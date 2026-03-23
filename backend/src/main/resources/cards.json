@@ -1,0 +1,4070 @@
+[
+  {
+    "id": "hgss4-1",
+    "nombre": "Aggron",
+    "tipo": "Metal",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Second Strike",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Guard Claw",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss4-1.png"
+  },
+  {
+    "id": "xy5-1",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Multiply",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy5-1.png"
+  },
+  {
+    "id": "pl1-1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Gigavolt",
+        "costo": [
+          "Lightning",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Reflect Energy",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl1-1.png"
+  },
+  {
+    "id": "dp3-1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Cluster Bolt",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp3-1.png"
+  },
+  {
+    "id": "det1-1",
+    "nombre": "Bulbasaur",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Find a Friend",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/det1-1.png"
+  },
+  {
+    "id": "dv1-1",
+    "nombre": "Dratini",
+    "tipo": "Dragon",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Wrap",
+        "costo": [
+          "Grass",
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dv1-1.png"
+  },
+  {
+    "id": "mcd19-1",
+    "nombre": "Caterpie",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Surprise Attack",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/mcd19-1.png"
+  },
+  {
+    "id": "pl3-1",
+    "nombre": "Absol G",
+    "tipo": "Darkness",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Feint Attack",
+        "costo": [
+          "Darkness"
+        ]
+      },
+      {
+        "nombre": "Doom News",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl3-1.png"
+  },
+  {
+    "id": "ex12-1",
+    "nombre": "Aerodactyl",
+    "tipo": "Colorless",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Power Blow",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Speed Stroke",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex12-1.png"
+  },
+  {
+    "id": "ex3-1",
+    "nombre": "Absol",
+    "tipo": "Darkness",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Bad News",
+        "costo": [
+          "Darkness"
+        ]
+      },
+      {
+        "nombre": "Prize Count",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex3-1.png"
+  },
+  {
+    "id": "ru1-1",
+    "nombre": "Venusaur",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Giga Drain",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ru1-1.png"
+  },
+  {
+    "id": "ecard2-H1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Thundershock",
+        "costo": [
+          "Lightning"
+        ]
+      },
+      {
+        "nombre": "Reflect Energy",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ecard2-H1.png"
+  },
+  {
+    "id": "base4-1",
+    "nombre": "Alakazam",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Confuse Ray",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base4-1.png"
+  },
+  {
+    "id": "hgss1-1",
+    "nombre": "Arcanine",
+    "tipo": "Fire",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Sharp Fang",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Fire Mane",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss1-1.png"
+  },
+  {
+    "id": "ex11-1",
+    "nombre": "Beedrill δ",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Super Slash",
+        "costo": [
+          "Grass",
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex11-1.png"
+  },
+  {
+    "id": "ex7-1",
+    "nombre": "Azumarill",
+    "tipo": "Water",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Water Punch",
+        "costo": [
+          "Water",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex7-1.png"
+  },
+  {
+    "id": "gym1-1",
+    "nombre": "Blaine's Moltres",
+    "tipo": "Fire",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Phoenix Flame",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym1-1.png"
+  },
+  {
+    "id": "base3-1",
+    "nombre": "Aerodactyl",
+    "tipo": "Fighting",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Wing Attack",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base3-1.png"
+  },
+  {
+    "id": "sm9-1",
+    "nombre": "Celebi & Venusaur-GX",
+    "tipo": "Grass",
+    "hp": "270",
+    "ataques": [
+      {
+        "nombre": "Pollen Hazard",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Solar Beam",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Evergreen-GX",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm9-1.png"
+  },
+  {
+    "id": "xy2-1",
+    "nombre": "Caterpie",
+    "tipo": "Grass",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy2-1.png"
+  },
+  {
+    "id": "pop6-1",
+    "nombre": "Bastiodon",
+    "tipo": "Metal",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Anger Revenge",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop6-1.png"
+  },
+  {
+    "id": "ecard2-H2",
+    "nombre": "Arcanine",
+    "tipo": "Fire",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Fire Blow",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ecard2-H2.png"
+  },
+  {
+    "id": "hgss4-2",
+    "nombre": "Altaria",
+    "tipo": "Colorless",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Midnight Eyes",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Stadium Power",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss4-2.png"
+  },
+  {
+    "id": "pl1-2",
+    "nombre": "Blastoise",
+    "tipo": "Water",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Aqua Press",
+        "costo": [
+          "Water",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Double Launcher",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl1-2.png"
+  },
+  {
+    "id": "ex3-2",
+    "nombre": "Altaria",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Dragon Dance",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Dragon Song",
+        "costo": [
+          "Water",
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex3-2.png"
+  },
+  {
+    "id": "dp3-2",
+    "nombre": "Blastoise",
+    "tipo": "Water",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Hydro Pump",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp3-2.png"
+  },
+  {
+    "id": "base3-2",
+    "nombre": "Articuno",
+    "tipo": "Water",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Freeze Dry",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ]
+      },
+      {
+        "nombre": "Blizzard",
+        "costo": [
+          "Water",
+          "Water",
+          "Water",
+          "Water"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base3-2.png"
+  },
+  {
+    "id": "pl3-2",
+    "nombre": "Blaziken FB",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Luring Flame",
+        "costo": [
+          "Fire"
+        ]
+      },
+      {
+        "nombre": "Vapor Kick",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl3-2.png"
+  },
+  {
+    "id": "ex11-2",
+    "nombre": "Crobat δ",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Radar Jam",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Target Attack",
+        "costo": [
+          "Grass",
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex11-2.png"
+  },
+  {
+    "id": "pop6-2",
+    "nombre": "Lucario",
+    "tipo": "Fighting",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Feint",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Aura Sphere",
+        "costo": [
+          "Fighting",
+          "Fighting"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop6-2.png"
+  },
+  {
+    "id": "xy2-2",
+    "nombre": "Metapod",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Harden",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy2-2.png"
+  },
+  {
+    "id": "base4-2",
+    "nombre": "Blastoise",
+    "tipo": "Water",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Hydro Pump",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base4-2.png"
+  },
+  {
+    "id": "gym1-2",
+    "nombre": "Brock's Rhydon",
+    "tipo": "Fighting",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Lariat",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym1-2.png"
+  },
+  {
+    "id": "hgss1-2",
+    "nombre": "Azumarill",
+    "tipo": "Water",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Waterfall",
+        "costo": [
+          "Water",
+          "Water"
+        ]
+      },
+      {
+        "nombre": "Bubblebeam",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss1-2.png"
+  },
+  {
+    "id": "det1-2",
+    "nombre": "Ludicolo",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Punch and Run",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/det1-2.png"
+  },
+  {
+    "id": "sm9-2",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Tangle Drag",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm9-2.png"
+  },
+  {
+    "id": "ex12-2",
+    "nombre": "Aggron",
+    "tipo": "Metal",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Heavy Blow",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Bound Crush",
+        "costo": [
+          "Fighting",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex12-2.png"
+  },
+  {
+    "id": "ex7-2",
+    "nombre": "Dark Ampharos",
+    "tipo": "Lightning",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Ram",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Shock Bolt",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex7-2.png"
+  },
+  {
+    "id": "ru1-2",
+    "nombre": "Cherrim",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Solarbeam",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ru1-2.png"
+  },
+  {
+    "id": "mcd19-2",
+    "nombre": "Alolan Exeggutor",
+    "tipo": "Grass",
+    "hp": "160",
+    "ataques": [
+      {
+        "nombre": "Tropical Shake",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/mcd19-2.png"
+  },
+  {
+    "id": "xy5-2",
+    "nombre": "Kakuna",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy5-2.png"
+  },
+  {
+    "id": "xy11-1",
+    "nombre": "Tangela",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Slam",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mega Drain",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy11-1.png"
+  },
+  {
+    "id": "ex14-1",
+    "nombre": "Banette",
+    "tipo": "Psychic",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Night Murmurs",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex14-1.png"
+  },
+  {
+    "id": "sm12-1",
+    "nombre": "Venusaur & Snivy-GX",
+    "tipo": "Grass",
+    "hp": "270",
+    "ataques": [
+      {
+        "nombre": "Forest Dump",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Solar Plant-GX",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm12-1.png"
+  },
+  {
+    "id": "bw1-1",
+    "nombre": "Snivy",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Vine Whip",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw1-1.png"
+  },
+  {
+    "id": "sm115-1",
+    "nombre": "Caterpie",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm115-1.png"
+  },
+  {
+    "id": "si1-1",
+    "nombre": "Mew",
+    "tipo": "Psychic",
+    "hp": "30",
+    "ataques": [
+      {
+        "nombre": "Rainbow Wave",
+        "costo": [
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/si1-1.png"
+  },
+  {
+    "id": "dp1-1",
+    "nombre": "Dialga",
+    "tipo": "Metal",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Time Bellow",
+        "costo": [
+          "Metal"
+        ]
+      },
+      {
+        "nombre": "Flash Cannon",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp1-1.png"
+  },
+  {
+    "id": "sm3-1",
+    "nombre": "Caterpie",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Surprise Attack",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm3-1.png"
+  },
+  {
+    "id": "pop7-1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Cluster Bolt",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop7-1.png"
+  },
+  {
+    "id": "gym2-1",
+    "nombre": "Blaine's Arcanine",
+    "tipo": "Fire",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Heat Tackle",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Firestorm",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym2-1.png"
+  },
+  {
+    "id": "col1-1",
+    "nombre": "Clefable",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Fairy Power",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Moon Impact",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/col1-1.png"
+  },
+  {
+    "id": "ex9-1",
+    "nombre": "Blaziken",
+    "tipo": "Fire",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Searing Flame",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Damage Burn",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex9-1.png"
+  },
+  {
+    "id": "bw10-1",
+    "nombre": "Surskit",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Sweet Scent",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw10-1.png"
+  },
+  {
+    "id": "swsh35-1",
+    "nombre": "Venusaur V",
+    "tipo": "Grass",
+    "hp": "220",
+    "ataques": [
+      {
+        "nombre": "Pollen Bomb",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Solar Typhoon",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh35-1.png"
+  },
+  {
+    "id": "xy7-1",
+    "nombre": "Oddish",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Trip Over",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy7-1.png"
+  },
+  {
+    "id": "sm1-1",
+    "nombre": "Caterpie",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Nap",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Gnaw",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm1-1.png"
+  },
+  {
+    "id": "ex13-1",
+    "nombre": "Armaldo δ",
+    "tipo": "Fighting",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Delta Edge",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Fossil Charge",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex13-1.png"
+  },
+  {
+    "id": "dv1-2",
+    "nombre": "Dratini",
+    "tipo": "Dragon",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Hypnotic Gaze",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Tail Whap",
+        "costo": [
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dv1-2.png"
+  },
+  {
+    "id": "ecard2-H3",
+    "nombre": "Ariados",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Spider Force",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ecard2-H3.png"
+  },
+  {
+    "id": "sm12-2",
+    "nombre": "Oddish",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Sweet Scent",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm12-2.png"
+  },
+  {
+    "id": "ex9-2",
+    "nombre": "Deoxys",
+    "tipo": "Psychic",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Swift",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex9-2.png"
+  },
+  {
+    "id": "bw1-2",
+    "nombre": "Snivy",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Leaf Blade",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw1-2.png"
+  },
+  {
+    "id": "base4-3",
+    "nombre": "Chansey",
+    "tipo": "Colorless",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Scrunch",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Double-edge",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base4-3.png"
+  },
+  {
+    "id": "ru1-3",
+    "nombre": "Ninetales",
+    "tipo": "Fire",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Flame Tail",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ru1-3.png"
+  },
+  {
+    "id": "xy5-3",
+    "nombre": "Beedrill",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Allergic Shock",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Twineedle",
+        "costo": [
+          "Grass",
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy5-3.png"
+  },
+  {
+    "id": "pop6-3",
+    "nombre": "Manaphy",
+    "tipo": "Water",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Call for Family",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Aqua Ring",
+        "costo": [
+          "Water",
+          "Water"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop6-3.png"
+  },
+  {
+    "id": "si1-2",
+    "nombre": "Pidgeot",
+    "tipo": "Colorless",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Supersonic Flight",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Slicing Wind",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/si1-2.png"
+  },
+  {
+    "id": "ex11-3",
+    "nombre": "Dragonite δ",
+    "tipo": "Lightning",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Agility",
+        "costo": [
+          "Lightning",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Heavy Impact",
+        "costo": [
+          "Lightning",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex11-3.png"
+  },
+  {
+    "id": "pl3-3",
+    "nombre": "Drifblim FB",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Shadow Ball",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl3-3.png"
+  },
+  {
+    "id": "base3-3",
+    "nombre": "Ditto",
+    "tipo": "Colorless",
+    "hp": "50",
+    "ataques": [],
+    "imagen": "assets/images/cards/base3-3.png"
+  },
+  {
+    "id": "hgss1-3",
+    "nombre": "Clefable",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Fairy Power",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Moon Impact",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss1-3.png"
+  },
+  {
+    "id": "ex13-2",
+    "nombre": "Cradily δ",
+    "tipo": "Darkness",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Harsh Fluid",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Poison Tentacles",
+        "costo": [
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex13-2.png"
+  },
+  {
+    "id": "hgss4-3",
+    "nombre": "Celebi",
+    "tipo": "Psychic",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Future Sight",
+        "costo": [
+          "Psychic"
+        ]
+      },
+      {
+        "nombre": "Leaf Bind",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss4-3.png"
+  },
+  {
+    "id": "xy7-2",
+    "nombre": "Gloom",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Drool",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy7-2.png"
+  },
+  {
+    "id": "bw10-2",
+    "nombre": "Masquerain",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw10-2.png"
+  },
+  {
+    "id": "ex7-3",
+    "nombre": "Dark Crobat",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Dark Drain",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Skill Dive",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex7-3.png"
+  },
+  {
+    "id": "ex12-3",
+    "nombre": "Cradily",
+    "tipo": "Grass",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Devolution Wave",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Linear Attack",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mud Shot",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex12-3.png"
+  },
+  {
+    "id": "swsh35-2",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Call for Family",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh35-2.png"
+  },
+  {
+    "id": "gym2-2",
+    "nombre": "Blaine's Charizard",
+    "tipo": "Fire",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Roaring Flames",
+        "costo": [
+          "Fire"
+        ]
+      },
+      {
+        "nombre": "Flame Jet",
+        "costo": [
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym2-2.png"
+  },
+  {
+    "id": "xy2-3",
+    "nombre": "Butterfree",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Quiver Dance",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Gust",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy2-3.png"
+  },
+  {
+    "id": "xy11-2",
+    "nombre": "Tangrowth",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Leaf Storm",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Flog",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy11-2.png"
+  },
+  {
+    "id": "det1-3",
+    "nombre": "Morelull",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Sleep Spore",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/det1-3.png"
+  },
+  {
+    "id": "ex3-3",
+    "nombre": "Crawdaunt",
+    "tipo": "Water",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Guillotine",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex3-3.png"
+  },
+  {
+    "id": "dv1-3",
+    "nombre": "Dragonair",
+    "tipo": "Dragon",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Tail Whap",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Dragon Pulse",
+        "costo": [
+          "Grass",
+          "Lightning",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dv1-3.png"
+  },
+  {
+    "id": "sm9-3",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Reckless Charge",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm9-3.png"
+  },
+  {
+    "id": "pop7-2",
+    "nombre": "Gallade",
+    "tipo": "Fighting",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Sonic Blade",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Psychic Cut",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop7-2.png"
+  },
+  {
+    "id": "sm1-2",
+    "nombre": "Metapod",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Iron Defense",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm1-2.png"
+  },
+  {
+    "id": "mcd19-3",
+    "nombre": "Magmar",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Controlled Burn",
+        "costo": [
+          "Fire"
+        ]
+      },
+      {
+        "nombre": "Flamethrower",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/mcd19-3.png"
+  },
+  {
+    "id": "col1-2",
+    "nombre": "Deoxys",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Cell Storm",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/col1-2.png"
+  },
+  {
+    "id": "pl1-3",
+    "nombre": "Blaziken",
+    "tipo": "Fire",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Clutch",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Fire Spin",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl1-3.png"
+  },
+  {
+    "id": "sm115-2",
+    "nombre": "Metapod",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm115-2.png"
+  },
+  {
+    "id": "gym1-3",
+    "nombre": "Erika's Clefable",
+    "tipo": "Colorless",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Fairy Power",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Moon Impact",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym1-3.png"
+  },
+  {
+    "id": "dp3-3",
+    "nombre": "Charizard",
+    "tipo": "Fire",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Blast Burn",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp3-3.png"
+  },
+  {
+    "id": "sm2-1",
+    "nombre": "Bellsprout",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Vine Whip",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm2-1.png"
+  },
+  {
+    "id": "base5-1",
+    "nombre": "Dark Alakazam",
+    "tipo": "Psychic",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Teleport Blast",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mind Shock",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base5-1.png"
+  },
+  {
+    "id": "xy4-1",
+    "nombre": "Venonat",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Stun Spore",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy4-1.png"
+  },
+  {
+    "id": "bw11-1",
+    "nombre": "Tangela",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Beat",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Flog",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw11-1.png"
+  },
+  {
+    "id": "ex4-1",
+    "nombre": "Team Aqua's Cacturne",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Dark Bind",
+        "costo": [
+          "Darkness"
+        ]
+      },
+      {
+        "nombre": "Poison Barb",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex4-1.png"
+  },
+  {
+    "id": "bw4-1",
+    "nombre": "Pinsir",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Power Pinch",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Grip and Squeeze",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw4-1.png"
+  },
+  {
+    "id": "bw9-1",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Triple Stab",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw9-1.png"
+  },
+  {
+    "id": "base1-1",
+    "nombre": "Alakazam",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Confuse Ray",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base1-1.png"
+  },
+  {
+    "id": "pop3-1",
+    "nombre": "Blastoise",
+    "tipo": "Water",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Smash Turn",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Rocket Tackle",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop3-1.png"
+  },
+  {
+    "id": "dp4-1",
+    "nombre": "Blaziken",
+    "tipo": "Fire",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Fire Dance",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Flame Kick",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp4-1.png"
+  },
+  {
+    "id": "bw7-1",
+    "nombre": "Oddish",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Absorb",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Acid",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw7-1.png"
+  },
+  {
+    "id": "ex8-1",
+    "nombre": "Altaria",
+    "tipo": "Colorless",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Double Wing Attack",
+        "costo": [
+          "Lightning"
+        ]
+      },
+      {
+        "nombre": "Dive",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex8-1.png"
+  },
+  {
+    "id": "bw5-1",
+    "nombre": "Bulbasaur",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Razor Leaf",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw5-1.png"
+  },
+  {
+    "id": "pop5-1",
+    "nombre": "Ho-Oh",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Fire Wing",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Fire Blast",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop5-1.png"
+  },
+  {
+    "id": "sm5-1",
+    "nombre": "Exeggcute",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Continuous Eggsplosion",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm5-1.png"
+  },
+  {
+    "id": "xy10-1",
+    "nombre": "Shuckle",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Hide a Berry",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Wrap",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy10-1.png"
+  },
+  {
+    "id": "sm8-1",
+    "nombre": "Tangela",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Gentle Slap",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Bind",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm8-1.png"
+  },
+  {
+    "id": "hgss2-1",
+    "nombre": "Jirachi",
+    "tipo": "Psychic",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Time Hollow",
+        "costo": [
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss2-1.png"
+  },
+  {
+    "id": "dpp-DP01",
+    "nombre": "Turtwig",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": []
+      },
+      {
+        "nombre": "Razor Leaf",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dpp-DP01.png"
+  },
+  {
+    "id": "swsh1-1",
+    "nombre": "Celebi V",
+    "tipo": "Grass",
+    "hp": "180",
+    "ataques": [
+      {
+        "nombre": "Find a Friend",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Line Force",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh1-1.png"
+  },
+  {
+    "id": "basep-1",
+    "nombre": "Pikachu",
+    "tipo": "Lightning",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Growl",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Thundershock",
+        "costo": [
+          "Lightning",
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/basep-1.png"
+  },
+  {
+    "id": "swsh4-1",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Bug Hunch",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh4-1.png"
+  },
+  {
+    "id": "xy1-1",
+    "nombre": "Venusaur-EX",
+    "tipo": "Grass",
+    "hp": "180",
+    "ataques": [
+      {
+        "nombre": "Poison Powder",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Jungle Hammer",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy1-1.png"
+  },
+  {
+    "id": "pop1-1",
+    "nombre": "Blaziken",
+    "tipo": "Fire",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Fire Punch",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Double Kick",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop1-1.png"
+  },
+  {
+    "id": "bw8-1",
+    "nombre": "Turtwig",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Nap",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Razor Leaf",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw8-1.png"
+  },
+  {
+    "id": "base6-1",
+    "nombre": "Alakazam",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Confuse Ray",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base6-1.png"
+  },
+  {
+    "id": "pop9-1",
+    "nombre": "Garchomp",
+    "tipo": "Colorless",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Dragon Rage",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Jet Sword",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop9-1.png"
+  },
+  {
+    "id": "pop4-1",
+    "nombre": "Chimecho δ",
+    "tipo": "Metal",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Wrap",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Sonicboom",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop4-1.png"
+  },
+  {
+    "id": "neo4-1",
+    "nombre": "Dark Ampharos",
+    "tipo": "Lightning",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Shock Bolt",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/neo4-1.png"
+  },
+  {
+    "id": "neo3-1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Attract Current",
+        "costo": [
+          "Lightning"
+        ]
+      },
+      {
+        "nombre": "Gigavolt",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Lightning",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/neo3-1.png"
+  },
+  {
+    "id": "pl4-1",
+    "nombre": "Charizard",
+    "tipo": "Fire",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Fire Wing",
+        "costo": [
+          "Fire"
+        ]
+      },
+      {
+        "nombre": "Burning Tail",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl4-1.png"
+  },
+  {
+    "id": "mcd19-4",
+    "nombre": "Alolan Sandshrew",
+    "tipo": "Water",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Fury Swipes",
+        "costo": []
+      }
+    ],
+    "imagen": "assets/images/cards/mcd19-4.png"
+  },
+  {
+    "id": "sm115-3",
+    "nombre": "Butterfree",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Gust",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm115-3.png"
+  },
+  {
+    "id": "base3-4",
+    "nombre": "Dragonite",
+    "tipo": "Colorless",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Slam",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base3-4.png"
+  },
+  {
+    "id": "ex9-3",
+    "nombre": "Exploud",
+    "tipo": "Colorless",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Collect",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Body Slam",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Hyper Voice",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mega Throw",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex9-3.png"
+  },
+  {
+    "id": "pop7-3",
+    "nombre": "Latias",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Miraculous Light",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mist Ball",
+        "costo": [
+          "Fire",
+          "Water",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop7-3.png"
+  },
+  {
+    "id": "pop6-4",
+    "nombre": "Pachirisu",
+    "tipo": "Lightning",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Minor Errand-Running",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Thunder Jolt",
+        "costo": [
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop6-4.png"
+  },
+  {
+    "id": "det1-4",
+    "nombre": "Charmander",
+    "tipo": "Fire",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Reckless Charge",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/det1-4.png"
+  },
+  {
+    "id": "ex4-2",
+    "nombre": "Team Aqua's Crawdaunt",
+    "tipo": "Water",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Aqua Reverse",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Deep Impact",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex4-2.png"
+  },
+  {
+    "id": "hgss1-4",
+    "nombre": "Gyarados",
+    "tipo": "Water",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Hydro Splash",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Hyper Beam",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss1-4.png"
+  },
+  {
+    "id": "xy1-2",
+    "nombre": "M Venusaur-EX",
+    "tipo": "Grass",
+    "hp": "230",
+    "ataques": [
+      {
+        "nombre": "Crisis Vine",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy1-2.png"
+  },
+  {
+    "id": "ex8-2",
+    "nombre": "Beautifly",
+    "tipo": "Grass",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Luring Antenna",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Cutting Wind",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex8-2.png"
+  },
+  {
+    "id": "bw5-2",
+    "nombre": "Ivysaur",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Sleep Powder",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Poison Powder",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw5-2.png"
+  },
+  {
+    "id": "dpp-DP02",
+    "nombre": "Chimchar",
+    "tipo": "Fire",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": []
+      },
+      {
+        "nombre": "Ember",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dpp-DP02.png"
+  },
+  {
+    "id": "sm2-2",
+    "nombre": "Weepinbell",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Muddy Acid",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm2-2.png"
+  },
+  {
+    "id": "pop4-2",
+    "nombre": "Deoxys δ",
+    "tipo": "Colorless",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Crystal Laser",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop4-2.png"
+  },
+  {
+    "id": "bw7-2",
+    "nombre": "Gloom",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Foul Odor",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Poison Powder",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw7-2.png"
+  },
+  {
+    "id": "xy4-2",
+    "nombre": "Venomoth",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Dizzying Wind",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Noxious Scales",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy4-2.png"
+  },
+  {
+    "id": "col1-3",
+    "nombre": "Dialga",
+    "tipo": "Metal",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Time Rewind",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Metal",
+          "Metal"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/col1-3.png"
+  },
+  {
+    "id": "ex12-4",
+    "nombre": "Delcatty",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Energy Link",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Tail Whap",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex12-4.png"
+  },
+  {
+    "id": "bw11-2",
+    "nombre": "Tangrowth",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Bind Down",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Flog",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw11-2.png"
+  },
+  {
+    "id": "pl1-4",
+    "nombre": "Delcatty",
+    "tipo": "Colorless",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Power Heal",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Rear Kick",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl1-4.png"
+  },
+  {
+    "id": "swsh35-3",
+    "nombre": "Kakuna",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh35-3.png"
+  },
+  {
+    "id": "base5-2",
+    "nombre": "Dark Arbok",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Stare",
+        "costo": [
+          "Grass",
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Poison Vapor",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base5-2.png"
+  },
+  {
+    "id": "ecard2-H4",
+    "nombre": "Azumarill",
+    "tipo": "Water",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Aqua Sonic",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ecard2-H4.png"
+  },
+  {
+    "id": "neo4-2",
+    "nombre": "Dark Crobat",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Dark Drain",
+        "costo": [
+          "Grass",
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/neo4-2.png"
+  },
+  {
+    "id": "ex3-4",
+    "nombre": "Flygon",
+    "tipo": "Colorless",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Energy Shower",
+        "costo": [
+          "Grass",
+          "Lightning"
+        ]
+      },
+      {
+        "nombre": "Rainbow Burn",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex3-4.png"
+  },
+  {
+    "id": "xy2-4",
+    "nombre": "Pineco",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Ram",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy2-4.png"
+  },
+  {
+    "id": "pop5-2",
+    "nombre": "Lugia",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Super Psy Bolt",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Aerowing",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop5-2.png"
+  },
+  {
+    "id": "base6-2",
+    "nombre": "Articuno",
+    "tipo": "Water",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Freeze Dry",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ]
+      },
+      {
+        "nombre": "Blizzard",
+        "costo": [
+          "Water",
+          "Water",
+          "Water",
+          "Water"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base6-2.png"
+  },
+  {
+    "id": "dv1-4",
+    "nombre": "Dragonair",
+    "tipo": "Dragon",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Healing Melody",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Slam",
+        "costo": [
+          "Lightning",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dv1-4.png"
+  },
+  {
+    "id": "ex11-4",
+    "nombre": "Espeon δ",
+    "tipo": "Psychic",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Psyshock",
+        "costo": [
+          "Psychic",
+          "Metal"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex11-4.png"
+  },
+  {
+    "id": "dp4-2",
+    "nombre": "Cresselia",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Moon Twinkle",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Lunar Dance",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp4-2.png"
+  },
+  {
+    "id": "dp1-2",
+    "nombre": "Dusknoir",
+    "tipo": "Psychic",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Hard Feelings",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp1-2.png"
+  },
+  {
+    "id": "gym2-3",
+    "nombre": "Brock's Ninetales",
+    "tipo": "Fire",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Will-o'-the-wisp",
+        "costo": [
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/gym2-3.png"
+  },
+  {
+    "id": "pop1-2",
+    "nombre": "Metagross",
+    "tipo": "Metal",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Metal Claw",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Hyper Beam",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop1-2.png"
+  },
+  {
+    "id": "si1-3",
+    "nombre": "Onix",
+    "tipo": "Fighting",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Slam",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Body Slam",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Fighting",
+          "Fighting"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/si1-3.png"
+  },
+  {
+    "id": "dp3-4",
+    "nombre": "Entei",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Blaze Roar",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp3-4.png"
+  },
+  {
+    "id": "base4-4",
+    "nombre": "Charizard",
+    "tipo": "Fire",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Fire Spin",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Fire"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/base4-4.png"
+  },
+  {
+    "id": "pl4-2",
+    "nombre": "Froslass",
+    "tipo": "Water",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Ground Frost",
+        "costo": [
+          "Water",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl4-2.png"
+  },
+  {
+    "id": "bw8-2",
+    "nombre": "Grotle",
+    "tipo": "Grass",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Knock Away",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw8-2.png"
+  },
+  {
+    "id": "pop3-2",
+    "nombre": "Flareon",
+    "tipo": "Fire",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Quick Attack",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Fire Spin",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop3-2.png"
+  },
+  {
+    "id": "xy11-3",
+    "nombre": "Hoppip",
+    "tipo": "Grass",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Splash",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy11-3.png"
+  },
+  {
+    "id": "sm3-2",
+    "nombre": "Metapod",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Ram",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Shed Skin",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm3-2.png"
+  },
+  {
+    "id": "swsh1-2",
+    "nombre": "Roselia",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Absorb",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh1-2.png"
+  },
+  {
+    "id": "pop9-2",
+    "nombre": "Manaphy",
+    "tipo": "Water",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Dive",
+        "costo": [
+          "Water"
+        ]
+      },
+      {
+        "nombre": "Water Glow",
+        "costo": [
+          "Water"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop9-2.png"
+  },
+  {
+    "id": "xy7-3",
+    "nombre": "Vileplume",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Solar Beam",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy7-3.png"
+  },
+  {
+    "id": "bw10-3",
+    "nombre": "Lileep",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Spiral Drain",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw10-3.png"
+  },
+  {
+    "id": "bw4-2",
+    "nombre": "Seedot",
+    "tipo": "Grass",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Trip Over",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw4-2.png"
+  },
+  {
+    "id": "sm9-4",
+    "nombre": "Kakuna",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm9-4.png"
+  },
+  {
+    "id": "hgss4-4",
+    "nombre": "Drapion",
+    "tipo": "Darkness",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Toxic Fang",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Land Crush",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss4-4.png"
+  },
+  {
+    "id": "ex13-3",
+    "nombre": "Deoxys δ",
+    "tipo": "Darkness",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Energy Loop",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex13-3.png"
+  },
+  {
+    "id": "sm5-2",
+    "nombre": "Yanma",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Super Speed",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm5-2.png"
+  },
+  {
+    "id": "sm75-1",
+    "nombre": "Charmander",
+    "tipo": "Fire",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Fire Fang",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm75-1.png"
+  },
+  {
+    "id": "ex10-1",
+    "nombre": "Ampharos",
+    "tipo": "Lightning",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Miraculous Thunder",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex10-1.png"
+  },
+  {
+    "id": "bw6-1",
+    "nombre": "Hoppip",
+    "tipo": "Grass",
+    "hp": "30",
+    "ataques": [
+      {
+        "nombre": "Flail Around",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw6-1.png"
+  },
+  {
+    "id": "si1-4",
+    "nombre": "Togepi",
+    "tipo": "Colorless",
+    "hp": "40",
+    "ataques": [
+      {
+        "nombre": "Bawl",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/si1-4.png"
+  },
+  {
+    "id": "bw5-3",
+    "nombre": "Venusaur",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Poison Powder",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw5-3.png"
+  },
+  {
+    "id": "dp1-3",
+    "nombre": "Electivire",
+    "tipo": "Lightning",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Giga Impact",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Lightning",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/dp1-3.png"
+  },
+  {
+    "id": "xy11-4",
+    "nombre": "Skiploom",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Splash",
+        "costo": [
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy11-4.png"
+  },
+  {
+    "id": "hgss4-5",
+    "nombre": "Mamoswine",
+    "tipo": "Water",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Icy Wind",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Snowstorm",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss4-5.png"
+  },
+  {
+    "id": "sm12-3",
+    "nombre": "Gloom",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Sleep Powder",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm12-3.png"
+  },
+  {
+    "id": "ex7-4",
+    "nombre": "Dark Electrode",
+    "tipo": "Lightning",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Energy Bomb",
+        "costo": [
+          "Lightning"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex7-4.png"
+  },
+  {
+    "id": "sm5-3",
+    "nombre": "Yanmega",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Supersonic",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Cutting Wind",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/sm5-3.png"
+  },
+  {
+    "id": "swsh1-3",
+    "nombre": "Roselia",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Sweet Scent",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Sting",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh1-3.png"
+  },
+  {
+    "id": "pl3-4",
+    "nombre": "Electivire FB",
+    "tipo": "Lightning",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Dump and Draw",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Electric Current",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl3-4.png"
+  },
+  {
+    "id": "hgss1-5",
+    "nombre": "Hitmontop",
+    "tipo": "Fighting",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Triple Kick",
+        "costo": [
+          "Fighting"
+        ]
+      },
+      {
+        "nombre": "Close Combat",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/hgss1-5.png"
+  },
+  {
+    "id": "ex12-5",
+    "nombre": "Gengar",
+    "tipo": "Psychic",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Cursed Reaction",
+        "costo": [
+          "Psychic"
+        ]
+      },
+      {
+        "nombre": "Super Psy Bolt",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex12-5.png"
+  },
+  {
+    "id": "pl4-3",
+    "nombre": "Heatran",
+    "tipo": "Fire",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Fire Fang",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Magma Mantle",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pl4-3.png"
+  },
+  {
+    "id": "bw10-4",
+    "nombre": "Cradily",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Lifesplosion",
+        "costo": [
+          "Grass"
+        ]
+      },
+      {
+        "nombre": "Spiral Drain",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/bw10-4.png"
+  },
+  {
+    "id": "pop4-3",
+    "nombre": "Flygon",
+    "tipo": "Fighting",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Bite",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Sand Pit",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/pop4-3.png"
+  },
+  {
+    "id": "ex3-5",
+    "nombre": "Golem",
+    "tipo": "Fighting",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Rock Vengeance",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Rock Slide",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex3-5.png"
+  },
+  {
+    "id": "swsh4-2",
+    "nombre": "Kakuna",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Shed Skin",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Grass"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/swsh4-2.png"
+  },
+  {
+    "id": "xy5-4",
+    "nombre": "Tangela",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Absorb",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Vine Whip",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/xy5-4.png"
+  },
+  {
+    "id": "ex9-4",
+    "nombre": "Gardevoir",
+    "tipo": "Psychic",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Psypunch",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Mind Shock",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex9-4.png"
+  },
+  {
+    "id": "ex11-5",
+    "nombre": "Flareon δ",
+    "tipo": "Fire",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Delta Search",
+        "costo": [
+          "Colorless"
+        ]
+      },
+      {
+        "nombre": "Return Burn",
+        "costo": [
+          "Fire",
+          "Metal",
+          "Colorless"
+        ]
+      }
+    ],
+    "imagen": "assets/images/cards/ex11-5.png"
+  }
+]
