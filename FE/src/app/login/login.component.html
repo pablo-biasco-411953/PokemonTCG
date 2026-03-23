@@ -1,0 +1,23 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Bienvenido al Pokémon TCG</h2>
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+      <div class="input-group">
+        <label for="username">Nombre de Usuario:</label>
+        <input
+          type="text"
+          id="username"
+          [(ngModel)]="username"
+          placeholder="Ingresa tu nombre"
+          required
+        >
+      </div>
+      <button
+        type="submit"
+        [disabled]="!loginForm.form.valid"
+        class="login-button">
+        Iniciar Sesión
+      </button>
+    </form>
+  </div>
+</div>

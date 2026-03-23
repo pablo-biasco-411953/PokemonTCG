@@ -1,0 +1,32 @@
+<div class="lobby-container">
+  <h2>Lobby - {{ jugador?.username }}</h2>
+  <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
+
+  <div class="player-info">
+    <p>Nombre: {{ jugador?.username }}</p>
+    <p>Sobres disponibles: {{ sobresDisponibles }}</p>
+  </div>
+
+  <div class="actions">
+    <button (click)="abrirSobres()" class="action-button" [disabled]="sobresDisponibles <= 0">
+      Abrir Sobre
+    </button>
+    <button (click)="buscarPartida()" class="action-button">
+      Buscar Partida
+    </button>
+  </div>
+
+  <div *ngIf="cartasRecibidas.length > 0" class="cards-grid">
+    <div *ngFor="let carta of cartasRecibidas" class="card-item flip-card">
+      <div class="flip-card-inner">
+        <div class="flip-card-front">
+          <img [src]="'assets/images/card-back.png'" alt="Carta" />
+        </div>
+        <div class="flip-card-back">
+          <img [src]="carta.imagen" [alt]="carta.nombre" />
+          <p>{{ carta.nombre }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
