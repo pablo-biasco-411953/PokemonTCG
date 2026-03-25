@@ -5,12 +5,11 @@ import com.pokemon.tcg.service.BattleEngineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/battle")
-@CrossOrigin(origins = "http://localhost:4200") // <--- FUNDAMENTAL PARA ANGULAR
+@CrossOrigin(origins = "http://localhost:4200")
 public class BattleController {
+
     private final BattleEngineService battleEngine;
 
     public BattleController(BattleEngineService battleEngine) {
@@ -18,52 +17,92 @@ public class BattleController {
     }
 
     @PostMapping("/start/{username}")
-    public ResponseEntity<Partida> startBattle(@PathVariable String username, @RequestBody StartBattleRequest request) {
-        Partida partida = battleEngine.startBattle(username, request.getMazoId());
-        return ResponseEntity.ok(partida);
+    public ResponseEntity<?> startBattle(@PathVariable String username,
+                                         @RequestBody StartBattleRequest request) {
+        try {
+            Partida partida = battleEngine.startBattle(username, request.getMazoId());
+            return ResponseEntity.ok(partida);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // Cambiamos el orden para que coincida con el frontend: /state/{id}
     @GetMapping("/state/{matchId}")
-    public ResponseEntity<Partida> getEstadoPartida(@PathVariable String matchId) {
+    public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId) {
         Partida partida = battleEngine.getEstadoPartida(matchId);
-        if (partida == null) {
-            return ResponseEntity.notFound().build();
-        }
+        if (partida == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(partida);
     }
 
     @PostMapping("/{matchId}/coin-flip")
-    public ResponseEntity<Boolean> lanzarMoneda(@PathVariable String matchId) {
-        boolean jugadorGana = battleEngine.lanzarMoneda(matchId);
-        return ResponseEntity.ok(jugadorGana);
+    public ResponseEntity<?> lanzarMoneda(@PathVariable String matchId) {
+        try {
+            boolean jugadorGana = battleEngine.lanzarMoneda(matchId);
+            return ResponseEntity.ok(jugadorGana);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{matchId}/choose-turn")
-    public ResponseEntity<Void> elegirTurno(@PathVariable String matchId, @RequestBody ChooseTurnRequest request) {
-        battleEngine.elegirTurno(matchId, request.isVaPrimero());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> elegirTurno(@PathVariable String matchId,
+                                         @RequestBody ChooseTurnRequest request) {
+        try {
+            battleEngine.elegirTurno(matchId, request.isVaPrimero());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{matchId}/play-pokemon")
-    public ResponseEntity<Void> jugarPokemon(@PathVariable String matchId, @RequestBody JugarPokemonRequest request) {
-        battleEngine.jugarPokemon(matchId, request.getCartaId(), request.getPosicion());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> jugarPokemon(@PathVariable String matchId,
+                                          @RequestBody JugarPokemonRequest request) {
+        try {
+            battleEngine.jugarPokemon(matchId, request.getCartaId(), request.getPosicion());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{matchId}/attach-energy")
-    public ResponseEntity<Void> unirEnergia(@PathVariable String matchId, @RequestBody UnirEnergiaRequest request) {
-        battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> unirEnergia(@PathVariable String matchId,
+                                         @RequestBody UnirEnergiaRequest request) {
+        try {
+            battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
+    // FIX: endpoint de ataque que faltaba — el frontend lo llama al hacer clic en el activo
+    @PostMapping("/{matchId}/attack")
+    public ResponseEntity<?> atacar(@PathVariable String matchId) {
+        try {
+            battleEngine.realizarAtaque(matchId);
+            // 🚨 IMPORTANTE: Pasar el turno después de atacar
+            battleEngine.pasarTurno(matchId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     @PostMapping("/{matchId}/pass-turn")
-    public ResponseEntity<Void> pasarTurno(@PathVariable String matchId) {
-        battleEngine.pasarTurno(matchId);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<?> pasarTurno(@PathVariable String matchId) {
+        try {
+            battleEngine.pasarTurno(matchId);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    // --- DTOs Internos ---
+    // ─────────────────────────────────────────────────────────────
+    // DTOs
+    // ─────────────────────────────────────────────────────────────
+
     public static class StartBattleRequest {
         private Long mazoId;
         public Long getMazoId() { return mazoId; }
@@ -73,7 +112,7 @@ public class BattleController {
     public static class ChooseTurnRequest {
         private boolean vaPrimero;
         public boolean isVaPrimero() { return vaPrimero; }
-        public void setVaPrimero(boolean vaPrimero) { this.vaPrimero = vaPrimero; }
+        public void setVaPrimero(boolean v) { this.vaPrimero = v; }
     }
 
     public static class JugarPokemonRequest {

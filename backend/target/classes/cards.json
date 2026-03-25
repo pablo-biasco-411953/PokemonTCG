@@ -4066,5 +4066,53 @@
       }
     ],
     "imagen": "/public/images/cards/ex11-5.png"
+  },
+  {
+    "id": "energy-grass",
+    "nombre": "Energía Planta",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-grass.png"
+  },
+  {
+    "id": "energy-fire",
+    "nombre": "Energía Fuego",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-fire.png"
+  },
+  {
+    "id": "energy-water",
+    "nombre": "Energía Agua",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-water.png"
+  },
+  {
+    "id": "energy-lightning",
+    "nombre": "Energía Eléctrica",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-lightning.png"
+  },
+  {
+    "id": "energy-psychic",
+    "nombre": "Energía Psíquica",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-psychic.png"
+  },
+  {
+    "id": "energy-fighting",
+    "nombre": "Energía Lucha",
+    "tipo": "Energy",
+    "hp": "0",
+    "ataques": [],
+    "imagen": "/public/images/cards/energy-fighting.png"
   }
 ]

@@ -1,4 +1,3 @@
-com\pokemon\tcg\controller\AtaqueController.class
 com\pokemon\tcg\service\SobreService.class
 com\pokemon\tcg\config\CorsConfig.class
 com\pokemon\tcg\model\battle\Partida.class
@@ -22,7 +21,6 @@ com\pokemon\tcg\BackendApplication.class
 com\pokemon\tcg\model\Card.class
 com\pokemon\tcg\controller\AuthController.class
 com\pokemon\tcg\controller\AuthController$LoginRequest.class
-com\pokemon\tcg\controller\AtaqueController$AtaqueRequest.class
 com\pokemon\tcg\config\DataLoader.class
 com\pokemon\tcg\controller\MazoController$GuardarMazoRequest.class
 com\pokemon\tcg\controller\SobreController.class

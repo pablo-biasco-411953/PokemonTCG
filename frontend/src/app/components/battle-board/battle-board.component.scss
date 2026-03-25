@@ -1,223 +1,383 @@
-/* =========================================================
-   BATTLE BOARD — Pokemon TCG Playmat
-   ========================================================= */
+/* ════════════════════════════════════════════════════════════════════════
+   POKEMON TCG BATTLE BOARD — V2 MEJORADO
+   ════════════════════════════════════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue:wght@400;700&family=Inter:wght@300;400;600;700&display=swap');
 
-$neoprene:      #161d22;
-$neoprene-mid:  #1e272e;
-$neoprene-lite: #263039;
-$gold:          #f9ca24;
-$gold-dim:      #c0982a;
-$hp-red:        #e84040;
-$active-glow:   #ffd700;
-$bench-border:  #3d5566;
-$turn-btn:      #fdcb6e;
-$discard-dash:  #4a6375;
+/* ════ PALETA DE COLORES ════ */
+$neoprene-dark: #0a0e1a;
+$neoprene-base: #0f1419;
+$neoprene-light: #1a2332;
+$neoprene-mid: #1e272e;
+$accent-gold: #f1c40f;
+$accent-gold-dim: #d4a917;
+$hp-color: #e84040;
+$energy-bright: #ffc107;
+$bench-border: #3d5566;
+$text-primary: #e0e8ef;
+$text-secondary: rgba(224, 232, 239, 0.6);
 
-/* ── Root ─────────────────────────────────────────── */
-.playmat {
-  font-family: 'Barlow Condensed', sans-serif;
-  background-color: $neoprene;
-  background-image:
-    radial-gradient(ellipse at 20% 50%, rgba(9,132,227,.07) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 50%, rgba(108,0,200,.05) 0%, transparent 60%),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23161d22'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%231a2228' opacity='.6'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%231a2228' opacity='.4'/%3E%3C/svg%3E");
-  min-height: 100vh;
-  display: grid;
-  grid-template-columns: 150px 1fr 150px;
-  /* FIX 1: el grid no usa altura fija — el contenido determina el alto */
-  align-items: start;
-  gap: 16px;
-  padding: 24px 20px 16px;
-  color: #e0e8ef;
-  position: relative;
-  /* FIX 1: sin overflow:hidden para que la mano no quede cortada */
+/* ════════════════════════════════════════════════════════════════════════
+   BODY Y RESET
+   ════════════════════════════════════════════════════════════════════════ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   overflow-x: hidden;
+  background: #000;
+}
 
+/* ════════════════════════════════════════════════════════════════════════
+   LAYOUT BASE — VIEWPORT COMPLETO
+   ════════════════════════════════════════════════════════════════════════ */
+
+.playmat {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* ════ FONDO PROFESIONAL CON CAPAS ════ */
+  background-color: $neoprene-dark;
+  background-image: 
+    /* Gradiente radial sutil en las esquinas */
+    radial-gradient(ellipse at 15% 20%, rgba(100, 200, 255, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 85% 80%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+    
+    /* Gradiente lineal diagonal para profundidad */
+    linear-gradient(135deg, $neoprene-dark 0%, $neoprene-light 100%),
+    
+    /* Patrón de textura sutil */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' result='noise'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%230f1419' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+  
+  background-attachment: fixed;
+  background-size: 100%, 100%, 100%, auto;
+  background-blend-mode: normal, normal, normal, overlay;
+  
+  /* ════ LAYOUT RESPONSIVO ════ */
+  min-height: 100vh;
+  width: 100%;
+  display: grid;
+  grid-template-columns: clamp(120px, 12%, 160px) 1fr clamp(120px, 12%, 160px);
+  align-items: center;
+  justify-items: center;
+  gap: clamp(12px, 2%, 18px);
+  padding: clamp(16px, 3vh, 28px) clamp(12px, 2%, 24px) clamp(12px, 2vh, 20px);
+  
+  color: $text-primary;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100vh;
+
+  /* ════ OVERLAY VIGNETTE ELEGANTE ════ */
   &::before {
     content: '';
     pointer-events: none;
     position: fixed;
     inset: 0;
-    background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
-    z-index: 0;
+    background: 
+      radial-gradient(ellipse at center, 
+        transparent 40%, 
+        rgba(0, 0, 0, 0.4) 100%);
+    z-index: -1;
+  }
+
+  /* ════ DECORACIÓN DE FONDO (Líneas sutiles) ════ */
+  &::after {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(90deg, 
+        rgba(241, 196, 15, 0.05) 0%, 
+        transparent 1%, 
+        transparent 99%, 
+        rgba(241, 196, 15, 0.05) 100%),
+      linear-gradient(0deg, 
+        rgba(241, 196, 15, 0.05) 0%, 
+        transparent 1%, 
+        transparent 99%, 
+        rgba(241, 196, 15, 0.05) 100%);
+    background-size: 200px 200px;
+    z-index: -1;
   }
 }
 
-/* ── Shared card-back ────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════
+   ELEMENTOS COMUNES
+   ════════════════════════════════════════════════════════════════════════ */
+
 .card-back {
-  /* FIX 2: cartas más grandes */
-  width: 88px;
-  height: 122px;
+  width: clamp(80px, 10vw, 90px);
+  height: clamp(110px, 14vw, 125px);
   background: linear-gradient(145deg, #0a6abf 0%, #0460a8 50%, #034f8c 100%);
-  border: 2px solid rgba(255,255,255,.18);
-  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 9px;
   box-shadow:
-    0 4px 14px rgba(0,0,0,.5),
-    inset 0 1px 0 rgba(255,255,255,.12);
+    0 6px 16px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
+  flex-shrink: 0;
 
   &::after {
     content: '';
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at 50% 50%, transparent 28%, rgba(255,255,255,.04) 28%, rgba(255,255,255,.04) 30%, transparent 30%),
-      linear-gradient(0deg, transparent 47%, rgba(255,255,255,.05) 47%, rgba(255,255,255,.05) 53%, transparent 53%);
+      radial-gradient(circle at 30% 30%, transparent 20%, rgba(255, 255, 255, 0.05) 20%, rgba(255, 255, 255, 0.05) 22%, transparent 22%),
+      linear-gradient(135deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
   }
 }
 
-/* ── Side columns ────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════
+   COLUMNAS LATERALES — RESPONSIVE
+   ════════════════════════════════════════════════════════════════════════ */
+
 .side-column {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  z-index: 1;
-  /* FIX 1: alinear al centro vertical del campo */
-  align-self: stretch;
+  padding: clamp(8px, 1%, 12px) 0;
+  z-index: 10;
+  height: 100%;
+  gap: clamp(12px, 2%, 20px);
 }
 
-/* ── Prize zone ──────────────────────────────────── */
+.spacer {
+  flex: 1;
+  min-height: clamp(60px, 10%, 100px);
+}
+
+/* ════ PREMIO ════ */
+
 .prize-zone {
   position: relative;
-  height: 200px;
-  width: 88px;
+  height: clamp(150px, 20%, 180px);
+  width: clamp(75px, 10%, 92px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
   label {
-    font-size: 9px;
+    font-size: clamp(8px, 1.2vw, 10px);
     font-weight: 700;
-    letter-spacing: .12em;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     position: absolute;
-    bottom: -22px;
-    width: 100%;
+    bottom: clamp(-28px, -3.5%, -32px);
+    width: 130%;
     text-align: center;
-    color: rgba(255,255,255,.45);
+    color: $text-secondary;
+    line-height: 1.3;
+    white-space: nowrap;
+
+    .prize-count {
+      display: block;
+      font-size: clamp(7px, 1vw, 9px);
+      opacity: 0.7;
+    }
   }
 
   .prize-card {
     position: absolute;
-    transition: transform .2s;
-    &:hover { transform: translateY(-4px) scale(1.05); z-index: 5; }
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: translateY(-6px) scale(1.08);
+      z-index: 50;
+    }
   }
 }
 
-/* ── CENTER FIELD ────────────────────────────────── */
+.prize-zone.bot {
+  opacity: 0.85;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   CAMPO CENTRAL — FLEX VERTICAL CON ALTURA CONSTANTE
+   ════════════════════════════════════════════════════════════════════════ */
+
 .center-field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 1;
-  gap: 10px;
-  /* FIX 1: el campo ocupa todo el alto disponible */
-  min-height: 100vh;
-  padding-bottom: 20px;
+  z-index: 5;
+  gap: clamp(8px, 1.5%, 12px);
+  width: 100%;
+  height: auto;
+  max-height: 100vh;
+  padding: 0;
+  grid-column: 2;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+
+  /* Scrollbar personalizado */
+  scrollbar-width: thin;
+  scrollbar-color: rgba($accent-gold, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($accent-gold, 0.3);
+    border-radius: 3px;
+
+    &:hover {
+      background: rgba($accent-gold, 0.5);
+    }
+  }
 }
 
-/* ══════════════════════════════════════════════════
-   FIX 3: MANO DEL BOT — boca abajo, arriba del campo
-══════════════════════════════════════════════════ */
+/* ════ MANO BOT ════ */
+
 .bot-hand-area {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  height: 60px;      /* solo asoma la parte inferior de las cartas */
+  height: clamp(50px, 6%, 70px);
   position: relative;
   width: 100%;
   overflow: visible;
-}
-
-.bot-card-in-hand {
-  position: absolute;
-  /* centrado dinámico via CSS custom properties */
-  left: calc(50% + (var(--i) - (var(--total) - 1) / 2) * 28px);
-  top: 0;
-  transform-origin: bottom center;
-  /* leve rotación en abanico */
-  transform: rotate(calc((var(--i) - (var(--total) - 1) / 2) * 4deg)) translateY(-55px);
+  gap: clamp(3px, 0.5%, 8px);
 
   .bot-hand-card {
-    /* FIX 2: tamaño más grande */
-    width: 72px;
-    height: 100px;
-    /* Giradas boca abajo (180°) */
+    position: absolute;
+    width: clamp(65px, 8%, 74px);
+    height: clamp(90px, 12%, 102px);
+    left: calc(50% + (var(--i) - (var(--total) - 1) / 2) * clamp(24px, 3%, 32px));
     transform: rotate(180deg);
-    box-shadow: 0 6px 16px rgba(0,0,0,.6);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      transform: rotate(180deg) translateY(-6px) scale(1.04);
+    }
+  }
+
+  .bot-hand-label {
+    position: absolute;
+    bottom: clamp(-24px, -3%, -28px);
+    font-size: clamp(8px, 1vw, 9px);
+    color: $text-secondary;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    white-space: nowrap;
   }
 }
 
-/* ── Bench rows ──────────────────────────────────── */
+/* ════ FILAS BANCA ════ */
 .bench-row {
   display: flex;
-  gap: 8px;
-  /* FIX 2: bench más alto para cartas más grandes */
-  min-height: 120px;
-  align-items: center;
-  background: rgba(255,255,255,.025);
-  border: 1px dashed $bench-border;
+  justify-content: center; 
+  gap: clamp(8px, 1.5vw, 15px); // Espacio real entre cartas
+  
+  /* Eliminamos el min-width que causaba el estiramiento */
+  width: fit-content; 
+  margin: 0 auto;
+  max-width: 95%;
+  
+  padding: 15px;
+  overflow: visible; 
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba($bench-border, 0.3);
   border-radius: 12px;
-  padding: 8px 14px;
-  min-width: 380px;
-  flex-shrink: 0;
-
-  &.bot { opacity: .85; }
 
   .bench-card {
-    position: relative;
-    cursor: pointer;
+    position: relative; // Esto asegura que el HP se pegue a LA CARTA
+    flex-shrink: 0;
+    
+    /* Importante: para que el HP no flote fuera si la carta se mueve */
+    display: block; 
 
     img {
-      /* FIX 2: imágenes más grandes en banca */
-      width: 84px;
-      border-radius: 6px;
-      box-shadow: 0 3px 10px rgba(0,0,0,.5);
-      transition: transform .2s, box-shadow .2s;
+      width: clamp(75px, 10vw, 90px);
+      height: auto;
+      aspect-ratio: 2/3;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
       display: block;
     }
 
-    &:hover img {
-      /* FIX 2: hover más pronunciado */
-      transform: translateY(-10px) scale(1.15);
-      box-shadow: 0 14px 28px rgba(0,0,0,.65);
+    .bench-hp {
+      position: absolute;
+      /* Ajustamos para que se pegue arriba a la derecha de la carta */
+      top: -8px; 
+      right: -8px;
+      
+      background: $hp-color;
+      color: white;
+      font-weight: 800;
+      font-size: 11px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+      border: 2px solid white;
+      z-index: 10; // Asegura que esté sobre la imagen
     }
 
-    &.empty-slot {
-      width: 84px;
-      height: 116px;
-      border: 1px dashed rgba(255,255,255,.12);
-      border-radius: 6px;
+    &:hover img {
+      transform: translateY(-10px) scale(1.1);
+      z-index: 5;
     }
   }
 }
+/* ════ ARENA DUELO ════ */
 
-/* ── Duel Arena ──────────────────────────────────── */
 .duel-arena {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 4px 0;
+  
+  /* Aumentamos el gap y el padding vertical considerablemente */
+  gap: clamp(15px, 2.5vh, 25px); 
+  padding: clamp(10px, 1.5vh, 15px) 0;
+  
   flex-shrink: 0;
+  margin: clamp(12px, 1.5vh, 18px) 0;
+  
+  /* Un fondo sutil opcional para dar contexto a la zona */
+  background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%);
+  border-radius: 20px;
 }
-
 .vs-divider {
-  width: 340px;
-  height: 1px;
+  width: clamp(280px, 90%, 400px); // Un poco más ancho
+  height: 2px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba($gold-dim, .15) 10%,
-    $gold 50%,
-    rgba($gold-dim, .15) 90%,
+    rgba($accent-gold, 0.2) 10%,
+    $accent-gold 50%,
+    rgba($accent-gold, 0.2) 90%,
     transparent 100%);
   position: relative;
   flex-shrink: 0;
+  
+  /* IMPORTANTE: Contexto de apilamiento */
+  z-index: 30; // Mayor que el z-index de las cartas (que suele ser 10-20)
 
   &::before {
     content: 'VS';
@@ -226,55 +386,63 @@ $discard-dash:  #4a6375;
     top: 50%;
     transform: translate(-50%, -50%);
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 11px;
-    letter-spacing: .15em;
-    color: $gold;
-    background: $neoprene;
-    padding: 0 8px;
-    opacity: .8;
+    font-size: clamp(12px, 1.8vh, 14px); // Un poco más grande
+    letter-spacing: 0.25em; // Más espaciado
+    font-weight: 700;
+    color: $accent-gold;
+    
+    /* Fondo sólido y más grande para "cortar" la carta si se superpone */
+    background: $neoprene-dark; 
+    padding: 2px clamp(10px, 1.5vw, 15px);
+    
+    border-radius: 4px; // Un poco redondeado
+    text-shadow: 0 0 10px rgba($accent-gold, 0.6), 0 2px 8px rgba(0, 0, 0, 0.9);
+    
+    /* Asegura que el texto VS esté sobre su propia línea de fondo */
+    z-index: 1; 
   }
 }
+/* ════ CAJA ACTIVA ════ */
 
-/* Active box — FIX 2: más grande */
 .active-box {
-  width: 148px;
-  height: 204px;
-  border: 2px solid rgba($active-glow, .45);
-  border-radius: 10px;
+  width: clamp(120px, 16%, 152px);
+  height: clamp(165px, 21%, 210px);
+  border: 2px solid rgba($accent-gold, 0.4);
+  border-radius: clamp(10px, 1.5%, 12px);
   position: relative;
   overflow: visible;
-  transition: border-color .3s;
   cursor: pointer;
   flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: rgba(255, 255, 255, 0.02);
 
   &::before {
     content: '';
     position: absolute;
-    inset: -4px;
-    border-radius: 13px;
+    inset: clamp(-4px, -0.5%, -6px);
+    border-radius: clamp(11px, 1.6%, 14px);
     background: transparent;
-    box-shadow: 0 0 0 0 rgba($active-glow, 0);
-    transition: box-shadow .3s;
+    box-shadow: 0 0 0 0 rgba($accent-gold, 0);
+    transition: box-shadow 0.3s ease;
   }
-
-  &.player:hover::before {
-    box-shadow: 0 0 24px 6px rgba($active-glow, .35);
-  }
-
-  &.player { border-color: rgba($active-glow, .7); }
 
   img {
     width: 100%;
     height: 100%;
-    border-radius: 8px;
+    border-radius: clamp(8px, 1.2%, 10px);
     object-fit: cover;
     display: block;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  &:not(:has(img)) {
+  &.has-card {
+    border-color: rgba($accent-gold, 0.6);
+  }
+
+  &:not(.has-card) {
     border-style: dashed;
-    border-color: rgba(255,255,255,.15);
-    background: rgba(255,255,255,.03);
+    border-color: rgba(255, 255, 255, 0.12);
+
     &::after {
       content: '+';
       position: absolute;
@@ -282,220 +450,572 @@ $discard-dash:  #4a6375;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 36px;
-      color: rgba(255,255,255,.1);
+      font-size: clamp(28px, 4%, 40px);
+      color: rgba(255, 255, 255, 0.08);
+      font-weight: 300;
     }
   }
 
-  .hp-tag {
+  /* HP Badge */
+  .hp-badge {
     position: absolute;
-    top: -14px;
+    top: clamp(-14px, -2%, -18px);
     left: 50%;
     transform: translateX(-50%);
-    background: $hp-red;
-    font-size: 12px;
+    background: linear-gradient(135deg, $hp-color 0%, darken($hp-color, 10%) 100%);
     font-weight: 700;
-    letter-spacing: .04em;
-    padding: 2px 10px;
-    border-radius: 20px;
+    padding: clamp(2px, 0.3%, 4px) clamp(8px, 1.2%, 12px);
+    border-radius: clamp(18px, 2.5%, 24px);
     white-space: nowrap;
-    box-shadow: 0 2px 8px rgba($hp-red, .5);
-    z-index: 2;
+    box-shadow: 0 4px 12px rgba($hp-color, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: clamp(2px, 0.3%, 4px);
+
+    .hp-value {
+      font-size: clamp(12px, 1.6%, 14px);
+      letter-spacing: 0.05em;
+    }
+
+    .hp-label {
+      font-size: clamp(8px, 1%, 10px);
+      opacity: 0.9;
+      letter-spacing: 0.1em;
+    }
   }
 
-  .atk-hint {
+  /* Contador energía */
+  .energy-counter {
     position: absolute;
-    bottom: 0; left: 0; right: 0;
-    padding: 8px 4px;
-    font-size: 11px;
+    bottom: clamp(8px, 1%, 12px);
+    right: clamp(-14px, -2%, -18px);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid $energy-bright;
+    border-radius: clamp(18px, 2.5%, 24px);
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 0.8%, 8px);
+    padding: clamp(3px, 0.5%, 5px) clamp(8px, 1.2%, 12px);
+    z-index: 15;
+    box-shadow: 0 0 16px rgba($energy-bright, 0.5);
+    backdrop-filter: blur(8px);
+
+    .energy-orb {
+      width: clamp(13px, 1.8%, 16px);
+      height: clamp(13px, 1.8%, 16px);
+      background: radial-gradient(circle at 30% 30%, #ffeb3b, $energy-bright);
+      border-radius: 50%;
+      box-shadow: 0 0 8px rgba($energy-bright, 0.8);
+      animation: pulse-glow 1.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+
+    .energy-number {
+      color: white;
+      font-size: clamp(11px, 1.5%, 13px);
+      font-weight: 700;
+      min-width: clamp(16px, 2.2%, 18px);
+    }
+  }
+
+  /* Indicador ataque */
+  .attack-prompt {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: clamp(6px, 0.8%, 8px) clamp(4px, 0.5%, 6px);
+    font-size: clamp(8px, 1%, 10px);
     font-weight: 700;
-    letter-spacing: .1em;
+    letter-spacing: 0.12em;
     text-align: center;
     text-transform: uppercase;
-    background: linear-gradient(0deg, rgba(0,0,0,.88) 0%, rgba(0,0,0,.4) 100%);
-    border-radius: 0 0 8px 8px;
-    color: $gold;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.5) 100%);
+    border-radius: 0 0 clamp(8px, 1.2%, 10px) clamp(8px, 1.2%, 10px);
+    color: $accent-gold;
     opacity: 0;
-    transition: opacity .2s;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+
+    span {
+      display: block;
+      line-height: 1.2;
+    }
   }
 
-  &.player:hover .atk-hint { opacity: 1; }
+  /* Hover jugador */
+  &.player {
+    &:hover::before {
+      box-shadow: 0 0 28px 8px rgba($accent-gold, 0.3);
+    }
+
+    &:hover .attack-prompt {
+      opacity: 1;
+    }
+
+    &.can-attack {
+      border-color: $accent-gold;
+      box-shadow: 0 0 16px rgba($accent-gold, 0.2) inset;
+
+      .attack-prompt {
+        opacity: 1;
+        color: #ffeb3b;
+      }
+    }
+  }
+
+  /* Vibración */
+  &.vibrate {
+    animation: vibrate 0.5s ease;
+  }
 }
 
 @keyframes vibrate {
-  0%,100% { transform: translateX(0); }
-  20%      { transform: translateX(-5px) rotate(-1deg); }
-  40%      { transform: translateX(5px) rotate(1deg); }
-  60%      { transform: translateX(-4px); }
-  80%      { transform: translateX(4px); }
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20% { transform: translateX(-4px) rotate(-0.5deg); }
+  40% { transform: translateX(4px) rotate(0.5deg); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
 }
-.vibrate { animation: vibrate .45s ease; }
 
-/* ── Right side column ───────────────────────────── */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba($energy-bright, 0.8);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba($energy-bright, 1);
+    transform: scale(1.1);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MANO DEL JUGADOR — ABANICO ESTABLE Y REACTIVO
+   ════════════════════════════════════════════════════════════════════════ */
+
+.hand-area {
+  width: 100%;
+  margin-top: 125px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: clamp(16px, 2%, 24px);
+  border-top: 1px solid rgba($accent-gold, 0.12);
+  gap: clamp(10px, 1.5%, 14px);
+  
+  .hand-label {
+    font-size: clamp(9px, 1.2%, 10px);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba($accent-gold, 0.65);
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 0.8%, 8px);
+    white-space: nowrap;
+
+    .hand-icon {
+      font-size: clamp(12px, 1.6%, 14px);
+      opacity: 0.8;
+    }
+
+    .hand-count {
+      opacity: 0.6;
+      font-weight: 500;
+    }
+  }
+
+  .hand-cards {
+    position: relative;
+    width: 100%;
+    max-width: clamp(500px, 95%, 950px);
+    height: clamp(160px, 22%, 220px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    perspective: 1400px;
+    gap: 0;
+  }
+}
+
+/* ════ CARTA EN MANO (ABANICO ESTABLE) ════ */
+
+.card-in-hand {
+  position: absolute;
+  bottom: 0;
+  cursor: pointer;
+  width: clamp(90px, 12%, 115px);
+  
+  /* Variables posición radial */
+  --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(45px, 6%, 58px));
+  --rotation: calc((var(--i) - (var(--total) - 1) / 2) * 5.5deg);
+  
+  left: calc(50% + var(--offset-x));
+  transform-origin: bottom center;
+  transform: translateX(-50%) rotate(var(--rotation));
+  
+  /* Transiciones más controladas */
+  transition: 
+    transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+    z-index 0.1s linear,
+    filter 0.35s ease,
+    box-shadow 0.35s ease;
+  
+  z-index: calc(100 + var(--i));
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.7));
+
+  img {
+    width: 100%;
+    height: auto;
+    border-radius: clamp(8px, 1.2%, 11px);
+    display: block;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: 
+      filter 0.35s ease, 
+      box-shadow 0.35s ease;
+  }
+
+  /* ⚡ ENERGÍA */
+  .energy-icon-hand {
+    position: absolute;
+    top: clamp(-12px, -1.5%, -14px);
+    right: clamp(-12px, -1.5%, -14px);
+    width: clamp(28px, 3.5%, 36px);
+    height: clamp(28px, 3.5%, 36px);
+    background: linear-gradient(135deg, $energy-bright, #ffb300);
+    color: #000;
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: clamp(14px, 1.8%, 18px);
+    z-index: 50;
+    box-shadow: 0 4px 14px rgba($energy-bright, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.6);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &.is-energy {
+    img {
+      border: 2px solid $accent-gold;
+      box-shadow: 0 0 0 1px rgba($accent-gold, 0.4);
+    }
+
+    .energy-icon-hand {
+      animation: pulse-energy 1.3s ease-in-out infinite;
+    }
+  }
+
+  /* ════ HOVER — ABANICO ESTABLE ════ */
+
+  &:hover {
+    transform: 
+      translateX(-50%) 
+      translateY(clamp(-55px, -7%, -75px)) 
+scale(clamp(1.25, 1.35, 1.42))
+      rotate(0deg);
+    
+    z-index: 1000 !important;
+    filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.85));
+
+    img {
+      filter: brightness(1.18) contrast(1.12);
+      box-shadow: 
+        0 0 0 clamp(2px, 0.25%, 3px) $accent-gold, 
+        0 0 16px rgba($accent-gold, 0.5), 
+        inset 0 1px 3px rgba(255, 255, 255, 0.3);
+    }
+
+    .energy-icon-hand {
+      transform: scale(1.25);
+    }
+  }
+
+  /* ════ SEPARACIÓN CARTAS ADYACENTES ════ */
+
+  &:hover ~ .card-in-hand {
+    --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(45px, 6%, 58px) + clamp(40px, 5%, 50px));
+    transform: translateX(-50%) rotate(var(--rotation));
+  }
+
+  /* ════ AREA HOVER EXTENDIDA (más tolerancia) ════ */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: clamp(-20px, -3%, -30px);
+    pointer-events: auto;
+    z-index: -1;
+  }
+}
+
+@keyframes pulse-energy {
+  0%, 100% {
+    box-shadow: 
+      0 4px 14px rgba($energy-bright, 0.7), 
+      inset 0 1px 3px rgba(255, 255, 255, 0.6), 
+      0 0 0 0 rgba($energy-bright, 0.5);
+  }
+  50% {
+    box-shadow: 
+      0 4px 14px rgba($energy-bright, 1), 
+      inset 0 1px 3px rgba(255, 255, 255, 0.6), 
+      0 0 0 clamp(8px, 1%, 10px) rgba($energy-bright, 0);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   MAZO Y CONTROLES
+   ════════════════════════════════════════════════════════════════════════ */
+
 .deck-discard-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: clamp(6px, 1%, 10px);
   align-items: center;
 
   .discard-pile {
-    width: 88px;
-    height: 122px;
-    border: 1.5px dashed $discard-dash;
-    border-radius: 8px;
+    width: clamp(75px, 10%, 92px);
+    height: clamp(103px, 13%, 127px);
+    border: 1.5px dashed $bench-border;
+    border-radius: clamp(8px, 1.2%, 9px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: clamp(7px, 0.9%, 9px);
     font-weight: 700;
-    letter-spacing: .1em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,.3);
-    gap: 4px;
+    color: rgba(255, 255, 255, 0.25);
+    gap: clamp(3px, 0.5%, 5px);
+    background: rgba(255, 255, 255, 0.01);
+    transition: all 0.3s ease;
 
     &::before {
       content: '⊘';
-      font-size: 22px;
-      opacity: .25;
+      font-size: clamp(18px, 2.5%, 24px);
+      opacity: 0.15;
+    }
+
+    &:hover {
+      border-color: rgba($accent-gold, 0.3);
+      color: rgba($accent-gold, 0.4);
     }
   }
 
   .card-back {
     position: relative;
 
-    span {
+    .deck-count {
       position: absolute;
-      bottom: 6px; right: 6px;
-      background: rgba(0,0,0,.7);
-      font-size: 12px;
+      bottom: clamp(5px, 0.7%, 7px);
+      right: clamp(5px, 0.7%, 7px);
+      background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.8));
+      font-size: clamp(10px, 1.3%, 12px);
       font-weight: 700;
-      padding: 1px 7px;
-      border-radius: 10px;
-      color: #fff;
+      padding: clamp(1px, 0.15%, 2px) clamp(6px, 0.8%, 8px);
+      border-radius: clamp(10px, 1.5%, 12px);
+      color: $text-primary;
       z-index: 2;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      min-width: clamp(24px, 3%, 28px);
+      text-align: center;
     }
   }
 }
 
-.controls { display: flex; align-items: center; }
+.controls-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 1%, 12px) 0;
+  width: 100%;
+}
 
 .btn-turn {
-  background: $turn-btn;
+  background: $accent-gold;
   border: none;
-  padding: 10px 14px;
-  border-radius: 22px;
+  padding: clamp(10px, 1.3%, 12px) clamp(14px, 1.8%, 18px);
+  border-radius: clamp(22px, 3%, 28px);
   cursor: pointer;
-  font-family: 'Barlow Condensed', sans-serif;
-  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(10px, 1.3%, 12px);
   font-weight: 700;
-  letter-spacing: .08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #1a1208;
-  box-shadow: 0 4px 12px rgba($turn-btn, .4);
-  transition: transform .15s, box-shadow .15s;
-
-  &:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba($turn-btn, .5); }
-  &:active { transform: translateY(0); }
-
-  &.BOT {
-    background: $neoprene-lite;
-    color: rgba(255,255,255,.3);
-    box-shadow: none;
-    cursor: not-allowed;
-    &:hover { transform: none; }
-  }
-}
-
-/* ══════════════════════════════════════════════════
-   FIX 1: MANO DEL JUGADOR — dentro del flujo del grid
-   no usa position:fixed, no se superpone con la banca
-══════════════════════════════════════════════════ */
-.hand-area {
-  width: 100%;
-  margin-top: auto;   /* empuja la mano al fondo del center-field */
+  box-shadow: 0 6px 16px rgba($accent-gold, 0.5);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255,255,255,.06);
-}
+  gap: clamp(6px, 0.8%, 8px);
+  white-space: nowrap;
 
-.hand-label {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: .15em;
-  color: rgba(255,255,255,.3);
-}
+  .btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(13px, 1.8%, 16px);
+    font-weight: 900;
 
-.hand-cards {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  position: relative;
-  /* altura mínima = carta + espacio para el hover */
-  height: 170px;
-  width: 100%;
-}
+    &.spinning {
+      animation: spin 2s linear infinite;
+    }
+  }
 
-/* FIX 2: cartas en mano más grandes + hover más grande */
-.card-in-hand {
-  position: absolute;
-  /* centrado y abanico via CSS custom properties */
-  left: calc(50% + (var(--i) - (var(--total) - 1) / 2) * 36px);
-  bottom: 0;
-  cursor: pointer;
-  transform-origin: bottom center;
-  transform: rotate(calc((var(--i) - (var(--total) - 1) / 2) * 3.5deg));
-  transition: transform .2s cubic-bezier(.22,.61,.36,1), z-index 0s;
-  z-index: calc(var(--i) + 1);
-
-  img {
-    /* FIX 2: cartas notablemente más grandes */
-    width: 120px;
-    border-radius: 8px;
-    box-shadow: 0 4px 14px rgba(0,0,0,.6);
+  .btn-text {
     display: block;
   }
 
-  &:hover {
-    /* FIX 2: sube más y escala más al hacer hover */
-    transform: translateY(-65px) scale(1.5) !important;
-    z-index: 110;
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba($accent-gold, 0.65);
+  }
 
-    img {
-      box-shadow: 0 16px 32px rgba(0,0,0,.75), 0 0 0 2px $gold;
+  &:active:not(:disabled) {
+    transform: translateY(0px);
+  }
+
+  &.is-disabled {
+    background: $neoprene-light;
+    color: rgba(255, 255, 255, 0.25);
+    box-shadow: none;
+    cursor: not-allowed;
+
+    &:hover {
+      transform: none;
     }
   }
 }
 
-/* ── Status badges ───────────────────────────────── */
-.status-badge {
-  position: absolute;
-  bottom: 26px; right: -8px;
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  border: 2px solid $neoprene;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px;
-  z-index: 3;
-
-  &.poisoned  { background: #6c3483; }
-  &.burned    { background: #e67e22; }
-  &.paralyzed { background: #f1c40f; color: #000; }
-  &.asleep    { background: #2c3e50; }
-  &.confused  { background: #8e44ad; }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* ── Loading overlay ─────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════════
+   LOADING OVERLAY
+   ════════════════════════════════════════════════════════════════════════ */
+
 .loading-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,.65);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 200;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 24px;
-  letter-spacing: .2em;
-  color: $gold;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  gap: clamp(12px, 2%, 20px);
+  backdrop-filter: blur(2px);
+
+  .spinner {
+    width: clamp(40px, 5%, 50px);
+    height: clamp(40px, 5%, 50px);
+    border: 3px solid rgba($accent-gold, 0.3);
+    border-top-color: $accent-gold;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(16px, 2.5%, 20px);
+    letter-spacing: 0.15em;
+    color: $accent-gold;
+    text-shadow: 0 2px 8px rgba($accent-gold, 0.3);
+  }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   RESPONSIVE — MEDIA QUERIES
+   ════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1400px) {
+  .playmat {
+    gap: clamp(10px, 1.5%, 14px);
+    padding: clamp(14px, 2%, 20px) clamp(10px, 1.5%, 16px);
+  }
+
+  .bench-row {
+    width: clamp(260px, 90%, 350px);
+  }
+
+  .card-in-hand {
+    width: clamp(85px, 11%, 105px);
+    --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(40px, 5.5%, 50px));
+
+    &:hover {
+transform: translateX(-50%) translateY(clamp(-65px, -6.5%, -50px)) scale(clamp(1.25, 1.3, 1.35)) rotate(0deg);
+    &:hover ~ .card-in-hand {
+      --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(40px, 5.5%, 50px) + clamp(36px, 4.8%, 42px));
+    }
+  }
+}
+
+@media (max-width: 1200px) {
+  .playmat {
+    grid-template-columns: clamp(110px, 10%, 140px) 1fr clamp(110px, 10%, 140px);
+  }
+
+  .vs-divider {
+    width: clamp(260px, 85%, 320px);
+  }
+
+  .active-box {
+    width: clamp(110px, 14%, 140px);
+    height: clamp(150px, 19%, 195px);
+  }
+
+  .bench-row {
+    width: clamp(240px, 85%, 320px);
+  }
+
+  .card-in-hand {
+    width: clamp(80px, 10%, 100px);
+    --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(35px, 4.5%, 45px));
+
+    &:hover {
+transform: translateX(-50%) translateY(clamp(-65px, -6.5%, -50px)) scale(clamp(1.25, 1.3, 1.35)) rotate(0deg);    }
+
+    &:hover ~ .card-in-hand {
+      --offset-x: calc((var(--i) - (var(--total) - 1) / 2) * clamp(35px, 4.5%, 45px) + clamp(32px, 4%, 38px));
+    }
+  }
+}
+
+@media (max-width: 1024px) {
+  .center-field {
+    max-height: calc(100vh - 40px);
+  }
+
+  .hand-cards {
+    height: clamp(140px, 18%, 200px);
+  }
+}
+
+@media (max-height: 900px) {
+  .center-field {
+    gap: clamp(6px, 1%, 10px);
+  }
+
+  .prize-zone {
+    height: clamp(120px, 16%, 150px);
+  }
+
+  .bench-row {
+    min-height: clamp(80px, 10%, 110px);
+  }
+
+  .active-box {
+    height: clamp(135px, 17%, 180px);
+  }
+
+  .hand-area {
+    padding-top: clamp(12px, 1.5%, 16px);
+    gap: clamp(8px, 1%, 10px);
+    }
+}}

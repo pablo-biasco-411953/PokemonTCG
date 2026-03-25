@@ -102,24 +102,28 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
   }
 
-  atacar() {
-    if (
-      this.partida.turnoActual !== 'JUGADOR' ||
-      !this.partida.bot.activo ||
-      this.cargandoAccion
-    ) return;
+atacar() {
+  if (this.partida.turnoActual !== 'JUGADOR' || !this.partida.bot.activo || this.cargandoAccion) return;
 
-    this.cargandoAccion = true;
-    this.battleService.atacar(this.matchId!).subscribe({
-      next: () => {
-        this.vibrarBot = true;
-        setTimeout(() => (this.vibrarBot = false), 500);
-        this.cargandoAccion = false;
-        this.cargarEstado();
-      },
-      error: () => (this.cargandoAccion = false)
-    });
-  }
+  this.cargandoAccion = true;
+  
+  this.battleService.atacar(this.matchId!).subscribe({
+    next: () => {
+      this.vibrarBot = true;
+      setTimeout(() => (this.vibrarBot = false), 500);
+      
+      // No hace falta llamar a cargarEstado() aquí si el Polling está activo,
+      // pero lo dejamos por si acaso.
+      this.cargarEstado();
+      this.cargandoAccion = false; 
+    },
+    error: (err) => {
+      console.error("Error en el ataque:", err);
+      this.cargandoAccion = false; // 🚨 ESTO ES LO QUE TE FALTABA PARA DESTRABAR
+      alert("El ataque falló. Revisá que el endpoint en Java sea /attack");
+    }
+  });
+}
 
   pasarTurno() {
     if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
@@ -128,6 +132,60 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.pasarTurno(this.matchId!).subscribe({
       next: () => { this.cargandoAccion = false; this.cargarEstado(); },
       error: () => (this.cargandoAccion = false)
+    });
+  }
+
+  jugarCarta(carta: any) {
+    if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+
+    const tipo = carta.tipo?.toLowerCase() || '';
+
+    // 1. SI ES ENERGÍA
+    if (tipo.includes('energy') || tipo.includes('energía')) {
+      this.gestionarUnionEnergia(carta);
+    } 
+    // 2. SI ES POKÉMON (Cualquier cosa que no sea energía o evolución Stage 1/2)
+    else if (!tipo.includes('stage')) {
+      this.gestionarBajadaPokemon(carta);
+    } 
+    else {
+      alert('Las evoluciones todavía no están implementadas.');
+    }
+  }
+
+  private gestionarBajadaPokemon(carta: any) {
+    const posicion = this.partida.jugador.activo ? 1 : 0; // 0 para activo, 1 para banca
+    this.cargandoAccion = true;
+
+    this.battleService.jugarPokemon(this.matchId!, carta.id, posicion).subscribe({
+      next: () => { 
+        this.cargandoAccion = false; 
+        this.cargarEstado(); 
+      },
+      error: () => (this.cargandoAccion = false)
+    });
+  }
+
+  private gestionarUnionEnergia(cartaEnergia: any) {
+    // Regla: Necesitás un Pokémon activo para ponerle la energía
+    if (!this.partida.jugador.activo) {
+      alert('¡Tenés que tener un Pokémon activo para ponerle energía!');
+      return;
+    }
+
+    this.cargandoAccion = true;
+    const pokemonId = this.partida.jugador.activo.card.id;
+
+    this.battleService.unirEnergia(this.matchId!, pokemonId, cartaEnergia.id).subscribe({
+      next: () => {
+        this.cargandoAccion = false;
+        this.cargarEstado();
+      },
+      error: (err) => {
+        this.cargandoAccion = false;
+        console.error(err);
+        alert('No se pudo unir la energía. ¿Quizás ya uniste una este turno?');
+      }
     });
   }
 
@@ -140,3 +198,5 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.router.navigate(['/lobby']);
   }
 }
+
+
