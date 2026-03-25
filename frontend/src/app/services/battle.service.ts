@@ -29,8 +29,8 @@ export class BattleService {
   }
 
  unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
-  return this.http.post<void>(`{${this.base}/${matchId}/attach-energy`, {
-    cartaId: cartaId,
+return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
+      cartaId: cartaId,
     energiaId: energiaId
   });
 }
