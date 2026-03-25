@@ -191,14 +191,15 @@ finalizarApertura() {
     this.router.navigate(['/deck-builder']); 
   }
   
-  buscarPartida(mazoId: number) { 
-    if (!this.jugador?.username) return;
-
-    this.battleService.startBattle(this.jugador.username, mazoId).subscribe({
-      next: (res) => {
-        if(res?.id) this.router.navigate(['/battle']);
-      },
-      error: (err) => console.error('Error al buscar partida', err)
-    }); 
-  }
+buscarPartida(mazoId: number) { 
+// Agregamos el "!" después de this.jugador
+this.battleService.startBattle(this.jugador!.username, mazoId).subscribe({
+  next: (partida: any) => {
+    if (partida && partida.id) {
+       this.router.navigate(['/battle', partida.id]);
+    }
+  },
+  error: (err) => console.error('Error al iniciar batalla', err)
+});
+}
 }

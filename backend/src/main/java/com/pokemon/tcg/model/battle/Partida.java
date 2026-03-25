@@ -16,19 +16,34 @@ public class Partida {
     public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, FIN_PARTIDA }
 
     public Partida(TableroJugador jugador, TableroJugador bot) {
+        // Generamos un ID por defecto para que nunca empiece en null
         this.id = UUID.randomUUID().toString();
         this.jugador = jugador;
         this.bot = bot;
-        this.turnoActual = Turno.JUGADOR; // por defecto
+        this.turnoActual = Turno.JUGADOR;
         this.faseActual = Fase.INICIO;
     }
 
-    // getters y setters
-    public String getId() { return id; }
+    // --- GETTERS Y SETTERS ---
+
+    // Este es el método que te pedía el compilador:
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
     public TableroJugador getJugador() { return jugador; }
+    public void setJugador(TableroJugador jugador) { this.jugador = jugador; }
+
     public TableroJugador getBot() { return bot; }
+    public void setBot(TableroJugador bot) { this.bot = bot; }
+
     public Turno getTurnoActual() { return turnoActual; }
     public void setTurnoActual(Turno turnoActual) { this.turnoActual = turnoActual; }
+
     public Fase getFaseActual() { return faseActual; }
     public void setFaseActual(Fase faseActual) { this.faseActual = faseActual; }
 }
