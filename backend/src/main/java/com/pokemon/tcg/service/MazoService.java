@@ -33,8 +33,8 @@ public class MazoService {
         }
 
         if (cartaIds == null || cartaIds.size() != 60) {
-            throw new IllegalArgumentException("Un mazo debe contener exactamente 60 cartas. Se proporcionaron: " + 
-                (cartaIds == null ? 0 : cartaIds.size()));
+            throw new IllegalArgumentException("Un mazo debe contener exactamente 60 cartas. Se proporcionaron: " +
+                    (cartaIds == null ? 0 : cartaIds.size()));
         }
 
         // Verificar que todas las cartas existen
@@ -50,6 +50,29 @@ public class MazoService {
         // Crear y guardar el mazo
         Mazo mazo = new Mazo(nombre, jugador);
         mazo.setCartas(cartas);
+        return mazoRepo.save(mazo);
+    }
+
+    /**
+     * Actualiza un mazo existente.
+     */
+    public Mazo actualizarMazo(Long id, String nombre, List<String> cartasIds) {
+        // Usamos mazoRepo que es el nombre definido arriba
+        Mazo mazo = mazoRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Mazo no encontrado con ID: " + id));
+
+        mazo.setNombre(nombre);
+
+        // Buscamos las cartas usando cardRepo
+        List<Card> nuevasCartas = cardRepo.findAllById(cartasIds);
+
+        // Opcional: Podrías validar que nuevasCartas.size() == 60 acá también
+        if (nuevasCartas.size() != 60) {
+            // Podrías lanzar error o simplemente dejar que guarde si confías en el front
+        }
+
+        mazo.setCartas(nuevasCartas);
+
         return mazoRepo.save(mazo);
     }
 

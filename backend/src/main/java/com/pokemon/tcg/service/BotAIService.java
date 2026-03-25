@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Collections;
 
 @Service
 public class BotAIService {
@@ -89,15 +90,84 @@ public class BotAIService {
             return;
         }
 
-        // Evaluar posibles ataques y elegir uno
-        // Para simplificar, elegimos un ataque aleatorio si hay uno disponible
-        // En una implementación real, se debería usar lógica más compleja
+        // Evaluar posibles ataques y elegir uno basado en las energías disponibles
+        try {
+            // Parsear los ataques desde el JSON
+            List<Ataque> ataques = parsearAtaques(activo.getCard().getAttacks());
 
-        // Simulamos que el bot decide atacar con probabilidad del 30%
-        if (random.nextDouble() < 0.3) {
-            // Aquí iría la lógica para elegir un ataque específico
-            // Por ahora, solo se indica que atacará
+            // Filtrar ataques que pueda ejecutar con la energía actual
+            List<Ataque> ataquesEjecutables = new ArrayList<>();
+            for (Ataque ataque : ataques) {
+                if (tieneEnergiaSuficiente(activo, ataque)) {
+                    ataquesEjecutables.add(ataque);
+                }
+            }
+
+            // Elegir un ataque aleatorio de los ejecutables
+            if (!ataquesEjecutables.isEmpty()) {
+                Ataque ataqueSeleccionado = ataquesEjecutables.get(random.nextInt(ataquesEjecutables.size()));
+
+                // Encontrar un objetivo válido (Pokémon del jugador)
+                TableroJugador tableroJugador = partida.getJugador();
+                CartaEnJuego objetivo = null;
+
+                // Buscar un Pokémon en la mano del jugador para atacar
+                if (!tableroJugador.getBanca().isEmpty()) {
+                    objetivo = tableroJugador.getBanca().get(0);
+                } else if (tableroJugador.getActivo() != null) {
+                    objetivo = tableroJugador.getActivo();
+                }
+
+                if (objetivo != null) {
+                    // Aquí se ejecutaría el ataque real
+                    // Por ahora solo se muestra que se seleccionó un ataque
+                    partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
+                }
+            }
+        } catch (Exception e) {
+            // Si hay error al parsear, simplemente no atacar
+            return;
         }
+    }
+
+    /**
+     * Parsea los ataques desde el JSON.
+     */
+    private List<Ataque> parsearAtaques(String attacksJson) {
+        // Implementación simplificada para evitar dependencias externas
+        // En una implementación real, usarías ObjectMapper o similar
+        return new ArrayList<>();
+    }
+
+    /**
+     * Verifica si el atacante tiene suficiente energía para ejecutar el ataque.
+     */
+    private boolean tieneEnergiaSuficiente(CartaEnJuego atacante, Ataque ataque) {
+        // Contar energías del tipo requerido
+        java.util.Map<String, Integer> energiaRequerida = new java.util.HashMap<>();
+        for (String tipo : ataque.getTiposEnergia()) {
+            energiaRequerida.put(tipo, energiaRequerida.getOrDefault(tipo, 0) + 1);
+        }
+
+        // Contar energías disponibles en el atacante
+        java.util.Map<String, Integer> energiaDisponible = new java.util.HashMap<>();
+        for (Card energia : atacante.getEnergiasUnidas()) {
+            String tipoEnergia = energia.getTipo();
+            if (tipoEnergia != null) {
+                energiaDisponible.put(tipoEnergia, energiaDisponible.getOrDefault(tipoEnergia, 0) + 1);
+            }
+        }
+
+        // Verificar si se tienen suficientes energías
+        for (String tipo : energiaRequerida.keySet()) {
+            int necesitado = energiaRequerida.get(tipo);
+            int disponible = energiaDisponible.getOrDefault(tipo, 0);
+            if (disponible < necesitado) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

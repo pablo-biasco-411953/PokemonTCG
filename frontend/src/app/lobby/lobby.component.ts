@@ -1,89 +1,204 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { SobreService } from '../services/sobre.service';
+import { MazoService } from '../services/mazo.service';
+import { JugadorService } from '../services/jugador.service';
 import { BattleService } from '../services/battle.service';
 import { Router } from '@angular/router';
-import { Jugador } from '../model/jugador';
-import { MazoService } from '../services/mazo.service';
-import { Mazo } from '../model/mazo';
+import { AperturaSobreComponent } from '../components/apertura-sobre/apertura-sobre';
+import { Mazo } from '../model/mazo'; 
+
+// --- INTERFACES ---
+export interface MazoUI extends Mazo {
+  pokemonIds: number[];
+}
+
+export interface Jugador {
+  username: string;
+  nivel?: number;
+  sobresDisponibles?: number;
+  cantidadCartas?: number;
+}
+
+export interface PokemonZoomUI {
+  id: string;
+  nombre: string;
+  imagen: string; 
+  pokedexId: number;
+  hp: number | string;
+  tipo: string;
+  attacks: string;
+  hpIcon: string;
+  typeIcon: string;
+  attacksIcon: string;
+}
 
 @Component({
   selector: 'app-lobby',
   templateUrl: './lobby.component.html',
-  styleUrls: ['./lobby.component.scss']
+  styleUrls: ['./lobby.component.scss'],
+  standalone: true,
+  imports: [CommonModule, AperturaSobreComponent]
 })
-export class LobbyComponent implements OnInit {
+export class LobbyComponent implements OnInit, AfterViewInit {
+  @ViewChild('bgVideo') bgVideo!: ElementRef<HTMLVideoElement>;
+  
   jugador: Jugador | null = null;
-  sobresDisponibles = 6;
-  cartasRecibidas: any[] = [];
-  errorMsg: string | null = null;
-  mazos: Mazo[] = [];
+  mazos: MazoUI[] = []; 
+  slotsVacios: number[] = []; 
+  sobresDisponibles: number = 0;
+  cantidadCartas: number = 0;
+  mostrarAnimacionSobre: boolean = false;
+  cartasNuevas: any[] = []; 
+
+  // Scanner / Zoom
+  pkmZoom: PokemonZoomUI | null = null;
+  zoomX: number = 0;
+  zoomY: number = 0;
 
   constructor(
     private sobreService: SobreService,
-    private battleService: BattleService,
     private mazoService: MazoService,
-    private router: Router
+    private jugadorService: JugadorService,
+    private battleService: BattleService,
+    private router: Router,
+    private cdr: ChangeDetectorRef 
   ) {}
 
   ngOnInit(): void {
-    // Recuperar información del jugador desde localStorage
-    const jugadorData = localStorage.getItem('jugador');
-    if (jugadorData) {
-      this.jugador = JSON.parse(jugadorData);
-      this.sobresDisponibles = this.jugador.sobresDisponibles;
-
-      // Cargar los mazos del jugador
-      this.cargarMazos();
+    try {
+      const data = localStorage.getItem('jugador');
+      if (data) {
+        this.jugador = JSON.parse(data);
+        this.refrescarTodo(); 
+      } else {
+        this.router.navigate(['/login']);
+      }
+    } catch (error) {
+      console.error('Error parseando datos del jugador:', error);
+      this.router.navigate(['/login']);
     }
   }
 
-  private cargarMazos(): void {
-    if (this.jugador?.username) {
-      this.mazoService.listarMazos(this.jugador.username).subscribe({
-        next: (mazos) => {
-          this.mazos = mazos;
-        },
-        error: (err) => {
-          console.error('Error al cargar mazos:', err);
-        }
-      });
+  ngAfterViewInit(): void {
+    if (this.bgVideo?.nativeElement) {
+      this.bgVideo.nativeElement.muted = true;
+      this.bgVideo.nativeElement.play().catch(err => console.error("Video bloqueado:", err));
     }
   }
+cantidadCartasUnicas: number = 0;
+ refrescarTodo() {
+  if (!this.jugador?.username) return;
 
-  abrirSobres(): void {
+  this.jugadorService.getJugador(this.jugador.username).subscribe({
+    next: (res: any) => {
+      // 1. Actualizamos datos básicos
+      this.sobresDisponibles = res.sobresDisponibles ?? 0;
+      
+      // 2. Lógica de Cartas Únicas:
+      // Si el backend te devuelve la lista de cartas obtenidas (res.cartasObtenidas):
+      if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
+        const idsUnicos = new Set(res.cartasObtenidas.map((c: any) => c.pokemonId || c.id));
+        this.cantidadCartasUnicas = idsUnicos.size;
+      } else {
+        // Si el backend ya hace el "COUNT DISTINCT", usamos el valor directo
+        this.cantidadCartasUnicas = res.cantidadCartas ?? 0;
+      }
+
+      this.jugador = { ...this.jugador!, ...res };
+      this.cdr.detectChanges();
+    },
+    error: (err) => console.error('Error al obtener datos del jugador', err)
+  });
+  
+  this.cargarMazosDeJugador();
+}
+
+  cargarMazosDeJugador() {
     if (!this.jugador?.username) return;
-
-    this.sobreService.abrirSobre(this.jugador.username).subscribe({
-      next: (cartas) => {
-        this.cartasRecibidas = cartas;
-        if (this.sobresDisponibles > 0) {
-          this.sobresDisponibles -= 1;
-        }
-        this.errorMsg = null;
-      },
-      error: (err) => {
-        console.error(err);
-        this.errorMsg = err?.error?.message || 'Error al abrir sobre';
-        alert(this.errorMsg);
+    
+    this.mazoService.getMazosByJugador(this.jugador.username).subscribe({
+      next: (res: any[]) => { 
+        this.mazos = res; 
+        const faltantes = 2 - this.mazos.length;
+        this.slotsVacios = faltantes > 0 ? Array(faltantes).fill(0) : [];
+        this.cdr.detectChanges(); 
       }
     });
   }
 
-  buscarPartida(mazoId: number): void {
+  mostrarZoom(carta: any, event: MouseEvent) {
+    const pkm: PokemonZoomUI = {
+      id: carta.id,
+      nombre: carta.nombre,
+      imagen: carta.imagen,
+      pokedexId: carta.pokemonId || 1,
+      hp: carta.hp || 70,
+      tipo: carta.tipo || 'GRASS',
+      attacks: carta.attacks || '',
+      hpIcon: '♥',
+      typeIcon: '🍃',
+      attacksIcon: '•'
+    };
+    this.pkmZoom = pkm;
+    this.actualizarPosicion(event);
+  }
+
+  ocultarZoom() { this.pkmZoom = null; }
+
+  actualizarPosicion(event: MouseEvent) {
+    if (this.pkmZoom) {
+      this.zoomX = event.clientX + 25;
+      this.zoomY = event.clientY - 210;
+      this.cdr.detectChanges();
+    }
+  }
+
+  abrirSobres() {
+    if (!this.jugador?.username || this.sobresDisponibles <= 0) return;
+
+    // 1. Llamada al servicio para obtener las cartas del backend
+    this.sobreService.abrirSobre(this.jugador.username).subscribe({
+      next: (res: any[]) => {
+        this.cartasNuevas = res;
+        
+        // 2. DISPARAMOS LA CEREMONIA
+        // Seteamos esto a true para que el @if del HTML renderice el componente de animación
+        this.mostrarAnimacionSobre = true; 
+        
+        // 3. Bajamos el contador visual (opcional, podés hacerlo al terminar la animación)
+        this.sobresDisponibles--; 
+        
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al abrir sobre', err);
+        // Podrías meter un sonido de error o un glitch visual acá
+      }
+    });
+  }
+
+  // Este método lo llama el componente de apertura mediante un (output) cuando el usuario termina de ver las cartas
+finalizarApertura() { 
+  console.log("Cerrando apertura de sobres...");
+  this.cartasNuevas = []; 
+  this.mostrarAnimacionSobre = false; 
+  document.body.classList.remove('modal-open'); 
+  this.cdr.detectChanges(); 
+  this.refrescarTodo(); 
+}
+  irAlDeckBuilder() { 
+    this.router.navigate(['/deck-builder']); 
+  }
+  
+  buscarPartida(mazoId: number) { 
     if (!this.jugador?.username) return;
 
     this.battleService.startBattle(this.jugador.username, mazoId).subscribe({
-      next: (partida) => {
-        console.log('Partida iniciada:', partida);
-        // Redirigir a la pantalla de batalla
-        localStorage.setItem('matchId', partida.id);
-        this.router.navigate(['/battle']);
+      next: (res) => {
+        if(res?.id) this.router.navigate(['/battle']);
       },
-      error: (err) => {
-        console.error(err);
-        this.errorMsg = err?.error?.message || 'Error al iniciar partida';
-        alert(this.errorMsg);
-      }
-    });
+      error: (err) => console.error('Error al buscar partida', err)
+    }); 
   }
 }

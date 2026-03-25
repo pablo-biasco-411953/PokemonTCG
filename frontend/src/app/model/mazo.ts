@@ -1,6 +1,12 @@
+import { Card } from './card';
+
 export interface Mazo {
   id: number;
   nombre: string;
-  jugador: any; // Referencia al jugador
-  cartas: any[]; // Referencia a las cartas del mazo
+cartas: any[]; // Cambiá pokemonIds: number[] por esto  // El objeto jugador que viene en tu JSON
+  jugador?: {
+    id: number;
+    username: string;
+    sobresDisponibles: number;
+  };
 }

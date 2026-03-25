@@ -10,10 +10,13 @@ public class Jugador {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String username;
-    private int sobresDisponibles = 6;
 
-    @ManyToMany
+    @Column(unique = true)
+    private String username;
+    
+    private int sobresDisponibles;
+
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "jugador_card",
         joinColumns = @JoinColumn(name = "jugador_id"),
@@ -22,12 +25,11 @@ public class Jugador {
     private List<Card> coleccion = new ArrayList<>();
 
     public Jugador() {}
-
     public Jugador(String username) {
         this.username = username;
+        this.sobresDisponibles = 5;
     }
 
-    // getters y setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }

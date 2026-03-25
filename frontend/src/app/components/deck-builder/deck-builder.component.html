@@ -1,0 +1,96 @@
+<div class="builder-container pokedex-chassis">
+  
+  <div class="pokedex-top-bar">
+    <div class="led-container">
+      <div class="led main-blue pulsing"></div>
+      <div class="led red"></div>
+      <div class="led yellow"></div>
+      <div class="led green"></div>
+    </div>
+    <div class="pokedex-title dot-matrix">MI POKEDEX</div>
+    <div class="pokedex-hinge"></div>
+  </div>
+
+  <header class="pokedex-controls">
+    <button class="btn-nav pokedex-btn-round" (click)="volver()">⬅</button>
+    
+    <div class="search-bar pokedex-screen-inset-mini">
+      <input [(ngModel)]="filtroNombre" placeholder="BUSCAR POKEMON...">
+      <select [(ngModel)]="filtroTipo">
+        <option *ngFor="let t of tipos" [value]="t">{{t | uppercase}}</option>
+      </select>
+    </div>
+
+    <div class="deck-info">
+      <input [(ngModel)]="nombreMazo" class="deck-name-input pokedex-screen-inset-mini" placeholder="NOMBRE MAZO">
+      <button class="btn-save pokedex-btn-rect" (click)="guardar()" [disabled]="mazoEnProceso.length !== 60">
+        GUARDAR ({{mazoEnProceso.length}}/60)
+      </button>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <section class="pokedex-section pokedex-screen-inset">
+      <div class="grid">
+        <div *ngFor="let carta of coleccionFiltrada; let i = index" 
+             class="card-item card-entry"
+             [attr.data-card-id]="carta.id"
+             [style.animation-delay]="(i % 20) * 40 + 'ms'" 
+             [class.no-stock]="getCantidadEnMazo(carta.id) >= (cantidadesPoseidas[carta.id] || 0)"
+             (mouseenter)="startHover(carta)" 
+             (mouseleave)="stopHover()"
+             (click)="agregarAlMazo(carta)">
+          
+          <div class="inventory-badge dot-matrix">
+            x{{ cantidadesPoseidas[carta.id] || 0 }}
+          </div>
+
+          <div class="img-container">
+            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" onerror="this.src='images/card-back.png'">
+          </div>
+
+          <p class="pokemon-name dot-matrix">{{ carta.nombre | uppercase }}</p>
+
+          <span class="use-badge dot-matrix" *ngIf="getCantidadEnMazo(carta.id) > 0">
+            {{ getCantidadEnMazo(carta.id) }} / {{ cantidadesPoseidas[carta.id] || 0 }}
+          </span>
+
+          <div class="click-flash"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="deck-sidebar pokedex-panel-right">
+       <h3 class="panel-title dot-matrix">MAZO ACTUAL</h3>
+       <div class="deck-list pokedex-screen-inset-mini">
+          <div *ngFor="let c of mazoEnProceso; let i = index" class="deck-row dot-matrix">
+            <span>{{c.nombre | uppercase}}</span>
+            <button (click)="quitarDelMazo(i)" class="btn-remove pokedex-btn-tiny">X</button>
+          </div>
+          <div *ngIf="mazoEnProceso.length === 0" class="empty-msg dot-matrix">
+            [ ESPERANDO CARTAS... ]
+          </div>
+       </div>
+
+       <div class="pokedex-decorations">
+         <div class="d-pad"></div>
+         <div class="action-buttons">
+           <div class="btn-long black"></div>
+           <div class="btn-long black"></div>
+         </div>
+       </div>
+    </section>
+
+    <div class="inspection-overlay pokedex-screen-inset-zoom" *ngIf="showInspeccion && cardFocus">
+      <img [src]="getImagenReal(cardFocus.id)" [alt]="cardFocus.nombre">
+      <div class="info">
+        <h2 class="dot-matrix">{{ cardFocus.nombre | uppercase }}</h2>
+        <p class="dot-matrix">HP: {{ cardFocus.hp }} | TIPO: {{ cardFocus.tipo | uppercase }}</p>
+        <div class="details-box pokedex-text-box">
+          <h4 class="dot-matrix">DATOS TCG</h4>
+          <p class="dot-matrix">ATAQUE: {{ cardFocus.attacks }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

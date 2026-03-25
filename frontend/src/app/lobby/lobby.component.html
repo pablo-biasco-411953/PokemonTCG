@@ -1,32 +1,141 @@
-<div class="lobby-container">
-  <h2>Lobby - {{ jugador?.username }}</h2>
-  <div *ngIf="errorMsg" class="error">{{ errorMsg }}</div>
-
-  <div class="player-info">
-    <p>Nombre: {{ jugador?.username }}</p>
-    <p>Sobres disponibles: {{ sobresDisponibles }}</p>
+<div class="lobby-master-container" [class.subiendo]="mostrarAnimacionSobre">
+  
+  <div class="environment-layer">
+    <video #bgVideo autoplay loop muted playsinline class="video-bg">
+      <source src="images/fondolobby.webm" type="video/webm">
+    </video>
+    <div class="crt-scanlines"></div>
+    <div class="vignette-overlay"></div>
   </div>
 
-  <div class="actions">
-    <button (click)="abrirSobres()" class="action-button" [disabled]="sobresDisponibles <= 0">
-      Abrir Sobre
-    </button>
-    <button (click)="buscarPartida()" class="action-button">
-      Buscar Partida
-    </button>
-  </div>
-
-  <div *ngIf="cartasRecibidas.length > 0" class="cards-grid">
-    <div *ngFor="let carta of cartasRecibidas" class="card-item flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <img [src]="'assets/images/card-back.png'" alt="Carta" />
+  <div class="ui-layer lobby-content-wrapper">
+    
+    <nav class="top-nav-bar">
+      <div class="user-card-glass">
+        <div class="avatar-box">👤</div>
+        <div class="user-data">
+          <span class="u-name">{{ jugador?.username | uppercase }}</span>
         </div>
-        <div class="flip-card-back">
-          <img [src]="carta.imagen" [alt]="carta.nombre" />
-          <p>{{ carta.nombre }}</p>
+      </div>
+
+      <button class="btn-open-packs-premium" (click)="abrirSobres()" [disabled]="sobresDisponibles <= 0">
+        <div class="bg-glow"></div>
+        <div class="pack-icon">📦</div>
+        <div class="pack-content">
+          <span class="p-title">ABRIR SOBRE</span>
+          <span class="p-count dot-matrix">{{ sobresDisponibles }}</span>
+        </div>
+        <div class="shine"></div>
+      </button>
+      
+      <div class="wallet-group">
+        <div class="pill dot-matrix">💎 1.250</div>
+      </div>
+    </nav>
+
+    <main class="responsive-battle-grid">
+      <section class="mazos-section">
+        <div class="section-title">
+          <h2 class="dot-matrix">ESTACIÓN DE COMBATE</h2>
+        </div>
+
+        <div class="mazos-scroll-area">
+          @for (mazo of mazos; track mazo.id) {
+            <div class="mazo-card-wide">
+              <div class="m-info">
+                <strong class="deck-name">{{ mazo.nombre | uppercase }}</strong>
+                <p class="dot-matrix status-text">60/60 LOADED</p>
+                <button class="btn-search-match-xl" (click)="buscarPartida(mazo.id)">
+                  <div class="scan-effect"></div>
+                  <span class="btn-label">BUSCAR PARTIDA</span>
+                </button>
+              </div>
+
+              <div class="deck-mosaic-grid" (mousemove)="actualizarPosicion($event)">
+                @for (carta of mazo.cartas; track $index) {
+                  <div class="mosaic-slot" (mouseenter)="mostrarZoom(carta, $event)" (mouseleave)="ocultarZoom()">
+                    <img [src]="carta.imagen" (error)="imgRef.src = 'https://images.pokemontcg.io/' + ('' + carta.id).replace('-', '/') + '.png'" #imgRef class="card-thumb">
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          @for (slot of slotsVacios; track $index) {
+            <div class="mazo-card-wide ghost-slot" (click)="irAlDeckBuilder()">
+              <div class="m-info">
+                <strong class="dot-matrix">SLOT VACÍO</strong>
+                <p>Esperando deck...</p>
+              </div>
+              <div class="deck-mosaic-grid ghost-grid">
+                <div class="empty-slot-add">
+                  <span class="plus-icon">+</span>
+                  <small class="dot-matrix">CREAR MAZO</small>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <aside class="menu-side-section">
+        <div class="menu-item-glass" (click)="irAlDeckBuilder()">
+          <div class="icon-orb">📕</div>
+          <div class="label-wrap">
+            <span class="title">COLECCIÓN ÚNICA</span>
+            <div class="progress-container">
+              <div class="progress-bar" [style.width.%]="(cantidadCartasUnicas / 151) * 100">
+                <div class="bar-glow"></div>
+              </div>
+              <div class="stats-row">
+                <small class="dot-matrix">{{ cantidadCartasUnicas }} / 151</small>
+                <span class="percentage-label dot-matrix">
+                  {{ ((cantidadCartasUnicas / 151) * 100) | number:'1.0-0' }}%
+                </span>
+              </div>
+            </div>
+          </div>
+          <div class="corner-accent"></div>
+        </div>
+
+        <div class="menu-item-glass locked">
+          <div class="icon-orb">🏆</div>
+          <div class="label-wrap">
+            <span class="title">TORNEOS</span>
+            <small class="dot-matrix status-text">OFFLINE</small>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  @if (pkmZoom) {
+    <div class="card-zoom-overlay" [style.left.px]="zoomX" [style.top.px]="zoomY">
+      <div class="scanner-frame detailed-retrotech">
+        <div class="scan-line"></div>
+        <img [src]="pkmZoom.imagen" (error)="imgZ.src = 'https://images.pokemontcg.io/' + pkmZoom.id.replace('-', '/') + '_hires.png'" #imgZ>
+        <div class="pkm-pixel-panel">
+          <div class="data-box header-box">
+            <span class="p-id">#{{ pkmZoom.id }}</span>
+            <span class="p-name">{{ pkmZoom.nombre | uppercase }}</span>
+          </div>
+          <div class="data-box stats-box">
+            <div class="stat-hp">HP {{ pkmZoom.hp }} <span class="hp-heart">♥</span></div>
+            <div class="stat-type">{{ pkmZoom.tipo | uppercase }}</div>
+          </div>
+          <p class="p-sync">SYNCHRONIZED_100%</p>
         </div>
       </div>
     </div>
+  }
+
+  <div class="transicion-cielo" [class.activo]="mostrarAnimacionSobre">
+    <div class="speed-lines"></div>
+    @if (mostrarAnimacionSobre) {
+      <div class="sobre-apertura-wrapper"> 
+        <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
+      </div>
+    }
   </div>
+
 </div>

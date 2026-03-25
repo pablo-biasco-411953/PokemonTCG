@@ -5,28 +5,35 @@ import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.model.Mazo;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
+import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.model.battle.*;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class BattleEngineService {
     private final JugadorRepository jugadorRepo;
     private final MazoRepository mazoRepo;
+    private final CardRepository cardRepo;
     private final Random random = new Random();
     private final Map<String, Partida> partidasEnCurso = new ConcurrentHashMap<>();
+    private final BotAIService botAIService;
 
-    public BattleEngineService(JugadorRepository jugadorRepo, MazoRepository mazoRepo) {
+    public BattleEngineService(JugadorRepository jugadorRepo, MazoRepository mazoRepo, CardRepository cardRepo, BotAIService botAIService) {
         this.jugadorRepo = jugadorRepo;
         this.mazoRepo = mazoRepo;
+        this.cardRepo = cardRepo;
+        this.botAIService = botAIService;
     }
 
     /**
-     * Inicia una partida entre el jugador y un bot.
-     * Asigna el mazo seleccionado por el jugador.
+     * Inicia una partida entre el jugador y un bot usando el mazo seleccionado.
      */
     public Partida startBattle(String username, Long mazoId) {
         Jugador jugador = jugadorRepo.findByUsername(username);
@@ -34,132 +41,192 @@ public class BattleEngineService {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
         }
 
-        // Obtener el mazo del jugador
         Mazo mazoSeleccionado = mazoRepo.findById(mazoId).orElse(null);
         if (mazoSeleccionado == null) {
             throw new IllegalArgumentException("Mazo no encontrado: " + mazoId);
         }
 
-        // Verificar que el mazo pertenece al jugador
-        if (!mazoSeleccionado.getJugador().equals(jugador)) {
-            throw new IllegalArgumentException("El mazo no pertenece al jugador especificado");
-        }
-
-        // Crear tableros vacíos y asignar cartas del mazo seleccionado
+        // 1. Inicializar tableros
         TableroJugador tableroJugador = new TableroJugador();
         TableroJugador tableroBot = new TableroJugador();
 
-        // Asignar el mazo del jugador al tablero
-        List<Card> mazoJugador = mazoSeleccionado.getCartas();
-        if (mazoJugador.size() != 60) {
-            throw new IllegalStateException("El mazo debe tener exactamente 60 cartas. Actualmente tiene: " + mazoJugador.size());
-        }
-        tableroJugador.setMazo(new java.util.ArrayList<>(mazoJugador));
-
-        // Generar un mazo aleatorio para el bot (simulación)
-        List<Card> collectionCopy = jugador.getColeccion();
-        if (collectionCopy.size() < 60) {
-            throw new IllegalStateException("El jugador no tiene suficientes cartas para armar un mazo. Necesita al menos 60.");
+        // 2. Cargar mazo del Jugador
+        List<Card> cartasMazo = mazoSeleccionado.getCartas();
+        if (cartasMazo.size() < 60) {
+            throw new IllegalStateException("El mazo debe tener 60 cartas. Tiene: " + cartasMazo.size());
         }
 
-        java.util.Collections.shuffle(collectionCopy);
-        List<Card> mazoBot = collectionCopy.subList(0, 60);
-        tableroBot.setMazo(new java.util.ArrayList<>(mazoBot));
+        // Usamos una copia para poder hacer shuffle sin afectar la base de datos
+        List<Card> mazoListaJugador = new ArrayList<>(cartasMazo);
+        Collections.shuffle(mazoListaJugador);
+        tableroJugador.setMazo(mazoListaJugador);
 
+        // 3. Cargar mazo del Bot (Usamos el mismo mazo para asegurar que hay 60 cartas)
+        List<Card> mazoListaBot = new ArrayList<>(cartasMazo);
+        Collections.shuffle(mazoListaBot);
+        tableroBot.setMazo(mazoListaBot);
+
+        // 4. Repartir cartas iniciales (Mano y Premios)
+        prepararJuegoInicial(tableroJugador);
+        prepararJuegoInicial(tableroBot);
+
+        // 5. Crear partida y guardarla en memoria
         Partida partida = new Partida(tableroJugador, tableroBot);
-
-        // Lanzamiento de moneda para determinar quién comienza
-        boolean jugadorGanaMoneda = random.nextBoolean();
-        if (jugadorGanaMoneda) {
-            partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
-        } else {
-            partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
-        }
-
-        // Guardar partida en curso
+        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
         partidasEnCurso.put(partida.getId(), partida);
 
         return partida;
     }
 
     /**
-     * Realiza el lanzamiento de moneda para determinar quién comienza.
+     * Lógica estándar TCG: 7 cartas a la mano y 6 a premios.
      */
+    private void prepararJuegoInicial(TableroJugador tablero) {
+        // Robar 7 para la mano
+        for (int i = 0; i < 7; i++) {
+            if (!tablero.getMazo().isEmpty()) {
+                tablero.getMano().add(tablero.getMazo().remove(0));
+            }
+        }
+        // Separar 6 para premios
+        for (int i = 0; i < 6; i++) {
+            if (!tablero.getMazo().isEmpty()) {
+                tablero.getPremios().add(tablero.getMazo().remove(0));
+            }
+        }
+    }
+
     public boolean lanzarMoneda(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
-        if (partida == null) {
-            throw new IllegalArgumentException("Partida no encontrada: " + matchId);
-        }
-
+        if (partida == null) throw new IllegalArgumentException("Partida no encontrada.");
         boolean jugadorGana = random.nextBoolean();
         partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         return jugadorGana;
     }
 
-    /**
-     * Permite al jugador elegir si quiere ir primero o segundo después del lanzamiento de moneda.
-     */
     public void elegirTurno(String matchId, boolean vaPrimero) {
         Partida partida = partidasEnCurso.get(matchId);
-        if (partida == null) {
-            throw new IllegalArgumentException("Partida no encontrada: " + matchId);
-        }
+        if (partida == null) throw new IllegalArgumentException("Partida no encontrada.");
 
-        if (vaPrimero) {
+        partida.setTurnoActual(vaPrimero ? Partida.Turno.JUGADOR : Partida.Turno.BOT);
+
+        if (!vaPrimero) {
+            botAIService.ejecutarTurno(partida);
             partida.setTurnoActual(Partida.Turno.JUGADOR);
-        } else {
-            partida.setTurnoActual(Partida.Turno.BOT);
         }
     }
 
-    /**
-     * Obtiene el estado actual de una partida.
-     */
     public Partida getEstadoPartida(String matchId) {
         return partidasEnCurso.get(matchId);
     }
-    
-    /**
-     * Realiza el ataque entre dos cartas en juego.
-     */
-    public void realizarAtaque(CartaEnJuego atacante, CartaEnJuego defensor, Ataque ataque) {
-        // Verificar que el atacante tiene suficientes energías
-        if (!tieneEnergiaSuficiente(atacante, ataque)) {
-            throw new IllegalArgumentException("El atacante no tiene energía suficiente para ejecutar este ataque");
+
+    public void jugarPokemon(String matchId, String cartaId, int posicion) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida == null) throw new IllegalArgumentException("Partida no encontrada.");
+
+        TableroJugador tableroJugador = partida.getJugador();
+        Card carta = encontrarCartaEnMano(tableroJugador, cartaId);
+
+        if (carta == null) throw new IllegalArgumentException("Carta no encontrada.");
+        if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo Pokémon básicos.");
+
+        CartaEnJuego nuevoPokemon = new CartaEnJuego(carta);
+        tableroJugador.getMano().remove(carta);
+
+        if (tableroJugador.getActivo() == null) {
+            tableroJugador.setActivo(nuevoPokemon);
+        } else {
+            if (tableroJugador.getBanca().size() >= 5) throw new IllegalStateException("Banca llena.");
+            tableroJugador.getBanca().add(nuevoPokemon);
         }
-        
-        // Calcular daño base
-        int danioBase = ataque.getDanio();
-        
-        // Aplicar modificadores de tipo (debilidad/resistencia)
-        int danioFinal = calcularDaño(atacante, defensor, danioBase);
-        
-        // Restar daño a la vida del defensor
-        defensor.setHpActual(defensor.getHpActual() - danioFinal);
-        
-        // Verificar si el defensor fue eliminado (K.O.)
+    }
+
+    public void unirEnergia(String matchId, String cartaId, String energiaId) {
+        Partida partida = partidasEnCurso.get(matchId);
+        TableroJugador tablero = partida.getJugador();
+        CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaId);
+        Card energia = encontrarCartaEnMano(tablero, energiaId);
+
+        if (objetivo != null && energia != null && esEnergia(energia)) {
+            objetivo.getEnergiasUnidas().add(energia);
+            tablero.getMano().remove(energia);
+        }
+    }
+
+    public void pasarTurno(String matchId) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida != null && partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+            partida.setTurnoActual(Partida.Turno.BOT);
+            botAIService.ejecutarTurno(partida);
+            partida.setTurnoActual(Partida.Turno.JUGADOR);
+            // Al volver al jugador, robamos carta de turno
+            robarCarta(partida.getJugador());
+        }
+    }
+
+    private void robarCarta(TableroJugador tablero) {
+        if (!tablero.getMazo().isEmpty()) {
+            tablero.getMano().add(tablero.getMazo().remove(0));
+        }
+    }
+
+    public void realizarAtaque(String matchId, CartaEnJuego atacante, CartaEnJuego defensor, Ataque ataque) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida == null) return;
+
+        int danio = ataque.getDanio();
+        defensor.setHpActual(defensor.getHpActual() - danio);
+
         if (defensor.getHpActual() <= 0) {
-            // El Pokémon es eliminado y va al descarte
-            // Este método se completará en Fase 5
+            resolverKO(partida, atacante, defensor);
         }
     }
-    
-    /**
-     * Verifica si el atacante tiene suficiente energía para ejecutar el ataque.
-     */
-    private boolean tieneEnergiaSuficiente(CartaEnJuego atacante, Ataque ataque) {
-        // Implementar lógica de verificación de energías
-        // Esta es una implementación simplificada
-        return true;
+
+    private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
+        TableroJugador tableroVictima = encontrarTableroPorCartaEnJuego(partida, defensor);
+        TableroJugador tableroGanador = encontrarTableroPorCartaEnJuego(partida, atacante);
+
+        if (tableroVictima != null && tableroGanador != null) {
+            // Mover al descarte
+            tableroVictima.getPilaDescarte().add(defensor.getCard());
+            if (defensor.equals(tableroVictima.getActivo())) tableroVictima.setActivo(null);
+            else tableroVictima.getBanca().remove(defensor);
+
+            // Tomar premio
+            if (!tableroGanador.getPremios().isEmpty()) {
+                tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
+            }
+
+            // Validar fin de partida
+            if (tableroGanador.getPremios().isEmpty() ||
+                    (tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty())) {
+                partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+            }
+        }
     }
-    
-    /**
-     * Calcula el daño final considerando debilidades y resistencias.
-     */
-    private int calcularDaño(CartaEnJuego atacante, CartaEnJuego defensor, int danioBase) {
-        // Esta es una implementación simplificada
-        // En la implementación real, se debe comparar tipos y aplicar modificadores
-        
-        return danioBase;
+
+    // --- HELPERS ---
+
+    private Card encontrarCartaEnMano(TableroJugador tablero, String id) {
+        return tablero.getMano().stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
+    }
+
+    private CartaEnJuego encontrarCartaEnTablero(TableroJugador tablero, String id) {
+        if (tablero.getActivo() != null && tablero.getActivo().getCard().getId().equals(id)) return tablero.getActivo();
+        return tablero.getBanca().stream().filter(c -> c.getCard().getId().equals(id)).findFirst().orElse(null);
+    }
+
+    private TableroJugador encontrarTableroPorCartaEnJuego(Partida p, CartaEnJuego c) {
+        if (encontrarCartaEnTablero(p.getJugador(), c.getCard().getId()) != null) return p.getJugador();
+        if (encontrarCartaEnTablero(p.getBot(), c.getCard().getId()) != null) return p.getBot();
+        return null;
+    }
+
+    private boolean esPokemonBasico(Card c) {
+        return c.getTipo() != null && c.getTipo().toLowerCase().contains("basic");
+    }
+
+    private boolean esEnergia(Card c) {
+        return c.getTipo() != null && c.getTipo().toLowerCase().contains("energy");
     }
 }
