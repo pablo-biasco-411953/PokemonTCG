@@ -1,0 +1,312 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+// --- PALETA DE COLORES KANTO ---
+$pokedex-red: #dc0a2d;
+$pokedex-red-dark: #8b0000;
+$pokedex-screen-bg: #111111;
+$pokedex-btn-blue: #51aae5;
+$pokedex-btn-yellow: #ffcc00;
+$pokedex-neon-verde: #00ff7f;
+
+// --- ANIMACIONES ---
+@keyframes led-pulse {
+  0%, 100% { box-shadow: 0 0 10px $pokedex-btn-blue; filter: brightness(1); }
+  50% { box-shadow: 0 0 25px $pokedex-btn-blue; filter: brightness(1.3); }
+}
+
+.builder-container.pokedex-chassis {
+  background-color: $pokedex-red;
+  background-image: linear-gradient(145deg, $pokedex-red 0%, $pokedex-red-dark 100%);
+  color: white;
+  height: 100vh;
+  padding: 15px;
+  border-radius: 20px;
+  border: 5px solid $pokedex-red-dark;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  font-family: 'Helvetica Neue', sans-serif;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  // --- LUCES LED ---
+  .pokedex-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    border-bottom: 3px solid $pokedex-red-dark;
+
+    .led-container {
+      display: flex; gap: 8px; align-items: center;
+      .led {
+        width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff;
+        &.main-blue { 
+          width: 45px; height: 45px; 
+          background: $pokedex-btn-blue; 
+          box-shadow: 0 0 15px $pokedex-btn-blue, inset 0 0 10px white;
+          animation: led-pulse 2s infinite; 
+        }
+        &.red { background: #ff4444; }
+        &.yellow { background: $pokedex-btn-yellow; }
+        &.green { background: #00ff7f; }
+      }
+    }
+
+    .pokedex-title {
+      font-family: 'VT323', monospace;
+      font-size: 1.5rem;
+    }
+  }
+
+  // --- CONTROLES ---
+  header.pokedex-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 15px;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+
+    input, select {
+      background: #222;
+      color: $pokedex-btn-yellow;
+      border: 1px solid #444;
+      padding: 6px;
+      font-family: 'VT323', monospace;
+      border-radius: 4px;
+    }
+
+    .btn-save {
+      background: $pokedex-btn-yellow;
+      color: black;
+      font-weight: bold;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-family: 'VT323', monospace;
+      font-size: 1.1rem;
+
+      &:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
+  }
+
+  // --- WORKSPACE ---
+  .workspace {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 20px;
+    flex-grow: 1;
+    overflow: hidden;
+  }
+
+  // --- POKEDEX ---
+  .pokedex-section.pokedex-screen-inset {
+    background-color: $pokedex-screen-bg;
+    border: 8px solid #333;
+    border-radius: 10px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.9);
+    padding: 20px;
+    overflow-y: auto;
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 20px;
+
+      .card-item {
+        position: relative;
+        background: #1e1e1e;
+        border: 2px solid #333;
+        border-radius: 8px;
+        padding: 8px;
+        transition: all 0.2s;
+
+        &:hover:not(.no-stock) { 
+          transform: translateY(-5px); 
+          border-color: $pokedex-neon-verde;
+          box-shadow: 0 0 15px rgba($pokedex-neon-verde, 0.4);
+        }
+
+        &.no-stock { filter: grayscale(1) brightness(0.4); border-color: #ff4444; }
+
+        .inventory-badge {
+          position: absolute; top: 0; left: 0;
+          background: $pokedex-neon-verde; color: #000;
+          font-weight: bold; font-size: 0.8rem; padding: 2px 6px;
+          border-radius: 4px; font-family: 'VT323', monospace;
+        }
+
+        .img-container img { width: 100%; border-radius: 4px; }
+        .pokemon-name { font-family: 'VT323'; color: #ccc; font-size: 0.9rem; }
+        .use-badge { background: $pokedex-btn-yellow; color: black; border-radius: 4px; font-size: 0.75rem; }
+      }
+    }
+  }
+
+  // --- SIDEBAR ---
+  .deck-sidebar.pokedex-panel-right {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .panel-title { 
+      font-family: 'VT323';
+      color: $pokedex-btn-yellow;
+      border-bottom: 2px solid $pokedex-btn-yellow;
+    }
+
+    .deck-list {
+      flex-grow: 1;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.4);
+      border: 2px solid #222;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 10px;
+
+      .deck-row {
+        display: flex; justify-content: space-between;
+        font-family: 'VT323';
+        color: $pokedex-neon-verde;
+
+        button { background: #ff4444; border-radius: 3px; }
+      }
+    }
+
+    .pokedex-decorations {
+      display: flex; justify-content: space-between;
+    }
+  }
+}
+
+// --- SCROLL ---
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #222; }
+::-webkit-scrollbar-thumb { background: #444; border-radius: 10px; }
+
+
+// =====================================================
+// 📱 RESPONSIVE (NO ROMPE NADA)
+// =====================================================
+
+// TABLET
+@media (max-width: 1024px) {
+
+  .workspace {
+    grid-template-columns: 1fr; // 🔥 stack
+  }
+
+  .deck-sidebar.pokedex-panel-right {
+    flex-direction: row;
+    gap: 15px;
+
+    .deck-list {
+      max-height: 200px;
+    }
+  }
+}
+
+// MOBILE
+@media (max-width: 768px) {
+
+  .builder-container.pokedex-chassis {
+    height: auto;
+    border-radius: 0;
+  }
+
+  header.pokedex-controls {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .pokedex-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pokedex-section .grid {
+    grid-template-columns: repeat(2, 1fr); // 🔥 cartas grandes
+  }
+
+  .deck-sidebar.pokedex-panel-right {
+    flex-direction: column;
+  }
+}
+
+// MOBILE CHICO
+@media (max-width: 480px) {
+
+  .pokedex-section .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .pokedex-top-bar .led.main-blue {
+    width: 30px;
+    height: 30px;
+  }
+
+  .pokedex-title {
+    font-size: 1.2rem;
+  }
+
+  .btn-save {
+    width: 100%;
+  }
+
+  @media (max-width: 768px) {
+
+  .workspace {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .pokedex-section.pokedex-screen-inset {
+    padding: 10px;
+    border-width: 4px;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .pokedex-section .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+}
+@media (max-width: 480px) {
+
+  .pokedex-section .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+}
+
+@media (max-width: 768px) {
+
+  .deck-sidebar.pokedex-panel-right {
+    max-height: 250px;
+  }
+
+  .deck-list {
+    max-height: 150px;
+  }
+
+}
+}

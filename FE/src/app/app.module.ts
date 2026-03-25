@@ -17,8 +17,17 @@ const routes: Routes = [
 ];
 
 @NgModule({
-  declarations: [App, LoginComponent, LobbyComponent, BattleBoardComponent],
-  imports: [BrowserModule, HttpClientModule, FormsModule, RouterModule.forRoot(routes)],
+  declarations: [],
+  imports: [
+    BrowserModule, 
+    HttpClientModule, 
+    FormsModule, 
+    RouterModule.forRoot(routes),
+    App, 
+    LoginComponent, 
+    LobbyComponent, 
+    BattleBoardComponent
+  ],
   bootstrap: [App]
 })
 export class AppModule {}
