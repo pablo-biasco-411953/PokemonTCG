@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
-
+import java.util.UUID;
 @Service
 public class BattleEngineService {
     private final JugadorRepository jugadorRepo;
@@ -70,13 +70,22 @@ public class BattleEngineService {
         prepararJuegoInicial(tableroJugador);
         prepararJuegoInicial(tableroBot);
 
-        // 5. Crear partida y guardarla en memoria
+        // 5. Crear partida
         Partida partida = new Partida(tableroJugador, tableroBot);
-        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
-        partidasEnCurso.put(partida.getId(), partida);
 
+        // GENERAR ID EXPLÍCITO AQUÍ
+        String nuevoId = UUID.randomUUID().toString();
+        partida.setId(nuevoId);
+
+        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
+
+        // GUARDAR USANDO EL MISMO ID
+        partidasEnCurso.put(nuevoId, partida);
+
+        System.out.println("Partida creada exitosamente con ID: " + nuevoId); // Log para debug
         return partida;
     }
+
 
     /**
      * Lógica estándar TCG: 7 cartas a la mano y 6 a premios.
@@ -222,8 +231,19 @@ public class BattleEngineService {
         return null;
     }
 
+    // En BattleEngineService.java
+    // En BattleEngineService.java
     private boolean esPokemonBasico(Card c) {
-        return c.getTipo() != null && c.getTipo().toLowerCase().contains("basic");
+        if (c.getTipo() == null) return false;
+
+        String tipo = c.getTipo().toLowerCase();
+
+        // Si dice "Basic" o "Básico", pasa directo
+        if (tipo.contains("basi") || tipo.contains("bási")) return true;
+
+        // Si NO dice "Stage" (que son las evoluciones) y tiene HP, lo tomamos como básico
+        // Esto es un "parche" para que tus cartas actuales funcionen
+        return !tipo.contains("stage") && !tipo.contains("energy");
     }
 
     private boolean esEnergia(Card c) {
