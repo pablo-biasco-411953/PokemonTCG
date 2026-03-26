@@ -1,167 +1,292 @@
-<div class="loading-overlay" *ngIf="cargandoAccion">
-  <div class="spinner"></div>
-  <span>PROCESANDO…</span>
+<!-- ══════════════════════════════════════════════════════════════
+     POKEMON TCG — BATTLE BOARD V5
+     ══════════════════════════════════════════════════════════════ -->
+
+<!-- OVERLAY: INICIO -->
+<div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
+  <div class="intro-bg-lines">
+    <span *ngFor="let l of [1,2,3,4,5,6,7,8,9,10,11,12]" [style.--ln]="l"></span>
+  </div>
+  <div class="intro-content">
+    <div class="intro-pokeball">
+      <div class="pb-top"></div>
+      <div class="pb-band"></div>
+      <div class="pb-button"></div>
+    </div>
+    <div class="intro-sparks">
+      <span *ngFor="let s of [1,2,3,4,5,6,7,8,9,10,11,12]" [style.--n]="s"></span>
+    </div>
+    <p class="intro-sup">¡Batalla iniciada!</p>
+    <h1 class="intro-title">BATTLE<br><em>START</em></h1>
+    <div class="intro-sub-bar"><div class="intro-bar-fill"></div></div>
+  </div>
 </div>
 
-<div class="playmat" *ngIf="partida">
-  <!-- ══════════════════════════════════════════════
-       COLUMNA IZQUIERDA — Premios
-       ══════════════════════════════════════════════ -->
-  <div class="side-column left">
-    <div class="prize-zone bot">
-      <div *ngFor="let p of partida.bot.premios; let i = index" 
-           class="card-back prize-card" 
-           [style.top.px]="i * 22"></div>
-      <label>Premios bot<br><span class="prize-count">({{ partida.bot.premios.length }})</span></label>
-    </div>
+<!-- OVERLAY: CAMBIO DE TURNO -->
+<div class="turn-overlay" *ngIf="showTurnOverlay"
+     [class.is-player]="turnoOverlayTipo === 'jugador'"
+     [class.is-bot]="turnoOverlayTipo === 'bot'">
+  <div class="to-bg-sweep"></div>
+  <div class="to-content">
+    <div class="to-lines"><span></span><span></span><span></span></div>
+    <p class="to-text">{{ turnoOverlayTipo === 'jugador' ? 'TU TURNO' : 'TURNO DEL BOT' }}</p>
+    <small class="to-sub">{{ turnoOverlayTipo === 'jugador' ? '¡Hacé tu jugada!' : 'El rival está pensando…' }}</small>
+  </div>
+</div>
 
-    <div class="spacer"></div>
+<!-- OVERLAY: CARGANDO -->
+<div class="loading-overlay" *ngIf="cargandoAccion">
+  <div class="loader-ring"></div>
+  <span>PROCESANDO</span>
+</div>
 
-    <div class="prize-zone player">
-      <div *ngFor="let p of partida.jugador.premios; let i = index" 
-           class="card-back prize-card" 
-           [style.top.px]="i * 22"></div>
-      <label>Tus premios<br><span class="prize-count">({{ partida.jugador.premios.length }})</span></label>
-    </div>
+<!-- ════════════════════════════════════════
+     TABLERO PRINCIPAL
+     ════════════════════════════════════════ -->
+<div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible">
+
+  <!-- Decoración de fondo -->
+  <div class="field-decor" aria-hidden="true">
+    <div class="fd-glow top"></div>
+    <div class="fd-ring"></div>
+    <div class="fd-line horiz"></div>
+    <div class="fd-glow bottom"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════
-       CAMPO CENTRAL
-       ══════════════════════════════════════════════ -->
-  <div class="center-field">
-    
-    <!-- ════ MANO DEL BOT ════ -->
-    <div class="bot-hand-area">
-      <div *ngFor="let carta of partida.bot.mano; let i = index" 
-           class="bot-hand-card"
-           [style.--i]="i"
-           [style.--total]="partida.bot.mano.length">
+  <!-- ══ COL IZQUIERDA — Premios ══ -->
+  <aside class="side-col left">
+
+    <!-- FIX: cada bloque ocupa exactamente la mitad de la columna -->
+    <div class="prize-half top">
+      <div class="prize-label-top">PREMIOS BOT</div>
+      <div class="prize-stack">
+        <div *ngFor="let i of [0,1,2,3,4,5]"
+             class="card-back prize-card"
+             [style.--pi]="i"
+             [class.prize-hidden]="i >= partida.bot.premios.length">
+        </div>
+      </div>
+      <div class="prize-counter">{{ partida.bot.premios.length }}<span>/6</span></div>
+    </div>
+
+    <!-- Línea divisoria central -->
+    <div class="col-divider"></div>
+
+    <div class="prize-half bottom">
+      <div class="prize-counter gold">{{ partida.jugador.premios.length }}<span>/6</span></div>
+      <div class="prize-stack">
+        <div *ngFor="let i of [0,1,2,3,4,5]"
+             class="card-back prize-card gold"
+             [style.--pi]="i"
+             [class.prize-hidden]="i >= partida.jugador.premios.length">
+        </div>
+      </div>
+      <div class="prize-label-bottom">TUS PREMIOS</div>
+    </div>
+
+  </aside>
+
+  <!-- ══ CAMPO CENTRAL ══ -->
+  <main class="center-field">
+
+    <!-- Mano del Bot (boca abajo) -->
+    <div class="bot-hand-zone">
+      <div class="bot-hand-inner">
+        <div *ngFor="let c of partida.bot.mano; let i = index"
+             class="bot-card card-back"
+             [style.--bi]="i"
+             [style.--btot]="partida.bot.mano.length">
+        </div>
       </div>
       <div class="bot-hand-label">{{ partida.bot.mano.length }} cartas</div>
     </div>
 
-    <!-- ════ BANCA BOT ════ -->
-    <div class="bench-row bot">
-      <div *ngFor="let b of partida.bot.banca" class="bench-card">
-        <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre">
-        <div class="bench-hp" *ngIf="b.hpActual">{{ b.hpActual }}</div>
-      </div>
-      <div class="bench-card empty-slot" *ngFor="let _ of [1,2,3,4,5].slice(partida.bot.banca.length)"></div>
-    </div>
-
-    <!-- ════ ARENA DE DUELO ════ -->
-    <div class="duel-arena">
-      <!-- BOT ACTIVO -->
-      <div class="active-box bot" [class.vibrate]="vibrarBot" [class.has-card]="!!partida.bot.activo">
-        <div class="hp-badge" *ngIf="partida.bot.activo">
-          <span class="hp-value">{{ partida.bot.activo.hpActual }}</span>
-          <span class="hp-label">HP</span>
+    <!-- Banca Bot -->
+    <div class="bench-zone">
+      <div class="bench-label">BANCA RIVAL</div>
+      <div class="bench-row">
+        <div *ngFor="let b of partida.bot.banca" class="bench-slot filled">
+          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre">
+          <div class="bench-hp-bar">
+            <div class="bench-hp-fill" [style.width.%]="getHpPercent(b)"
+                 [class.mid]="getHpPercent(b) < 50" [class.low]="getHpPercent(b) < 25"></div>
+          </div>
         </div>
-        <img *ngIf="partida.bot.activo" [src]="getImagenCarta(partida.bot.activo.card.id)">
-        
-        <div class="energy-counter" *ngIf="partida.bot.activo?.energiasUnidas?.length > 0">
-          <div class="energy-orb"></div>
-          <span class="energy-number">{{ partida.bot.activo.energiasUnidas.length }}</span>
-        </div>
-
-        <div class="status-badges">
-          <!-- Estados de condición si los hay -->
-        </div>
-      </div>
-
-      <!-- DIVISOR VS -->
-      <div class="vs-divider"></div>
-
-      <!-- JUGADOR ACTIVO -->
-      <div class="active-box player" 
-           (click)="atacar()" 
-           [class.has-card]="!!partida.jugador.activo"
-           [class.can-attack]="partida.jugador.activo && partida.turnoActual === 'JUGADOR' && partida.jugador.activo.energiasUnidas?.length > 0">
-        <div class="hp-badge" *ngIf="partida.jugador.activo">
-          <span class="hp-value">{{ partida.jugador.activo.hpActual }}</span>
-          <span class="hp-label">HP</span>
-        </div>
-        <img *ngIf="partida.jugador.activo" [src]="getImagenCarta(partida.jugador.activo.card.id)">
-        
-        <div class="energy-counter" *ngIf="partida.jugador.activo?.energiasUnidas?.length > 0">
-          <div class="energy-orb"></div>
-          <span class="energy-number">{{ partida.jugador.activo.energiasUnidas.length }}</span>
-        </div>
-
-        <div class="attack-prompt" *ngIf="partida.jugador.activo && partida.turnoActual === 'JUGADOR'">
-          <span *ngIf="partida.jugador.activo.energiasUnidas?.length > 0">⚡ ATACAR</span>
-          <span *ngIf="partida.jugador.activo.energiasUnidas?.length === 0">NECESITÁS ENERGÍA</span>
-        </div>
+        <div *ngFor="let _ of getEmptySlots(partida.bot.banca.length)" class="bench-slot empty"></div>
       </div>
     </div>
 
-    <!-- ════ BANCA JUGADOR ════ -->
-    <div class="bench-row player">
-      <div *ngFor="let b of partida.jugador.banca" 
-           class="bench-card" 
-           (click)="seleccionarBanca(b)">
-        <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre">
-        <div class="bench-hp" *ngIf="b.hpActual">{{ b.hpActual }}</div>
+    <!-- ══ ARENA ══ -->
+    <div class="arena">
+
+      <!-- Partículas -->
+      <div class="arena-fx" aria-hidden="true">
+        <span *ngFor="let p of [1,2,3,4,5,6,7,8]" [style.--pn]="p" class="particle"></span>
       </div>
-      <div class="bench-card empty-slot" *ngFor="let _ of [1,2,3,4,5].slice(partida.jugador.banca.length)"></div>
+
+      <!-- ── BOT ACTIVO ── -->
+      <div class="combatant-col bot-col">
+        <div class="sprite-area" *ngIf="partida.bot.activo">
+          <img class="poke-sprite back"
+               [src]="getSpriteBack(partida.bot.activo.card.nombre)"
+               [alt]="partida.bot.activo.card.nombre"
+               (error)="onSpriteError($event)">
+          <div class="sprite-shadow"></div>
+        </div>
+
+        <div class="active-frame" [class.vibrate]="vibrarBot" [class.is-empty]="!partida.bot.activo">
+          <ng-container *ngIf="partida.bot.activo; else botEmpty">
+            <img [src]="getImagenCarta(partida.bot.activo.card.id)" [alt]="partida.bot.activo.card.nombre">
+            <div class="hp-strip">
+              <div class="hp-bar-track">
+                <div class="hp-bar-fill"
+                     [style.width.%]="getHpPercent(partida.bot.activo)"
+                     [class.mid]="getHpPercent(partida.bot.activo) < 50"
+                     [class.low]="getHpPercent(partida.bot.activo) < 25"></div>
+              </div>
+              <span class="hp-num">{{ partida.bot.activo.hpActual }} HP</span>
+            </div>
+            <div class="energy-chip" *ngIf="partida.bot.activo.energiasUnidas?.length">
+              ⚡{{ partida.bot.activo.energiasUnidas.length }}
+            </div>
+          </ng-container>
+          <ng-template #botEmpty><span class="empty-txt">SIN ACTIVO</span></ng-template>
+        </div>
+
+        <p class="col-label">RIVAL</p>
+      </div>
+
+      <!-- VS -->
+      <div class="vs-center">
+        <div class="vs-ring r1"></div>
+        <div class="vs-ring r2"></div>
+        <div class="vs-badge">VS</div>
+      </div>
+
+      <!-- ── JUGADOR ACTIVO ── -->
+      <div class="combatant-col player-col">
+        <p class="col-label player">TU POKÉMON</p>
+
+        <div class="active-frame player-frame"
+             [class.is-empty]="!partida.jugador.activo"
+             [class.can-attack]="puedeAtacar()"
+             (click)="atacar()">
+          <ng-container *ngIf="partida.jugador.activo; else playerEmpty">
+            <img [src]="getImagenCarta(partida.jugador.activo.card.id)" [alt]="partida.jugador.activo.card.nombre">
+            <div class="hp-strip">
+              <div class="hp-bar-track">
+                <div class="hp-bar-fill"
+                     [style.width.%]="getHpPercent(partida.jugador.activo)"
+                     [class.mid]="getHpPercent(partida.jugador.activo) < 50"
+                     [class.low]="getHpPercent(partida.jugador.activo) < 25"></div>
+              </div>
+              <span class="hp-num">{{ partida.jugador.activo.hpActual }} HP</span>
+            </div>
+            <div class="energy-chip" *ngIf="partida.jugador.activo.energiasUnidas?.length">
+              ⚡{{ partida.jugador.activo.energiasUnidas.length }}
+            </div>
+            <div class="atk-hint" *ngIf="partida.turnoActual === 'JUGADOR'">
+              <span [class.ready]="puedeAtacar()">
+                {{ puedeAtacar() ? '⚔ ATACAR' : 'SIN ENERGÍA' }}
+              </span>
+            </div>
+          </ng-container>
+          <ng-template #playerEmpty>
+            <span class="empty-txt player">Jugá un Pokémon</span>
+          </ng-template>
+        </div>
+
+        <div class="sprite-area" *ngIf="partida.jugador.activo">
+          <img class="poke-sprite front"
+               [src]="getSpriteFront(partida.jugador.activo.card.nombre)"
+               [alt]="partida.jugador.activo.card.nombre"
+               (error)="onSpriteError($event)">
+          <div class="sprite-shadow"></div>
+        </div>
+      </div>
+
+    </div><!-- /arena -->
+
+    <!-- Banca Jugador -->
+    <div class="bench-zone player-bench-zone">
+      <div class="bench-row">
+        <div *ngFor="let b of partida.jugador.banca"
+             class="bench-slot filled player-slot"
+             (click)="seleccionarBanca(b)">
+          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre">
+          <div class="bench-hp-bar">
+            <div class="bench-hp-fill" [style.width.%]="getHpPercent(b)"
+                 [class.mid]="getHpPercent(b) < 50" [class.low]="getHpPercent(b) < 25"></div>
+          </div>
+        </div>
+        <div *ngFor="let _ of getEmptySlots(partida.jugador.banca.length)" class="bench-slot empty"></div>
+      </div>
+      <div class="bench-label player">MI BANCA</div>
     </div>
 
-    <!-- ════ MANO DEL JUGADOR (ABANICO DINÁMICO) ════ -->
-    <div class="hand-area">
-      <div class="hand-label">
-        <span class="hand-icon">🎴</span>
-        <span>MI MANO</span>
-        <span class="hand-count">({{ partida.jugador.mano.length }})</span>
+    <!-- Mano del Jugador -->
+    <div class="hand-zone">
+      <div class="hand-header">
+        <span class="hand-title">MI MANO</span>
+        <span class="hand-badge">{{ partida.jugador.mano.length }}</span>
+        <span class="hand-tip" *ngIf="partida.turnoActual === 'JUGADOR'">— tocá una carta para jugarla</span>
       </div>
       <div class="hand-cards">
-        <div *ngFor="let carta of partida.jugador.mano; let i = index" 
-             class="card-in-hand" 
-             [style.--i]="i"
-             [style.--total]="partida.jugador.mano.length"
-             [class.is-energy]="carta.tipo?.toLowerCase().includes('energy')"
+        <div *ngFor="let carta of partida.jugador.mano; let i = index"
+             class="hand-card"
+             [style.--hi]="i"
+             [style.--htot]="partida.jugador.mano.length"
+             [class.is-energy]="esEnergia(carta)"
              (click)="jugarCarta(carta)"
-             [attr.data-card-name]="carta.nombre">
+             [title]="carta.nombre">
           <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
-          <div class="energy-icon-hand" *ngIf="carta.tipo?.toLowerCase().includes('energy')">⚡</div>
+          <div class="epip" *ngIf="esEnergia(carta)">⚡</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ══════════════════════════════════════════════
-       COLUMNA DERECHA — Mazo y Controles
-       ══════════════════════════════════════════════ -->
-  <div class="side-column right">
-    <!-- MAZO Y DESCARTE BOT -->
-    <div class="deck-discard-group bot">
-      <div class="card-back deck bot-deck">
-        <span class="deck-count">{{ partida.bot.mazo.length }}</span>
+  </main>
+
+  <!-- ══ COL DERECHA — Mazos / Controles ══ -->
+  <aside class="side-col right">
+
+    <div class="deck-block">
+      <div class="card-back deck-card">
+        <span class="deck-num">{{ partida.bot.mazo.length }}</span>
       </div>
-      <div class="discard-pile">Descarte</div>
+      <div class="discard-card">
+        <span class="discard-icon">⊘</span>
+        <span class="discard-txt">DESCARTE</span>
+      </div>
     </div>
 
-    <!-- CONTROLES -->
-    <div class="controls-panel">
-      <button class="btn-turn" 
-              [ngClass]="{ 'is-active': partida.turnoActual === 'JUGADOR', 'is-disabled': partida.turnoActual !== 'JUGADOR' || cargandoAccion }"
+    <div class="turn-panel">
+      <div class="turn-status" [class.active]="partida.turnoActual === 'JUGADOR'">
+        {{ partida.turnoActual === 'JUGADOR' ? 'TU TURNO' : 'RIVAL' }}
+      </div>
+      <button class="btn-end"
+              [class.inactive]="partida.turnoActual !== 'JUGADOR'"
               [disabled]="partida.turnoActual !== 'JUGADOR' || cargandoAccion"
               (click)="pasarTurno()">
-        <span class="btn-icon" [class.spinning]="cargandoAccion">
-          <span *ngIf="partida.turnoActual === 'JUGADOR'">✓</span>
-          <span *ngIf="partida.turnoActual !== 'JUGADOR'">⏳</span>
-        </span>
-        <span class="btn-text">
-          {{ partida.turnoActual === 'JUGADOR' ? 'Terminar turno' : 'Bot pensando…' }}
-        </span>
+        <span class="btn-ico">{{ partida.turnoActual === 'JUGADOR' ? '▶' : '⏳' }}</span>
+        <span>{{ partida.turnoActual === 'JUGADOR' ? 'TERMINAR' : 'PENSANDO' }}</span>
       </button>
-    </div>
-
-    <!-- MAZO Y DESCARTE JUGADOR -->
-    <div class="deck-discard-group player">
-      <div class="discard-pile">Descarte</div>
-      <div class="card-back deck player-deck">
-        <span class="deck-count">{{ partida.jugador.mazo.length }}</span>
+      <div class="turn-dots">
+        <span [class.on]="partida.turnoActual === 'JUGADOR'"></span>
+        <span [class.on]="partida.turnoActual === 'BOT'"></span>
       </div>
     </div>
-  </div>
+
+    <div class="deck-block">
+      <div class="discard-card">
+        <span class="discard-icon">⊘</span>
+        <span class="discard-txt">DESCARTE</span>
+      </div>
+      <div class="card-back deck-card blue">
+        <span class="deck-num">{{ partida.jugador.mazo.length }}</span>
+      </div>
+    </div>
+
+  </aside>
+
 </div>
