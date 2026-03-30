@@ -102,14 +102,16 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 @keyframes ifup { from{transform:translateY(12px);opacity:0} to{transform:none;opacity:1} }
 
 .turn-overlay {
-  position:fixed; inset:0; z-index:1500; display:flex; align-items:center; justify-content:center;
-  pointer-events:none; overflow:hidden;
-  animation: ton .25s ease both, toff .5s 1.5s ease forwards;
+  position: fixed; inset: 0; z-index: 1500; 
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; overflow: hidden;
+  background: rgba(0,0,0,0.8); // Fondo oscuro semi-transparente
+  backdrop-filter: blur(8px); // Un poco de blur para separar del tablero
 }
 @keyframes ton  { from{opacity:0} to{opacity:1} }
 @keyframes toff { to{opacity:0} }
 .to-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.68); backdrop-filter:blur(7px); }
-.to-body { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:6px; animation:tbody .3s .05s cubic-bezier(.22,.61,.36,1) both; }
+.to-body { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:6px; animation: tbody-in .4s cubic-bezier(.17, .89, .32, 1.27) both;; }
 @keyframes tbody { from{transform:scale(.6) translateY(24px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
 .to-lines { display:flex; gap:6px; margin-bottom:4px;
   span { display:block; height:3px; border-radius:2px; animation:tls .4s .1s ease both;
@@ -119,10 +121,24 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 @keyframes tls { from{width:0;opacity:0} }
 .is-player .to-lines span { background:var(--gold); }
 .is-bot    .to-lines span { background:var(--blue); }
-.to-text { font-family:var(--fd); font-size:clamp(50px,9vw,84px); letter-spacing:.1em; color:#fff; text-shadow:0 4px 28px rgba(0,0,0,.6); }
-.is-player .to-text { color:var(--gold); text-shadow:0 0 40px var(--glow); }
-.is-bot    .to-text { color:var(--blue); text-shadow:0 0 40px var(--blue-g); }
-.to-sub { font-family:var(--fu); font-size:12px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--text2); }
+.to-text { font-family:var(--fd); font-size:clamp(50px,9vw,84px); letter-spacing:.1em; color:#fff;text-shadow: 0 0 20px rgba(0,0,0,1), 0 0 40px rgba(0,0,0,0.8); }
+.is-player .to-text { 
+  color: #fff; // Blanco puro
+  border-bottom: 4px solid var(--gold);
+  text-shadow: 0 0 20px var(--glow); 
+}
+.is-bot .to-text { 
+  color: #4ab8f8; // Azul brillante para el Bot
+  border-bottom: 4px solid #4ab8f8;
+  text-shadow: 0 0 30px rgba(74, 184, 248, 0.5); 
+}.to-sub {
+  font-family: var(--fu);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: rgba(255, 255, 255, 0.8); // Un gris muy claro
+  text-transform: uppercase;
+}
 /* Contenedor del Bot */
 .bot-sprite-wrap {
   position: relative; /* Asegura que el transform funcione */
@@ -134,6 +150,11 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
     transform: translateY(120px) scale(1.5) !important;
     z-index: 9999 !important;
   }
+}
+
+@keyframes tbody-in {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* Opcional: El flash de pantalla blanca */
@@ -314,7 +335,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .arena-particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; span { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--gold); opacity: .35; left:  calc(8% + var(--pn) * 15%); top:  calc(5% + var(--pn) * 14%); animation: ap calc(3s + var(--pn)*.4s) ease-in-out infinite; animation-delay: calc(var(--pn) * -.5s); box-shadow: 0 0 4px var(--glow); } }
 @keyframes ap { 0%,to{transform:translateY(0) scale(1);opacity:.35} 50%{transform:translateY(-12px) scale(1.5);opacity:.6} }
 
-.arena-half { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-top: 15px; &.bot-half { padding-top: 40px; align-items: flex-start; } &.player-half { padding-bottom: 40px; align-items: flex-end; } }
+.arena-half { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-top: 50px; &.bot-half { padding-top: 40px; align-items: flex-start; } &.player-half { padding-bottom: 40px; align-items: flex-end; } }
 
 .combatant { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
 .bot-combatant { flex-direction: row; .active-card-wrap { order: 1; } .sprite-wrap { order: 2; } margin-top: 20px; }
@@ -790,4 +811,188 @@ bot-sprite-wrap {
   color: #000;
   box-shadow: 0 0 5px rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.4);
+}
+
+
+.coinflip-overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px); // Un poco más de blur
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  color: white;
+
+  .panel {
+    text-align: center;
+    background: rgba(15, 15, 25, 0.95); // Más oscuro
+    padding: 60px; border-radius: 25px; // Más espacio
+    border: 3px solid rgba(100, 255, 218, 0.4);
+    box-shadow: 
+      0 0 70px rgba(0, 0, 0, 0.8),
+      0 0 30px rgba(100, 255, 218, 0.2); // Glow metálico
+    min-width: 400px;
+  }
+}
+
+// --- ZONA DE LANZAMIENTO (INTERACTIVA) ---
+.throw-zone {
+  width: 100%;
+  height: 500px; // Más espacio vertical
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end; // Arranca desde abajo
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  border-radius: 15px;
+
+  &:active { cursor: grabbing; }
+  &.pointer-events-none { pointer-events: none; }
+}
+
+// --- ESCENA Y MONEDA 3D REAL ---
+.moneda-scene {
+  perspective: 2000px; // 🚩 CLAVE: Un valor alto para el efecto 3D
+  width: 180px; // Un poco más grande
+  height: 180px;
+  margin: 50px auto;
+  pointer-events: none;
+  position: relative;
+}
+
+// 🔥 SOMBRA DINÁMICA
+.moneda-sombra {
+  position: absolute;
+  bottom: -30px; // Abajo de la moneda
+  left: 50%; transform: translateX(-50%) scaleY(0.2);
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
+  border-radius: 50%;
+  opacity: 0; // Se prende cuando vuela
+  transition: opacity 0.3s, transform 0.3s;
+  
+  &.active {
+    opacity: 1;
+  }
+}
+
+.moneda-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  // 🚩 Este transition es el que "suaviza" el aterrizaje cuando deja de girar
+  transition: transform 0.8s cubic-bezier(0.15, 0.85, 0.35, 1.1), filter 0.5s;
+
+  &.girando {
+    animation: girarRapido 0.15s linear infinite; 
+  }
+
+  // 🔥 Efecto de Brillo Metálico cuando aterriza
+  &.final-cara, &.final-cruz {
+    filter: brightness(1.4) contrast(1.1);
+  }
+
+  .animar-vuelo {
+  animation: vueloParabola var(--duracion-vuelo) ease-in-out forwards;
+}
+
+&.final-cara {
+    animation: none;
+    // Forzamos 10 vueltas completas (3600deg) para que termine en CARA (0°)
+    transform: translateY(0) rotateY(3600deg) scale(1.1);
+  }  &.final-cruz {
+    animation: none;
+    // Forzamos 10 vueltas + MEDIA VUELTA (3600 + 180 = 3780deg) para que termine en CRUZ
+    transform: translateY(0) rotateY(3780deg) scale(1.1);
+  }
+
+  // 🔥 EFECTO BRILLO METÁLICO (Luz)
+  .luz {
+    position: absolute; inset: -20px;
+    background: linear-gradient(135deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%);
+    border-radius: 50%;
+    backface-visibility: hidden;
+    animation: shineEffect 0.3s linear infinite; // ¡Gira con la moneda!
+  }
+
+  // Estilo de las caras de la moneda
+  .cara, .cruz {
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    backface-visibility: hidden; // 🚩 Oculta la parte trasera
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 
+      inset 0 0 10px rgba(0,0,0,0.5), // Sombra interna (Canto)
+      0 0 30px rgba(255, 255, 255, 0.3); // Glow externo
+    border: 6px solid #111; // Canto más grueso
+
+    img {
+      width: 85%; height: 85%;
+      object-fit: contain;
+      pointer-events: none;
+      user-drag: none; -webkit-user-drag: none;
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); // Glow en el Pikachu
+    }
+  }
+
+  .cara { background: linear-gradient(135deg, #fceabb 0%, #fccd4d 50%, #f8b500 100%); border-color: #b58900; }
+  .cruz { background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 50%, #9e9e9e 100%); border-color: #757575; transform: rotateY(180deg); }
+}
+
+// --- KEYFRAMES ---
+
+@keyframes vueloDinamico {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(var(--altura-vuelo, -350px)) scale(1.8); } // Sube más alto y más grande
+  100% { transform: translateY(0) scale(1); } // Cae al punto original
+}
+
+@keyframes giroAcumulado {
+  // A mayor fuerza, más vueltas da (por ejemplo, 10 vueltas completas = 3600deg)
+  // Reemplazamos el giro infinito por este giro acumulado
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(var(--giros-totales, 3600deg)); }
+}
+
+@keyframes shineEffect {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// --- TEXTOS ---
+.swipe-hint {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  color: #64ffda;
+  letter-spacing: 3px;
+  animation: breathe 2s infinite;
+  margin-top: 20px;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes vueloParabola {
+  0% { bottom: 0; }
+  50% { bottom: var(--altura-vuelo); transform: scale(1.6); }
+  100% { bottom: 0; transform: scale(1.1); }
+}
+
+@keyframes girarRapido {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+
+.rival-banca-slot {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 1;
+  transform: scale(1);
+
+  &.ng-enter {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.5);
+  }
 }

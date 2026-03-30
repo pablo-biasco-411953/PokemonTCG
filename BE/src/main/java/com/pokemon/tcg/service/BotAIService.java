@@ -30,7 +30,7 @@ public class BotAIService {
                     .findFirst().get();
             tableroBot.getBanca().remove(mejorOpcion);
             tableroBot.setActivo(mejorOpcion);
-            System.out.println("Ã°Å¸Â¤â€“ [BOT] SubiÃƒÂ³ a " + mejorOpcion.getCard().getNombre() + " porque es el mÃƒÂ¡s apto.");
+            System.out.println("Ã°Å¸Â¤â€“ [BOT] Subió a " + mejorOpcion.getCard().getNombre() + " porque es el más apto.");
         }
         // Luego sigue su lÃƒÂ³gica normal...
         gestionarCartasEnMano(tableroBot);
@@ -57,35 +57,130 @@ public class BotAIService {
         }
     }
 
-    private void gestionarEnergiaBot(TableroJugador tablero) {
-        Card energia = tablero.getMano().stream()
-                .filter(this::esEnergia)
-                .findFirst().orElse(null);
 
-        if (energia != null) {
-            CartaEnJuego activo = tablero.getActivo();
-            CartaEnJuego objetivo = null;
 
-            // ESTRATEGIA:
-            // 1. Si el activo existe y no tiene mucha energÃƒÂ­a, priorizarlo para atacar rÃƒÂ¡pido.
-            if (activo != null && activo.getEnergiasUnidas().size() < 2) {
-                objetivo = activo;
-            }
-            // 2. Si el activo estÃƒÂ¡ cargado o no existe, cargar al de la banca con mÃƒÂ¡s HP (el "tanque")
-            else if (!tablero.getBanca().isEmpty()) {
-                objetivo = tablero.getBanca().stream()
-                        .max((c1, c2) -> Integer.compare(c1.getHpActual(), c2.getHpActual()))
-                        .orElse(null);
-            } else {
-                objetivo = activo;
-            }
+    private boolean puedePagarAtaque(CartaEnJuego pokemon, Ataque ataque) {
+        List<Card> energias = new ArrayList<>(pokemon.getEnergiasUnidas());
+        List<String> costo = new ArrayList<>(ataque.getCosto());
 
-            if (objetivo != null) {
-                objetivo.getEnergiasUnidas().add(energia);
-                tablero.getMano().remove(energia);
-                System.out.println("Ã°Å¸Â¤â€“ [BOT] DecisiÃƒÂ³n estratÃƒÂ©gica: EnergÃƒÂ­a unida a " + objetivo.getCard().getNombre());
+        // 1. Validar energías específicas (Water, Fire, etc.)
+        for (int i = costo.size() - 1; i >= 0; i--) {
+            String tipoReq = costo.get(i);
+            if (!tipoReq.equalsIgnoreCase("Colorless")) {
+                // Buscamos si el bot tiene ese tipo
+                Card tieneTipo = energias.stream()
+                        .filter(e -> e.getNombre().toLowerCase().contains(tipoReq.toLowerCase()))
+                        .findFirst().orElse(null);
+
+                if (tieneTipo != null) {
+                    energias.remove(tieneTipo);
+                    costo.remove(i);
+                } else {
+                    return false; // ❌ Le falta una específica, no puede atacar
+                }
             }
         }
+
+        // 2. Validar Incoloras (Cualquiera que sobre)
+        return energias.size() >= costo.size();
+    }
+
+
+
+    private boolean pokemonNecesitaEsteTipo(CartaEnJuego pokemon, Card energia) {
+        if (pokemon.getCard().getAtaques() == null) return false;
+
+        // 🚩 Usamos el normalizador acá también
+        String tipoEnergia = normalizarTipo(energia.getNombre());
+
+        return pokemon.getCard().getAtaques().stream()
+                .anyMatch(ataque -> {
+                    List<String> costo = ataque.getCosto();
+                    return costo != null && costo.stream()
+                            .anyMatch(tipoReq -> normalizarTipo(tipoReq).equals(tipoEnergia) ||
+                                    tipoReq.equalsIgnoreCase("Colorless"));
+                });
+    }
+
+    private void gestionarEnergiaBot(TableroJugador tablero) {
+        // 1. Obtenemos las energías que el bot tiene en la mano
+        List<Card> energiasEnMano = tablero.getMano().stream()
+                .filter(this::esEnergia)
+                .collect(java.util.stream.Collectors.toList());
+
+        if (energiasEnMano.isEmpty()) return;
+
+        CartaEnJuego activo = tablero.getActivo();
+
+        // 🛡️ REGLA DE ORO: Si el activo existe, verificamos si necesita energía
+        if (activo != null) {
+
+            // 🚩 PASO A: ¿Ya puede atacar con alguno de sus ataques?
+            boolean yaPuedeAtacar = activo.getCard().getAtaques().stream()
+                    .anyMatch(ataque -> puedePagarCosto(activo, ataque)); // Usamos tu función de validación
+
+            if (yaPuedeAtacar) {
+                System.out.println("🤖 [BOT] " + activo.getCard().getNombre() + " ya está listo para atacar. Guardando energía...");
+                // Opcional: Podrías llamar a una función para cargar a la banca acá
+                return; // 🛑 FRENAMOS ACÁ, NO LE DAMOS MÁS ENERGÍA AL ACTIVO
+            }
+
+            // 🚩 PASO B: Si NO puede atacar, buscamos una energía útil para COMPLETAR el costo
+            Card energiaUtil = energiasEnMano.stream()
+                    .filter(e -> pokemonNecesitaEsteTipo(activo, e))
+                    .findFirst()
+                    .orElse(null);
+
+            if (energiaUtil != null) {
+                activo.getEnergiasUnidas().add(energiaUtil);
+                tablero.getMano().remove(energiaUtil);
+                System.out.println("🤖 [BOT] Unión estratégica: " + energiaUtil.getNombre() + " a " + activo.getCard().getNombre() + " para cargar ataque.");
+                return; // Solo una unión por turno, regla oficial
+            }
+        }
+
+        // Si no encontró energía útil o el activo ya estaba cargado, la energía se queda en la mano.
+    }
+
+
+    private boolean puedePagarCosto(CartaEnJuego pokemon, Ataque ataque) {
+        if (pokemon.getEnergiasUnidas() == null || ataque.getCosto() == null) return false;
+
+        List<Card> misEnergias = new ArrayList<>(pokemon.getEnergiasUnidas());
+        List<String> costoReq = new ArrayList<>(ataque.getCosto());
+
+        for (int i = costoReq.size() - 1; i >= 0; i--) {
+            String tipoBuscado = normalizarTipo(costoReq.get(i));
+            if (!tipoBuscado.equals("Colorless")) {
+                Card match = misEnergias.stream()
+                        .filter(e -> normalizarTipo(e.getNombre() + " " + e.getTipo()).contains(tipoBuscado))
+                        .findFirst().orElse(null);
+
+                if (match != null) {
+                    misEnergias.remove(match);
+                    costoReq.remove(i);
+                } else {
+                    return false;
+                }
+            }
+        }
+        return misEnergias.size() >= costoReq.size();
+    }
+
+    // 🚩 EL TRADUCTOR UNIVERSAL (Agregalo al BotAIService)
+    private String normalizarTipo(String texto) {
+        if (texto == null) return "";
+        String t = texto.toLowerCase();
+        if (t.contains("grass") || t.contains("planta")) return "Grass";
+        if (t.contains("fire") || t.contains("fuego")) return "Fire";
+        if (t.contains("water") || t.contains("agua")) return "Water";
+        if (t.contains("lightning") || t.contains("eléctrica") || t.contains("electrica")) return "Lightning";
+        if (t.contains("psychic") || t.contains("psíquica") || t.contains("psiquica")) return "Psychic";
+        if (t.contains("fighting") || t.contains("lucha")) return "Fighting";
+        if (t.contains("darkness") || t.contains("siniestra") || t.contains("oscuridad")) return "Darkness";
+        if (t.contains("metal") || t.contains("acero")) return "Metal";
+        if (t.contains("colorless") || t.contains("incolora")) return "Colorless";
+        return texto;
     }
 
     private void intentarAtacar(TableroJugador tableroBot, Partida partida) {
@@ -94,32 +189,38 @@ public class BotAIService {
 
         if (activoBot == null || activoJugador == null) return;
 
-        // 🚩 Si no tiene energía, que ni lo intente y pase el turno
-        if (activoBot.getEnergiasUnidas().isEmpty()) {
-            System.out.println("🤖 [BOT] Esperando energía para atacar...");
+        List<Ataque> ataques = activoBot.getCard().getAtaques();
+        if (ataques == null || ataques.isEmpty()) return;
+
+        // Elegimos el primer ataque por ahora
+        Ataque ataqueElegido = ataques.get(0);
+
+        // 1. Validar energía
+        if (!puedePagarCosto(activoBot, ataqueElegido)) {
+            System.out.println("🤖 [BOT] No tiene energía para " + ataqueElegido.getNombre());
             return;
         }
 
-        // Buscamos el daño real
-        int danio = calcularDanio(activoBot);
+        // 2. 🚩 CÁLCULO DE DAÑO (Acá estaba el error)
+        // Llamamos a la función que creamos y guardamos el resultado en 'danioFinal'
+        int danioFinal = calcularDanioFinal(activoBot, activoJugador, ataqueElegido);
 
-        // Solo si el daño es mayor a 0 ejecutamos la lógica
-        if (danio > 0) {
-            int nuevaHp = activoJugador.getHpActual() - danio;
-            activoJugador.setHpActual(Math.max(0, nuevaHp));
-            System.out.println("🤖 [BOT] Atacó con " + danio + " daño.");
+        // 3. Aplicar el daño al jugador usando la variable correcta
+        int nuevaHp = activoJugador.getHpActual() - danioFinal;
+        activoJugador.setHpActual(Math.max(0, nuevaHp));
 
-            if (activoJugador.getHpActual() <= 0) {
-                resolverKO(partida, activoBot, activoJugador);
-            }
+        System.out.println("🤖 [BOT] Atacó con " + ataqueElegido.getNombre() +
+                " haciendo " + danioFinal + " de daño.");
+
+        if (activoJugador.getHpActual() <= 0) {
+            resolverKO(partida, activoBot, activoJugador);
         }
     }
-
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
         TableroJugador tableroVictima = partida.getJugador();
         TableroJugador tableroBot     = partida.getBot();
 
-        System.out.println("Ã°Å¸â€™â‚¬ [BOT] K.O.! " + defensor.getCard().getNombre() + " derrotado.");
+        System.out.println("[BOT] K.O.! " + defensor.getCard().getNombre() + " derrotado.");
 
         // Mover al descarte
         tableroVictima.getPilaDescarte().add(defensor.getCard());
@@ -128,7 +229,7 @@ public class BotAIService {
         // El bot toma un premio
         if (!tableroBot.getPremios().isEmpty()) {
             tableroBot.getMano().add(tableroBot.getPremios().remove(0));
-            System.out.println("Ã°Å¸Â¤â€“ [BOT] TomÃƒÂ³ un premio. Premios restantes: " + tableroBot.getPremios().size());
+            System.out.println("[BOT] Tomó un premio. Premios restantes: " + tableroBot.getPremios().size());
         }
 
         // Fin de partida
@@ -138,39 +239,46 @@ public class BotAIService {
 
         if (botSinPremios || jugadorSinPokemon) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println("Ã°Å¸Ââ€  [BOT] Ã‚Â¡Partida terminada! GanÃƒÂ³ el bot.");
+            System.out.println(" [BOT] ¡Partida terminada! Gana el bot.");
         }
     }
 
-    private int calcularDanio(CartaEnJuego cartaEnJuego) {
-        Card card = cartaEnJuego.getCard();
+    private int calcularDanioFinal(CartaEnJuego atacante, CartaEnJuego defensor, Ataque ataque) {
+        int resultado = ataque.getDanio(); // Daño base del JSON
+        String tipoAtacante = atacante.getCard().getTipo();
 
-        // Ã¢Å“â€¦ AHORA SÃƒÂ: Traemos la lista real de objetos Ataque
-        List<Ataque> ataques = card.getAtaques();
-
-        if (ataques != null && !ataques.isEmpty()) {
-            // Hacemos que el bot elija el primer ataque que tenga la carta
-            Ataque ataqueElegido = ataques.get(0);
-
-            System.out.println("Ã°Å¸Â¤â€“ Bot atacando con: " + ataqueElegido.getNombre());
-
-            // Si el ataque hace 0 de daÃƒÂ±o (ej: "Growl" que solo baja stats),
-            // le ponemos un mÃƒÂ­nimo de 10 para que el bot no se quede pegando por 0 eternamente.
-            return ataqueElegido.getDanio() > 0 ? ataqueElegido.getDanio() : 10;
+        // Validar Debilidad (x2)
+        if (defensor.getCard().getDebilidades() != null) {
+            boolean esDebil = defensor.getCard().getDebilidades().stream()
+                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoAtacante));
+            if (esDebil) {
+                System.out.println("💥 ¡Debilidad! Daño x2");
+                resultado *= 2;
+            }
         }
 
-        return 20; // Fallback por si la carta vino sin ataques cargados
+        // Validar Resistencia (-20)
+        if (defensor.getCard().getResistencias() != null) {
+            boolean esResistente = defensor.getCard().getResistencias().stream()
+                    .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoAtacante));
+            if (esResistente) {
+                System.out.println("🛡️ ¡Resistencia! Daño -20");
+                resultado = Math.max(0, resultado - 20);
+            }
+        }
+
+        return resultado;
     }
 
     private boolean esPokemonBasico(Card carta) {
         if (carta.getTipo() == null) return false;
         String tipo = carta.getTipo().toLowerCase();
-        return !tipo.contains("energy") && !tipo.contains("energÃƒÂ­a") && !tipo.contains("stage");
+        return !tipo.contains("energy") && !tipo.contains("energía") && !tipo.contains("stage");
     }
 
     private boolean esEnergia(Card carta) {
         if (carta.getTipo() == null) return false;
         String tipo = carta.getTipo().toLowerCase();
-        return tipo.contains("energy") || tipo.contains("energÃƒÂ­a");
+        return tipo.contains("energy") || tipo.contains("energía");
     }
 }

@@ -1,4 +1,9 @@
-﻿<div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
+﻿
+
+<div style="position:fixed; top:0; left:0; background:red; color:white; z-index:99999; padding:10px;">
+  DEBUG: Partida existe? {{ !!partida }} | Fase: {{ partida?.faseActual }} | Estado Moneda: {{ estadoCoinFlip }}
+</div>
+<div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
   <div class="intro-lines"><span *ngFor="let l of [1,2,3,4,5,6,7,8,9,10,11,12]" [style.--ln]="l"></span></div>
   <div class="intro-content">
     <div class="intro-pokeball"><div class="pb-band"></div><div class="pb-btn"></div></div>
@@ -9,19 +14,75 @@
   </div>
 </div>
 
+<div class="coinflip-overlay" *ngIf="estadoCoinFlip !== 'OCULTO'">
+  <div class="panel">
+    
+    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
+      <h2 class="sorteo-title">SORTEO INICIAL</h2>
+      <p class="sorteo-sub">¿Cara o Cruz?</p>
+      <div class="choice-buttons">
+        <button class="btn-choice heads" (click)="iniciarSorteo('CARA')">CARA</button>
+        <button class="btn-choice tails" (click)="iniciarSorteo('CRUZ')">CRUZ</button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
+      <div class="throw-zone" 
+           (mousedown)="onMouseDown($event)" 
+           (window:mouseup)="onMouseUp($event)"
+           [class.pointer-events-none]="lanzada">
+        
+        <p class="swipe-hint" *ngIf="!lanzada">¡Deslizá hacia arriba para lanzar!</p>
+
+        <div class="moneda-scene">
+          <div class="moneda-inner" 
+               [class.animar-vuelo]="lanzada"
+               [class.girando]="lanzada && girando"
+               [style.transform]="(!girando && lanzada) ? ('rotateY(' + anguloFinal + 'deg)') : null">
+            
+            <div class="cara front">
+              <img src="coin-heads.png" draggable="false">
+            </div>
+            <div class="cruz back">
+              <img src="coin-tails.png" draggable="false">
+            </div>
+          </div>
+        </div>
+        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">Lanzando moneda...</p>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
+      <div class="resultado-panel">
+        <p class="res-ganaste">¡GANASTE EL SORTEO!</p>
+        <div class="choice-buttons small">
+          <button (click)="seleccionarTurno(true)">YO PRIMERO</button>
+          <button (click)="seleccionarTurno(false)">BOT PRIMERO</button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
+      <div class="resultado-panel">
+        <p class="res-perdiste">PERDISTE EL SORTEO</p>
+        <p class="res-sub">El Bot decidió ir primero.</p>
+      </div>
+    </ng-container>
+
+  </div>
+</div>
 <div class="turn-overlay" *ngIf="showTurnOverlay"
      [class.is-player]="turnoOverlayTipo==='jugador'"
      [class.is-bot]="turnoOverlayTipo==='bot'">
-  <div class="to-backdrop"></div>
   <div class="to-body">
-    <div class="to-lines"><span></span><span></span><span></span></div>
-    <p class="to-text">{{ turnoOverlayTipo==='jugador' ? 'TU TURNO' : 'TURNO DEL BOT' }}</p>
-    <small class="to-sub">{{ turnoOverlayTipo==='jugador' ? '¡Hacé tu jugada!' : 'El rival está pensando…' }}</small>
+    <div class="to-lines"><span></span></div>
+    <p class="to-text">
+      {{ turnoOverlayTipo==='jugador' ? '¡TU TURNO!' : '¡TURNO DEL RIVAL!' }}
+    </p>
+    <small class="to-sub">
+      {{ turnoOverlayTipo==='jugador' ? '¡Elegí tu estrategia!' : '¡Prepárate para defender!' }}
+    </small>
   </div>
-</div>
-
-<div class="loading-overlay" *ngIf="cargandoAccion && !animandoAtaque">
-  <div class="loader-ring"></div><span>PROCESANDO</span>
 </div>
 
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
@@ -175,19 +236,20 @@
             </div>
           </div>
 
-          <div class="active-card-wrap player-card-wrap">
-            <div class="attack-selection-panel habilidades-panel" *ngIf="showHabilidadesPanel">
-              <button class="close-panel-btn" (click)="showHabilidadesPanel = false; $event.stopPropagation()">✕</button>
-              <p class="panel-title">ACCIONES DISPONIBLES</p>
-              
-          <div class="habilidades-list">
-  <button *ngFor="let h of partida.jugador.activo.card.ataques" 
-          class="habilidad-card" 
-          [class.habilidad-locked]="!validarEnergiaAtaque(h)"
-          [disabled]="!validarEnergiaAtaque(h)"
-          (click)="realizarAccion(h)">
+    <div class="active-card-wrap player-card-wrap">
+  <div class="attack-selection-panel habilidades-panel" *ngIf="showHabilidadesPanel">
+    <button class="close-panel-btn" (click)="showHabilidadesPanel = false; $event.stopPropagation()">✕</button>
+    <p class="panel-title">ACCIONES DISPONIBLES</p>
     
-    <div class="hab-header">
+    <div class="habilidades-list">
+      
+      <button *ngFor="let h of partida.jugador.activo.card.ataques" 
+              class="habilidad-card" 
+              [class.habilidad-locked]="!validarEnergiaAtaque(h)"
+              [disabled]="!validarEnergiaAtaque(h) || cargandoAccion || bloqueadoPorAnimacion"
+              (click)="realizarAccion(h)">
+        
+        <div class="hab-header">
       <div class="hab-cost-container">
         <span *ngFor="let check of getCheckEnergiasAtaque(h)" 
               class="cost-dot" 
@@ -280,7 +342,7 @@
       <div class="turn-status" [class.active]="partida.turnoActual==='JUGADOR'">{{ partida.turnoActual==='JUGADOR' ? 'TU TURNO' : 'RIVAL' }}</div>
       <button class="btn-turn" [class.off]="partida.turnoActual!=='JUGADOR'" [disabled]="partida.turnoActual!=='JUGADOR'||cargandoAccion" (click)="pasarTurno()">
         <span class="bico">{{ partida.turnoActual==='JUGADOR' ? '▶' : '⏳' }}</span>
-        <span>{{ partida.turnoActual==='JUGADOR' ? 'TERMINAR' : 'PENSANDO' }}</span>
+        <span>{{ partida.turnoActual==='JUGADOR' ? 'TERMINAR TURNO' : 'PENSANDO' }}</span>
       </button>
       <div class="turn-dots">
         <span [class.on]="partida.turnoActual==='JUGADOR'"></span><span [class.on]="partida.turnoActual==='BOT'"></span>

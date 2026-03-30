@@ -6,22 +6,15 @@ import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Ataque {
-
     private String nombre;
 
-    @JsonProperty("dano") // Angular necesita que se llame asÃ­
+    @JsonProperty("dano")
     private int danio;
 
-    @JsonProperty("costo") // Angular necesita que se llame asÃ­
+    @JsonProperty("costo")
     private List<String> tiposEnergia;
 
     public Ataque() {}
-
-    public Ataque(String nombre, int danio, List<String> tiposEnergia) {
-        this.nombre = nombre;
-        this.danio = danio;
-        this.tiposEnergia = tiposEnergia;
-    }
 
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
@@ -29,6 +22,9 @@ public class Ataque {
     public int getDanio() { return danio; }
     public void setDanio(int danio) { this.danio = danio; }
 
-    public List<String> getTiposEnergia() { return tiposEnergia; }
+    @JsonProperty("costo") // Para que Jackson sepa leerlo del JSON
+    public List<String> getCosto() { return tiposEnergia; }
+
+    @JsonProperty("costo") // Para que Jackson sepa escribirlo
     public void setTiposEnergia(List<String> tiposEnergia) { this.tiposEnergia = tiposEnergia; }
 }
