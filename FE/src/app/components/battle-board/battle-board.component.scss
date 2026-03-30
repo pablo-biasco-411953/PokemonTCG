@@ -1062,3 +1062,98 @@ width: 130px; // Un poco más grandes
   transition: all 0.2s;
 }
 
+
+
+/* ══════════════════════════════════════════════════════════════
+   SISTEMA DE ENERGÍAS TCG REAL (FIX Z-INDEX)
+   ══════════════════════════════════════════════════════════════ */
+
+.active-card-wrap { 
+  position: relative; 
+  isolation: isolate; /* Crea una burbuja para que las energías no traspasen la mesa */
+}
+
+.active-card {
+  position: relative;
+  z-index: 2; /* La carta activa va por encima */
+}
+
+.energy-stack {
+  position: absolute; 
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; 
+  z-index: 1; /* Las energías van por debajo de la carta activa, pero adentro de la burbuja */
+}
+
+.energy-attached {
+  position: absolute; 
+  width: 100%; 
+  height: 100%;
+  border-radius: 8px; 
+  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: slide-energy-in 0.4s ease-out backwards;
+  
+  img { 
+    width: 100%; height: 100%; 
+    object-fit: contain; 
+    border-radius: 8px; 
+    background: #000;
+  }
+}
+
+.player-stack .energy-attached { 
+  transform: translateY(calc(var(--ei) * -22px)) translateX(calc(var(--ei) * -8px)); 
+}
+
+.bot-stack .energy-attached { 
+  transform: translateY(calc(var(--ei) * 22px)) translateX(calc(var(--ei) * 8px)); 
+}
+
+@keyframes slide-energy-in { 
+  from { opacity: 0; transform: translateY(0) scale(0.8); } 
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   SISTEMA DE SPRITES DE ENERGÍA (ESTILO VIDEOJUEGO)
+   ══════════════════════════════════════════════════════════════ */
+
+.energy-icons-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 4px; 
+  margin-bottom: 8px;
+  z-index: 10;
+  position: relative;
+}
+
+.energy-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+  background: #222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  animation: pop-badge 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+
+  img {
+    width: 150%;
+    height: 150%;
+    object-fit: cover;
+    object-position: center 25%;
+  }
+}
+
+@keyframes pop-badge {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
