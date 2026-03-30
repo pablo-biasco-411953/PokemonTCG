@@ -89,23 +89,34 @@
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
-          <div class="active-card-wrap bot-card-wrap">
-            <div class="active-card" [class.vibrate]="vibrarBot" [class.is-empty]="!partida.bot.activo">
-              <ng-container *ngIf="partida.bot.activo">
-                <img [src]="getImagenCarta(partida.bot.activo.card.id)" [alt]="partida.bot.activo.card.nombre">
-              </ng-container>
-              <span *ngIf="!partida.bot.activo" class="empty-label">SIN ACTIVO</span>
-            </div>
+          
+          <div class="active-card bot-active">
+            <ng-container *ngIf="partida.bot.activo">
+              <img [src]="getImagenCarta(partida.bot.activo.card.id)">
+            </ng-container>
           </div>
 
-          <div class="sprite-container">
-            <div class="sprite-wrap bot-sprite-wrap" [class.sprite-attack]="animandoBotAtaque">
-              <ng-container *ngIf="partida.bot.activo">
-                <img class="poke-sprite sprite-back" [src]="getSpriteBack(partida.bot.activo.card.nombre)" (error)="onSpriteError($event)">
-                <div class="sprite-shadow"></div>
-              </ng-container>
-            </div>
+          <div class="sprite-container" [class.recibiendo-danio]="animandoBotDanio">
             
+            <div class="particle-emitter" *ngIf="mostrarEfectoBot">
+              <div *ngFor="let p of particulasBot" class="particle"
+                   [style.backgroundColor]="p.color"
+                   [style.width.px]="p.size" 
+                   [style.height.px]="p.size"
+                   [style.animationDuration.s]="p.duracion"
+                   [style.--tx.px]="p.tx" 
+                   [style.--ty.px]="p.ty">
+              </div>
+            </div>
+
+         <div class="sprite-wrap bot-sprite-wrap" [class.sprite-attack]="animandoBotAtaque">
+  <ng-container *ngIf="partida.bot.activo">
+    <img class="poke-sprite sprite-front" 
+         [src]="getSpriteFront(partida.bot.activo.card.nombre)" 
+         (error)="onSpriteError($event)">
+    <div class="sprite-shadow"></div>
+  </ng-container>
+</div>
             <div class="energy-icons-row" *ngIf="partida.bot.activo?.energiasUnidas?.length">
               <div *ngFor="let energia of partida.bot.activo.energiasUnidas" class="energy-badge" [title]="energia.nombre">
                 <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre">
@@ -124,13 +135,31 @@
 
       <div class="arena-half arena-bottom">
         <div class="combatant player-combatant" cdkDropList (cdkDropListDropped)="soltarCarta($event, 'activo')">
-          <div class="sprite-container">
-            <div class="sprite-wrap player-sprite-wrap" [class.sprite-attack]="animandoAtaque">
-              <ng-container *ngIf="partida.jugador.activo">
-                <img class="poke-sprite sprite-front" [src]="getSpriteFront(partida.jugador.activo.card.nombre)" (error)="onSpriteError($event)">
-                <div class="sprite-shadow"></div>
-              </ng-container>
+          
+          <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
+
+            <div class="particle-emitter" *ngIf="mostrarEfectoJugador">
+              <div *ngFor="let p of particulasJugador" class="particle"
+                   [style.backgroundColor]="p.color"
+                   [style.width.px]="p.size" 
+                   [style.height.px]="p.size"
+                   [style.animationDuration.s]="p.duracion"
+                   [style.--tx.px]="p.tx" 
+                   [style.--ty.px]="p.ty">
+              </div>
             </div>
+
+       <div class="sprite-wrap player-sprite-wrap" 
+     [class.pokemon-defeated]="partida?.jugador?.activo?.hpActual <= 0"
+     [class.sprite-attack]="animandoAtaque">
+        
+  <ng-container *ngIf="partida.jugador.activo">
+    <img class="poke-sprite sprite-back" 
+         [src]="getSpriteBack(partida.jugador.activo.card.nombre)" 
+         (error)="onSpriteError($event)">
+    <div class="sprite-shadow"></div>
+  </ng-container>
+</div>
 
             <div class="energy-icons-row" *ngIf="partida.jugador.activo?.energiasUnidas?.length">
               <div *ngFor="let energia of partida.jugador.activo.energiasUnidas" class="energy-badge" [title]="energia.nombre">
@@ -147,7 +176,56 @@
           </div>
 
           <div class="active-card-wrap player-card-wrap">
-            <div class="active-card player-active" [class.can-attack]="puedeAtacar()" (click)="atacar()">
+            <div class="attack-selection-panel habilidades-panel" *ngIf="showHabilidadesPanel">
+              <button class="close-panel-btn" (click)="showHabilidadesPanel = false; $event.stopPropagation()">✕</button>
+              <p class="panel-title">ACCIONES DISPONIBLES</p>
+              
+          <div class="habilidades-list">
+  <button *ngFor="let h of partida.jugador.activo.card.ataques" 
+          class="habilidad-card" 
+          [class.habilidad-locked]="!validarEnergiaAtaque(h)"
+          [disabled]="!validarEnergiaAtaque(h)"
+          (click)="realizarAccion(h)">
+    
+    <div class="hab-header">
+      <div class="hab-cost-container">
+        <span *ngFor="let check of getCheckEnergiasAtaque(h)" 
+              class="cost-dot" 
+              [style.backgroundColor]="getEnergyColor(check.tipo)" 
+              [class.missing-energy]="!check.cumplido"
+              [title]="check.cumplido ? 'Energía lista' : 'Falta energía ' + check.tipo">
+          
+          <i *ngIf="!check.cumplido" class="error-exclamation">!</i>
+        </span>
+      </div>
+      <span class="hab-type">DAÑO</span>
+      <span class="hab-dano">{{ h.dano }}</span>
+    </div>
+    
+ <div class="hab-body">
+  <p class="hab-name">{{ h.nombre }}</p>
+  
+  <div class="missing-summary" *ngIf="!validarEnergiaAtaque(h)">
+    <span class="missing-label">FALTAN:</span>
+    <div class="missing-icons">
+      <div *ngFor="let f of getFaltantesAtaque(h)" class="missing-item">
+        <span class="missing-count">x{{ f.cantidad }}</span>
+        <span class="missing-orb" [style.backgroundColor]="getEnergyColor(f.tipo)">
+          {{ f.tipo.charAt(0) }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <div class="locked-overlay" *ngIf="!validarEnergiaAtaque(h)">
+      <span class="lock-text">ENERGÍA INSUFICIENTE</span>
+    </div>
+  </button>
+</div>
+            </div>
+
+            <div class="active-card player-active" [class.can-attack]="puedeAtacar()" (click)="intentarAbrirHabilidades()">
               <ng-container *ngIf="partida.jugador.activo">
                 <img [src]="getImagenCarta(partida.jugador.activo.card.id)">
               </ng-container>
@@ -169,19 +247,28 @@
       <div class="bench-label player">MI BANCA</div>
     </div>
 
-    <div class="hand-zone">
-      <div class="hand-cards" cdkDropList cdkDropListOrientation="horizontal">
-        <div *ngFor="let carta of partida.jugador.mano; let i = index" class="hand-card" cdkDrag [cdkDragData]="carta" [style.--bi]="i" [style.--btot]="partida.jugador.mano.length" (click)="jugarCarta(carta)" [title]="carta.nombre">
-          
-          <div *cdkDragPreview class="custom-drag-preview">
-            <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
-          </div>
-          <div *cdkDragPlaceholder class="card-placeholder"></div>
-          
-          <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
-        </div>
-      </div>
+<div class="hand-zone">
+  <div class="hand-cards" cdkDropList cdkDropListOrientation="horizontal">
+    <div *ngFor="let carta of partida.jugador.mano; let i = index" 
+         class="hand-card-hitbox" 
+         [style.--bi]="i" 
+         [style.--btot]="partida.jugador.mano.length">
+         
+         <div class="hand-card" 
+              cdkDrag 
+              [cdkDragData]="carta"
+              (click)="jugarCarta(carta)">
+              
+              <div *cdkDragPreview class="custom-drag-preview">
+                <img [src]="getImagenCarta(carta.id)">
+              </div>
+
+              <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
+         </div>
     </div>
+  </div>
+
+</div>
   </main>
 
   <aside class="side-col right">

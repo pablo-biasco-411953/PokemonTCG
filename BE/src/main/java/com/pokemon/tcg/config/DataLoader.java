@@ -27,15 +27,15 @@ public class DataLoader implements CommandLineRunner {
             try {
                 InputStream inputStream = getClass().getResourceAsStream("/cards.json");
                 if (inputStream == null) {
-                    System.out.println("❌ ERROR: No se encontró el archivo /cards.json en src/main/resources");
+                    System.out.println("âŒ ERROR: No se encontrÃ³ el archivo /cards.json en src/main/resources");
                     return;
                 }
 
                 List<Card> cards = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
                 cardRepo.saveAll(cards);
-                System.out.println("✅ ¡ÉXITO! Se cargaron " + cards.size() + " cartas reales desde el JSON.");
+                System.out.println("âœ… Â¡Ã‰XITO! Se cargaron " + cards.size() + " cartas reales desde el JSON.");
             } catch (Exception e) {
-                System.out.println("❌ ERROR al procesar el JSON: " + e.getMessage());
+                System.out.println("âŒ ERROR al procesar el JSON: " + e.getMessage());
             }
         }
     }

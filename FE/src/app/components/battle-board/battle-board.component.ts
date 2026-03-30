@@ -1,17 +1,18 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BattleService } from '../../services/battle.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
+
 @Component({
   selector: 'app-battle-board',
   templateUrl: './battle-board.component.html',
   styleUrls: ['./battle-board.component.scss'],
   standalone: true,
-  imports: [CommonModule, DragDropModule] // <-- ¡Agregalo acá!
+  imports: [CommonModule, DragDropModule]
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
-
+public Math = Math; // 👈 Agregá esto para usarlo en el template
   matchId: string | null = null;
   partida: any = null;
   jugadorNombre = '';
@@ -25,19 +26,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   showTurnOverlay   = false;
   turnoOverlayTipo: 'jugador' | 'bot' = 'jugador';
 
-  // Animaciones de ataque
-  animandoAtaque    = false;   // sprite jugador se lanza
-  animandoBotAtaque = false;   // sprite bot recibe el golpe
-  showImpactFlash   = false;   // flash blanco de impacto
+  // Animaciones y Panel
+  animandoAtaque    = false;
+public animandoBotAtaque = false;
+  showImpactFlash   = false;
+  showHabilidadesPanel = false; // Controla el panel de acciones
 
   private ataqueRealizado = false;
   private pollingPartida: any;
-
-  /**
-   * Mapa nombre→número de Pokédex.
-   * La clave es el nombre normalizado (minúsculas, sin tildes).
-   * Completá con todos los pokémon de tu colección.
-   */
+public botEstaAtacando = false;
+private datosPendientesBot: any = null;
   private readonly pokedexNum: Record<string, number> = {
     'bulbasaur':1,'ivysaur':2,'venusaur':3,
     'charmander':4,'charmeleon':5,'charizard':6,
@@ -102,142 +100,129 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     'articuno':144,'zapdos':145,'moltres':146,
     'dratini':147,'dragonair':148,'dragonite':149,
     'mewtwo':150,'mew':151,
-    // Especiales de TCG
     'crawdaunt':342,'crobat':169,'espeon':196,'umbreon':197,
     'blaziken':257,'swampert':260,'sceptile':254,
     'torchic':255,'mudkip':258,'treecko':252,
     'ralts':280,'kirlia':281,'gardevoir':282,
-    // Johto (Gen 2)
-  'chikorita':152,'bayleef':153,'meganium':154,
-  'cyndaquil':155,'quilava':156,'typhlosion':157,
-  'totodile':158,'croconaw':159,'feraligatr':160,
-  'sentret':161,'furret':162,'hoothoot':163,'noctowl':164,
-  'ledyba':165,'ledian':166,'spinarak':167,'ariados':168,
-  'chinchou':170,'lanturn':171,'pichu':172,'cleffa':173,
-  'igglybuff':174,'togepi':175,'togetic':176,'natu':177,'xatu':178,
-  'mareep':179,'flaaffy':180,'ampharos':181,
-  'bellossom':182,'marill':183,'azumarill':184,'sudowoodo':185,
-  'politoed':186,'hoppip':187,'skiploom':188,'jumpluff':189,
-  'aipom':190,'sunkern':191,'sunflora':192,'yanma':193,
-  'wooper':194,'quagsire':195,'murkrow':198,'slowking':199,
-  'misdreavus':200,'unown':201,'wobbuffet':202,'girafarig':203,
-  'pineco':204,'forretress':205,'dunsparce':206,'gligar':207,
-  'steelix':208,'snubbull':209,'granbull':210,
-  'qwilfish':211,'scizor':212,'shuckle':213,'heracross':214,
-  'sneasel':215,'teddiursa':216,'ursaring':217,
-  'slugma':218,'magcargo':219,'swinub':220,'piloswine':221,
-  'corsola':222,'remoraid':223,'octillery':224,'delibird':225,
-  'mantine':226,'skarmory':227,'houndour':228,'houndoom':229,
-  'kingdra':230,'phanpy':231,'donphan':232,'porygon2':233,
-  'stantler':234,'smeargle':235,'tyrogue':236,'hitmontop':237,
-  'smoochum':238,'elekid':239,'magby':240,'miltank':241,
-  'blissey':242,'raikou':243,'entei':244,'suicune':245,
-  'larvitar':246,'pupitar':247,'tyranitar':248,
-  'lugia':249,'ho-oh':250,'celebi':251,
-
-  // Hoenn (Gen 3) - Vi varios de estos en tu banca
-  'poochyena':261,'mightyena':262,'zigzagoon':263,'linoone':264,
-  'wurmple':265,'silcoon':266,'beautifly':267,'cascoon':268,'dustox':269,
-  'lotad':270,'lombre':271,'ludicolo':272,'seedot':273,'nuzleaf':274,'shiftry':275,
-  'taillow':276,'swellow':277,'wingull':278,'pelipper':279,
-  'slakoth':287,'vigoroth':288,'slaking':289,
-  'nincada':290,'ninjask':291,'shedinja':292,
-  'whismur':293,'loudred':294,'exploud':295,
-  'makuhita':296,'hariyama':297,'azurill':298,'nosepass':299,
-  'skitty':300,'delcatty':301,'sableye':302,'mawile':303,
-  'aron':304,'lairon':305,'aggron':306,'meditite':307,'medicham':308,
-  'electrike':309,'manectric':310,'plusle':311,'minun':312,
-  'volbeat':313,'illumise':314,'roselia':315,'gulpin':316,'swalot':317,
-  'carvanha':318,'sharpedo':319,'wailmer':320,'wailord':321,
-  'numel':322,'camerupt':323,'torkoal':324,'spoink':325,'grumpig':326,
-  'spinda':327,'trapinch':328,'vibrava':329,'flygon':330,
-  'cacnea':331,'cacturne':332,'swablu':333,'altaria':334,'zangoose':335,'seviper':336,
-  'lunatone':337,'solrock':338,'barboach':339,'whiscash':340,'corphish':341,
-  'lileep':345,'cradily':346,'anorith':347,'armaldo':348,
-  'feebas':349,'milotic':350,'castform':351,'kecleon':352,
-  'shuppet':353,'banette':354,'duskull':355,'dusclops':356,
-  'tropius':357,'chimecho':358,'absol':359,'wynaut':360,
-  'snorunt':361,'glalie':362,'spheal':363,'sealeo':364,'walrein':365,
-  'clamperl':366,'huntail':367,'gorebyss':368,'relicanth':369,'luvdisc':370,
-  'bagon':371,'shelgon':372,'salamence':373,'beldum':374,'metang':375,'metagross':376,
-  'regirock':377,'regice':378,'registeel':379,'latias':380,'latios':381,
-  'kyogre':382,'groudon':383,'rayquaza':384,'jirachi':385,'deoxys':386,
-
-  // Sinnoh (Gen 4) - ¡Para que Dialga no se rompa!
-  'turtwig':387,'grotle':388,'torterra':389,
-  'chimchar':390,'monferno':391,'infernape':392,
-  'piplup':393,'prinplup':394,'empoleon':395,
-  'starly':396,'staravia':397,'staraptor':398,
-  'bidoof':399,'bibarel':400,'kricketot':401,'kricketune':402,
-  'shinx':403,'luxio':404,'luxray':405,'cranidos':408,'rampardos':409,
-  'shieldon':410,'bastiodon':411,'combee':415,'vespiquen':416,
-  'pachirisu':417,'buizel':418,'floatzel':419,'cherubi':420,'cherrim':421,
-  'drifloon':425,'drifblim':426,'buneary':427,'lopunny':428,
-  'honchkrow':430,'glameow':431,'purugly':432,'stunky':434,'skuntank':435,
-  'bronzor':436,'bronzong':437,'gible':443,'gabite':444,'garchomp':445,
-  'lucario':448,'riolu':447,'croagunk':453,'toxicroak':454,
-  'weavile':461,'magnezone':462,'electivire':466,'magmortar':467,
-  'leafeon':470,'glaceon':471,'gliscor':472,'mamoswine':473,
-  'porygon-z':474,'gallade':475,'probopass':476,'dusknoir':477,'froslass':478,
-  'rotom':479,'uxie':480,'mesprit':481,'azelf':482,
-  'dialga':483,'palkia':484,'heatran':485,'regigigas':486,'giratina':487,
-  'cresselia':488,'phione':489,'manaphy':490,'darkrai':491,'shaymin':492,'arceus':493,
-  // Unova (Gen 5) - Muy comunes en TCG
-  'victini':494,'snivy':495,'servine':496,'serperior':497,
-  'tepig':498,'pignite':499,'emboar':500,
-  'oshawott':501,'dewott':502,'samurott':503,
-  'purrloin':509,'liepard':510,'munna':517,'musharna':518,
-  'pidove':519,'tranquill':520,'unfezant':521,'blitzle':522,'zebstrika':523,
-  'drilbur':529,'excadrill':530,'audino':531,'timburr':532,'gurdurr':533,'conkeldurr':534,
-  'tympole':535,'palpitoad':536,'seismitoad':537,'throh':538,'sawk':539,
-  'venipede':543,'whirlipede':544,'scolipede':545,'cottonee':546,'whimsicott':547,
-  'petilil':548,'lilligant':549,'basculin':550,'sandile':551,'krokorok':552,'krookodile':553,
-  'darumaka':554,'darmanitan':555,'maractus':556,'dwebble':557,'crustle':558,'scraggy':559,'scrafty':560,
-  'sigilyph':561,'yamask':562,'cofagrigus':563,'tirtouga':564,'carracosta':565,'archen':566,'archeops':567,
-  'trubbish':568,'garbodor':569,'zorua':570,'zoroark':571,'minccino':572,'cinccino':573,
-  'gothita':574,'gothorita':575,'gothitelle':576,'solosis':577,'duosion':578,'reuniclus':579,
-  'ducklett':580,'swanna':581,'vanillite':582,'vanillish':583,'vanilluxe':584,
-  'deerling':585,'sawsbuck':586,'emolga':587,'karrablast':588,'escavalier':589,'foongus':590,'amoonguss':591,
-  'frillish':592,'jellicent':593,'alomomola':594,'joltik':595,'galvantula':596,
-  'ferroseed':597,'ferrothorn':598,'klink':599,'klang':600,'klinklang':601,
-  'tynamo':602,'eelektrik':603,'eelektross':604,'elgyem':605,'beheeyem':606,
-  'litwick':607,'lampent':608,'chandelure':609,'axew':610,'fraxure':611,'haxorus':612,
-  'cubchoo':613,'beartic':614,'cryogonal':615,'shelmet':616,'accelgor':617,'stunfisk':618,
-  'mienshao':620,'druddigon':621,'golett':622,'golurk':623,'pawniard':624,'bisharp':625,'bouffalant':626,
-  'rufflet':627,'braviary':628,'vullaby':629,'mandibuzz':630,'heatmor':631,'durant':632,
-  'deino':633,'zweilous':634,'hydreigon':635,'larvesta':636,'volcarona':637,
-  'cobalion':638,'terrakion':639,'virizion':640,'tornadus':641,'thundurus':642,'reshiram':643,'zekrom':644,
-  'landorus':645,'kyurem':646,'keldeo':647,'meloetta':648,'genesect':649,
-
-  // Kalos (Gen 6)
-  'chespin':650,'quilladin':651,'chesnaught':652,
-  'fennekin':653,'braixen':654,'delphox':655,
-  'froakie':656,'frogadier':657,'greninja':658,
-  'fletchling':661,'fletchinder':662,'talonflame':663,
-  'scatterbug':664,'spewpa':665,'vivillon':666,'litleo':667,'pyroar':668,
-  'flabebe':669,'floette':670,'florges':671,'skiddo':672,'gogoat':673,
-  'pancham':674,'pangoro':675,'furfrou':676,'espurr':677,'meowstic':678,
-  'honedge':679,'doublade':680,'aegislash':681,'spritzee':682,'aromatisse':683,
-  'swirlix':684,'slurpuff':685,'inkay':686,'malamar':687,'binacle':688,'barbaracle':689,
-  'skrelp':690,'dragalge':691,'clauncher':692,'clawitzer':693,'helioptile':694,'heliolisk':695,
-  'tyrunt':696,'tyrantrum':697,'amaura':698,'aurorus':699,'sylveon':700,
-  'hawlucha':701,'dedenne':702,'carbink':703,'goomy':704,'sliggoo':705,'goodra':706,
-  'klefki':707,'phantump':708,'trevenant':709,'pumpkaboo':710,'gourgeist':711,
-  'bergmite':712,'avalugg':713,'noibat':714,'noivern':715,
-  'xerneas':716,'yveltal':717,'zygarde':718,'diancie':719,'hoopa':720,'volcanion':721,
-
-  // Alola (Gen 7) - Por si aparecen los GX
-  'rowlet':722,'dartrix':723,'decidueye':724,
-  'litten':725,'torracat':726,'incineroar':727,
-  'popplio':728,'brionne':729,'primarina':730,
-  'rockruff':744,'lycanroc':745,'mimikyu':778,'tapu koko':785,'tapu lele':786,'solgaleo':791,'lunala':792,
-  'zeraora':807,'meltan':808,'melmetal':809,
-
-  // Galar (Gen 8) - Por si tenés V o VMAX
-  'grookey':810,'thackey':811,'rillaboom':812,
-  'scorbunny':813,'raboot':814,'cinderace':815,
-  'sobble':816,'drizzile':817,'inteleon':818,
-  'zacian':888,'zamazenta':889,'eternatus':890,
+    'chikorita':152,'bayleef':153,'meganium':154,
+    'cyndaquil':155,'quilava':156,'typhlosion':157,
+    'totodile':158,'croconaw':159,'feraligatr':160,
+    'sentret':161,'furret':162,'hoothoot':163,'noctowl':164,
+    'ledyba':165,'ledian':166,'spinarak':167,'ariados':168,
+    'chinchou':170,'lanturn':171,'pichu':172,'cleffa':173,
+    'igglybuff':174,'togepi':175,'togetic':176,'natu':177,'xatu':178,
+    'mareep':179,'flaaffy':180,'ampharos':181,
+    'bellossom':182,'marill':183,'azumarill':184,'sudowoodo':185,
+    'politoed':186,'hoppip':187,'skiploom':188,'jumpluff':189,
+    'aipom':190,'sunkern':191,'sunflora':192,'yanma':193,
+    'wooper':194,'quagsire':195,'murkrow':198,'slowking':199,
+    'misdreavus':200,'unown':201,'wobbuffet':202,'girafarig':203,
+    'pineco':204,'forretress':205,'dunsparce':206,'gligar':207,
+    'steelix':208,'snubbull':209,'granbull':210,
+    'qwilfish':211,'scizor':212,'shuckle':213,'heracross':214,
+    'sneasel':215,'teddiursa':216,'ursaring':217,
+    'slugma':218,'magcargo':219,'swinub':220,'piloswine':221,
+    'corsola':222,'remoraid':223,'octillery':224,'delibird':225,
+    'mantine':226,'skarmory':227,'houndour':228,'houndoom':229,
+    'kingdra':230,'phanpy':231,'donphan':232,'porygon2':233,
+    'stantler':234,'smeargle':235,'tyrogue':236,'hitmontop':237,
+    'smoochum':238,'elekid':239,'magby':240,'miltank':241,
+    'blissey':242,'raikou':243,'entei':244,'suicune':245,
+    'larvitar':246,'pupitar':247,'tyranitar':248,
+    'lugia':249,'ho-oh':250,'celebi':251,
+    'poochyena':261,'mightyena':262,'zigzagoon':263,'linoone':264,
+    'wurmple':265,'silcoon':266,'beautifly':267,'cascoon':268,'dustox':269,
+    'lotad':270,'lombre':271,'ludicolo':272,'seedot':273,'nuzleaf':274,'shiftry':275,
+    'taillow':276,'swellow':277,'wingull':278,'pelipper':279,
+    'slakoth':287,'vigoroth':288,'slaking':289,
+    'nincada':290,'ninjask':291,'shedinja':292,
+    'whismur':293,'loudred':294,'exploud':295,
+    'makuhita':296,'hariyama':297,'azurill':298,'nosepass':299,
+    'skitty':300,'delcatty':301,'sableye':302,'mawile':303,
+    'aron':304,'lairon':305,'aggron':306,'meditite':307,'medicham':308,
+    'electrike':309,'manectric':310,'plusle':311,'minun':312,
+    'volbeat':313,'illumise':314,'roselia':315,'gulpin':316,'swalot':317,
+    'carvanha':318,'sharpedo':319,'wailmer':320,'wailord':321,
+    'numel':322,'camerupt':323,'torkoal':324,'spoink':325,'grumpig':326,
+    'spinda':327,'trapinch':328,'vibrava':329,'flygon':330,
+    'cacnea':331,'cacturne':332,'swablu':333,'altaria':334,'zangoose':335,'seviper':336,
+    'lunatone':337,'solrock':338,'barboach':339,'whiscash':340,'corphish':341,
+    'lileep':345,'cradily':346,'anorith':347,'armaldo':348,
+    'feebas':349,'milotic':350,'castform':351,'kecleon':352,
+    'shuppet':353,'banette':354,'duskull':355,'dusclops':356,
+    'tropius':357,'chimecho':358,'absol':359,'wynaut':360,
+    'snorunt':361,'glalie':362,'spheal':363,'sealeo':364,'walrein':365,
+    'clamperl':366,'huntail':367,'gorebyss':368,'relicanth':369,'luvdisc':370,
+    'bagon':371,'shelgon':372,'salamence':373,'beldum':374,'metang':375,'metagross':376,
+    'regirock':377,'regice':378,'registeel':379,'latias':380,'latios':381,
+    'kyogre':382,'groudon':383,'rayquaza':384,'jirachi':385,'deoxys':386,
+    'turtwig':387,'grotle':388,'torterra':389,
+    'chimchar':390,'monferno':391,'infernape':392,
+    'piplup':393,'prinplup':394,'empoleon':395,
+    'starly':396,'staravia':397,'staraptor':398,
+    'bidoof':399,'bibarel':400,'kricketot':401,'kricketune':402,
+    'shinx':403,'luxio':404,'luxray':405,'cranidos':408,'rampardos':409,
+    'shieldon':410,'bastiodon':411,'combee':415,'vespiquen':416,
+    'pachirisu':417,'buizel':418,'floatzel':419,'cherubi':420,'cherrim':421,
+    'drifloon':425,'drifblim':426,'buneary':427,'lopunny':428,
+    'honchkrow':430,'glameow':431,'purugly':432,'stunky':434,'skuntank':435,
+    'bronzor':436,'bronzong':437,'gible':443,'gabite':444,'garchomp':445,
+    'lucario':448,'riolu':447,'croagunk':453,'toxicroak':454,
+    'weavile':461,'magnezone':462,'electivire':466,'magmortar':467,
+    'leafeon':470,'glaceon':471,'gliscor':472,'mamoswine':473,
+    'porygon-z':474,'gallade':475,'probopass':476,'dusknoir':477,'froslass':478,
+    'rotom':479,'uxie':480,'mesprit':481,'azelf':482,
+    'dialga':483,'palkia':484,'heatran':485,'regigigas':486,'giratina':487,
+    'cresselia':488,'phione':489,'manaphy':490,'darkrai':491,'shaymin':492,'arceus':493,
+    'victini':494,'snivy':495,'servine':496,'serperior':497,
+    'tepig':498,'pignite':499,'emboar':500,
+    'oshawott':501,'dewott':502,'samurott':503,
+    'purrloin':509,'liepard':510,'munna':517,'musharna':518,
+    'pidove':519,'tranquill':520,'unfezant':521,'blitzle':522,'zebstrika':523,
+    'drilbur':529,'excadrill':530,'audino':531,'timburr':532,'gurdurr':533,'conkeldurr':534,
+    'tympole':535,'palpitoad':536,'seismitoad':537,'throh':538,'sawk':539,
+    'venipede':543,'whirlipede':544,'scolipede':545,'cottonee':546,'whimsicott':547,
+    'petilil':548,'lilligant':549,'basculin':550,'sandile':551,'krokorok':552,'krookodile':553,
+    'darumaka':554,'darmanitan':555,'maractus':556,'dwebble':557,'crustle':558,'scraggy':559,'scrafty':560,
+    'sigilyph':561,'yamask':562,'cofagrigus':563,'tirtouga':564,'carracosta':565,'archen':566,'archeops':567,
+    'trubbish':568,'garbodor':569,'zorua':570,'zoroark':571,'minccino':572,'cinccino':573,
+    'gothita':574,'gothorita':575,'gothitelle':576,'solosis':577,'duosion':578,'reuniclus':579,
+    'ducklett':580,'swanna':581,'vanillite':582,'vanillish':583,'vanilluxe':584,
+    'deerling':585,'sawsbuck':586,'emolga':587,'karrablast':588,'escavalier':589,'foongus':590,'amoonguss':591,
+    'frillish':592,'jellicent':593,'alomomola':594,'joltik':595,'galvantula':596,
+    'ferroseed':597,'ferrothorn':598,'klink':599,'klang':600,'klinklang':601,
+    'tynamo':602,'eelektrik':603,'eelektross':604,'elgyem':605,'beheeyem':606,
+    'litwick':607,'lampent':608,'chandelure':609,'axew':610,'fraxure':611,'haxorus':612,
+    'cubchoo':613,'beartic':614,'cryogonal':615,'shelmet':616,'accelgor':617,'stunfisk':618,
+    'mienshao':620,'druddigon':621,'golett':622,'golurk':623,'pawniard':624,'bisharp':625,'bouffalant':626,
+    'rufflet':627,'braviary':628,'vullaby':629,'mandibuzz':630,'heatmor':631,'durant':632,
+    'deino':633,'zweilous':634,'hydreigon':635,'larvesta':636,'volcarona':637,
+    'cobalion':638,'terrakion':639,'virizion':640,'tornadus':641,'thundurus':642,'reshiram':643,'zekrom':644,
+    'landorus':645,'kyurem':646,'keldeo':647,'meloetta':648,'genesect':649,
+    'chespin':650,'quilladin':651,'chesnaught':652,
+    'fennekin':653,'braixen':654,'delphox':655,
+    'froakie':656,'frogadier':657,'greninja':658,
+    'fletchling':661,'fletchinder':662,'talonflame':663,
+    'scatterbug':664,'spewpa':665,'vivillon':666,'litleo':667,'pyroar':668,
+    'flabebe':669,'floette':670,'florges':671,'skiddo':672,'gogoat':673,
+    'pancham':674,'pangoro':675,'furfrou':676,'espurr':677,'meowstic':678,
+    'honedge':679,'doublade':680,'aegislash':681,'spritzee':682,'aromatisse':683,
+    'swirlix':684,'slurpuff':685,'inkay':686,'malamar':687,'binacle':688,'barbaracle':689,
+    'skrelp':690,'dragalge':691,'clauncher':692,'clawitzer':693,'helioptile':694,'heliolisk':695,
+    'tyrunt':696,'tyrantrum':697,'amaura':698,'aurorus':699,'sylveon':700,
+    'hawlucha':701,'dedenne':702,'carbink':703,'goomy':704,'sliggoo':705,'goodra':706,
+    'klefki':707,'phantump':708,'trevenant':709,'pumpkaboo':710,'gourgeist':711,
+    'bergmite':712,'avalugg':713,'noibat':714,'noivern':715,
+    'xerneas':716,'yveltal':717,'zygarde':718,'diancie':719,'hoopa':720,'volcanion':721,
+    'rowlet':722,'dartrix':723,'decidueye':724,
+    'litten':725,'torracat':726,'incineroar':727,
+    'popplio':728,'brionne':729,'primarina':730,
+    'rockruff':744,'lycanroc':745,'mimikyu':778,'tapu koko':785,'tapu lele':786,'solgaleo':791,'lunala':792,
+    'zeraora':807,'meltan':808,'melmetal':809,
+    'grookey':810,'thackey':811,'rillaboom':812,
+    'scorbunny':813,'raboot':814,'cinderace':815,
+    'sobble':816,'drizzile':817,'inteleon':818,
+    'zacian':888,'zamazenta':889,'eternatus':890,
   };
 
   constructor(
@@ -261,72 +246,215 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
   }
 
-  // ─── Intro ────────────────────────────────────────────────
   private reproducirIntro(): void {
     setTimeout(() => { this.introFadingOut = true;  this.cdr.detectChanges(); }, 2500);
     setTimeout(() => { this.boardVisible   = true;  this.cdr.detectChanges(); }, 2700);
     setTimeout(() => { this.showIntro      = false; this.cdr.detectChanges(); }, 3300);
   }
 
-  // ─── Turn overlay ─────────────────────────────────────────
-  private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
-    this.turnoOverlayTipo = turno;
-    this.showTurnOverlay  = true;
-    this.cdr.detectChanges();
-    setTimeout(() => { this.showTurnOverlay = false; this.cdr.detectChanges(); }, 2000);
-  }
+private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
+  this.turnoOverlayTipo = turno;
+  this.showTurnOverlay = true;
+  this.cdr.detectChanges();
 
-  // ─── Polling ──────────────────────────────────────────────
-iniciarPolling(): void {
-  // Solo pedimos estado si es el turno del BOT y no estamos animando nada
-  this.pollingPartida = setInterval(() => {
-    if (this.partida?.turnoActual === 'BOT' && !this.cargandoAccion && !this.animandoAtaque) {
-      this.cargarEstado();
+  setTimeout(() => {
+    this.showTurnOverlay = false;
+    this.cdr.detectChanges();
+
+    // Si es el turno del bot, esperamos un segundo más para que "piense"
+    if (turno === 'bot') {
+      setTimeout(() => {
+        this.ejecutarIAEnemiga();
+      }, 1200); // 1.2 segundos de "pensamiento"
     }
   }, 2000);
 }
+getCheckEnergiasAtaque(ataque: any): any[] {
+  if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
+  
+  const poseidas = [...this.partida.jugador.activo.energiasUnidas];
+  const resultado: any[] = [];
 
-cargarEstado(): void {
-  // Si no hay ID o estamos en medio de un ataque/carga, no pisamos el estado
-  if (!this.matchId || this.cargandoAccion || this.animandoAtaque) return;
+  // Recorremos el costo del ataque (ej: ['Fire', 'Colorless'])
+  ataque.costo.forEach((tipoRequerido: string) => {
+    // Buscamos si tenemos esa energía
+    // Si es 'Colorless', cualquier energía sirve
+    const index = poseidas.findIndex(e => 
+      e.tipo === tipoRequerido || (tipoRequerido === 'Colorless')
+    );
+
+    if (index !== -1) {
+      resultado.push({ tipo: tipoRequerido, cumplido: true });
+      poseidas.splice(index, 1); // La "usamos" para el check
+    } else {
+      resultado.push({ tipo: tipoRequerido, cumplido: false });
+    }
+  });
+
+  return resultado;
+}
+// 1. Agregá esta variable al principio de tu clase BattleBoardComponent
+public activoVisualJugador: any = null; // 👈 El HTML mirará ESTE objeto
+public hpRenderJugador: number = 0;
+private bloqueadoPorAnimacion = false;
+
+cargarEstado(esPollingBot: boolean = false): void {
+  if (!this.matchId || this.bloqueadoPorAnimacion) return;
 
   this.battleService.getState(this.matchId).subscribe({
     next: (data) => {
-      // Solo disparamos el detector de cambios si la data es distinta
-      if (JSON.stringify(this.partida) !== JSON.stringify(data)) {
-        const turnoAntes = this.partida?.turnoActual;
-        this.partida = data;
-
-        // Si el turno cambió, mostramos el cartelito
-        if (turnoAntes && turnoAntes !== data.turnoActual) {
-          if (data.turnoActual === 'JUGADOR') this.ataqueRealizado = false;
-          this.mostrarTurnOverlay(data.turnoActual === 'JUGADOR' ? 'jugador' : 'bot');
-        }
-        this.cdr.detectChanges();
+      // Sincronización inicial del "Espejo"
+      if (!this.activoVisualJugador && data.jugador?.activo) {
+        this.activoVisualJugador = JSON.parse(JSON.stringify(data.jugador.activo));
+        this.hpRenderJugador = this.activoVisualJugador.hpActual;
       }
-    },
-    error: (err) => console.error("Error cargando estado:", err)
+
+      const hpServidor = data.jugador?.activo?.hpActual || 0;
+
+      // 🔥 INTERCEPTOR DE DAÑO
+      // Comparamos lo que dice el server contra nuestro HP visual en pantalla
+      if (data.turnoActual === 'BOT' && hpServidor < this.hpRenderJugador) {
+        console.log("⚔️ ¡ALTO! El server dice que hubo daño. Guardando datos...");
+        this.datosPendientesBot = data; 
+        this.ejecutarIAEnemiga(); // Disparamos la animación
+        return; // 🛑 BLOQUEO: No actualizamos nada del HTML todavía
+      }
+
+      // Actualización normal (energías, cartas, etc.)
+      this.partida = data;
+      // Si el bicho cambió (por un KO o cambio), actualizamos el visual
+      if (data.jugador?.activo?.card?.id !== this.activoVisualJugador?.card?.id) {
+         this.activoVisualJugador = JSON.parse(JSON.stringify(data.jugador.activo));
+         this.hpRenderJugador = this.activoVisualJugador?.hpActual || 0;
+      }
+      this.cdr.detectChanges();
+    }
   });
 }
 
-  // ─── Sprites ─────────────────────────────────────────────
+actualizarSeguridadEstado(data: any) {
+  if (data.turnoActual === 'JUGADOR') {
+    // Si es mi turno, el bot NO puede estar atacando, reseteamos por seguridad
+    this.botEstaAtacando = false;
+    this.bloqueadoPorAnimacion = false;
+    this.cargandoAccion = false;
+  }
+}
+private intentosBotSinAccion = 0;
+private ultimaCantidadCartasBot = -1;
+private ciclosSinCambio = 0;
+private hpVisualInterno: number = 0;
+
+
+iniciarPolling(): void {
+  if (this.pollingPartida) clearInterval(this.pollingPartida);
+
+  this.pollingPartida = setInterval(() => {
+    // Si estamos animando, ni siquiera pedimos datos para no ensuciar el flujo
+    if (this.partida?.turnoActual === 'BOT' && !this.bloqueadoPorAnimacion) {
+      this.cargarEstado(true);
+    }
+  }, 2000);
+}
+forzarUpdate() {
+  this.battleService.getState(this.matchId!).subscribe(data => {
+    this.partida = data;
+    this.cdr.detectChanges();
+    alert("Estado sincronizado. Cartas bot: " + data.bot.mano.length);
+  });
+}
+
+getFaltantesAtaque(ataque: any): any[] {
+  if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
+  
+  const poseidas = [...this.partida.jugador.activo.energiasUnidas];
+  const faltantesMap: { [key: string]: number } = {};
+
+  // 1. Clonamos el costo para no romper el original
+  const costoRestante = [...ataque.costo];
+
+  // 2. Primero restamos las específicas (Fuego, Agua, etc.)
+  for (let i = costoRestante.length - 1; i >= 0; i--) {
+    const tipoReq = costoRestante[i];
+    if (tipoReq !== 'Colorless') {
+      const index = poseidas.findIndex(p => p.tipo === tipoReq);
+      if (index !== -1) {
+        poseidas.splice(index, 1);
+        costoRestante.splice(i, 1);
+      }
+    }
+  }
+
+  // 3. Luego restamos las Incoloras con lo que sobre
+  for (let i = costoRestante.length - 1; i >= 0; i--) {
+    if (costoRestante[i] === 'Colorless' && poseidas.length > 0) {
+      poseidas.splice(0, 1);
+      costoRestante.splice(i, 1);
+    }
+  }
+
+  // 4. Lo que quedó en costoRestante es lo que falta. Agrupamos:
+  costoRestante.forEach(tipo => {
+    faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1;
+  });
+
+  // Convertimos a array para el *ngFor
+  return Object.keys(faltantesMap).map(tipo => ({
+    tipo,
+    cantidad: faltantesMap[tipo]
+  }));
+}
+
+ejecutarIAEnemiga() {
+  if (this.bloqueadoPorAnimacion || !this.datosPendientesBot) return;
+  
+  this.bloqueadoPorAnimacion = true;
+  this.botEstaAtacando = true;
+  this.animandoBotAtaque = true;
+  this.cdr.detectChanges();
+
+  // 1. ESPERAMOS AL IMPACTO (450ms del salto)
+  setTimeout(() => {
+    this.dispararParticulas('jugador', 'Colorless');
+    this.showImpactFlash = true;
+    this.cdr.detectChanges();
+
+    // ⚡ SINCRONIZACIÓN MANUAL (Acá es donde el ojo ve el cambio)
+    setTimeout(() => {
+      if (this.datosPendientesBot) {
+        console.log("💉 El golpe conectó. Bajando vida visual.");
+        // Primero actualizamos el objeto lógico de la partida
+        this.partida = this.datosPendientesBot;
+        // Y recién ahora el HP que el HTML está mirando
+        this.hpRenderJugador = this.partida.jugador.activo.hpActual;
+        this.activoVisualJugador.hpActual = this.hpRenderJugador;
+        
+        this.datosPendientesBot = null;
+        this.cdr.detectChanges();
+      }
+    }, 100);
+
+    setTimeout(() => { this.showImpactFlash = false; this.cdr.detectChanges(); }, 200);
+
+    // 2. REGRESO
+    setTimeout(() => {
+      this.animandoBotAtaque = false;
+      this.botEstaAtacando = false;
+      this.bloqueadoPorAnimacion = false;
+      this.cdr.detectChanges();
+    }, 800);
+  }, 450);
+}
   private normalizarNombre(nombre: string): string {
     if (!nombre) return '';
-    return nombre.toLowerCase()
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-      .trim();
+    return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
   private getPokemonNum(nombreCarta: string): number {
     const norm = this.normalizarNombre(nombreCarta);
     if (this.pokedexNum[norm]) return this.pokedexNum[norm];
-
-    // Busca palabra por palabra (maneja "Team Aqua's Crawdaunt" → "crawdaunt")
     const palabras = norm.split(/[\s'']+/).reverse();
-    for (const p of palabras) {
-      if (this.pokedexNum[p]) return this.pokedexNum[p];
-    }
-
+    for (const p of palabras) { if (this.pokedexNum[p]) return this.pokedexNum[p]; }
     const numMatch = norm.match(/\d+/);
     if (numMatch) return parseInt(numMatch[0], 10);
     return 0;
@@ -348,7 +476,6 @@ cargarEstado(): void {
     (event.target as HTMLImageElement).style.display = 'none';
   }
 
-  // ─── HP ───────────────────────────────────────────────────
   getHpPercent(pokemon: any): number {
     if (!pokemon?.hpActual) return 0;
     const max = this.getHpMax(pokemon);
@@ -359,7 +486,6 @@ cargarEstado(): void {
     return pokemon?.hpMax || parseInt(pokemon?.card?.hp, 10) || 100;
   }
 
-  // ─── Helpers ──────────────────────────────────────────────
   getImagenCarta(id: string): string { return `images/cards/${id}.png`; }
   getEmptySlots(n: number): number[] { return Array(Math.max(0, 5 - n)).fill(0); }
 
@@ -380,7 +506,6 @@ cargarEstado(): void {
     );
   }
 
-  // ─── Acciones ─────────────────────────────────────────────
   jugarCarta(carta: any): void {
     if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
     if (this.esEnergia(carta)) this.gestionarUnionEnergia(carta);
@@ -402,90 +527,197 @@ cargarEstado(): void {
     this.cargandoAccion = true;
     this.battleService.unirEnergia(this.matchId!, this.partida.jugador.activo.card.id, cartaEnergia.id).subscribe({
       next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-      error: (err) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energía.'); }
+      error: (err: any) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energía.'); }
     });
   }
 
   soltarCarta(event: CdkDragDrop<any[]>, zona: 'activo' | 'banca'): void {
-    // Si la soltó en la misma mano, no hacemos nada
     if (event.previousContainer === event.container) return;
-
-    // Obtenemos la carta que el jugador arrastró
     const cartaArrastrada = event.item.data;
-
-    // Reutilizamos la lógica que ya tenés armada
     if (this.esEnergia(cartaArrastrada)) {
       this.gestionarUnionEnergia(cartaArrastrada);
     } else if (this.esPokemon(cartaArrastrada)) {
-      // Acá podés afinar si la baja a la banca o al activo dependiendo de la 'zona'
       this.jugarCarta(cartaArrastrada); 
     }
   }
 
-  /**
-   * Secuencia de ataque coordinada:
-   * 1. Sprite jugador se lanza hacia arriba (350ms)
-   * 2. Flash de impacto blanco (400ms)
-   * 3. Sprite bot vibra + se ilumina de rojo (400-900ms)
-   * 4. Todo vuelve a normal, se actualiza el estado (900ms)
-   */
- atacar(): void {
-  if (!this.puedeAtacar() || this.cargandoAccion) return;
+  // Refactorizado: Muestra panel si hay ataques cargados, sino ataca directo (fallback)
+intentarAbrirHabilidades(event?: MouseEvent): void {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
 
+  // SIEMPRE resetear estados de bloqueo si es el turno del jugador
+  if (this.partida?.turnoActual === 'JUGADOR') {
+    this.botEstaAtacando = false;
+    this.bloqueadoPorAnimacion = false;
+  }
+
+  // 🚩 El bloqueo: Si alguna animación quedó trabada, la ignoramos si el turno es nuestro
+  if (this.cargandoAccion) {
+    console.warn("⚠️ Intento de apertura bloqueado por cargandoAccion");
+    return;
+  }
+
+  console.log("🔥 Abriendo panel de habilidades...");
+  this.showHabilidadesPanel = !this.showHabilidadesPanel;
+  
+  // Forzamos a Angular a que dibuje el modal AHORA
+  this.cdr.detectChanges();
+}
+validarEnergiaAtaque(ataque: any): boolean {
+  if (!ataque || !this.partida?.jugador?.activo) return false;
+
+  // --- MAPEO DE NORMALIZACIÓN ---
+  // Esta función convierte cualquier nombre raro al estándar de la API ("Grass", "Fire", etc.)
+  const normalizarTipo = (tipo: string): string => {
+    const t = tipo.toLowerCase();
+    if (t.includes('grass') || t.includes('planta')) return 'Grass';
+    if (t.includes('fire') || t.includes('fuego')) return 'Fire';
+    if (t.includes('water') || t.includes('agua')) return 'Water';
+    if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
+    if (t.includes('psychic') || t.includes('psíquica') || t.includes('psiquica')) return 'Psychic';
+    if (t.includes('fighting') || t.includes('lucha')) return 'Fighting';
+    if (t.includes('darkness') || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
+    if (t.includes('metal') || t.includes('acero')) return 'Metal';
+    if (t.includes('dragon') || t.includes('dragón')) return 'Dragon';
+    if (t.includes('fairy') || t.includes('hada')) return 'Fairy';
+    return tipo; // Si no lo conoce, lo deja igual
+  };
+
+  // 1. Obtenemos y normalizamos las energías que tiene el Pokémon
+const misEnergias = this.partida.jugador.activo.energiasUnidas.map((e: any) => {
+    // Si el 'tipo' es genérico ("Energy"), buscamos en el 'nombre' (ej: "Grass Energy")
+    const textoParaValidar = (e.tipo === 'Energy' || !e.tipo) ? e.nombre : e.tipo;
+    return normalizarTipo(textoParaValidar);
+});  
+  // 2. Obtenemos y normalizamos el costo requerido del ataque
+  const costoRequerido = [...ataque.costo].map(t => normalizarTipo(t));
+
+  // LOGS DE DEBUG
+  console.log(`--- Validando ataque: ${ataque.nombre} ---`);
+  console.log("Mis Energías (Normalizadas):", misEnergias);
+  console.log("Costo Requerido (Normalizado):", costoRequerido);
+
+  // 3. Primero validamos y descontamos las energías específicas (no incoloras)
+  for (let i = costoRequerido.length - 1; i >= 0; i--) {
+    const tipoReq = costoRequerido[i];
+    
+    if (tipoReq !== 'Colorless') {
+      const index = misEnergias.indexOf(tipoReq);
+      if (index !== -1) {
+        misEnergias.splice(index, 1);
+        costoRequerido.splice(i, 1);
+      } else {
+        console.warn(`❌ Falta energía específica: ${tipoReq}`);
+        return false;
+      }
+    }
+  }
+
+  // 4. Lo que queda son 'Colorless' (comodines)
+  const puede = misEnergias.length >= costoRequerido.length;
+  
+  if (!puede) {
+    console.warn(`❌ Faltan ${costoRequerido.length - misEnergias.length} energías Incoloras`);
+  } else {
+    console.log(`✅ ${ataque.nombre} Habilitado`);
+  }
+
+  return puede;
+}
+
+realizarAccion(habilidad: any): void {
+    this.showHabilidadesPanel = false;
+    
+    if (!this.validarEnergiaAtaque(habilidad)) {
+      alert('¡No tenés suficiente energía para usar ' + habilidad.nombre + '!');
+      return;
+    }
+    
+    // Cambiamos 'h.nombre' por 'habilidad.nombre' para que coincida con el parámetro
+    this.ejecutarAtaqueSecuencia(habilidad.nombre); 
+  }
+
+ private ejecutarAtaqueSecuencia(nombreAtaque: string | null): void {
+  if (this.cargandoAccion || !nombreAtaque) return;
+  
   this.cargandoAccion = true;
-  this.ataqueRealizado = true; // Bloqueamos el botón de ataque inmediatamente
+  this.ataqueRealizado = true;
 
-  this.battleService.atacar(this.matchId!).subscribe({
+  const habilidad = this.partida.jugador.activo.card.ataques.find((a: any) => a.nombre === nombreAtaque);
+  const tipoEnergia = habilidad?.costo[0] || 'Colorless';
+
+  this.battleService.atacar(this.matchId!, nombreAtaque).subscribe({
     next: () => {
-      // FASE 1: El sprite salta
       this.animandoAtaque = true;
       this.cdr.detectChanges();
 
-      // FASE 2: Flash de impacto (en el milisegundo 380)
       setTimeout(() => {
+        this.dispararParticulas('bot', tipoEnergia);
         this.showImpactFlash = true;
         this.cdr.detectChanges();
-        setTimeout(() => { this.showImpactFlash = false; this.cdr.detectChanges(); }, 200);
-      }, 380);
+        setTimeout(() => this.showImpactFlash = false, 200);
+      }, 400);
 
-      // FASE 3: El Bot vibra y se pone rojo
-      setTimeout(() => {
-        this.animandoBotAtaque = true;
-        this.vibrarBot = true;
-        this.cdr.detectChanges();
-      }, 430);
-
-      // FASE 4: Limpieza y actualización REAL
       setTimeout(() => {
         this.animandoAtaque = false;
-        this.animandoBotAtaque = false;
-        this.vibrarBot = false;
         this.cargandoAccion = false;
-        
-        // Pedimos el estado final después de que la animación terminó
+        // Al terminar, forzamos un cargarEstado limpio
         this.cargarEstado(); 
-      }, 950);
+      }, 1000);
     },
-    error: (err) => {
+    error: (err: any) => {
       this.cargandoAccion = false;
       this.ataqueRealizado = false;
-      alert('Error al atacar: ' + (err?.error ?? 'No hay conexión'));
+      alert('Error: ' + (err?.error ?? 'No se pudo atacar'));
     }
   });
 }
-
-  // En tu playmat.component.ts
-get manoAgrupada(): any[][] {
-  const tamañoStack = 4; // Agrupamos de a 4 cartas
-  const mano = this.partida.jugador.mano;
-  const stacks = [];
-
-  for (let i = 0; i < mano.length; i += tamañoStack) {
-    stacks.push(mano.slice(i, i + tamañoStack));
+  get manoAgrupada(): any[][] {
+    const tamañoStack = 4;
+    const mano = this.partida.jugador.mano;
+    const stacks = [];
+    for (let i = 0; i < mano.length; i += tamañoStack) stacks.push(mano.slice(i, i + tamañoStack));
+    return stacks;
   }
-  
-  return stacks;
-}
+
+getEnergyName(tipo: string): string {
+    const t = (tipo || '').toLowerCase();
+    const nombres: any = {
+      'grass': 'Planta',
+      'fire': 'Fuego',
+      'water': 'Agua',
+      'lightning': 'Eléctrico',
+      'psychic': 'Psíquico',
+      'fighting': 'Lucha',
+      'darkness': 'Siniestro',
+      'metal': 'Acero',
+      'colorless': 'Incolora',
+      'fairy': 'Hada',
+      'dragon': 'Dragón'
+    };
+    return nombres[t] || 'Energía';
+  }
+
+  getEnergyColor(tipo: string): string {
+    const t = (tipo || '').toLowerCase();
+    const colors: any = {
+      'grass': '#78C850',
+      'fire': '#F08030',
+      'water': '#6890F0',
+      'lightning': '#F8D030',
+      'psychic': '#F85888',
+      'fighting': '#C03028',
+      'darkness': '#705848',
+      'metal': '#B8B8D0',
+      'colorless': '#A8A878',
+      'fairy': '#EE99AC',
+      'dragon': '#7038F8'
+    };
+    return colors[t] || '#A8A878'; // Colorless por defecto
+  }
 
   pasarTurno(): void {
     if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
@@ -508,4 +740,45 @@ get manoAgrupada(): any[][] {
   }
 
   volverAlLobby(): void { this.router.navigate(['/lobby']); }
+
+  // --- SISTEMA DE PARTÍCULAS DINÁMICO ---
+  mostrarEfectoBot = false;
+  mostrarEfectoJugador = false;
+  particulasBot: any[] = [];
+  particulasJugador: any[] = [];
+  animandoBotDanio = false;
+  animandoJugadorDanio = false;
+
+  dispararParticulas(objetivo: 'bot' | 'jugador', tipoEnergia: string) {
+    const color = this.getEnergyColor(tipoEnergia) || '#ffffff';
+    const nuevasParticulas = [];
+    for (let i = 0; i < 20; i++) {
+      const angulo = Math.random() * Math.PI * 2;
+      const distancia = 40 + Math.random() * 80;
+      nuevasParticulas.push({
+        color: color,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia,
+        size: 5 + Math.random() * 7,
+        duracion: 0.4 + Math.random() * 0.5
+      });
+    }
+
+    if (objetivo === 'bot') {
+      this.particulasBot = nuevasParticulas;
+      this.mostrarEfectoBot = true;
+      this.animandoBotDanio = true;
+    } else {
+      this.particulasJugador = nuevasParticulas;
+      this.mostrarEfectoJugador = true;
+      this.animandoJugadorDanio = true;
+    }
+
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (objetivo === 'bot') { this.mostrarEfectoBot = false; this.animandoBotDanio = false; }
+      else { this.mostrarEfectoJugador = false; this.animandoJugadorDanio = false; }
+      this.cdr.detectChanges();
+    }, 800);
+  }
 }

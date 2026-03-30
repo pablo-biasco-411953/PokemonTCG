@@ -36,9 +36,9 @@ public class BattleEngineService {
         this.botAIService = botAIService;
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // INICIO DE PARTIDA
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public Partida startBattle(String username, Long mazoId) {
         Jugador jugador = jugadorRepo.findByUsername(username);
@@ -65,12 +65,12 @@ public class BattleEngineService {
         prepararJuegoInicial(tableroJugador);
         prepararJuegoInicial(tableroBot);
 
-        // FIX: Partida genera su propio UUID en el constructor — lo reutilizamos directamente
+        // FIX: Partida genera su propio UUID en el constructor Ã¢â‚¬â€ lo reutilizamos directamente
         Partida partida = new Partida(tableroJugador, tableroBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
 
         partidasEnCurso.put(partida.getId(), partida);
-        System.out.println("✅ Partida creada con ID: " + partida.getId());
+        System.out.println("Ã¢Å“â€¦ Partida creada con ID: " + partida.getId());
         return partida;
     }
 
@@ -85,9 +85,9 @@ public class BattleEngineService {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // SETUP INICIAL
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public boolean lanzarMoneda(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
@@ -107,17 +107,17 @@ public class BattleEngineService {
         }
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // CONSULTA DE ESTADO
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public Partida getEstadoPartida(String matchId) {
         return partidasEnCurso.get(matchId);
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // ACCIONES DEL JUGADOR
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public void jugarPokemon(String matchId, String cartaId, int posicion) {
         Partida partida = getPartidaOThrow(matchId);
@@ -126,7 +126,7 @@ public class BattleEngineService {
         TableroJugador tablero = partida.getJugador();
         Card carta = encontrarCartaEnMano(tablero, cartaId);
         if (carta == null) throw new IllegalArgumentException("Carta no encontrada en la mano.");
-        if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo podés bajar Pokémon básicos.");
+        if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo podÃƒÂ©s bajar PokÃƒÂ©mon bÃƒÂ¡sicos.");
 
         CartaEnJuego nuevoPokemon = new CartaEnJuego(carta);
         tablero.getMano().remove(carta);
@@ -135,7 +135,7 @@ public class BattleEngineService {
             tablero.setActivo(nuevoPokemon);
         } else {
             if (tablero.getBanca().size() >= 5)
-                throw new IllegalStateException("La banca está llena (máximo 5).");
+                throw new IllegalStateException("La banca estÃƒÂ¡ llena (mÃƒÂ¡ximo 5).");
             tablero.getBanca().add(nuevoPokemon);
         }
     }
@@ -148,21 +148,20 @@ public class BattleEngineService {
         CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaId);
         Card energia = encontrarCartaEnMano(tablero, energiaId);
 
-        if (objetivo == null) throw new IllegalArgumentException("Pokémon objetivo no encontrado.");
-        if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("Energía no encontrada.");
+        if (objetivo == null) throw new IllegalArgumentException("PokÃƒÂ©mon objetivo no encontrado.");
+        if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("EnergÃƒÂ­a no encontrada.");
 
         objetivo.getEnergiasUnidas().add(energia);
         tablero.getMano().remove(energia);
     }
 
     /**
-     * FIX: El jugador ataca con su Pokémon activo al activo del bot.
-     * Ya no recibe atacante/defensor como parámetros — los deduce del estado.
+     * FIX: El jugador ataca con su PokÃƒÂ©mon activo al activo del bot.
+     * Ya no recibe atacante/defensor como parÃƒÂ¡metros Ã¢â‚¬â€ los deduce del estado.
      */
-    public void realizarAtaque(String matchId) {
+    public void realizarAtaque(String matchId, String nombreAtaqueElegido) {
         Partida partida = partidasEnCurso.get(matchId);
 
-        // 1. Validaciones de estado
         if (partida == null) return;
         if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
             throw new IllegalStateException("No es tu turno para atacar.");
@@ -171,67 +170,73 @@ public class BattleEngineService {
         CartaEnJuego activoJugador = partida.getJugador().getActivo();
         CartaEnJuego activoBot = partida.getBot().getActivo();
 
-        // 2. Validar que tengas un Pokémon y que tenga al menos 1 energía
         if (activoJugador == null) {
-            throw new IllegalStateException("No tenés un Pokémon activo.");
+            throw new IllegalStateException("No tenÃƒÂ©s un PokÃƒÂ©mon activo.");
         }
 
         if (activoJugador.getEnergiasUnidas().isEmpty()) {
-            throw new IllegalStateException("Necesitás al menos 1 energía unida para atacar.");
+            throw new IllegalStateException("NecesitÃƒÂ¡s al menos 1 energÃƒÂ­a unida para atacar.");
         }
 
         if (activoBot != null) {
-            // 3. Lógica de daño (usamos 30 fijo por ahora)
-            int danio = 30;
-            int nuevaHp = activoBot.getHpActual() - danio;
-            activoBot.setHpActual(Math.max(0, nuevaHp));
+            // Ã°Å¸Å¡Â¨ BUSCAMOS EL DAÃƒâ€˜O REAL DEL ATAQUE Ã°Å¸Å¡Â¨
+            int danio = 20; // DaÃƒÂ±o base por si falla
 
-            System.out.println("⚔️ [BATTLE] " + activoJugador.getCard().getNombre() +
-                    " atacó a " + activoBot.getCard().getNombre() + " por " + danio);
-
-            // 4. Verificar K.O.
-            if (activoBot.getHpActual() <= 0) {
-                resolverKO(partida, activoJugador, activoBot);
-
-                // 🚨 FIX ESTRATÉGICO: Si el bot tiene banca, subimos uno inmediatamente
-                // para que no se quede tildado en su próximo turno
-                if (!partida.getBot().getBanca().isEmpty()) {
-                    CartaEnJuego nuevoActivoBot = partida.getBot().getBanca().remove(0);
-                    partida.getBot().setActivo(nuevoActivoBot);
-                    System.out.println("🤖 [BOT] Reemplazó su activo derrotado por: " + nuevoActivoBot.getCard().getNombre());
+            // Buscamos en la lista de ataques del PokÃƒÂ©mon el que coincida con el nombre que mandÃƒÂ³ Angular
+            List<Ataque> ataques = activoJugador.getCard().getAtaques();
+            if (ataques != null) {
+                for (Ataque atk : ataques) {
+                    if (atk.getNombre().equals(nombreAtaqueElegido)) {
+                        danio = atk.getDanio();
+                        break;
+                    }
                 }
             }
 
-            // 5. REGLA TCG: Atacar termina el turno automáticamente
-            System.out.println("🔄 Ataque finalizado. Pasando turno al BOT...");
+            int nuevaHp = activoBot.getHpActual() - danio;
+            activoBot.setHpActual(Math.max(0, nuevaHp));
+
+            System.out.println("Ã¢Å¡â€Ã¯Â¸Â [BATTLE] " + activoJugador.getCard().getNombre() +
+                    " usÃƒÂ³ [" + nombreAtaqueElegido + "] y atacÃƒÂ³ a " + activoBot.getCard().getNombre() + " por " + danio);
+
+            if (activoBot.getHpActual() <= 0) {
+                resolverKO(partida, activoJugador, activoBot);
+
+                if (!partida.getBot().getBanca().isEmpty()) {
+                    CartaEnJuego nuevoActivoBot = partida.getBot().getBanca().remove(0);
+                    partida.getBot().setActivo(nuevoActivoBot);
+                    System.out.println("Ã°Å¸Â¤â€“ [BOT] ReemplazÃƒÂ³ su activo derrotado por: " + nuevoActivoBot.getCard().getNombre());
+                }
+            }
+
+            System.out.println("Ã°Å¸â€â€ž Ataque finalizado. Pasando turno al BOT...");
             this.pasarTurno(matchId);
 
         } else {
-            throw new IllegalStateException("El oponente no tiene un Pokémon activo al cual atacar.");
+            throw new IllegalStateException("El oponente no tiene un PokÃƒÂ©mon activo al cual atacar.");
         }
     }
-
     public void pasarTurno(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
-        // Resetear el flag de ataque del activo del jugador para el próximo turno
+        // Resetear el flag de ataque del activo del jugador para el prÃƒÂ³ximo turno
         if (partida.getJugador().getActivo() != null)
             partida.getJugador().getActivo().setPuedeAtacar(true);
 
         partida.setTurnoActual(Partida.Turno.BOT);
 
-        // FIX: turno del bot en hilo separado — no bloquea el thread HTTP
+        // FIX: turno del bot en hilo separado Ã¢â‚¬â€ no bloquea el thread HTTP
         ejecutarTurnoBot(matchId);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // TURNO DEL BOT (asíncrono)
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // TURNO DEL BOT (asÃƒÂ­ncrono)
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     /**
      * FIX: @Async evita que el request del frontend quede colgado esperando
-     * que el bot termine. Requiere @EnableAsync en la clase de configuración.
+     * que el bot termine. Requiere @EnableAsync en la clase de configuraciÃƒÂ³n.
      */
     @Async
     public void ejecutarTurnoBot(String matchId) {
@@ -239,28 +244,29 @@ public class BattleEngineService {
         if (partida == null) return;
 
         try {
-            // Pequeña pausa para que el frontend perciba que "el bot piensa"
             Thread.sleep(1200);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
 
+        // 🚩 ¡ACÁ ESTÁ EL ARREGLO! 🚩
+        // El bot DEBE robar antes de que la IA decida qué hacer
+        robarCarta(partida.getBot());
+
         botAIService.ejecutarTurno(partida);
 
-        // Robar carta al inicio del turno del jugador
+        // Al finalizar el turno del bot, el JUGADOR roba su carta para su nuevo turno
         robarCarta(partida.getJugador());
 
-        // Resetear flag de ataque del bot para su próximo turno
         if (partida.getBot().getActivo() != null)
             partida.getBot().getActivo().setPuedeAtacar(true);
 
         partida.setTurnoActual(Partida.Turno.JUGADOR);
-        System.out.println("✅ Turno del bot finalizado. Turno del jugador.");
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // LÓGICA INTERNA
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // LÃƒâ€œGICA INTERNA
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
         TableroJugador tableroVictima  = encontrarTableroPorCarta(partida, defensor);
@@ -268,7 +274,7 @@ public class BattleEngineService {
 
         if (tableroVictima == null || tableroGanador == null) return;
 
-        // Mover el Pokémon K.O. al descarte
+        // Mover el PokÃƒÂ©mon K.O. al descarte
         tableroVictima.getPilaDescarte().add(defensor.getCard());
         if (defensor.equals(tableroVictima.getActivo())) {
             tableroVictima.setActivo(null);
@@ -281,7 +287,7 @@ public class BattleEngineService {
             tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
         }
 
-        System.out.println("💀 K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
+        System.out.println("Ã°Å¸â€™â‚¬ K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
 
         // Verificar fin de partida
         boolean ganadorSinPremios = tableroGanador.getPremios().isEmpty();
@@ -290,19 +296,19 @@ public class BattleEngineService {
 
         if (ganadorSinPremios || victimasinPokemon) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println("🏆 ¡Partida terminada!");
+            System.out.println("Ã°Å¸Ââ€  Ã‚Â¡Partida terminada!");
         }
     }
 
     /**
-     * Obtiene el daño base del primer ataque de la carta.
+     * Obtiene el daÃƒÂ±o base del primer ataque de la carta.
      * Si la carta no tiene ataques parseados, devuelve 10 como fallback.
      */
     private int calcularDanio(CartaEnJuego cartaEnJuego) {
         Card card = cartaEnJuego.getCard();
 
         if (card.getAtaques() != null && !card.getAtaques().isEmpty()) {
-            // Como no tenés daño real, devolvemos un valor base
+            // Como no tenÃƒÂ©s daÃƒÂ±o real, devolvemos un valor base
             return 20;
         }
 
@@ -314,9 +320,9 @@ public class BattleEngineService {
             tablero.getMano().add(tablero.getMazo().remove(0));
     }
 
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
     // HELPERS / FINDERS
-    // ─────────────────────────────────────────────────────────────
+    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private Partida getPartidaOThrow(String matchId) {
         Partida p = partidasEnCurso.get(matchId);
@@ -352,12 +358,13 @@ public class BattleEngineService {
     private boolean esPokemonBasico(Card c) {
         if (c.getTipo() == null) return false;
         String tipo = c.getTipo().toLowerCase();
-        return !tipo.contains("stage") && !tipo.contains("energy") && !tipo.contains("energía");
+        return !tipo.contains("stage") && !tipo.contains("energy") && !tipo.contains("energÃƒÂ­a");
     }
 
     private boolean esEnergia(Card c) {
         return c.getTipo() != null &&
                 (c.getTipo().toLowerCase().contains("energy") ||
-                        c.getTipo().toLowerCase().contains("energía"));
+                        c.getTipo().toLowerCase().contains("energÃƒÂ­a"));
     }
 }
+

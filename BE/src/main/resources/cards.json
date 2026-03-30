@@ -11,7 +11,8 @@
           "Metal",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Guard Claw",
@@ -20,7 +21,8 @@
           "Metal",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/hgss4-1.png"
@@ -35,7 +37,8 @@
         "nombre": "Multiply",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/xy5-1.png"
@@ -51,7 +54,8 @@
         "costo": [
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "30+"
       },
       {
         "nombre": "Reflect Energy",
@@ -59,7 +63,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/pl1-1.png"
@@ -76,7 +81,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/dp3-1.png"
@@ -91,7 +97,8 @@
         "nombre": "Find a Friend",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/det1-1.png"
@@ -107,7 +114,8 @@
         "costo": [
           "Grass",
           "Lightning"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/dv1-1.png"
@@ -122,7 +130,8 @@
         "nombre": "Surprise Attack",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/mcd19-1.png"
@@ -137,7 +146,8 @@
         "nombre": "Feint Attack",
         "costo": [
           "Darkness"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Doom News",
@@ -145,7 +155,8 @@
           "Darkness",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/pl3-1.png"
@@ -160,7 +171,8 @@
         "nombre": "Power Blow",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10+"
       },
       {
         "nombre": "Speed Stroke",
@@ -168,7 +180,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/ex12-1.png"
@@ -183,14 +196,16 @@
         "nombre": "Bad News",
         "costo": [
           "Darkness"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Prize Count",
         "costo": [
           "Darkness",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       }
     ],
     "imagen": "/images/cards/ex3-1.png"
@@ -208,7 +223,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ru1-1.png"
@@ -223,7 +239,8 @@
         "nombre": "Thundershock",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Reflect Energy",
@@ -231,7 +248,8 @@
           "Lightning",
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ecard2-H1.png"
@@ -248,7 +266,8 @@
           "Psychic",
           "Psychic",
           "Psychic"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/base4-1.png"
@@ -264,7 +283,8 @@
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       },
       {
         "nombre": "Fire Mane",
@@ -273,7 +293,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "90"
       }
     ],
     "imagen": "/images/cards/hgss1-1.png"
@@ -290,7 +311,8 @@
           "Grass",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "50+"
       }
     ],
     "imagen": "/images/cards/ex11-1.png"
@@ -306,7 +328,8 @@
         "costo": [
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       }
     ],
     "imagen": "/images/cards/ex7-1.png"
@@ -325,7 +348,8 @@
           "Fire",
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "90"
       }
     ],
     "imagen": "/images/cards/gym1-1.png"
@@ -342,7 +366,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/base3-1.png"
@@ -359,7 +384,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       },
       {
         "nombre": "Solar Beam",
@@ -368,7 +394,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "150"
       },
       {
         "nombre": "Evergreen-GX",
@@ -377,7 +404,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "180"
       }
     ],
     "imagen": "/images/cards/sm9-1.png"
@@ -392,7 +420,8 @@
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/xy2-1.png"
@@ -409,7 +438,8 @@
           "Metal",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/pop6-1.png"
@@ -426,7 +456,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30+"
       }
     ],
     "imagen": "/images/cards/ecard2-H2.png"
@@ -441,7 +472,8 @@
         "nombre": "Midnight Eyes",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Stadium Power",
@@ -449,7 +481,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40+"
       }
     ],
     "imagen": "/images/cards/hgss4-2.png"
@@ -465,7 +498,8 @@
         "costo": [
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       },
       {
         "nombre": "Double Launcher",
@@ -474,7 +508,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/pl1-2.png"
@@ -489,14 +524,16 @@
         "nombre": "Dragon Dance",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Dragon Song",
         "costo": [
           "Water",
           "Lightning"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/ex3-2.png"
@@ -513,7 +550,8 @@
           "Water",
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "50+"
       }
     ],
     "imagen": "/images/cards/dp3-2.png"
@@ -530,7 +568,8 @@
           "Water",
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Blizzard",
@@ -539,7 +578,8 @@
           "Water",
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/base3-2.png"
@@ -554,14 +594,16 @@
         "nombre": "Luring Flame",
         "costo": [
           "Fire"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Vapor Kick",
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "30+"
       }
     ],
     "imagen": "/images/cards/pl3-2.png"
@@ -577,7 +619,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Target Attack",
@@ -585,7 +628,8 @@
           "Grass",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/ex11-2.png"
@@ -600,14 +644,16 @@
         "nombre": "Feint",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Aura Sphere",
         "costo": [
           "Fighting",
           "Fighting"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/pop6-2.png"
@@ -623,7 +669,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/xy2-2.png"
@@ -640,7 +687,8 @@
           "Water",
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "40+"
       }
     ],
     "imagen": "/images/cards/base4-2.png"
@@ -658,7 +706,8 @@
           "Fighting",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/gym1-2.png"
@@ -674,7 +723,8 @@
         "costo": [
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Bubblebeam",
@@ -682,7 +732,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/hgss1-2.png"
@@ -699,7 +750,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/det1-2.png"
@@ -714,13 +766,15 @@
         "nombre": "Tangle Drag",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/sm9-2.png"
@@ -737,7 +791,8 @@
           "Fighting",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70-"
       },
       {
         "nombre": "Bound Crush",
@@ -746,7 +801,8 @@
           "Metal",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/ex12-2.png"
@@ -762,7 +818,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Shock Bolt",
@@ -770,7 +827,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/ex7-2.png"
@@ -787,7 +845,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ru1-2.png"
@@ -802,7 +861,8 @@
         "nombre": "Tropical Shake",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20+"
       }
     ],
     "imagen": "/images/cards/mcd19-2.png"
@@ -817,7 +877,8 @@
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/xy5-2.png"
@@ -833,7 +894,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "30×"
       },
       {
         "nombre": "Mega Drain",
@@ -841,7 +903,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/xy11-1.png"
@@ -857,7 +920,8 @@
         "costo": [
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/ex14-1.png"
@@ -875,7 +939,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "160"
       },
       {
         "nombre": "Solar Plant-GX",
@@ -883,7 +948,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/sm12-1.png"
@@ -898,14 +964,16 @@
         "nombre": "Tackle",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Vine Whip",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/bw1-1.png"
@@ -920,7 +988,8 @@
         "nombre": "Tackle",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/sm115-1.png"
@@ -935,7 +1004,8 @@
         "nombre": "Rainbow Wave",
         "costo": [
           "Psychic"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/si1-1.png"
@@ -950,7 +1020,8 @@
         "nombre": "Time Bellow",
         "costo": [
           "Metal"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Flash Cannon",
@@ -958,7 +1029,8 @@
           "Metal",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/dp1-1.png"
@@ -973,7 +1045,8 @@
         "nombre": "Surprise Attack",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm3-1.png"
@@ -990,7 +1063,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/pop7-1.png"
@@ -1007,7 +1081,8 @@
           "Fire",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Firestorm",
@@ -1016,7 +1091,8 @@
           "Fire",
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "120"
       }
     ],
     "imagen": "/images/cards/gym2-1.png"
@@ -1032,14 +1108,16 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Moon Impact",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/col1-1.png"
@@ -1054,7 +1132,8 @@
         "nombre": "Searing Flame",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Damage Burn",
@@ -1062,7 +1141,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "50+"
       }
     ],
     "imagen": "/images/cards/ex9-1.png"
@@ -1077,7 +1157,8 @@
         "nombre": "Sweet Scent",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/bw10-1.png"
@@ -1094,7 +1175,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       },
       {
         "nombre": "Solar Typhoon",
@@ -1103,7 +1185,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "220"
       }
     ],
     "imagen": "/images/cards/swsh35-1.png"
@@ -1118,7 +1201,8 @@
         "nombre": "Trip Over",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10+"
       }
     ],
     "imagen": "/images/cards/xy7-1.png"
@@ -1133,14 +1217,16 @@
         "nombre": "Nap",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Gnaw",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm1-1.png"
@@ -1156,7 +1242,8 @@
         "costo": [
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       },
       {
         "nombre": "Fossil Charge",
@@ -1164,7 +1251,8 @@
           "Fighting",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex13-1.png"
@@ -1179,13 +1267,15 @@
         "nombre": "Hypnotic Gaze",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Tail Whap",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/dv1-2.png"
@@ -1201,7 +1291,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       }
     ],
     "imagen": "/images/cards/ecard2-H3.png"
@@ -1216,7 +1307,8 @@
         "nombre": "Sweet Scent",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/sm12-2.png"
@@ -1232,7 +1324,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/ex9-2.png"
@@ -1248,7 +1341,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "10+"
       }
     ],
     "imagen": "/images/cards/bw1-2.png"
@@ -1264,7 +1358,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Double-edge",
@@ -1273,7 +1368,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/base4-3.png"
@@ -1290,7 +1386,8 @@
           "Fire",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ru1-3.png"
@@ -1305,14 +1402,16 @@
         "nombre": "Allergic Shock",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Twineedle",
         "costo": [
           "Grass",
           "Grass"
-        ]
+        ],
+        "dano": "50×"
       }
     ],
     "imagen": "/images/cards/xy5-3.png"
@@ -1327,14 +1426,16 @@
         "nombre": "Call for Family",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Aqua Ring",
         "costo": [
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/pop6-3.png"
@@ -1350,7 +1451,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Slicing Wind",
@@ -1359,7 +1461,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/si1-2.png"
@@ -1375,7 +1478,8 @@
         "costo": [
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Heavy Impact",
@@ -1384,7 +1488,8 @@
           "Metal",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/ex11-3.png"
@@ -1401,7 +1506,8 @@
           "Psychic",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/pl3-3.png"
@@ -1425,14 +1531,16 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Moon Impact",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/hgss1-3.png"
@@ -1448,7 +1556,8 @@
         "costo": [
           "Darkness",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Poison Tentacles",
@@ -1456,7 +1565,8 @@
           "Metal",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex13-2.png"
@@ -1471,14 +1581,16 @@
         "nombre": "Future Sight",
         "costo": [
           "Psychic"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Leaf Bind",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/hgss4-3.png"
@@ -1494,7 +1606,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/xy7-2.png"
@@ -1511,7 +1624,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/bw10-2.png"
@@ -1527,14 +1641,16 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Skill Dive",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/ex7-3.png"
@@ -1550,14 +1666,16 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Linear Attack",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Mud Shot",
@@ -1565,7 +1683,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex12-3.png"
@@ -1580,7 +1699,8 @@
         "nombre": "Call for Family",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/swsh35-2.png"
@@ -1595,14 +1715,16 @@
         "nombre": "Roaring Flames",
         "costo": [
           "Fire"
-        ]
+        ],
+        "dano": "20+"
       },
       {
         "nombre": "Flame Jet",
         "costo": [
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/gym2-2.png"
@@ -1617,7 +1739,8 @@
         "nombre": "Quiver Dance",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Gust",
@@ -1625,7 +1748,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/xy2-3.png"
@@ -1642,7 +1766,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       },
       {
         "nombre": "Flog",
@@ -1651,7 +1776,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "110+"
       }
     ],
     "imagen": "/images/cards/xy11-2.png"
@@ -1666,7 +1792,8 @@
         "nombre": "Sleep Spore",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/det1-3.png"
@@ -1683,7 +1810,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex3-3.png"
@@ -1699,7 +1827,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Dragon Pulse",
@@ -1707,7 +1836,8 @@
           "Grass",
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/dv1-3.png"
@@ -1722,7 +1852,8 @@
         "nombre": "Reckless Charge",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm9-3.png"
@@ -1738,7 +1869,8 @@
         "costo": [
           "Fighting",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Psychic Cut",
@@ -1746,7 +1878,8 @@
           "Psychic",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60+"
       }
     ],
     "imagen": "/images/cards/pop7-2.png"
@@ -1761,7 +1894,8 @@
         "nombre": "Iron Defense",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Bug Bite",
@@ -1769,7 +1903,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/sm1-2.png"
@@ -1784,7 +1919,8 @@
         "nombre": "Controlled Burn",
         "costo": [
           "Fire"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Flamethrower",
@@ -1792,7 +1928,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/mcd19-3.png"
@@ -1809,7 +1946,8 @@
           "Psychic",
           "Psychic",
           "Psychic"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/col1-2.png"
@@ -1825,7 +1963,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Fire Spin",
@@ -1833,7 +1972,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "100"
       }
     ],
     "imagen": "/images/cards/pl1-3.png"
@@ -1849,7 +1989,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/sm115-2.png"
@@ -1864,7 +2005,8 @@
         "nombre": "Fairy Power",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Moon Impact",
@@ -1872,7 +2014,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/gym1-3.png"
@@ -1890,7 +2033,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "120"
       }
     ],
     "imagen": "/images/cards/dp3-3.png"
@@ -1906,7 +2050,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/sm2-1.png"
@@ -1923,7 +2068,8 @@
           "Psychic",
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Mind Shock",
@@ -1931,7 +2077,8 @@
           "Psychic",
           "Psychic",
           "Psychic"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/base5-1.png"
@@ -1947,7 +2094,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/xy4-1.png"
@@ -1962,7 +2110,8 @@
         "nombre": "Beat",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Flog",
@@ -1970,7 +2119,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       }
     ],
     "imagen": "/images/cards/bw11-1.png"
@@ -1985,7 +2135,8 @@
         "nombre": "Dark Bind",
         "costo": [
           "Darkness"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Poison Barb",
@@ -1993,7 +2144,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/ex4-1.png"
@@ -2009,7 +2161,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Grip and Squeeze",
@@ -2017,7 +2170,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/bw4-1.png"
@@ -2032,7 +2186,8 @@
         "nombre": "Triple Stab",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10×"
       }
     ],
     "imagen": "/images/cards/bw9-1.png"
@@ -2049,7 +2204,8 @@
           "Psychic",
           "Psychic",
           "Psychic"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/base1-1.png"
@@ -2065,7 +2221,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Rocket Tackle",
@@ -2074,7 +2231,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/pop3-1.png"
@@ -2089,7 +2247,8 @@
         "nombre": "Fire Dance",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Flame Kick",
@@ -2097,7 +2256,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/dp4-1.png"
@@ -2112,14 +2272,16 @@
         "nombre": "Absorb",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Acid",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/bw7-1.png"
@@ -2134,7 +2296,8 @@
         "nombre": "Double Wing Attack",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Dive",
@@ -2142,7 +2305,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex8-1.png"
@@ -2157,7 +2321,8 @@
         "nombre": "Tackle",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Razor Leaf",
@@ -2165,7 +2330,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/bw5-1.png"
@@ -2181,7 +2347,8 @@
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Fire Blast",
@@ -2190,7 +2357,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/pop5-1.png"
@@ -2205,7 +2373,8 @@
         "nombre": "Continuous Eggsplosion",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20×"
       }
     ],
     "imagen": "/images/cards/sm5-1.png"
@@ -2220,14 +2389,16 @@
         "nombre": "Hide a Berry",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Wrap",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/xy10-1.png"
@@ -2243,7 +2414,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Bind",
@@ -2251,7 +2423,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/sm8-1.png"
@@ -2266,7 +2439,8 @@
         "nombre": "Time Hollow",
         "costo": [
           "Psychic"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/hgss2-1.png"
@@ -2279,13 +2453,15 @@
     "ataques": [
       {
         "nombre": "Tackle",
-        "costo": []
+        "costo": [],
+        "dano": "10"
       },
       {
         "nombre": "Razor Leaf",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/dpp-DP01.png"
@@ -2300,14 +2476,16 @@
         "nombre": "Find a Friend",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Line Force",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "50+"
       }
     ],
     "imagen": "/images/cards/swsh1-1.png"
@@ -2322,14 +2500,16 @@
         "nombre": "Growl",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Thundershock",
         "costo": [
           "Lightning",
           "Lightning"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/basep-1.png"
@@ -2344,7 +2524,8 @@
         "nombre": "Bug Hunch",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/swsh4-1.png"
@@ -2361,7 +2542,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       },
       {
         "nombre": "Jungle Hammer",
@@ -2370,7 +2552,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "90"
       }
     ],
     "imagen": "/images/cards/xy1-1.png"
@@ -2386,7 +2569,8 @@
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Double Kick",
@@ -2394,7 +2578,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50×"
       }
     ],
     "imagen": "/images/cards/pop1-1.png"
@@ -2409,7 +2594,8 @@
         "nombre": "Nap",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Razor Leaf",
@@ -2417,7 +2603,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/bw8-1.png"
@@ -2434,7 +2621,8 @@
           "Psychic",
           "Psychic",
           "Psychic"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/base6-1.png"
@@ -2449,7 +2637,8 @@
         "nombre": "Dragon Rage",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       },
       {
         "nombre": "Jet Sword",
@@ -2457,7 +2646,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "100"
       }
     ],
     "imagen": "/images/cards/pop9-1.png"
@@ -2472,14 +2662,16 @@
         "nombre": "Wrap",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Sonicboom",
         "costo": [
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/pop4-1.png"
@@ -2496,7 +2688,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/neo4-1.png"
@@ -2511,7 +2704,8 @@
         "nombre": "Attract Current",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Gigavolt",
@@ -2520,7 +2714,8 @@
           "Lightning",
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "40+"
       }
     ],
     "imagen": "/images/cards/neo3-1.png"
@@ -2535,7 +2730,8 @@
         "nombre": "Fire Wing",
         "costo": [
           "Fire"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Burning Tail",
@@ -2543,7 +2739,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/pl4-1.png"
@@ -2556,7 +2753,8 @@
     "ataques": [
       {
         "nombre": "Fury Swipes",
-        "costo": []
+        "costo": [],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/mcd19-4.png"
@@ -2572,7 +2770,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/sm115-3.png"
@@ -2590,7 +2789,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40×"
       }
     ],
     "imagen": "/images/cards/base3-4.png"
@@ -2605,14 +2805,16 @@
         "nombre": "Collect",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Body Slam",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Hyper Voice",
@@ -2620,7 +2822,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       },
       {
         "nombre": "Mega Throw",
@@ -2629,7 +2832,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60+"
       }
     ],
     "imagen": "/images/cards/ex9-3.png"
@@ -2644,7 +2848,8 @@
         "nombre": "Miraculous Light",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Mist Ball",
@@ -2652,7 +2857,8 @@
           "Fire",
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/pop7-3.png"
@@ -2667,13 +2873,15 @@
         "nombre": "Minor Errand-Running",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Thunder Jolt",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/pop6-4.png"
@@ -2688,7 +2896,8 @@
         "nombre": "Reckless Charge",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/det1-4.png"
@@ -2704,7 +2913,8 @@
         "costo": [
           "Darkness",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Deep Impact",
@@ -2712,7 +2922,8 @@
           "Water",
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/ex4-2.png"
@@ -2729,7 +2940,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       },
       {
         "nombre": "Hyper Beam",
@@ -2738,7 +2950,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/hgss1-4.png"
@@ -2756,7 +2969,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "120"
       }
     ],
     "imagen": "/images/cards/xy1-2.png"
@@ -2771,7 +2985,8 @@
         "nombre": "Luring Antenna",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Cutting Wind",
@@ -2779,7 +2994,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex8-2.png"
@@ -2795,7 +3011,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Poison Powder",
@@ -2803,7 +3020,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/bw5-2.png"
@@ -2816,14 +3034,16 @@
     "ataques": [
       {
         "nombre": "Scratch",
-        "costo": []
+        "costo": [],
+        "dano": "10"
       },
       {
         "nombre": "Ember",
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/dpp-DP02.png"
@@ -2839,7 +3059,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/sm2-2.png"
@@ -2855,7 +3076,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/pop4-2.png"
@@ -2871,7 +3093,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Poison Powder",
@@ -2879,7 +3102,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/bw7-2.png"
@@ -2894,7 +3118,8 @@
         "nombre": "Dizzying Wind",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Noxious Scales",
@@ -2902,7 +3127,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/xy4-2.png"
@@ -2920,7 +3146,8 @@
           "Metal",
           "Metal",
           "Metal"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/col1-3.png"
@@ -2935,7 +3162,8 @@
         "nombre": "Energy Link",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Tail Whap",
@@ -2943,7 +3171,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/ex12-4.png"
@@ -2958,7 +3187,8 @@
         "nombre": "Bind Down",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Flog",
@@ -2967,7 +3197,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60+"
       }
     ],
     "imagen": "/images/cards/bw11-2.png"
@@ -2982,7 +3213,8 @@
         "nombre": "Power Heal",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10+"
       },
       {
         "nombre": "Rear Kick",
@@ -2990,7 +3222,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/pl1-4.png"
@@ -3005,7 +3238,8 @@
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/swsh35-3.png"
@@ -3021,7 +3255,8 @@
         "costo": [
           "Grass",
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Poison Vapor",
@@ -3029,7 +3264,8 @@
           "Grass",
           "Grass",
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/base5-2.png"
@@ -3046,7 +3282,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/ecard2-H4.png"
@@ -3062,7 +3299,8 @@
         "costo": [
           "Grass",
           "Grass"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/neo4-2.png"
@@ -3078,7 +3316,8 @@
         "costo": [
           "Grass",
           "Lightning"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Rainbow Burn",
@@ -3086,7 +3325,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30+"
       }
     ],
     "imagen": "/images/cards/ex3-4.png"
@@ -3102,7 +3342,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/xy2-4.png"
@@ -3118,7 +3359,8 @@
         "costo": [
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Aerowing",
@@ -3126,7 +3368,8 @@
           "Psychic",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/pop5-2.png"
@@ -3143,7 +3386,8 @@
           "Water",
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Blizzard",
@@ -3152,7 +3396,8 @@
           "Water",
           "Water",
           "Water"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/base6-2.png"
@@ -3167,14 +3412,16 @@
         "nombre": "Healing Melody",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Slam",
         "costo": [
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "30×"
       }
     ],
     "imagen": "/images/cards/dv1-4.png"
@@ -3190,7 +3437,8 @@
         "costo": [
           "Psychic",
           "Metal"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/ex11-4.png"
@@ -3205,7 +3453,8 @@
         "nombre": "Moon Twinkle",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Lunar Dance",
@@ -3213,7 +3462,8 @@
           "Psychic",
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/dp4-2.png"
@@ -3230,7 +3480,8 @@
           "Psychic",
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/dp1-2.png"
@@ -3246,7 +3497,8 @@
         "costo": [
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/gym2-3.png"
@@ -3262,7 +3514,8 @@
         "costo": [
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Hyper Beam",
@@ -3271,7 +3524,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/pop1-2.png"
@@ -3287,7 +3541,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20×"
       },
       {
         "nombre": "Body Slam",
@@ -3296,7 +3551,8 @@
           "Fighting",
           "Fighting",
           "Fighting"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/si1-3.png"
@@ -3313,7 +3569,8 @@
           "Fire",
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/dp3-4.png"
@@ -3331,7 +3588,8 @@
           "Fire",
           "Fire",
           "Fire"
-        ]
+        ],
+        "dano": "100"
       }
     ],
     "imagen": "/images/cards/base4-4.png"
@@ -3347,7 +3605,8 @@
         "costo": [
           "Water",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/pl4-2.png"
@@ -3364,7 +3623,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40+"
       }
     ],
     "imagen": "/images/cards/bw8-2.png"
@@ -3380,7 +3640,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "10+"
       },
       {
         "nombre": "Fire Spin",
@@ -3388,7 +3649,8 @@
           "Fire",
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/pop3-2.png"
@@ -3403,7 +3665,8 @@
         "nombre": "Splash",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/xy11-3.png"
@@ -3418,14 +3681,16 @@
         "nombre": "Ram",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Shed Skin",
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/sm3-2.png"
@@ -3440,7 +3705,8 @@
         "nombre": "Absorb",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/swsh1-2.png"
@@ -3455,13 +3721,15 @@
         "nombre": "Dive",
         "costo": [
           "Water"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Water Glow",
         "costo": [
           "Water"
-        ]
+        ],
+        "dano": "0"
       }
     ],
     "imagen": "/images/cards/pop9-2.png"
@@ -3478,7 +3746,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/xy7-3.png"
@@ -3494,7 +3763,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/bw10-3.png"
@@ -3509,7 +3779,8 @@
         "nombre": "Trip Over",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10+"
       }
     ],
     "imagen": "/images/cards/bw4-2.png"
@@ -3525,7 +3796,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm9-4.png"
@@ -3542,7 +3814,8 @@
           "Darkness",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Land Crush",
@@ -3551,7 +3824,8 @@
           "Darkness",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "80"
       }
     ],
     "imagen": "/images/cards/hgss4-4.png"
@@ -3568,7 +3842,8 @@
           "Darkness",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ex13-3.png"
@@ -3584,7 +3859,8 @@
         "costo": [
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm5-2.png"
@@ -3600,7 +3876,8 @@
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm75-1.png"
@@ -3617,7 +3894,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex10-1.png"
@@ -3632,7 +3910,8 @@
         "nombre": "Flail Around",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "10×"
       }
     ],
     "imagen": "/images/cards/bw6-1.png"
@@ -3647,7 +3926,8 @@
         "nombre": "Bawl",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       }
     ],
     "imagen": "/images/cards/si1-4.png"
@@ -3665,7 +3945,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/bw5-3.png"
@@ -3683,7 +3964,8 @@
           "Lightning",
           "Lightning",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/dp1-3.png"
@@ -3698,7 +3980,8 @@
         "nombre": "Splash",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/xy11-4.png"
@@ -3715,7 +3998,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       },
       {
         "nombre": "Snowstorm",
@@ -3724,7 +4008,8 @@
           "Water",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/hgss4-5.png"
@@ -3739,7 +4024,8 @@
         "nombre": "Sleep Powder",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/sm12-3.png"
@@ -3754,7 +4040,8 @@
         "nombre": "Energy Bomb",
         "costo": [
           "Lightning"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/ex7-4.png"
@@ -3769,7 +4056,8 @@
         "nombre": "Supersonic",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Cutting Wind",
@@ -3778,7 +4066,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "120"
       }
     ],
     "imagen": "/images/cards/sm5-3.png"
@@ -3793,14 +4082,16 @@
         "nombre": "Sweet Scent",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Sting",
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/swsh1-3.png"
@@ -3815,7 +4106,8 @@
         "nombre": "Dump and Draw",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Electric Current",
@@ -3823,7 +4115,8 @@
           "Lightning",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "40"
       }
     ],
     "imagen": "/images/cards/pl3-4.png"
@@ -3838,7 +4131,8 @@
         "nombre": "Triple Kick",
         "costo": [
           "Fighting"
-        ]
+        ],
+        "dano": "20×"
       },
       {
         "nombre": "Close Combat",
@@ -3846,7 +4140,8 @@
           "Fighting",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/hgss1-5.png"
@@ -3861,7 +4156,8 @@
         "nombre": "Cursed Reaction",
         "costo": [
           "Psychic"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Super Psy Bolt",
@@ -3869,7 +4165,8 @@
           "Psychic",
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ex12-5.png"
@@ -3885,7 +4182,8 @@
         "costo": [
           "Fire",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Magma Mantle",
@@ -3894,7 +4192,8 @@
           "Fire",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60+"
       }
     ],
     "imagen": "/images/cards/pl4-3.png"
@@ -3909,7 +4208,8 @@
         "nombre": "Lifesplosion",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Spiral Drain",
@@ -3917,7 +4217,8 @@
           "Grass",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/bw10-4.png"
@@ -3933,7 +4234,8 @@
         "costo": [
           "Fighting",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Sand Pit",
@@ -3942,7 +4244,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "70"
       }
     ],
     "imagen": "/images/cards/pop4-3.png"
@@ -3959,7 +4262,8 @@
           "Fighting",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "20+"
       },
       {
         "nombre": "Rock Slide",
@@ -3969,7 +4273,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ex3-5.png"
@@ -3984,13 +4289,15 @@
         "nombre": "Shed Skin",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "0"
       },
       {
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
-        ]
+        ],
+        "dano": "20"
       }
     ],
     "imagen": "/images/cards/swsh4-2.png"
@@ -4006,7 +4313,8 @@
         "costo": [
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "20"
       },
       {
         "nombre": "Vine Whip",
@@ -4014,7 +4322,8 @@
           "Grass",
           "Grass",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       }
     ],
     "imagen": "/images/cards/xy5-4.png"
@@ -4030,7 +4339,8 @@
         "costo": [
           "Psychic",
           "Colorless"
-        ]
+        ],
+        "dano": "30"
       },
       {
         "nombre": "Mind Shock",
@@ -4039,7 +4349,8 @@
           "Colorless",
           "Colorless",
           "Colorless"
-        ]
+        ],
+        "dano": "60"
       }
     ],
     "imagen": "/images/cards/ex9-4.png"
@@ -4054,7 +4365,8 @@
         "nombre": "Delta Search",
         "costo": [
           "Colorless"
-        ]
+        ],
+        "dano": "10"
       },
       {
         "nombre": "Return Burn",
@@ -4062,7 +4374,8 @@
           "Fire",
           "Metal",
           "Colorless"
-        ]
+        ],
+        "dano": "50"
       }
     ],
     "imagen": "/images/cards/ex11-5.png"

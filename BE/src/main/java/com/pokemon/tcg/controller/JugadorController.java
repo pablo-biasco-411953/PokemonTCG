@@ -2,13 +2,13 @@ package com.pokemon.tcg.controller;
 
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.repository.JugadorRepository;
+import com.pokemon.tcg.dto.JugadorDatosResponse;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
-import java.util.*;
 
 @RestController
 @RequestMapping("/api/jugadores")
-// CAMBIO CLAVE: Especificamos el origen exacto de Angular
+@CrossOrigin(origins = "http://localhost:4200")
 public class JugadorController {
 
     private final JugadorRepository jugadorRepo;
@@ -23,11 +23,14 @@ public class JugadorController {
             Jugador j = jugadorRepo.findByUsername(username);
             if (j == null) return ResponseEntity.status(404).body("Jugador no encontrado");
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("username", j.getUsername());
-            response.put("sobresDisponibles", j.getSobresDisponibles());
-            int size = (j.getColeccion() != null) ? j.getColeccion().size() : 0;
-            response.put("cantidadCartas", size);
+            int cantidadCartas = (j.getColeccion() != null) ? j.getColeccion().size() : 0;
+            
+            // Usamos el nuevo DTO en vez de un HashMap genÃ©rico
+            JugadorDatosResponse response = new JugadorDatosResponse(
+                j.getUsername(), 
+                j.getSobresDisponibles(), 
+                cantidadCartas
+            );
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -35,9 +35,15 @@ return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
   });
 }
 
-  // FIX: ahora apunta al endpoint /attack que existía solo en el frontend pero no en el backend
-  atacar(matchId: string): Observable<void> {
-    return this.http.post<void>(`${this.base}/${matchId}/attack`, {});
+ /**
+   * Realiza un ataque usando el nombre de la habilidad elegida.
+   * Se envía como Query Parameter (?nombreAtaque=...) porque el Backend 
+   * usa @RequestParam en el BattleController.
+   */
+  atacar(matchId: string, nombreAtaque: string): Observable<void> {
+    // Usamos encodeURIComponent por si el nombre tiene espacios (ej: "Cluster Bolt")
+    const url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
+    return this.http.post<void>(url, {});
   }
 
   pasarTurno(matchId: string): Observable<void> {
