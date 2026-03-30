@@ -236,63 +236,58 @@
             </div>
           </div>
 
-    <div class="active-card-wrap player-card-wrap">
+ <div class="active-card-wrap player-card-wrap">
   <div class="attack-selection-panel habilidades-panel" *ngIf="showHabilidadesPanel">
     <button class="close-panel-btn" (click)="showHabilidadesPanel = false; $event.stopPropagation()">✕</button>
     <p class="panel-title">ACCIONES DISPONIBLES</p>
     
     <div class="habilidades-list">
-      
-      <button *ngFor="let h of partida.jugador.activo.card.ataques" 
-              class="habilidad-card" 
-              [class.habilidad-locked]="!validarEnergiaAtaque(h)"
-              [disabled]="!validarEnergiaAtaque(h) || cargandoAccion || bloqueadoPorAnimacion"
-              (click)="realizarAccion(h)">
-        
+      <ng-container *ngIf="partida?.jugador?.activo?.card?.ataques?.length; else sinAtaques">
+        <button *ngFor="let h of partida.jugador.activo.card.ataques" 
+                class="habilidad-card" 
+                [class.habilidad-locked]="!validarEnergiaAtaque(h)"
+                (click)="realizarAccion(h); $event.stopPropagation()">
+          <div class="hab-header">
+            <div class="hab-cost-container">
+              <span *ngFor="let check of getCheckEnergiasAtaque(h)" class="cost-dot" [style.backgroundColor]="getEnergyColor(check.tipo)"></span>
+            </div>
+            <span class="hab-type">DAÑO</span>
+            <span class="hab-dano">{{ h.danio || h.dano || 0 }}</span>
+          </div>
+          <div class="hab-body"><p class="hab-name">{{ h.nombre }}</p></div>
+        </button>
+      </ng-container>
+
+      <ng-template #sinAtaques><p style="color:white; text-align:center;">Sin ataques.</p></ng-template>
+
+      <button class="habilidad-card retirada-btn"
+              [class.habilidad-locked]="partida.yaSeRetiroEsteTurno || !puedePagarRetiro()"
+              (click)="iniciarModoRetirada(); $event.stopPropagation()">
         <div class="hab-header">
-      <div class="hab-cost-container">
-        <span *ngFor="let check of getCheckEnergiasAtaque(h)" 
-              class="cost-dot" 
-              [style.backgroundColor]="getEnergyColor(check.tipo)" 
-              [class.missing-energy]="!check.cumplido"
-              [title]="check.cumplido ? 'Energía lista' : 'Falta energía ' + check.tipo">
-          
-          <i *ngIf="!check.cumplido" class="error-exclamation">!</i>
-        </span>
-      </div>
-      <span class="hab-type">DAÑO</span>
-      <span class="hab-dano">{{ h.dano }}</span>
-    </div>
-    
- <div class="hab-body">
-  <p class="hab-name">{{ h.nombre }}</p>
-  
-  <div class="missing-summary" *ngIf="!validarEnergiaAtaque(h)">
-    <span class="missing-label">FALTAN:</span>
-    <div class="missing-icons">
-      <div *ngFor="let f of getFaltantesAtaque(h)" class="missing-item">
-        <span class="missing-count">x{{ f.cantidad }}</span>
-        <span class="missing-orb" [style.backgroundColor]="getEnergyColor(f.tipo)">
-          {{ f.tipo.charAt(0) }}
-        </span>
-      </div>
+          <span class="hab-type">COSTO</span>
+          <span class="hab-dano">{{ partida.jugador.activo.card.costoRetirada || 0 }}</span>
+        </div>
+        <div class="hab-body"><p class="hab-name">RETIRAR POKÉMON</p></div>
+      </button>
     </div>
   </div>
-</div>
 
-    <div class="locked-overlay" *ngIf="!validarEnergiaAtaque(h)">
-      <span class="lock-text">ENERGÍA INSUFICIENTE</span>
-    </div>
-  </button>
+  <div class="active-card player-active" 
+       [class.can-attack]="puedeAtacar()" 
+       (click)="intentarAbrirHabilidades()">
+    
+    <ng-container *ngIf="partida.jugador.activo">
+      <img [src]="getImagenCarta(partida.jugador.activo.card.id)">
+      
+      <div class="energias-unidas-activo">
+        <div *ngFor="let energia of partida.jugador.activo.energiasUnidas" 
+             class="energia-orb"
+             [style.backgroundColor]="getEnergyColor(energia.tipo)">
+        </div>
+      </div>
+    </ng-container>
+  </div>
 </div>
-            </div>
-
-            <div class="active-card player-active" [class.can-attack]="puedeAtacar()" (click)="intentarAbrirHabilidades()">
-              <ng-container *ngIf="partida.jugador.activo">
-                <img [src]="getImagenCarta(partida.jugador.activo.card.id)">
-              </ng-container>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -316,10 +311,11 @@
          [style.--bi]="i" 
          [style.--btot]="partida.jugador.mano.length">
          
-         <div class="hand-card" 
-              cdkDrag 
-              [cdkDragData]="carta"
-              (click)="jugarCarta(carta)">
+        <div class="hand-card" 
+     cdkDrag 
+     [cdkDragData]="carta"
+     [class.pokemon-bloqueado]="esPokemon(carta) && !partida?.jugador?.activo && partida?.jugador?.banca?.length > 0"
+     (click)="jugarCarta(carta)">
               
               <div *cdkDragPreview class="custom-drag-preview">
                 <img [src]="getImagenCarta(carta.id)">
@@ -338,16 +334,24 @@
       <div class="card-back deck-card"><span class="deck-count">{{ partida.bot.mazo.length }}</span></div>
       <div class="discard"><span>⊘</span><span style="font-size: 14px; font-weight: 1000; display: block;">DESCARTE</span></div>
     </div>
-    <div class="turn-block">
-      <div class="turn-status" [class.active]="partida.turnoActual==='JUGADOR'">{{ partida.turnoActual==='JUGADOR' ? 'TU TURNO' : 'RIVAL' }}</div>
-      <button class="btn-turn" [class.off]="partida.turnoActual!=='JUGADOR'" [disabled]="partida.turnoActual!=='JUGADOR'||cargandoAccion" (click)="pasarTurno()">
-        <span class="bico">{{ partida.turnoActual==='JUGADOR' ? '▶' : '⏳' }}</span>
-        <span>{{ partida.turnoActual==='JUGADOR' ? 'TERMINAR TURNO' : 'PENSANDO' }}</span>
-      </button>
-      <div class="turn-dots">
-        <span [class.on]="partida.turnoActual==='JUGADOR'"></span><span [class.on]="partida.turnoActual==='BOT'"></span>
-      </div>
-    </div>
+   <div class="turn-block">
+  <div class="turn-status" [class.active]="partida?.turnoActual === 'JUGADOR'">
+    {{ partida?.turnoActual === 'JUGADOR' ? 'TU TURNO' : 'TURNO RIVAL' }}
+  </div>
+
+  <button class="btn-turn" 
+          [class.off]="partida?.turnoActual !== 'JUGADOR' || cargandoAccion" 
+          [disabled]="partida?.turnoActual !== 'JUGADOR' || cargandoAccion || bloqueadoPorAnimacion" 
+          (click)="pasarTurno()">
+    <span class="bico">{{ (partida?.turnoActual === 'JUGADOR' && !cargandoAccion) ? '▶' : '⏳' }}</span>
+    <span>{{ (partida?.turnoActual === 'JUGADOR' && !cargandoAccion) ? 'TERMINAR TURNO' : 'ESPERANDO...' }}</span>
+  </button>
+
+  <div class="turn-dots">
+    <span [class.on]="partida?.turnoActual === 'JUGADOR'"></span>
+    <span [class.on]="partida?.turnoActual === 'BOT'"></span>
+  </div>
+</div>
     <div class="side-deck-block">
       <div class="discard"><span>⊘</span><small>DESCARTE</small></div>
       <div class="card-back deck-card deck-player"><span class="deck-count">{{ partida.jugador.mazo.length }}</span></div>

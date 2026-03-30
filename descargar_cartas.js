@@ -57,8 +57,9 @@ async function main() {
       const id = card.id;
       const nombre = card.name;
       const tipo = (card.types && card.types.length > 0) ? card.types[0] : 'Colorless';
-      const hp = card.hp || '60';
       
+      const hp = card.hp || '60';
+      const costoRetirada = card.convertedRetreatCost || 0;
       // 1. Mapeo de Ataques
       const ataques = (card.attacks || []).map(a => {
         let damageValue = 0;
@@ -99,6 +100,7 @@ async function main() {
         nombre, 
         tipo, 
         hp, 
+        costoRetirada, // 👈 Lo agregamos al objeto final
         ataques, 
         debilidades, 
         resistencias, 

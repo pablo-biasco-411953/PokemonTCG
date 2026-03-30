@@ -21,7 +21,7 @@ public class Card {
     private String hp;
     private String tipo;
     private String imagen;
-
+    private int costoRetirada;
     @Column(length = 2000, name = "attacks")
     private String attacksJson;
 
@@ -91,7 +91,10 @@ public class Card {
             this.resistanceJson = mapper.writeValueAsString(this.resistencias);
         } catch (Exception e) { this.resistanceJson = "[]"; }
     }
-
+    @JsonProperty("costoRetirada")
+    public void setCostoRetirada(int costoRetirada) {
+        this.costoRetirada = costoRetirada;
+    }
     // ─── CARGA DESDE DB (Hidratación) ───
     @PostLoad
     private void onLoad() {
@@ -137,4 +140,7 @@ public class Card {
     @JsonIgnore
     public String getResistanceJson() { return resistanceJson; }
     public void setResistanceJson(String resistanceJson) { this.resistanceJson = resistanceJson; }
+    public int getCostoRetirada() {
+        return costoRetirada;
+    }
 }
