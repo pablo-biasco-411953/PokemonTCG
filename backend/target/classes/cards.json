@@ -12,7 +12,7 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Guard Claw",
@@ -22,10 +22,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/hgss4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/hgss4-1.png"
   },
   {
     "id": "xy5-1",
@@ -38,10 +50,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/xy5-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy5-1.png"
   },
   {
     "id": "pl1-1",
@@ -55,7 +74,7 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "30+"
+        "dano": 30
       },
       {
         "nombre": "Reflect Energy",
@@ -64,10 +83,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/pl1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl1-1.png"
   },
   {
     "id": "dp3-1",
@@ -82,10 +113,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/dp3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp3-1.png"
   },
   {
     "id": "det1-1",
@@ -98,10 +141,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/det1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/det1-1.png"
   },
   {
     "id": "dv1-1",
@@ -115,10 +165,17 @@
           "Grass",
           "Lightning"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/dv1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-1.png"
   },
   {
     "id": "mcd19-1",
@@ -131,10 +188,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/mcd19-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/mcd19-1.png"
   },
   {
     "id": "pl3-1",
@@ -147,7 +211,7 @@
         "costo": [
           "Darkness"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Doom News",
@@ -156,10 +220,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/pl3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl3-1.png"
   },
   {
     "id": "ex12-1",
@@ -172,7 +248,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10+"
+        "dano": 10
       },
       {
         "nombre": "Speed Stroke",
@@ -181,10 +257,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/ex12-1.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex12-1.png"
   },
   {
     "id": "ex3-1",
@@ -197,7 +285,7 @@
         "costo": [
           "Darkness"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Prize Count",
@@ -205,10 +293,22 @@
           "Darkness",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/ex3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex3-1.png"
   },
   {
     "id": "ru1-1",
@@ -224,10 +324,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ru1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ru1-1.png"
   },
   {
     "id": "ecard2-H1",
@@ -240,7 +347,7 @@
         "costo": [
           "Lightning"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Reflect Energy",
@@ -249,10 +356,17 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ecard2-H1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ecard2-H1.png"
   },
   {
     "id": "base4-1",
@@ -267,10 +381,17 @@
           "Psychic",
           "Psychic"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/base4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base4-1.png"
   },
   {
     "id": "hgss1-1",
@@ -284,7 +405,7 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       },
       {
         "nombre": "Fire Mane",
@@ -294,10 +415,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "90"
+        "dano": 90
       }
     ],
-    "imagen": "/images/cards/hgss1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss1-1.png"
   },
   {
     "id": "ex11-1",
@@ -312,10 +440,17 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "50+"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex11-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex11-1.png"
   },
   {
     "id": "ex7-1",
@@ -329,10 +464,17 @@
           "Water",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/ex7-1.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex7-1.png"
   },
   {
     "id": "gym1-1",
@@ -349,10 +491,17 @@
           "Fire",
           "Fire"
         ],
-        "dano": "90"
+        "dano": 90
       }
     ],
-    "imagen": "/images/cards/gym1-1.png"
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/gym1-1.png"
   },
   {
     "id": "base3-1",
@@ -367,10 +516,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/base3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base3-1.png"
   },
   {
     "id": "sm9-1",
@@ -385,7 +546,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       },
       {
         "nombre": "Solar Beam",
@@ -395,7 +556,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "150"
+        "dano": 150
       },
       {
         "nombre": "Evergreen-GX",
@@ -405,10 +566,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "180"
+        "dano": 180
       }
     ],
-    "imagen": "/images/cards/sm9-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm9-1.png"
   },
   {
     "id": "xy2-1",
@@ -421,10 +589,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/xy2-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy2-1.png"
   },
   {
     "id": "pop6-1",
@@ -439,10 +614,22 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pop6-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "+40"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop6-1.png"
   },
   {
     "id": "ecard2-H2",
@@ -457,10 +644,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30+"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ecard2-H2.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ecard2-H2.png"
   },
   {
     "id": "hgss4-2",
@@ -473,7 +667,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Stadium Power",
@@ -482,10 +676,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40+"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/hgss4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/hgss4-2.png"
   },
   {
     "id": "pl1-2",
@@ -499,7 +705,7 @@
           "Water",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       },
       {
         "nombre": "Double Launcher",
@@ -509,10 +715,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/pl1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl1-2.png"
   },
   {
     "id": "ex3-2",
@@ -525,7 +738,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Dragon Song",
@@ -533,10 +746,26 @@
           "Water",
           "Lightning"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex3-2.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Grass",
+        "valor": "-30"
+      },
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex3-2.png"
   },
   {
     "id": "dp3-2",
@@ -551,10 +780,17 @@
           "Water",
           "Colorless"
         ],
-        "dano": "50+"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/dp3-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dp3-2.png"
   },
   {
     "id": "base3-2",
@@ -569,7 +805,7 @@
           "Water",
           "Water"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Blizzard",
@@ -579,10 +815,17 @@
           "Water",
           "Water"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/base3-2.png"
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base3-2.png"
   },
   {
     "id": "pl3-2",
@@ -595,7 +838,7 @@
         "costo": [
           "Fire"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Vapor Kick",
@@ -603,10 +846,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "30+"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/pl3-2.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl3-2.png"
   },
   {
     "id": "ex11-2",
@@ -620,7 +870,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Target Attack",
@@ -629,10 +879,17 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/ex11-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex11-2.png"
   },
   {
     "id": "pop6-2",
@@ -645,7 +902,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Aura Sphere",
@@ -653,10 +910,17 @@
           "Fighting",
           "Fighting"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/pop6-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop6-2.png"
   },
   {
     "id": "xy2-2",
@@ -670,10 +934,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/xy2-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy2-2.png"
   },
   {
     "id": "base4-2",
@@ -688,10 +959,17 @@
           "Water",
           "Water"
         ],
-        "dano": "40+"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/base4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base4-2.png"
   },
   {
     "id": "gym1-2",
@@ -707,10 +985,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/gym1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Lightning",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/gym1-2.png"
   },
   {
     "id": "hgss1-2",
@@ -724,7 +1014,7 @@
           "Water",
           "Water"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Bubblebeam",
@@ -733,10 +1023,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/hgss1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss1-2.png"
   },
   {
     "id": "det1-2",
@@ -751,10 +1048,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/det1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/det1-2.png"
   },
   {
     "id": "sm9-2",
@@ -767,17 +1071,24 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/sm9-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm9-2.png"
   },
   {
     "id": "ex12-2",
@@ -792,7 +1103,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70-"
+        "dano": 70
       },
       {
         "nombre": "Bound Crush",
@@ -802,10 +1113,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/ex12-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Grass",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex12-2.png"
   },
   {
     "id": "ex7-2",
@@ -819,7 +1142,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Shock Bolt",
@@ -828,10 +1151,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/ex7-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex7-2.png"
   },
   {
     "id": "ru1-2",
@@ -846,10 +1176,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ru1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/ru1-2.png"
   },
   {
     "id": "mcd19-2",
@@ -862,10 +1204,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20+"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/mcd19-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/mcd19-2.png"
   },
   {
     "id": "xy5-2",
@@ -878,10 +1227,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/xy5-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy5-2.png"
   },
   {
     "id": "xy11-1",
@@ -895,7 +1251,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "30×"
+        "dano": 30
       },
       {
         "nombre": "Mega Drain",
@@ -904,10 +1260,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/xy11-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy11-1.png"
   },
   {
     "id": "ex14-1",
@@ -921,10 +1284,22 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex14-1.png"
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex14-1.png"
   },
   {
     "id": "sm12-1",
@@ -940,7 +1315,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "160"
+        "dano": 160
       },
       {
         "nombre": "Solar Plant-GX",
@@ -949,10 +1324,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/sm12-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm12-1.png"
   },
   {
     "id": "bw1-1",
@@ -965,7 +1347,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Vine Whip",
@@ -973,10 +1355,22 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/bw1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw1-1.png"
   },
   {
     "id": "sm115-1",
@@ -989,10 +1383,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/sm115-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm115-1.png"
   },
   {
     "id": "si1-1",
@@ -1005,10 +1406,17 @@
         "costo": [
           "Psychic"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/si1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/si1-1.png"
   },
   {
     "id": "dp1-1",
@@ -1021,7 +1429,7 @@
         "costo": [
           "Metal"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Flash Cannon",
@@ -1030,10 +1438,22 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/dp1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp1-1.png"
   },
   {
     "id": "sm3-1",
@@ -1046,10 +1466,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm3-1.png"
   },
   {
     "id": "pop7-1",
@@ -1064,10 +1491,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/pop7-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop7-1.png"
   },
   {
     "id": "gym2-1",
@@ -1082,7 +1521,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Firestorm",
@@ -1092,10 +1531,17 @@
           "Fire",
           "Fire"
         ],
-        "dano": "120"
+        "dano": 120
       }
     ],
-    "imagen": "/images/cards/gym2-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/gym2-1.png"
   },
   {
     "id": "col1-1",
@@ -1109,7 +1555,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Moon Impact",
@@ -1117,10 +1563,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/col1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/col1-1.png"
   },
   {
     "id": "ex9-1",
@@ -1133,7 +1586,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Damage Burn",
@@ -1142,10 +1595,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "50+"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex9-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex9-1.png"
   },
   {
     "id": "bw10-1",
@@ -1158,10 +1618,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/bw10-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw10-1.png"
   },
   {
     "id": "swsh35-1",
@@ -1176,7 +1643,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       },
       {
         "nombre": "Solar Typhoon",
@@ -1186,10 +1653,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "220"
+        "dano": 220
       }
     ],
-    "imagen": "/images/cards/swsh35-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh35-1.png"
   },
   {
     "id": "xy7-1",
@@ -1202,10 +1676,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10+"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/xy7-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy7-1.png"
   },
   {
     "id": "sm1-1",
@@ -1218,7 +1699,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Gnaw",
@@ -1226,10 +1707,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm1-1.png"
   },
   {
     "id": "ex13-1",
@@ -1243,7 +1731,7 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       },
       {
         "nombre": "Fossil Charge",
@@ -1252,10 +1740,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex13-1.png"
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex13-1.png"
   },
   {
     "id": "dv1-2",
@@ -1268,17 +1763,24 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Tail Whap",
         "costo": [
           "Lightning"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/dv1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-2.png"
   },
   {
     "id": "ecard2-H3",
@@ -1292,10 +1794,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/ecard2-H3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ecard2-H3.png"
   },
   {
     "id": "sm12-2",
@@ -1308,10 +1817,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/sm12-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm12-2.png"
   },
   {
     "id": "ex9-2",
@@ -1325,10 +1841,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex9-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex9-2.png"
   },
   {
     "id": "bw1-2",
@@ -1342,10 +1865,22 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "10+"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/bw1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw1-2.png"
   },
   {
     "id": "base4-3",
@@ -1359,7 +1894,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Double-edge",
@@ -1369,10 +1904,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/base4-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base4-3.png"
   },
   {
     "id": "ru1-3",
@@ -1387,10 +1934,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ru1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ru1-3.png"
   },
   {
     "id": "xy5-3",
@@ -1403,7 +1957,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Twineedle",
@@ -1411,10 +1965,17 @@
           "Grass",
           "Grass"
         ],
-        "dano": "50×"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/xy5-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy5-3.png"
   },
   {
     "id": "pop6-3",
@@ -1427,7 +1988,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Aqua Ring",
@@ -1435,10 +1996,17 @@
           "Water",
           "Water"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/pop6-3.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop6-3.png"
   },
   {
     "id": "si1-2",
@@ -1452,7 +2020,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Slicing Wind",
@@ -1462,10 +2030,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/si1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/si1-2.png"
   },
   {
     "id": "ex11-3",
@@ -1479,7 +2059,7 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Heavy Impact",
@@ -1489,10 +2069,26 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/ex11-3.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Grass",
+        "valor": "-30"
+      },
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex11-3.png"
   },
   {
     "id": "pl3-3",
@@ -1507,10 +2103,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/pl3-3.png"
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "��2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Colorless",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl3-3.png"
   },
   {
     "id": "base3-3",
@@ -1518,7 +2126,19 @@
     "tipo": "Colorless",
     "hp": "50",
     "ataques": [],
-    "imagen": "/images/cards/base3-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base3-3.png"
   },
   {
     "id": "hgss1-3",
@@ -1532,7 +2152,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Moon Impact",
@@ -1540,10 +2160,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/hgss1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss1-3.png"
   },
   {
     "id": "ex13-2",
@@ -1557,7 +2184,7 @@
           "Darkness",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Poison Tentacles",
@@ -1566,10 +2193,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex13-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex13-2.png"
   },
   {
     "id": "hgss4-3",
@@ -1582,7 +2216,7 @@
         "costo": [
           "Psychic"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Leaf Bind",
@@ -1590,10 +2224,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/hgss4-3.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss4-3.png"
   },
   {
     "id": "xy7-2",
@@ -1607,10 +2248,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/xy7-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy7-2.png"
   },
   {
     "id": "bw10-2",
@@ -1625,10 +2273,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/bw10-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw10-2.png"
   },
   {
     "id": "ex7-3",
@@ -1642,7 +2297,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Skill Dive",
@@ -1650,10 +2305,22 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/ex7-3.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex7-3.png"
   },
   {
     "id": "ex12-3",
@@ -1667,7 +2334,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Linear Attack",
@@ -1675,7 +2342,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Mud Shot",
@@ -1684,10 +2351,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex12-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex12-3.png"
   },
   {
     "id": "swsh35-2",
@@ -1700,10 +2374,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/swsh35-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh35-2.png"
   },
   {
     "id": "gym2-2",
@@ -1716,7 +2397,7 @@
         "costo": [
           "Fire"
         ],
-        "dano": "20+"
+        "dano": 20
       },
       {
         "nombre": "Flame Jet",
@@ -1724,10 +2405,22 @@
           "Fire",
           "Fire"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/gym2-2.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/gym2-2.png"
   },
   {
     "id": "xy2-3",
@@ -1740,7 +2433,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Gust",
@@ -1749,10 +2442,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/xy2-3.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/xy2-3.png"
   },
   {
     "id": "xy11-2",
@@ -1767,7 +2472,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       },
       {
         "nombre": "Flog",
@@ -1777,10 +2482,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "110+"
+        "dano": 110
       }
     ],
-    "imagen": "/images/cards/xy11-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy11-2.png"
   },
   {
     "id": "det1-3",
@@ -1793,10 +2505,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/det1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/det1-3.png"
   },
   {
     "id": "ex3-3",
@@ -1811,10 +2530,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex3-3.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex3-3.png"
   },
   {
     "id": "dv1-3",
@@ -1828,7 +2554,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Dragon Pulse",
@@ -1837,10 +2563,17 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/dv1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-3.png"
   },
   {
     "id": "sm9-3",
@@ -1853,10 +2586,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm9-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm9-3.png"
   },
   {
     "id": "pop7-2",
@@ -1870,7 +2610,7 @@
           "Fighting",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Psychic Cut",
@@ -1879,10 +2619,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60+"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pop7-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop7-2.png"
   },
   {
     "id": "sm1-2",
@@ -1895,7 +2642,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Bug Bite",
@@ -1904,10 +2651,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/sm1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm1-2.png"
   },
   {
     "id": "mcd19-3",
@@ -1920,7 +2674,7 @@
         "costo": [
           "Fire"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Flamethrower",
@@ -1929,10 +2683,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/mcd19-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/mcd19-3.png"
   },
   {
     "id": "col1-2",
@@ -1947,10 +2708,17 @@
           "Psychic",
           "Psychic"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/col1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/col1-2.png"
   },
   {
     "id": "pl1-3",
@@ -1964,7 +2732,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Fire Spin",
@@ -1973,10 +2741,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "100"
+        "dano": 100
       }
     ],
-    "imagen": "/images/cards/pl1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl1-3.png"
   },
   {
     "id": "sm115-2",
@@ -1990,10 +2765,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/sm115-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm115-2.png"
   },
   {
     "id": "gym1-3",
@@ -2006,7 +2788,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Moon Impact",
@@ -2015,10 +2797,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/gym1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/gym1-3.png"
   },
   {
     "id": "dp3-3",
@@ -2034,10 +2828,22 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "120"
+        "dano": 120
       }
     ],
-    "imagen": "/images/cards/dp3-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+40"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp3-3.png"
   },
   {
     "id": "sm2-1",
@@ -2051,10 +2857,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/sm2-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm2-1.png"
   },
   {
     "id": "base5-1",
@@ -2069,7 +2882,7 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Mind Shock",
@@ -2078,10 +2891,17 @@
           "Psychic",
           "Psychic"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/base5-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base5-1.png"
   },
   {
     "id": "xy4-1",
@@ -2095,10 +2915,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/xy4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy4-1.png"
   },
   {
     "id": "bw11-1",
@@ -2111,7 +2938,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Flog",
@@ -2120,10 +2947,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/bw11-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw11-1.png"
   },
   {
     "id": "ex4-1",
@@ -2136,7 +2975,7 @@
         "costo": [
           "Darkness"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Poison Barb",
@@ -2145,10 +2984,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/ex4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex4-1.png"
   },
   {
     "id": "bw4-1",
@@ -2162,7 +3008,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Grip and Squeeze",
@@ -2171,10 +3017,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/bw4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw4-1.png"
   },
   {
     "id": "bw9-1",
@@ -2187,10 +3040,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10×"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/bw9-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw9-1.png"
   },
   {
     "id": "base1-1",
@@ -2205,10 +3065,17 @@
           "Psychic",
           "Psychic"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/base1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base1-1.png"
   },
   {
     "id": "pop3-1",
@@ -2222,7 +3089,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Rocket Tackle",
@@ -2232,10 +3099,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pop3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop3-1.png"
   },
   {
     "id": "dp4-1",
@@ -2248,7 +3122,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Flame Kick",
@@ -2257,10 +3131,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/dp4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dp4-1.png"
   },
   {
     "id": "bw7-1",
@@ -2273,7 +3154,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Acid",
@@ -2281,10 +3162,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/bw7-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw7-1.png"
   },
   {
     "id": "ex8-1",
@@ -2297,7 +3190,7 @@
         "costo": [
           "Lightning"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Dive",
@@ -2306,10 +3199,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex8-1.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex8-1.png"
   },
   {
     "id": "bw5-1",
@@ -2322,7 +3227,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Razor Leaf",
@@ -2331,10 +3236,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/bw5-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw5-1.png"
   },
   {
     "id": "pop5-1",
@@ -2348,7 +3265,7 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Fire Blast",
@@ -2358,10 +3275,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pop5-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop5-1.png"
   },
   {
     "id": "sm5-1",
@@ -2374,10 +3298,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20×"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm5-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm5-1.png"
   },
   {
     "id": "xy10-1",
@@ -2390,7 +3321,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Wrap",
@@ -2398,10 +3329,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/xy10-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy10-1.png"
   },
   {
     "id": "sm8-1",
@@ -2415,7 +3353,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Bind",
@@ -2424,10 +3362,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/sm8-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm8-1.png"
   },
   {
     "id": "hgss2-1",
@@ -2440,10 +3385,17 @@
         "costo": [
           "Psychic"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/hgss2-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss2-1.png"
   },
   {
     "id": "dpp-DP01",
@@ -2454,17 +3406,29 @@
       {
         "nombre": "Tackle",
         "costo": [],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Razor Leaf",
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/dpp-DP01.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "+10"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dpp-DP01.png"
   },
   {
     "id": "swsh1-1",
@@ -2477,7 +3441,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Line Force",
@@ -2485,10 +3449,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "50+"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/swsh1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh1-1.png"
   },
   {
     "id": "basep-1",
@@ -2501,7 +3472,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Thundershock",
@@ -2509,10 +3480,17 @@
           "Lightning",
           "Lightning"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/basep-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/basep-1.png"
   },
   {
     "id": "swsh4-1",
@@ -2525,10 +3503,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/swsh4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh4-1.png"
   },
   {
     "id": "xy1-1",
@@ -2543,7 +3528,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       },
       {
         "nombre": "Jungle Hammer",
@@ -2553,10 +3538,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "90"
+        "dano": 90
       }
     ],
-    "imagen": "/images/cards/xy1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy1-1.png"
   },
   {
     "id": "pop1-1",
@@ -2570,7 +3562,7 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Double Kick",
@@ -2579,10 +3571,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50×"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/pop1-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop1-1.png"
   },
   {
     "id": "bw8-1",
@@ -2595,7 +3594,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Razor Leaf",
@@ -2604,10 +3603,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/bw8-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw8-1.png"
   },
   {
     "id": "base6-1",
@@ -2622,10 +3633,17 @@
           "Psychic",
           "Psychic"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/base6-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base6-1.png"
   },
   {
     "id": "pop9-1",
@@ -2638,7 +3656,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       },
       {
         "nombre": "Jet Sword",
@@ -2647,10 +3665,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "100"
+        "dano": 100
       }
     ],
-    "imagen": "/images/cards/pop9-1.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop9-1.png"
   },
   {
     "id": "pop4-1",
@@ -2663,7 +3688,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Sonicboom",
@@ -2671,10 +3696,17 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/pop4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop4-1.png"
   },
   {
     "id": "neo4-1",
@@ -2689,10 +3721,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/neo4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/neo4-1.png"
   },
   {
     "id": "neo3-1",
@@ -2705,7 +3744,7 @@
         "costo": [
           "Lightning"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Gigavolt",
@@ -2715,10 +3754,17 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "40+"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/neo3-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/neo3-1.png"
   },
   {
     "id": "pl4-1",
@@ -2731,7 +3777,7 @@
         "costo": [
           "Fire"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Burning Tail",
@@ -2740,10 +3786,22 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/pl4-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl4-1.png"
   },
   {
     "id": "mcd19-4",
@@ -2754,10 +3812,17 @@
       {
         "nombre": "Fury Swipes",
         "costo": [],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/mcd19-4.png"
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/mcd19-4.png"
   },
   {
     "id": "sm115-3",
@@ -2771,10 +3836,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/sm115-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm115-3.png"
   },
   {
     "id": "base3-4",
@@ -2790,10 +3862,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40×"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/base3-4.png"
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base3-4.png"
   },
   {
     "id": "ex9-3",
@@ -2806,7 +3885,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Body Slam",
@@ -2814,7 +3893,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Hyper Voice",
@@ -2823,7 +3902,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       },
       {
         "nombre": "Mega Throw",
@@ -2833,10 +3912,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60+"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ex9-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex9-3.png"
   },
   {
     "id": "pop7-3",
@@ -2849,7 +3935,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Mist Ball",
@@ -2858,10 +3944,22 @@
           "Water",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/pop7-3.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop7-3.png"
   },
   {
     "id": "pop6-4",
@@ -2874,17 +3972,29 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Thunder Jolt",
         "costo": [
           "Lightning"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/pop6-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop6-4.png"
   },
   {
     "id": "det1-4",
@@ -2897,10 +4007,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/det1-4.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/det1-4.png"
   },
   {
     "id": "ex4-2",
@@ -2914,7 +4031,7 @@
           "Darkness",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Deep Impact",
@@ -2923,10 +4040,17 @@
           "Water",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/ex4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex4-2.png"
   },
   {
     "id": "hgss1-4",
@@ -2941,7 +4065,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       },
       {
         "nombre": "Hyper Beam",
@@ -2951,10 +4075,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/hgss1-4.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/hgss1-4.png"
   },
   {
     "id": "xy1-2",
@@ -2970,10 +4106,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "120"
+        "dano": 120
       }
     ],
-    "imagen": "/images/cards/xy1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy1-2.png"
   },
   {
     "id": "ex8-2",
@@ -2986,7 +4129,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Cutting Wind",
@@ -2995,10 +4138,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex8-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex8-2.png"
   },
   {
     "id": "bw5-2",
@@ -3012,7 +4162,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Poison Powder",
@@ -3021,10 +4171,22 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/bw5-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw5-2.png"
   },
   {
     "id": "dpp-DP02",
@@ -3035,7 +4197,7 @@
       {
         "nombre": "Scratch",
         "costo": [],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Ember",
@@ -3043,10 +4205,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/dpp-DP02.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+10"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dpp-DP02.png"
   },
   {
     "id": "sm2-2",
@@ -3060,10 +4229,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/sm2-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm2-2.png"
   },
   {
     "id": "pop4-2",
@@ -3077,10 +4253,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/pop4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop4-2.png"
   },
   {
     "id": "bw7-2",
@@ -3094,7 +4277,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Poison Powder",
@@ -3103,10 +4286,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/bw7-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw7-2.png"
   },
   {
     "id": "xy4-2",
@@ -3119,7 +4314,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Noxious Scales",
@@ -3128,10 +4323,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/xy4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy4-2.png"
   },
   {
     "id": "col1-3",
@@ -3147,10 +4349,22 @@
           "Metal",
           "Metal"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/col1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/col1-3.png"
   },
   {
     "id": "ex12-4",
@@ -3163,7 +4377,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Tail Whap",
@@ -3172,10 +4386,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/ex12-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex12-4.png"
   },
   {
     "id": "bw11-2",
@@ -3188,7 +4409,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Flog",
@@ -3198,10 +4419,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60+"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/bw11-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw11-2.png"
   },
   {
     "id": "pl1-4",
@@ -3214,7 +4447,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10+"
+        "dano": 10
       },
       {
         "nombre": "Rear Kick",
@@ -3223,10 +4456,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pl1-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl1-4.png"
   },
   {
     "id": "swsh35-3",
@@ -3239,10 +4479,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/swsh35-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh35-3.png"
   },
   {
     "id": "base5-2",
@@ -3256,7 +4503,7 @@
           "Grass",
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Poison Vapor",
@@ -3265,10 +4512,17 @@
           "Grass",
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/base5-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base5-2.png"
   },
   {
     "id": "ecard2-H4",
@@ -3283,10 +4537,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/ecard2-H4.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ecard2-H4.png"
   },
   {
     "id": "neo4-2",
@@ -3300,10 +4561,22 @@
           "Grass",
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/neo4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/neo4-2.png"
   },
   {
     "id": "ex3-4",
@@ -3317,7 +4590,7 @@
           "Grass",
           "Lightning"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Rainbow Burn",
@@ -3326,10 +4599,26 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30+"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex3-4.png"
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fire",
+        "valor": "-30"
+      },
+      {
+        "tipo": "Lightning",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex3-4.png"
   },
   {
     "id": "xy2-4",
@@ -3343,10 +4632,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/xy2-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy2-4.png"
   },
   {
     "id": "pop5-2",
@@ -3360,7 +4656,7 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Aerowing",
@@ -3369,10 +4665,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/pop5-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop5-2.png"
   },
   {
     "id": "base6-2",
@@ -3387,7 +4690,7 @@
           "Water",
           "Water"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Blizzard",
@@ -3397,10 +4700,17 @@
           "Water",
           "Water"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/base6-2.png"
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base6-2.png"
   },
   {
     "id": "dv1-4",
@@ -3413,7 +4723,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Slam",
@@ -3421,10 +4731,17 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "30×"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/dv1-4.png"
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-4.png"
   },
   {
     "id": "ex11-4",
@@ -3438,10 +4755,17 @@
           "Psychic",
           "Metal"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex11-4.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex11-4.png"
   },
   {
     "id": "dp4-2",
@@ -3454,7 +4778,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Lunar Dance",
@@ -3463,10 +4787,17 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/dp4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dp4-2.png"
   },
   {
     "id": "dp1-2",
@@ -3481,10 +4812,22 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/dp1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Colorless",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp1-2.png"
   },
   {
     "id": "gym2-3",
@@ -3498,10 +4841,17 @@
           "Fire",
           "Fire"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/gym2-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/gym2-3.png"
   },
   {
     "id": "pop1-2",
@@ -3515,7 +4865,7 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Hyper Beam",
@@ -3525,10 +4875,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/pop1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Grass",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop1-2.png"
   },
   {
     "id": "si1-3",
@@ -3542,7 +4904,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20×"
+        "dano": 20
       },
       {
         "nombre": "Body Slam",
@@ -3552,10 +4914,17 @@
           "Fighting",
           "Fighting"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/si1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/si1-3.png"
   },
   {
     "id": "dp3-4",
@@ -3570,10 +4939,17 @@
           "Fire",
           "Fire"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/dp3-4.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dp3-4.png"
   },
   {
     "id": "base4-4",
@@ -3589,10 +4965,22 @@
           "Fire",
           "Fire"
         ],
-        "dano": "100"
+        "dano": 100
       }
     ],
-    "imagen": "/images/cards/base4-4.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base4-4.png"
   },
   {
     "id": "pl4-2",
@@ -3606,10 +4994,17 @@
           "Water",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/pl4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl4-2.png"
   },
   {
     "id": "bw8-2",
@@ -3624,10 +5019,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40+"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/bw8-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw8-2.png"
   },
   {
     "id": "pop3-2",
@@ -3641,7 +5048,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "10+"
+        "dano": 10
       },
       {
         "nombre": "Fire Spin",
@@ -3650,10 +5057,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/pop3-2.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop3-2.png"
   },
   {
     "id": "xy11-3",
@@ -3666,10 +5080,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/xy11-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy11-3.png"
   },
   {
     "id": "sm3-2",
@@ -3682,7 +5103,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Shed Skin",
@@ -3690,10 +5111,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/sm3-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm3-2.png"
   },
   {
     "id": "swsh1-2",
@@ -3706,10 +5134,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/swsh1-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh1-2.png"
   },
   {
     "id": "pop9-2",
@@ -3722,17 +5157,24 @@
         "costo": [
           "Water"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Water Glow",
         "costo": [
           "Water"
         ],
-        "dano": "0"
+        "dano": 0
       }
     ],
-    "imagen": "/images/cards/pop9-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop9-2.png"
   },
   {
     "id": "xy7-3",
@@ -3747,10 +5189,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/xy7-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy7-3.png"
   },
   {
     "id": "bw10-3",
@@ -3764,10 +5213,22 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/bw10-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw10-3.png"
   },
   {
     "id": "bw4-2",
@@ -3780,10 +5241,22 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10+"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/bw4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw4-2.png"
   },
   {
     "id": "sm9-4",
@@ -3797,10 +5270,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm9-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm9-4.png"
   },
   {
     "id": "hgss4-4",
@@ -3815,7 +5295,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Land Crush",
@@ -3825,10 +5305,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "80"
+        "dano": 80
       }
     ],
-    "imagen": "/images/cards/hgss4-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/hgss4-4.png"
   },
   {
     "id": "ex13-3",
@@ -3843,10 +5335,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ex13-3.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex13-3.png"
   },
   {
     "id": "sm5-2",
@@ -3860,10 +5359,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm5-2.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/sm5-2.png"
   },
   {
     "id": "sm75-1",
@@ -3877,10 +5388,17 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm75-1.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm75-1.png"
   },
   {
     "id": "ex10-1",
@@ -3895,10 +5413,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex10-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex10-1.png"
   },
   {
     "id": "bw6-1",
@@ -3911,10 +5441,22 @@
         "costo": [
           "Grass"
         ],
-        "dano": "10×"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/bw6-1.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw6-1.png"
   },
   {
     "id": "si1-4",
@@ -3927,10 +5469,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       }
     ],
-    "imagen": "/images/cards/si1-4.png"
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/si1-4.png"
   },
   {
     "id": "bw5-3",
@@ -3946,10 +5495,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/bw5-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw5-3.png"
   },
   {
     "id": "dp1-3",
@@ -3965,10 +5526,22 @@
           "Lightning",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/dp1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp1-3.png"
   },
   {
     "id": "xy11-4",
@@ -3981,10 +5554,17 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/xy11-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy11-4.png"
   },
   {
     "id": "hgss4-5",
@@ -3999,7 +5579,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       },
       {
         "nombre": "Snowstorm",
@@ -4009,10 +5589,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/hgss4-5.png"
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss4-5.png"
   },
   {
     "id": "sm12-3",
@@ -4025,10 +5612,17 @@
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/sm12-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm12-3.png"
   },
   {
     "id": "ex7-4",
@@ -4041,10 +5635,17 @@
         "costo": [
           "Lightning"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/ex7-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex7-4.png"
   },
   {
     "id": "sm5-3",
@@ -4057,7 +5658,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Cutting Wind",
@@ -4067,10 +5668,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "120"
+        "dano": 120
       }
     ],
-    "imagen": "/images/cards/sm5-3.png"
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/sm5-3.png"
   },
   {
     "id": "swsh1-3",
@@ -4083,7 +5696,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Sting",
@@ -4091,10 +5704,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/swsh1-3.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh1-3.png"
   },
   {
     "id": "pl3-4",
@@ -4107,7 +5727,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Electric Current",
@@ -4116,10 +5736,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "40"
+        "dano": 40
       }
     ],
-    "imagen": "/images/cards/pl3-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl3-4.png"
   },
   {
     "id": "hgss1-5",
@@ -4132,7 +5764,7 @@
         "costo": [
           "Fighting"
         ],
-        "dano": "20×"
+        "dano": 20
       },
       {
         "nombre": "Close Combat",
@@ -4141,10 +5773,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/hgss1-5.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss1-5.png"
   },
   {
     "id": "ex12-5",
@@ -4157,7 +5796,7 @@
         "costo": [
           "Psychic"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Super Psy Bolt",
@@ -4166,10 +5805,22 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ex12-5.png"
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ex12-5.png"
   },
   {
     "id": "pl4-3",
@@ -4183,7 +5834,7 @@
           "Fire",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Magma Mantle",
@@ -4193,10 +5844,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60+"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/pl4-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pl4-3.png"
   },
   {
     "id": "bw10-4",
@@ -4209,7 +5867,7 @@
         "costo": [
           "Grass"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Spiral Drain",
@@ -4218,10 +5876,22 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/bw10-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw10-4.png"
   },
   {
     "id": "pop4-3",
@@ -4235,7 +5905,7 @@
           "Fighting",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Sand Pit",
@@ -4245,10 +5915,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "70"
+        "dano": 70
       }
     ],
-    "imagen": "/images/cards/pop4-3.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop4-3.png"
   },
   {
     "id": "ex3-5",
@@ -4263,7 +5940,7 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "20+"
+        "dano": 20
       },
       {
         "nombre": "Rock Slide",
@@ -4274,10 +5951,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ex3-5.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex3-5.png"
   },
   {
     "id": "swsh4-2",
@@ -4290,17 +5974,24 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "0"
+        "dano": 0
       },
       {
         "nombre": "Bug Bite",
         "costo": [
           "Grass"
         ],
-        "dano": "20"
+        "dano": 20
       }
     ],
-    "imagen": "/images/cards/swsh4-2.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh4-2.png"
   },
   {
     "id": "xy5-4",
@@ -4314,7 +6005,7 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "20"
+        "dano": 20
       },
       {
         "nombre": "Vine Whip",
@@ -4323,10 +6014,17 @@
           "Grass",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       }
     ],
-    "imagen": "/images/cards/xy5-4.png"
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy5-4.png"
   },
   {
     "id": "ex9-4",
@@ -4340,7 +6038,7 @@
           "Psychic",
           "Colorless"
         ],
-        "dano": "30"
+        "dano": 30
       },
       {
         "nombre": "Mind Shock",
@@ -4350,10 +6048,17 @@
           "Colorless",
           "Colorless"
         ],
-        "dano": "60"
+        "dano": 60
       }
     ],
-    "imagen": "/images/cards/ex9-4.png"
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex9-4.png"
   },
   {
     "id": "ex11-5",
@@ -4366,7 +6071,7 @@
         "costo": [
           "Colorless"
         ],
-        "dano": "10"
+        "dano": 10
       },
       {
         "nombre": "Return Burn",
@@ -4375,10 +6080,1584 @@
           "Metal",
           "Colorless"
         ],
-        "dano": "50"
+        "dano": 50
       }
     ],
-    "imagen": "/images/cards/ex11-5.png"
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex11-5.png"
+  },
+  {
+    "id": "ex4-3",
+    "nombre": "Team Aqua's Kyogre",
+    "tipo": "Water",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Aqua Trip",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Aqua Smash",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex4-3.png"
+  },
+  {
+    "id": "base3-5",
+    "nombre": "Gengar",
+    "tipo": "Psychic",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Dark Mind",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base3-5.png"
+  },
+  {
+    "id": "dv1-5",
+    "nombre": "Dragonite",
+    "tipo": "Dragon",
+    "hp": "150",
+    "ataques": [
+      {
+        "nombre": "Hyper Beam",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      },
+      {
+        "nombre": "Hurricane Tail",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-5.png"
+  },
+  {
+    "id": "dp4-3",
+    "nombre": "Darkrai",
+    "tipo": "Darkness",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Reach Over",
+        "costo": [],
+        "dano": 0
+      },
+      {
+        "nombre": "Darkness Pursuit",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Darkness"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp4-3.png"
+  },
+  {
+    "id": "dp3-5",
+    "nombre": "Flygon",
+    "tipo": "Fighting",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Sand Sonic",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Lightning",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp3-5.png"
+  },
+  {
+    "id": "bw1-3",
+    "nombre": "Servine",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Wrap",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw1-3.png"
+  },
+  {
+    "id": "ecard2-H5",
+    "nombre": "Bellossom",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Knife Leaf",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/ecard2-H5.png"
+  },
+  {
+    "id": "pop1-3",
+    "nombre": "Rayquaza",
+    "tipo": "Colorless",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Fly",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Dragon Claw",
+        "costo": [
+          "Fire",
+          "Lightning"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop1-3.png"
+  },
+  {
+    "id": "gym2-4",
+    "nombre": "Erika's Venusaur",
+    "tipo": "Grass",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Growth",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Wide Solarbeam",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Grass",
+          "Grass"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/gym2-4.png"
+  },
+  {
+    "id": "xy4-3",
+    "nombre": "Yanma",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Air Slash",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/xy4-3.png"
+  },
+  {
+    "id": "ex10-2",
+    "nombre": "Ariados",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Reactive Poison",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Spider Trap",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex10-2.png"
+  },
+  {
+    "id": "xy7-4",
+    "nombre": "Bellossom",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Windmill",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Flower Tornado",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy7-4.png"
+  },
+  {
+    "id": "pl1-5",
+    "nombre": "Dialga",
+    "tipo": "Metal",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Time-Space Traveling",
+        "costo": [
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl1-5.png"
+  },
+  {
+    "id": "pop3-3",
+    "nombre": "Jolteon",
+    "tipo": "Lightning",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Thundershock",
+        "costo": [
+          "Lightning",
+          "Colorless"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Pin Missile",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop3-3.png"
+  },
+  {
+    "id": "ex8-3",
+    "nombre": "Breloom",
+    "tipo": "Fighting",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Leaf Poison",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Hustle Punch",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 70
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex8-3.png"
+  },
+  {
+    "id": "basep-2",
+    "nombre": "Electabuzz",
+    "tipo": "Lightning",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Light Screen",
+        "costo": [
+          "Lightning"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Quick Attack",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 10
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/basep-2.png"
+  },
+  {
+    "id": "base6-3",
+    "nombre": "Charizard",
+    "tipo": "Fire",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Fire Spin",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Fire",
+          "Fire"
+        ],
+        "dano": 100
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/base6-3.png"
+  },
+  {
+    "id": "bw4-3",
+    "nombre": "Kricketot",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Beat",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Double Headbutt",
+        "costo": [
+          "Grass",
+          "Grass"
+        ],
+        "dano": 10
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw4-3.png"
+  },
+  {
+    "id": "hgss2-2",
+    "nombre": "Magmortar",
+    "tipo": "Fire",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Hard Crush",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      },
+      {
+        "nombre": "Mantle Bazooka",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 100
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/hgss2-2.png"
+  },
+  {
+    "id": "bw11-3",
+    "nombre": "Shuckle",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Share",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Double Stab",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 40
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/bw11-3.png"
+  },
+  {
+    "id": "pop7-4",
+    "nombre": "Latios",
+    "tipo": "Colorless",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Energy Draw",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Luster Purge",
+        "costo": [
+          "Grass",
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 120
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Colorless",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop7-4.png"
+  },
+  {
+    "id": "ru1-4",
+    "nombre": "Heatran",
+    "tipo": "Fire",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Heat Boiler",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ru1-4.png"
+  },
+  {
+    "id": "neo3-2",
+    "nombre": "Blissey",
+    "tipo": "Colorless",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Body Slam",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/neo3-2.png"
+  },
+  {
+    "id": "mcd19-5",
+    "nombre": "Lapras",
+    "tipo": "Water",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Aqua Bullet",
+        "costo": [
+          "Water"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Hydro Pump",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 70
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/mcd19-5.png"
+  },
+  {
+    "id": "sm8-2",
+    "nombre": "Tangrowth",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Hefty Whip",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30
+      },
+      {
+        "nombre": "Whip Smash",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 110
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm8-2.png"
+  },
+  {
+    "id": "sm75-2",
+    "nombre": "Charmeleon",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Flamethrower",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 80
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm75-2.png"
+  },
+  {
+    "id": "sm9-5",
+    "nombre": "Beedrill",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Destiny Stinger",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Reckless Charge",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 90
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm9-5.png"
+  },
+  {
+    "id": "bw6-2",
+    "nombre": "Skiploom",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Bullet Seed",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 10
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw6-2.png"
+  },
+  {
+    "id": "neo4-3",
+    "nombre": "Dark Donphan",
+    "tipo": "Fighting",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Tusk Toss",
+        "costo": [
+          "Fighting",
+          "Fighting"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Giant Tusk",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Lightning",
+        "valor": "-30"
+      }
+    ],
+    "imagen": "/assets/images/cards/neo4-3.png"
+  },
+  {
+    "id": "bw7-3",
+    "nombre": "Vileplume",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Pollen Spray",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Water",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/bw7-3.png"
+  },
+  {
+    "id": "swsh35-4",
+    "nombre": "Beedrill",
+    "tipo": "Grass",
+    "hp": "140",
+    "ataques": [
+      {
+        "nombre": "Poison Jab",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 80
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/swsh35-4.png"
+  },
+  {
+    "id": "pop9-3",
+    "nombre": "Raichu",
+    "tipo": "Lightning",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Slam",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30
+      },
+      {
+        "nombre": "High Volt",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Lightning"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pop9-3.png"
+  },
+  {
+    "id": "dpp-DP03",
+    "nombre": "Piplup",
+    "tipo": "Water",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Peck",
+        "costo": [],
+        "dano": 10
+      },
+      {
+        "nombre": "Water Splash",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "+10"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dpp-DP03.png"
+  },
+  {
+    "id": "xy10-2",
+    "nombre": "Burmy",
+    "tipo": "Grass",
+    "hp": "60",
+    "ataques": [
+      {
+        "nombre": "Hang Down",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy10-2.png"
+  },
+  {
+    "id": "sm115-4",
+    "nombre": "Paras",
+    "tipo": "Grass",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Slash",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm115-4.png"
+  },
+  {
+    "id": "base1-2",
+    "nombre": "Blastoise",
+    "tipo": "Water",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Hydro Pump",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ],
+        "dano": 40
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/base1-2.png"
+  },
+  {
+    "id": "sm3-3",
+    "nombre": "Butterfree",
+    "tipo": "Grass",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Bye-Bye Heal",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Stun Spore",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/sm3-3.png"
+  },
+  {
+    "id": "xy2-5",
+    "nombre": "Seedot",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Call for Family",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy2-5.png"
+  },
+  {
+    "id": "xy1-3",
+    "nombre": "Weedle",
+    "tipo": "Grass",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Leaf Munch",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 10
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy1-3.png"
+  },
+  {
+    "id": "ex14-2",
+    "nombre": "Blastoise δ",
+    "tipo": "Fighting",
+    "hp": "110",
+    "ataques": [
+      {
+        "nombre": "Enraged Linear Attack",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Skull Bash",
+        "costo": [
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex14-2.png"
+  },
+  {
+    "id": "det1-5",
+    "nombre": "Charizard",
+    "tipo": "Fire",
+    "hp": "180",
+    "ataques": [
+      {
+        "nombre": "Slash",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 70
+      },
+      {
+        "nombre": "Wild Tackle",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 180
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/det1-5.png"
+  },
+  {
+    "id": "pl1-6",
+    "nombre": "Dialga",
+    "tipo": "Metal",
+    "hp": "100",
+    "ataques": [
+      {
+        "nombre": "Metal Burn",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 100
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/pl1-6.png"
+  },
+  {
+    "id": "dpp-DP04",
+    "nombre": "Pachirisu",
+    "tipo": "Lightning",
+    "hp": "70",
+    "ataques": [
+      {
+        "nombre": "Minor Errand-Running",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Thunder Jolt",
+        "costo": [
+          "Lightning"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dpp-DP04.png"
+  },
+  {
+    "id": "xy5-5",
+    "nombre": "Tangrowth",
+    "tipo": "Grass",
+    "hp": "130",
+    "ataques": [
+      {
+        "nombre": "Mega Drain",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      },
+      {
+        "nombre": "Grass Knot",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 80
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy5-5.png"
+  },
+  {
+    "id": "pop6-5",
+    "nombre": "Rampardos",
+    "tipo": "Fighting",
+    "hp": "120",
+    "ataques": [
+      {
+        "nombre": "Assurance",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 30
+      },
+      {
+        "nombre": "Hasty Headbutt",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Fighting"
+        ],
+        "dano": 100
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "+30"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/pop6-5.png"
+  },
+  {
+    "id": "xy2-6",
+    "nombre": "Nuzleaf",
+    "tipo": "Grass",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Razor Leaf",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20
+      },
+      {
+        "nombre": "Cut",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/xy2-6.png"
+  },
+  {
+    "id": "ex14-3",
+    "nombre": "Camerupt",
+    "tipo": "Fire",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Linear Attack",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Combustion",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex14-3.png"
+  },
+  {
+    "id": "dv1-6",
+    "nombre": "Bagon",
+    "tipo": "Dragon",
+    "hp": "50",
+    "ataques": [
+      {
+        "nombre": "Headbutt",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Dragon Claw",
+        "costo": [
+          "Fire",
+          "Water"
+        ],
+        "dano": 20
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Dragon",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/dv1-6.png"
+  },
+  {
+    "id": "ex8-4",
+    "nombre": "Camerupt",
+    "tipo": "Fire",
+    "hp": "90",
+    "ataques": [
+      {
+        "nombre": "Back Burner",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0
+      },
+      {
+        "nombre": "Split Bomb",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 0
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/ex8-4.png"
+  },
+  {
+    "id": "dp4-4",
+    "nombre": "Darkrai",
+    "tipo": "Darkness",
+    "hp": "80",
+    "ataques": [
+      {
+        "nombre": "Darkness Roar",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10
+      },
+      {
+        "nombre": "Sleep Hole",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 40
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "+20"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "imagen": "/assets/images/cards/dp4-4.png"
   },
   {
     "id": "energy-grass",
@@ -4386,7 +7665,9 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-grass.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-grass.png"
   },
   {
     "id": "energy-fire",
@@ -4394,7 +7675,9 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-fire.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-fire.png"
   },
   {
     "id": "energy-water",
@@ -4402,7 +7685,9 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-water.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-water.png"
   },
   {
     "id": "energy-lightning",
@@ -4410,7 +7695,9 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-lightning.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-lightning.png"
   },
   {
     "id": "energy-psychic",
@@ -4418,7 +7705,9 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-psychic.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-psychic.png"
   },
   {
     "id": "energy-fighting",
@@ -4426,6 +7715,8 @@
     "tipo": "Energy",
     "hp": "0",
     "ataques": [],
-    "imagen": "/images/cards/energy-fighting.png"
+    "debilidades": [],
+    "resistencias": [],
+    "imagen": "/assets/images/cards/energy-fighting.png"
   }
 ]

@@ -16,6 +16,7 @@ com\pokemon\tcg\service\MazoService.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\controller\MazoController.class
+com\pokemon\tcg\model\Card$3.class
 com\pokemon\tcg\config\DataLoader$1.class
 com\pokemon\tcg\model\battle\Partida$Turno.class
 com\pokemon\tcg\BackendApplication.class
@@ -27,6 +28,7 @@ com\pokemon\tcg\model\Jugador.class
 com\pokemon\tcg\model\battle\CartaEnJuego.class
 com\pokemon\tcg\dto\JugadorDatosResponse.class
 com\pokemon\tcg\model\battle\Ataque.class
+com\pokemon\tcg\model\Card$2.class
 com\pokemon\tcg\repository\JugadorRepository.class
 com\pokemon\tcg\service\BattleEngineService.class
 com\pokemon\tcg\controller\JugadorController.class
