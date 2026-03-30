@@ -26,7 +26,7 @@ public class Mazo {
     )
     private List<Card> cartas;
 
-    // Constructor vacío para JPA
+    // Constructor vacÃ­o para JPA
     public Mazo() {}
 
     // ESTE ES EL QUE FALTABA PARA EL SERVICE

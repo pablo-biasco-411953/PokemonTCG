@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sobres")
+@CrossOrigin(origins = "http://localhost:4200")
 public class SobreController {
     private final SobreService sobreService;
 
@@ -17,8 +18,12 @@ public class SobreController {
     }
 
     @PostMapping("/abrir/{username}")
-    public ResponseEntity<List<Card>> abrirSobre(@PathVariable String username) {
-        List<Card> cartas = sobreService.abrirSobre(username);
-        return ResponseEntity.ok(cartas);
+    public ResponseEntity<?> abrirSobre(@PathVariable String username) {
+        try {
+            List<Card> cartas = sobreService.abrirSobre(username);
+            return ResponseEntity.ok(cartas);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al abrir el sobre: " + e.getMessage());
+        }
     }
 }

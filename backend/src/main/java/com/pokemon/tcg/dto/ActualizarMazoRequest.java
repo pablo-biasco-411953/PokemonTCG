@@ -1,0 +1,13 @@
+package com.pokemon.tcg.dto;
+
+import java.util.List;
+
+public class ActualizarMazoRequest {
+    private String nombre;
+    private List<String> cartas;
+
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+    public List<String> getCartas() { return cartas; }
+    public void setCartas(List<String> cartas) { this.cartas = cartas; }
+}

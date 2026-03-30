@@ -1,6 +1,6 @@
 const https = require('https');
-const fs = require('fs'); // Importación normal para los streams
-const fsPromises = require('fs').promises; // Importación para las promesas
+const fs = require('fs');
+const fsPromises = require('fs').promises;
 const path = require('path');
 
 const API_URL = 'https://api.pokemontcg.io/v2/cards?pageSize=200';
@@ -31,7 +31,7 @@ async function fetchJSON(url) {
 
 async function downloadImage(url, dest) {
   return new Promise((resolve, reject) => {
-    const file = fs.createWriteStream(dest); // Ahora sí funciona porque usamos el fs normal
+    const file = fs.createWriteStream(dest);
     https.get(url, (res) => {
       res.pipe(file);
       file.on('finish', () => { file.close(resolve); });
@@ -57,7 +57,13 @@ async function main() {
       const nombre = card.name;
       const tipo = card.supertype === 'Energy' ? 'Energy' : (card.types && card.types.length > 0 ? card.types[0] : 'Desconocido');
       const hp = card.hp || '0';
-      const ataques = (card.attacks || []).map(a => ({ nombre: a.name, costo: a.cost }));
+      
+      // ✅ ¡AQUÍ ESTÁ LA MAGIA! Ahora capturamos el daño también
+      const ataques = (card.attacks || []).map(a => ({ 
+        nombre: a.name, 
+        costo: a.cost,
+        dano: a.damage || "0" // Si el ataque no hace daño (ej: curar), le pone "0"
+      }));
 
       let rutaImagenLocal = '';
       if (card.images && card.images.small) {
@@ -67,7 +73,7 @@ async function main() {
           try { await downloadImage(card.images.small, imgPath); } 
           catch (e) { console.warn(`Error al descargar imagen para ${id}:`, e.message); }
         }
-        rutaImagenLocal = `/public/images/cards/${id}.png`;
+        rutaImagenLocal = `/images/cards/${id}.png`;
       }
 
       cleanedCards.push({ id, nombre, tipo, hp, ataques, imagen: rutaImagenLocal });
@@ -89,7 +95,7 @@ async function main() {
         tipo: 'Energy',
         hp: '0',
         ataques: [],
-        imagen: `/public/images/cards/${energia.id}.png`
+        imagen: `/images/cards/${energia.id}.png`
       });
     }
 

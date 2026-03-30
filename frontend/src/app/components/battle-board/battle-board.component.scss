@@ -1,1014 +1,187 @@
-  /* ══════════════════════════════════════════════════════════════
-    POKEMON TCG — BATTLE BOARD V6
-    Neoprene texture · Vertical arena · Face-to-face sprites
-    Attack animations · Fixed prizes
-    ══════════════════════════════════════════════════════════════ */
-
-  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap');
-
-  /* ── Tokens ── */
-  :root {
-    --bg:      #06101a;
-    --bg2:     #0a1826;
-    --bg3:     #0f2030;
-    --gold:    #f2c040;
-    --gold2:   #ffe07a;
-    --glow:    rgba(242,192,64,.32);
-    --glow2:   rgba(242,192,64,.1);
-    --red:     #e53535;
-    --red-g:   rgba(229,53,53,.55);
-    --green:   #32d46e;
-    --orange:  #f08020;
-    --energy:  #fbbf24;
-    --ene-g:   rgba(251,191,36,.4);
-    --blue:    #4ab8f8;
-    --blue-g:  rgba(74,184,248,.3);
-    --brd:     rgba(255,255,255,.07);
-    --brd2:    rgba(255,255,255,.14);
-    --text:    #c4d4e4;
-    --text2:   rgba(255, 255, 255, 0.801);
-    --fd: 'Bebas Neue', sans-serif;
-    --fu: 'Rajdhani', sans-serif;
-    --fc: 'Barlow Condensed', sans-serif;
-    --r: 9px; --r2: 13px;
-  }
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
-
-  /* ══════════════════════════════════════════════════════════════
-    INTRO
-    ══════════════════════════════════════════════════════════════ */
-  .intro-overlay {
-    position: fixed; inset: 0; z-index: 1000;
-    background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-    &.fade-out { animation: i-out .8s ease forwards; }
-  }
-  @keyframes i-out { to { opacity: 0; pointer-events: none; } }
-
-  .intro-lines {
-    position: absolute; inset: 0; pointer-events: none;
-    span {
-      position: absolute; top: 50%; left: 50%;
-      width: 2px; height: 55vh;
-      background: linear-gradient(to top, transparent, rgba(242,192,64,.13));
-      transform-origin: bottom center;
-      transform: rotate(calc(var(--ln) * 30deg));
-      animation: il 2s ease-in-out infinite;
-      animation-delay: calc(var(--ln) * .07s);
-    }
-  }
-  @keyframes il { 0%,100%{opacity:.22} 50%{opacity:.55} }
-
-  .intro-content {
-    position: relative; z-index: 2;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-    text-align: center;
-  }
-
-  .intro-pokeball {
-    width: 114px; height: 114px; border-radius: 50%;
-    border: 4px solid var(--gold); position: relative;
-    animation: ipb 1.3s cubic-bezier(.22,.61,.36,1) both;
-    box-shadow: 0 0 55px var(--glow), inset 0 0 35px rgba(0,0,0,.5);
-    .pb-band { position:absolute; top:50%; left:0; right:0; height:4px; background:var(--gold); transform:translateY(-50%); }
-    .pb-btn  { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:28px; height:28px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#fff,var(--gold) 60%); border:4px solid var(--bg); animation:ibb 1s .6s ease-in-out infinite; }
-  }
-  @keyframes ipb { 0%{transform:rotate(-720deg)scale(0);opacity:0} 70%{transform:rotate(15deg)scale(1.1);opacity:1} 85%{transform:rotate(-8deg)scale(.97)} to{transform:rotate(0)scale(1)} }
-  @keyframes ibb { 0%,to{box-shadow:0 0 14px var(--glow)} 50%{box-shadow:0 0 32px rgba(242,192,64,.6)} }
-
-  .intro-sparks {
-    position: absolute; inset: -80px; pointer-events: none;
-    span { position:absolute; top:50%; left:50%; width:2px; height:46px; background:linear-gradient(to bottom,var(--gold),transparent); transform-origin:top center; transform:rotate(calc(var(--n)*30deg)) translateX(-1px); animation:isp .8s .35s ease both; opacity:0; }
-  }
-  @keyframes isp { 30%{opacity:1} to{transform:rotate(calc(var(--n)*30deg)) translateX(-1px) scaleY(1) translateY(-72px);opacity:0} }
-
-  .intro-eyebrow { font-family:var(--fu); font-size:11px; font-weight:700; letter-spacing:.35em; text-transform:uppercase; color:var(--text2); animation:ifup .5s .9s both; }
-  .intro-title { font-family:var(--fd); font-size:clamp(58px,10vw,98px); line-height:.9; color:#fff; animation:islam .5s .65s cubic-bezier(.22,.61,.36,1) both; em{color:var(--gold);font-style:normal;} }
-  @keyframes islam { from{transform:scale(1.7);opacity:0} to{transform:scale(1);opacity:1} }
-  .intro-bar-wrap { width:240px; height:3px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; animation:ifup .3s 1s both; }
-  .intro-bar { height:100%; width:0; background:linear-gradient(90deg,var(--gold),var(--gold2)); animation:ibg .7s 1.1s ease both; box-shadow:0 0 10px var(--glow); }
-  @keyframes ibg { to{width:100%} }
-  @keyframes ifup { from{transform:translateY(12px);opacity:0} to{transform:none;opacity:1} }
-
-  /* ══════════════════════════════════════════════════════════════
-    TURN OVERLAY
-    ══════════════════════════════════════════════════════════════ */
-  .turn-overlay {
-    position:fixed; inset:0; z-index:900; display:flex; align-items:center; justify-content:center;
-    pointer-events:none; overflow:hidden;
-    animation: ton .25s ease both, toff .5s 1.5s ease forwards;
-  }
-  @keyframes ton  { from{opacity:0} to{opacity:1} }
-  @keyframes toff { to{opacity:0} }
-  .to-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.68); backdrop-filter:blur(7px); }
-  .to-body { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:6px; animation:tbody .3s .05s cubic-bezier(.22,.61,.36,1) both; }
-  @keyframes tbody { from{transform:scale(.6) translateY(24px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
-  .to-lines { display:flex; gap:6px; margin-bottom:4px;
-    span { display:block; height:3px; border-radius:2px; animation:tls .4s .1s ease both;
-      &:nth-child(1){width:55px} &:nth-child(2){width:110px} &:nth-child(3){width:55px}
-    }
-  }
-  @keyframes tls { from{width:0;opacity:0} }
-  .is-player .to-lines span { background:var(--gold); }
-  .is-bot    .to-lines span { background:var(--blue); }
-  .to-text { font-family:var(--fd); font-size:clamp(50px,9vw,84px); letter-spacing:.1em; color:#fff; text-shadow:0 4px 28px rgba(0,0,0,.6); }
-  .is-player .to-text { color:var(--gold); text-shadow:0 0 40px var(--glow); }
-  .is-bot    .to-text { color:var(--blue); text-shadow:0 0 40px var(--blue-g); }
-  .to-sub { font-family:var(--fu); font-size:12px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--text2); }
-
-  /* ══════════════════════════════════════════════════════════════
-    LOADING / IMPACT FLASH
-    ══════════════════════════════════════════════════════════════ */
-  .loading-overlay {
-    position:fixed; inset:0; z-index:800; background:rgba(0,0,0,.75); backdrop-filter:blur(4px);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-    .loader-ring { width:50px; height:50px; border-radius:50%; border:3px solid rgba(255,255,255,.08); border-top-color:var(--gold); animation:spin 1s linear infinite; }
-    span { font-family:var(--fd); font-size:18px; letter-spacing:.25em; color:var(--gold); }
-  }
-  @keyframes spin { to{transform:rotate(360deg)} }
-
-  /* Flash blanco en el momento del impacto */
-  .impact-flash {
-    position: fixed; inset: 0; z-index: 850;
-  background: rgba(255, 255, 255, 0);
-    pointer-events: none;
-    transition: background .05s;
-    &.active { animation: iflash .35s ease forwards; }
-  }
-  @keyframes iflash {
-    0%   { background: rgba(255,255,255,0); }
-    20%  { background: rgba(255,255,255,.55); }
-    100% { background: rgba(255,255,255,0); }
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-    TABLERO
-    ══════════════════════════════════════════════════════════════ */
-  .playmat {
-    font-family: var(--fu);
-    position: fixed; inset: 0;
-    display: grid;
-    grid-template-columns: 130px 1fr 130px;
-    background: #06101a; // Un azul casi negro, muy profundo
-    color: var(--text);
-    overflow: hidden;
-    opacity: 0; transition: opacity .6s ease;
-    &.board-visible { opacity: 1; }
-  }
-
-  /* ══ NEOPRENE TEXTURE ══ */
-  .neoprene-texture {
-    position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    
-    /* Gradiente radial base para el centro */
-    background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%);
-
-    /* La cuadrícula sutil que se desplaza */
-    &::before {
-      content: ''; position: absolute; inset: 0;
-      background-image: 
-        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
-      background-size: 32px 32px;
-      animation: grid-drift 20s linear infinite;
-    }
-  }
-
-  /* Cuadrícula de neoprene — patrón SVG animado */
-  .neo-grid {
-    opacity: 0.4; // Bajamos la opacidad general
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-    /* Eliminé el verde, el blanco sutil queda mucho más premium */
-  }
-  @keyframes grid-drift {
-    to { background-position: 32px 32px, 32px 32px; }
-  }
-
-  /* Brillos suaves de campo */
-  .neo-glow {
-    position: absolute; left: 130px; right: 130px; height: 200px;
-    &.bot-glow    { top: 0;    background: radial-gradient(ellipse at 50% 0%, rgba(74, 184, 248, 0.671) 0%, transparent 70%); }
-    &.player-glow { bottom: 0; background: radial-gradient(ellipse at 50% 100%, rgba(242, 192, 64, 0.651) 0%, transparent 70%); }
-  }
-
-  /* Línea central que divide los campos */
-  .neo-center-line {
-    position: absolute; top: 50%; left: 130px; right: 130px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(242,192,64,.18), transparent);
-    transform: translateY(-50%);
-    &::before {
-      content: '';
-      position: absolute; top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 200px; height: 200px;
-      border-radius: 50%;
-      border: 1px solid rgba(242,192,64,.06);
-      box-shadow: 0 0 0 50px rgba(242,192,64,.015);
-    }
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-    COLUMNAS LATERALES
-    ══════════════════════════════════════════════════════════════ */
-  .side-col {
-    display: flex; flex-direction: column;
-    align-items: center;
-    height: 100%;
-    /* texto siempre legible — fondo opaco */
-    background: var(--bg2);
-    z-index: 10;
-    &.left  { border-right: 1px solid var(--brd); }
-    &.right { border-left:  1px solid var(--brd); }
-  }
-
-  /* ── PREMIOS — grid 3×2, sin superposición ── */
-  .prizes-section {
-    flex: 1; width: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 8px; padding: 12px 8px;
-  }
-
-  .turn-status {
-    font-size: 16px; // Antes 12px
-    background: rgba(124, 123, 123, 0.349);
-    padding: 5px 15px;
-    border-radius: 20px;
-    border: 1px solid var(--gold);
-    color: #fff;
-  }
-
-  .prizes-title, .hand-title, .bench-label {
-    background: rgba(0, 0, 0, 0.85) !important; // Fondo negro sólido
-    color: #fff !important;
-    font-size: 12px !important;
-    font-weight: 700;
-    padding: 4px 12px !important;
-    border: 1px solid var(--gold); // Un borde finito dorado los hace resaltar
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    backdrop-filter: blur(5px);
-  }
-  /* FIX definitivo: grid 3 columnas × 2 filas = 6 celdas, nunca se superponen */
-  .prizes-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(2, 1fr);
-    gap: 5px;
-    width: 100%;
-  }
-
-  .prize-cell { display: flex; align-items: center; justify-content: center; }
-
-
-
-  .prize-mini {
-  width: 42px;  // Antes 34px
-    height: 58px; // Antes 48px  border-radius: 4px;
-    transition: transform .2s;
-    &:hover { transform: scale(1.08) translateY(-2px); }
-  }
-
-  .prize-empty-cell {
-  width: 42px;  // Antes 34px
-    height: 58px; // Antes 48px  border: 1px dashed rgba(255,255,255,.1);
-    border-radius: 4px;
-    background: rgba(255,255,255,.02);
-  }
-
-.prizes-count {
-  font-family: var(--fd); 
-  font-size: 26px;
-  line-height: 1;
-  
-  /* Color principal: Un dorado vibrante */
-color: #FFFFFF;  /* Sombra para que "flote" sobre el fondo oscuro */
-text-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 12px rgba(66, 153, 225, 0.6);  
-  em { 
-    font-size: 14px; 
-    opacity: .7; 
-    font-style: normal; 
-    color: #E2E8F0; /* El "em" queda mejor en blanco puro */
-    margin-left: 2px;
-  }
-
-  &.gold { 
-    color: #FFF2A1; 
-    text-shadow: 0 0 15px #FFD700; 
-  }
-}
-
-  .side-divider {
-    width: 70%; height: 1px;
-    background: var(--brd);
-    flex-shrink: 0;
-  }
-
-  /* ── Mazo / Descarte ── */
-  .side-deck-block {
-    flex: 1; width: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 8px; padding: 10px 8px;
-  }
-  .deck-card {
-    width: 72px; height: 100px; position: relative; flex-shrink: 0;
-    &.deck-player {
-      background: linear-gradient(145deg, #0d3c70, #082b50, #051a36);
-      border-color: rgba(74,184,248,.2);
-    }
-  }
-  .deck-count {
-    position: absolute; bottom: 5px; right: 5px;
-    background: rgba(0,0,0,.8); font-family:var(--fu); font-size:13px; font-weight:700;
-    padding: 1px 7px; border-radius: 20px; color: #fff;
-    border: 1px solid rgba(255,255,255,.15);
-  }
- .discard-container {
-  display: flex;
-  flex-direction: column; /* Icono arriba, texto abajo */
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  color: white;           /* ¡ESTO ES LO MÁS IMPORTANTE! */
-  opacity: 0.7;           /* Para que parezca una zona vacía */
-  pointer-events: none;   /* Para que no interfiera con el drag & drop */
-}
-
-.discard-icon {
-  font-size: 24px;        /* Icono más grande */
-  margin-bottom: 4px;
-}
-
-.discard-label {
-  font-size: 16px;        /* Un poco más que los 14px de antes */
-  font-weight: 800;       /* Bien marcado */
-  letter-spacing: 1px;    /* Espaciado entre letras para estilo TCG */
-}
-.discard {
-  /* Tamaño aproximado de una carta */
-  width: 100px; 
-  height: 140px;
-  
-  /* El secreto: borde de puntos */
-  border: 2px dashed rgba(255, 255, 255, 0.3); /* Blanco con transparencia */
-  border-radius: 8px; /* Bordes redondeados como una carta */
-  
-  /* Centrado del contenido */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  
-  /* Para que el texto no sea negro */
-  color: white; 
-  opacity: 0.6;
-  
-  margin-top: 10px;
-}
-
-/* Si querés que el icono y el texto se vean mejor */
-.discard span:first-child {
-  font-size: 24px;
-  margin-bottom: 5px;
-}
-
-  /* ── Turn block ── */
-  .turn-block {
-    flex: 1; width: 100%;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 10px; padding: 10px 8px;
-  }
-  .turn-status {
-  font-family: var(--fd); 
-  font-size: 13px; /* Un punto más grande ayuda */
-  letter-spacing: 0.15em;
-  font-weight: 700; /* Un poco más de cuerpo */
-  
-  /* COLOR INACTIVO: Un gris azulado claro (no se pierde en el fondo) */
-  color: rgba(255, 255, 255, 0.4); 
-  text-transform: uppercase;
-  transition: all 0.4s ease;
-
-  &.active { 
-    /* COLOR ACTIVO: Un amarillo/dorado brillante */
-    color: #FFD700; 
-    /* El Glow: hace que el texto "flote" */
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.2); 
-    /* Un pequeño pulso opcional para llamar la atención */
-    transform: scale(1.05);
-  }
-}
-  .btn-turn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 140px; 
-  height: 70px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
-  /* FONTO ACTIVO: Gradiente con brillo central */
-  background: radial-gradient(circle at top, #ffe14d 0%, #c88b00 100%);
-  border: 2px solid #fff;
-  border-radius: 12px; /* Un radio más marcado queda mejor */
-  
-  /* TEXTO: Con sombra para legibilidad extrema */
-  color: #1a0f00;
-  font-family: var(--fd);
-  font-size: 18px; /* Un poquito menos para que no "explote" el botón */
-  font-weight: 900;
-  text-transform: uppercase;
-  
-  /* SOMBRAS: Efecto de iluminación en el tablero */
-  box-shadow: 
-    0 0 20px rgba(255, 215, 0, 0.4), 
-    inset 0 2px 4px rgba(255, 255, 255, 0.8), /* Brillo superior */
-    inset 0 -2px 10px rgba(0, 0, 0, 0.2);     /* Sombra inferior */
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    filter: brightness(1.1);
-    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(1px);
-  }
-
-  /* ESTADO INACTIVO (Rival pensando o deshabilitado) */
-  &.off, &:disabled {
-    background: rgba(255, 255, 255, 0.05); /* Casi transparente */
-    backdrop-filter: blur(5px);            /* Efecto vidrio esmerilado */
-    color: rgba(255, 255, 255, 0.15);
-    border: 2px solid rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-    cursor: not-allowed;
-    animation: none;
-  }
-}
-
-@keyframes pulse-gold {
-  0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-  50% { box-shadow: 0 0 35px rgba(255, 215, 0, 0.7); }
-  100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
-}
-  @keyframes pulse-turn {
-    0%, 100% { box-shadow: 0 0 15px var(--glow); }
-    50% { box-shadow: 0 0 30px var(--gold); transform: scale(1.02); }
-  }
-  .turn-dots {
-    display: flex; gap: 6px;
-    span { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.15); transition:background .4s, box-shadow .4s;
-      &.on { background:var(--gold); box-shadow:0 0 8px var(--glow); }
-    }
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-    CAMPO CENTRAL
-    ══════════════════════════════════════════════════════════════ */
-.center-field {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Empuja la banca del bot arriba y la tuya abajo */
-  padding-bottom: 140px; /* Este espacio en blanco RESERVA el lugar para la mano */
-  height: 100vh;
-  overflow: hidden;
-}
-
-  /* ── Mano del bot ── */
-  .bot-card {
-    width: 52px;  // Antes 42px
-    height: 72px; // Antes 58px
-    /* Ajustamos el calc para el nuevo ancho */
-    left: calc(50% - 26px + (var(--bi) - (var(--btot) - 1) / 2) * 25px);
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-  }
-.bot-hand-row {
-  position: relative;
-  width: 100%; /* Obligatorio para que calc(50%...) sea el centro real */
-  display: flex;
-  justify-content: center;
-  height: 60px; /* Altura fija para que no empuje nada */
-}
-
-.bot-card {
-  position: absolute;
-  width: 42px; 
-  height: 58px;
-  /* Centrado perfecto: el 50% ahora sí es el medio de la pantalla */
-  left: calc(35% - 570px + (var(--bi) - (var(--btot) - 1) / 2) * 20px);
-  top: 0;
-  transform: rotate(180deg);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-}
-  .bot-hand-tag {
-    position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%);
-    font-size: 8px; font-weight: 700; letter-spacing: .1em; color: var(--text2);
-    background: var(--bg2); padding: 1px 8px; border-radius: 8px; border: 1px solid var(--brd);
-    white-space: nowrap;
-  }
-
-  /* ── Bancas ── */
-  .bench-row {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    width: 100%; flex-shrink: 0;
-    &.player-bench { flex-direction: column-reverse; }
-  }
-  .bench-label {
-    font-size: 7px; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
-    color: var(--text2);
-    background: rgba(6,16,26,.7); padding: 1px 6px; border-radius: 3px;
-    &.player { color: rgba(242,192,64,.5); }
-  }
-  .bench-cards {
-    display: flex; gap: 5px; align-items: center; justify-content: center;
-    width: 100%; padding: 5px 8px;
-    background: var(--bg3);
-    border: 1px solid var(--brd);
-    border-radius: var(--r2);
-  }
-  .bench-slot {
-    position: relative; flex-shrink: 0;
-    &.occupied {
-      cursor: pointer;
-      img { width: 60px; height: auto; border-radius: 5px; display: block; box-shadow: 0 3px 8px rgba(0,0,0,.5); transition: transform .2s, box-shadow .2s; }
-      &:hover img { transform: translateY(-7px) scale(1.1); box-shadow: 0 12px 20px rgba(0,0,0,.7); }
-      &.player-slot:hover img { box-shadow: 0 12px 20px rgba(0,0,0,.7), 0 0 0 2px var(--gold); }
-    }
-    &.void { width: 60px; height: 84px; border: 1px dashed rgba(255,255,255,.07); border-radius: 5px; }
-  }
-  .bench-bar { position:absolute; bottom:-1px; left:3px; right:3px; height:3px; background:rgba(0,0,0,.5); border-radius:2px; overflow:hidden; }
-  .bench-fill { height:100%; background:var(--green); border-radius:2px; transition:width .5s;
-    &.mid { background:var(--orange); }
-    &.low { background:var(--red); animation:hpblink .8s ease-in-out infinite; }
-  }
-@keyframes hpblink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}  .bench-hp { position:absolute; top:-8px; right:-7px; background:var(--red); border:1.5px solid var(--bg); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; z-index:5; box-shadow:0 2px 5px var(--red-g); }
-
-  /* ══════════════════════════════════════════════════════════════
-    ARENA — VERTICAL: bot arriba · jugador abajo
-    ══════════════════════════════════════════════════════════════ */
-  .arena {
-    flex: 1;
-    width: 100%;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; // Esto empuja las mitades a los extremos, pero el padding de arriba las centrará
-  }
-  /* Partículas */
-  .arena-particles {
-    position: absolute; inset: 0; pointer-events: none; z-index: 0;
-    span {
-      position: absolute; width: 3px; height: 3px; border-radius: 50%;
-      background: var(--gold); opacity: .35;
-      left:  calc(8% + var(--pn) * 15%);
-      top:   calc(5% + var(--pn) * 14%);
-      animation: ap calc(3s + var(--pn)*.4s) ease-in-out infinite;
-      animation-delay: calc(var(--pn) * -.5s);
-      box-shadow: 0 0 4px var(--glow);
-    }
-  }
-  @keyframes ap { 0%,to{transform:translateY(0) scale(1);opacity:.35} 50%{transform:translateY(-12px) scale(1.5);opacity:.6} }
-
-  /* Mitades de arena */
-  .arena-half {
-    width: 100%;
-    flex: 1;
-    display: flex;
-    align-items: center; 
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-        margin-top: 15px;
-    
-    /* Añadimos este padding para empujar al combatiente hacia el centro */
-    &.bot-half { 
-      padding-top: 40px;    // Aleja al Venusaur de la banca del bot
-      align-items: flex-start; 
-    }
-    
-    &.player-half { 
-      padding-bottom: 40px; // Aleja al Charizard de tu banca
-      align-items: flex-end; 
-    }
-  }
-
-  /* ── COMBATANT ── */
-  .combatant {
-    display: flex; align-items: center;
-    gap: 18px; flex-shrink: 0;
-  }
-
-  /* Bot: carta izquierda, sprite a la derecha */
-  .bot-combatant {
-    flex-direction: row;
-    .active-card-wrap { order: 1; }
-    .sprite-wrap      { order: 2; }
-    margin-top: 20px; // Baja un poco más al activo del bot
-  }
-
-  /* Jugador: sprite a la izquierda, carta a la derecha */
-  .player-combatant {
-    flex-direction: row;
-    .sprite-wrap      { order: 1; }
-    .active-card-wrap { order: 2; }
-    margin-bottom: 20px; // Sube un poco más a tu activo
-  }
-
-  /* ── Active card ── */
-  .active-card-wrap {
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 10; // Esto asegura que la carta y su HP se vean claritos
-  }
-
-  .active-card {
-width: 130px; // Un poco más grandes
-  height: 182px;
-      border: 2px solid rgba(242,192,64,.28);
-    border-radius: var(--r2);
-    background: var(--bg3);
-    position: relative; overflow: visible; flex-shrink: 0;
-    transition: border-color .3s, box-shadow .3s;
-
-    img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; display: block; }
-
-    &.is-empty {
-      border-style: dashed; border-color: rgba(255,255,255,.1);
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    &.player-active {
-      cursor: pointer;
-      border-color: rgba(242,192,64,.45);
-      &.can-attack { border-color: var(--gold); box-shadow: 0 0 18px var(--glow); animation: cagold 2s ease-in-out infinite; }
-      &:hover::after { content:''; position:absolute; inset:-5px; border-radius:15px; box-shadow:0 0 24px 7px var(--glow); pointer-events:none; }
-    }
-  }
-  @keyframes cagold { 0%,to{box-shadow:0 0 14px var(--glow)} 50%{box-shadow:0 0 28px rgba(242,192,64,.5)} }
-
-  /* HP bar externa (fuera de la carta) */
- .hp-bar-ext {
-  width: 100px; /* Un poco más angosta para que no sature el centro */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.hp-track {
-  width: 100%;
-  height: 8px; /* Un poquito más alta para que se vea el color */
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-}  .hp-fill {
-  height: 100%;
-  background: #2ecc71; /* Verde esmeralda por defecto */
-  transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
-
-  &.mid {
-    background: #f1c40f; /* Amarillo */
-    box-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
-  }
-
-  &.low {
-    background: #e74c3c; /* Rojo */
-    box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
-    animation: hpblink 0.8s ease-in-out infinite;
-  }
-}
-.hp-label {
-  font-family: var(--fu);
-  font-size: 11px;
-  font-weight: 700;
-  color: white;
-  text-shadow: 1px 1px 2px black;
-  background: rgba(0,0,0,0.5);
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-
-  /* Energy chip */
-  .energy-chip {
-    position: absolute; top: -12px; right: -13px;
-    background: rgba(6,16,26,.95); border: 2px solid var(--energy);
-    border-radius: 20px; padding: 2px 7px;
-    font-size: 11px; font-weight: 700; color: var(--text);
-    display: flex; align-items: center; gap: 3px;
-    box-shadow: 0 0 12px var(--ene-g); z-index: 20;
-    animation: echip 1.8s ease-in-out infinite;
-  }
-  @keyframes echip { 0%,to{box-shadow:0 0 10px var(--ene-g)} 50%{box-shadow:0 0 20px rgba(251,191,36,.55)} }
-
-  /* Attack overlay */
-  .atk-overlay {
-    position: absolute; bottom: 0; left: 0; right: 0;
-    border-radius: 0 0 11px 11px;
-    background: linear-gradient(0deg, rgba(0,0,0,.95), rgba(0,0,0,.3) 100%);
-    padding: 9px 6px; text-align: center;
-    opacity: 0; transition: opacity .2s; pointer-events: none;
-    font-family: var(--fd); font-size: 14px; letter-spacing: .14em;
-    span { color: rgba(255,255,255,.3); }
-    span.ready { color: var(--gold); text-shadow: 0 0 10px var(--glow); }
-  }
-  .active-card.player-active:hover .atk-overlay,
-  .active-card.can-attack .atk-overlay { opacity: 1; }
-
-  .empty-label {
-    font-family: var(--fu); font-size: 10px; font-weight: 700;
-    letter-spacing: .1em; text-transform: uppercase;
-    color: rgba(255,255,255,.18); text-align: center; padding: 8px;
-    &.player { color: rgba(242,192,64,.3); }
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-    SPRITES DE POKÉMON
-    ══════════════════════════════════════════════════════════════ */
-  .sprite-wrap {
-    position: relative;
-    width: 90px; height: 80px;
-    display: flex; align-items: flex-end; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .poke-sprite {
-    max-width: 100%; max-height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 4px 10px rgba(0,0,0,.65));
-
-    /* Animaciones idle */
-    &.sprite-back  { animation: sfb 3.2s ease-in-out infinite; }
-    &.sprite-front { animation: sff 2.8s ease-in-out infinite; }
-  }
-  @keyframes sfb { 0%,to{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-  @keyframes sff { 0%,to{transform:translateY(0)} 50%{transform:translateY(-7px)} }
-
-  .sprite-shadow {
-    position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%);
-    width: 52px; height: 8px;
-    background: radial-gradient(ellipse, rgba(0,0,0,.38), transparent 70%);
-    animation: sshad 2.8s ease-in-out infinite;
-  }
-  @keyframes sshad { 0%,to{transform:translateX(-50%) scaleX(1);opacity:.38} 50%{transform:translateX(-50%) scaleX(.65);opacity:.16} }
-
-  /* ══════════════════════════════════════════════════════════════
-    ANIMACIONES DE ATAQUE
-    ══════════════════════════════════════════════════════════════ */
-
-  /* Sprite del jugador se lanza hacia arriba (hacia el bot) */
-  .player-sprite-wrap.sprite-attack .poke-sprite {
-    animation: player-lunge 0.65s cubic-bezier(.25,.8,.3,1) both !important;
-  }
-
-  @keyframes player-lunge {
-    0%   { transform: translateY(0) scale(1); }
-    10%  { transform: translateY(8px) scale(.92); }   /* retroceso */
-    45%  { transform: translateY(-72px) scale(1.18); filter: drop-shadow(0 0 14px rgba(242,192,64,.8)); }
-    52%  { transform: translateY(-78px) scale(1.2);  filter: drop-shadow(0 0 20px rgba(255,255,255,.9)); } /* impacto */
-    80%  { transform: translateY(-10px) scale(1.04); }
-    100% { transform: translateY(0) scale(1); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); }
-  }
-
-  /* Sprite del bot vibra y parpadea al recibir el golpe */
-  .bot-sprite-wrap.sprite-attack .poke-sprite {
-    animation: bot-hit 0.5s ease both !important;
-  }
-
-  @keyframes bot-hit {
-    0%   { transform: translateY(-5px); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); }
-    15%  { transform: translateX(-9px) rotate(-3deg); filter: brightness(1.8) drop-shadow(0 0 18px var(--red)); }
-    35%  { transform: translateX(9px)  rotate(3deg);  filter: brightness(1.4) drop-shadow(0 0 12px var(--red)); }
-    55%  { transform: translateX(-6px) rotate(-2deg); filter: brightness(1.6) drop-shadow(0 0 14px var(--red)); }
-    75%  { transform: translateX(6px)  rotate(2deg); }
-    100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); }
-  }
-
-  /* Carta del bot también vibra */
-  .active-card.vibrate {
-    animation: card-hit .5s ease both;
-  }
-  @keyframes card-hit {
-    0%,to { transform: none; }
-    15%   { transform: translateX(-7px) rotate(-1.5deg); }
-    35%   { transform: translateX(7px)  rotate(1.5deg); }
-    55%   { transform: translateX(-5px); }
-    75%   { transform: translateX(5px); }
-  }
-
-  .sprite-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  z-index: 5;
-}
-
-  /* ── VS Divisor ── */
-  .arena-divider {
-    display: flex; align-items: center; width: 85%; gap: 10px; flex-shrink: 0;
-    padding: 2px 0; z-index: 3;
-  }
-  .ad-line {
-    flex: 1; height: 1px;
-    &.left-line  { background: linear-gradient(90deg, transparent, rgba(242,192,64,.35));margin-left: 20%; }
-    &.right-line { background: linear-gradient(90deg, rgba(242,192,64,.35), transparent); margin-right: 2%}
-  }
-  .ad-vs-wrap { position: relative; flex-shrink: 0; width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
-  .ad-ring {
-    position: absolute; inset: 0; border-radius: 50%;
-    animation: vsr 8s linear infinite;
-    &::before { content:''; position:absolute; top:-2px; left:50%; width:5px; height:5px; border-radius:50%; background:var(--gold); transform:translateX(-50%); box-shadow:0 0 7px var(--glow); }
-  }
-  @keyframes vsr { to{transform:rotate(360deg)} }
-  .ad-vs {
-    font-size: 32px; // Más imponente
-    background: var(--bg);
-    border: 2px solid var(--gold);
-    color: var(--gold);
-    text-shadow: 0 0 15px var(--gold);
-    box-shadow: 0 0 30px var(--glow);
-    padding: 5px 15px;
-  }
-
-  /* ══════════════════════════════════════════════════════════════
-    MANO DEL JUGADOR
-    ══════════════════════════════════════════════════════════════ */
- 
-  .hand-header { display: flex; align-items: center; gap: 8px; width: 100%; padding: 0 8px; margin-bottom: 15px;}
-  .hand-title { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(242,192,64,.5); }
-  .hand-badge { background: rgba(242,192,64,.12); border: 1px solid rgba(242,192,64,.22); border-radius: 10px; padding: 0 7px; font-size: 10px; font-weight: 700; color: var(--gold); }
-  .hand-hint {
-    font-size: 12px; // Antes 9px
-    color: var(--gold);
-    text-transform: uppercase;
-    font-weight: 700;
-  }:root {
-  --hand-card-w: 110px; // Tamaño base LEGIBLE de la carta
+﻿/* ══════════════════════════════════════════════════════════════
+   POKEMON TCG — BATTLE BOARD V6.3 (LIMPIO Y DEFINITIVO)
+   Neoprene texture · Vertical arena · Face-to-face sprites
+   Attack animations · Fixed prizes · Drag & Drop · Pro Panel
+   ══════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap');
+
+/* ── Tokens ── */
+:root {
+  --bg:      #06101a;
+  --bg2:     #0a1826;
+  --bg3:     #0f2030;
+  --gold:    #f2c040;
+  --gold2:   #ffe07a;
+  --glow:    rgba(242,192,64,.32);
+  --glow2:   rgba(242,192,64,.1);
+  --red:     #e53535;
+  --red-g:   rgba(229,53,53,.55);
+  --green:   #32d46e;
+  --orange:  #f08020;
+  --energy:  #fbbf24;
+  --ene-g:   rgba(251,191,36,.4);
+  --blue:    #4ab8f8;
+  --blue-g:  rgba(74,184,248,.3);
+  --brd:     rgba(255,255,255,.07);
+  --brd2:    rgba(255,255,255,.14);
+  --text:    #c4d4e4;
+  --text2:   rgba(255, 255, 255, 0.801);
+  --fd: 'Bebas Neue', sans-serif;
+  --fu: 'Rajdhani', sans-serif;
+  --fc: 'Barlow Condensed', sans-serif;
+  --r: 9px; --r2: 13px;
+  --hand-card-w: 110px;
   --hand-card-h: 153px; 
 }
 
-
-
-/* ── LA PILA (Stack) ── */
-.hand-stack {
-  position: absolute;
-  bottom: 30px; // Elevamos las pilas del borde
-  width: 110px; // Ancho base de la carta (¡Ya no son hormigas!)
-  height: 153px;
-  left: 50%;
-  
-  /* Multiplicador de 110px: esto hace que los grupos no se pisen */
-  transform: translateX(calc(-50% + (var(--si) - (var(--stot) - 1) / 2) * 115px));
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  z-index: calc(var(--si) + 1);
-}
-
-/* ── LA CARTA INDIVIDUAL ── */
-.hand-zone {
-  position: absolute;
-  /* El secreto: un valor negativo que la pegue al borde inferior de la pantalla */
-  bottom: 0px; 
-  left: 50%;
-  transform: translateX(-50%);
-  width: 95%; /* Que se expanda más hacia los lados */
-  height: 120px; /* Bajamos la altura para que el 'piso' esté más abajo */
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  z-index: 2000;
+.pokemon-defeated {
+  opacity: 0;
+  transition: opacity 0.8s ease-out; /* Desaparece suave después del golpe */
   pointer-events: none;
 }
 
-.hand-cards {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  width: 100%;
-  pointer-events: auto;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
+
+/* ══════════════════════════════════════════════════════════════
+   INTRO & OVERLAYS
+   ══════════════════════════════════════════════════════════════ */
+.intro-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  &.fade-out { animation: i-out .8s ease forwards; }
+}
+@keyframes i-out { to { opacity: 0; pointer-events: none; } }
+
+.intro-lines {
+  position: absolute; inset: 0; pointer-events: none;
+  span {
+    position: absolute; top: 50%; left: 50%;
+    width: 2px; height: 55vh;
+    background: linear-gradient(to top, transparent, rgba(242,192,64,.13));
+    transform-origin: bottom center;
+    transform: rotate(calc(var(--ln) * 30deg));
+    animation: il 2s ease-in-out infinite;
+    animation-delay: calc(var(--ln) * .07s);
+  }
+}
+@keyframes il { 0%,100%{opacity:.22} 50%{opacity:.55} }
+
+.intro-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  text-align: center;
 }
 
-.hand-card {
-  position: absolute;
-  bottom: -20px;
-  width: 85px; 
-  height: 118px;
-  cursor: pointer;
-  /* Transición rápida para que no haya "ghosting" al mover el mouse */
-  transition: transform 0.15s ease-out, z-index 0s; 
-  
-  /* Reducimos la separación a 30px para que las 18 entren sin salirse de la pantalla */
-  left: calc(50% - 42px + (var(--bi) - (var(--btot) - 1) / 2) * 30px);
-  transform: rotate(calc((var(--bi) - (var(--btot) - 1) / 2) * 1deg));
-  z-index: var(--bi);
+.intro-pokeball {
+  width: 114px; height: 114px; border-radius: 50%;
+  border: 4px solid var(--gold); position: relative;
+  animation: ipb 1.3s cubic-bezier(.22,.61,.36,1) both;
+  box-shadow: 0 0 55px var(--glow), inset 0 0 35px rgba(0,0,0,.5);
+  .pb-band { position:absolute; top:50%; left:0; right:0; height:4px; background:var(--gold); transform:translateY(-50%); }
+  .pb-btn  { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:28px; height:28px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#fff,var(--gold) 60%); border:4px solid var(--bg); animation:ibb 1s .6s ease-in-out infinite; }
+}
+@keyframes ipb { 0%{transform:rotate(-720deg)scale(0);opacity:0} 70%{transform:rotate(15deg)scale(1.1);opacity:1} 85%{transform:rotate(-8deg)scale(.97)} to{transform:rotate(0)scale(1)} }
+@keyframes ibb { 0%,to{box-shadow:0 0 14px var(--glow)} 50%{box-shadow:0 0 32px rgba(242,192,64,.6)} }
 
-  img {
-    width: 100%;
-    border-radius: 5px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.8);
-    pointer-events: none; /* La imagen no captura el mouse, solo el div .hand-card */
+.intro-sparks {
+  position: absolute; inset: -80px; pointer-events: none;
+  span { position:absolute; top:50%; left:50%; width:2px; height:46px; background:linear-gradient(to bottom,var(--gold),transparent); transform-origin:top center; transform:rotate(calc(var(--n)*30deg)) translateX(-1px); animation:isp .8s .35s ease both; opacity:0; }
+}
+@keyframes isp { 30%{opacity:1} to{transform:rotate(calc(var(--n)*30deg)) translateX(-1px) scaleY(1) translateY(-72px);opacity:0} }
+
+.intro-eyebrow { font-family:var(--fu); font-size:11px; font-weight:700; letter-spacing:.35em; text-transform:uppercase; color:var(--text2); animation:ifup .5s .9s both; }
+.intro-title { font-family:var(--fd); font-size:clamp(58px,10vw,98px); line-height:.9; color:#fff; animation:islam .5s .65s cubic-bezier(.22,.61,.36,1) both; em{color:var(--gold);font-style:normal;} }
+@keyframes islam { from{transform:scale(1.7);opacity:0} to{transform:scale(1);opacity:1} }
+.intro-bar-wrap { width:240px; height:3px; background:rgba(255,255,255,.1); border-radius:2px; overflow:hidden; animation:ifup .3s 1s both; }
+.intro-bar { height:100%; width:0; background:linear-gradient(90deg,var(--gold),var(--gold2)); animation:ibg .7s 1.1s ease both; box-shadow:0 0 10px var(--glow); }
+@keyframes ibg { to{width:100%} }
+@keyframes ifup { from{transform:translateY(12px);opacity:0} to{transform:none;opacity:1} }
+
+.turn-overlay {
+  position:fixed; inset:0; z-index:1500; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; overflow:hidden;
+  animation: ton .25s ease both, toff .5s 1.5s ease forwards;
+}
+@keyframes ton  { from{opacity:0} to{opacity:1} }
+@keyframes toff { to{opacity:0} }
+.to-backdrop { position:absolute; inset:0; background:rgba(0,0,0,.68); backdrop-filter:blur(7px); }
+.to-body { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:6px; animation:tbody .3s .05s cubic-bezier(.22,.61,.36,1) both; }
+@keyframes tbody { from{transform:scale(.6) translateY(24px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+.to-lines { display:flex; gap:6px; margin-bottom:4px;
+  span { display:block; height:3px; border-radius:2px; animation:tls .4s .1s ease both;
+    &:nth-child(1){width:55px} &:nth-child(2){width:110px} &:nth-child(3){width:55px}
   }
+}
+@keyframes tls { from{width:0;opacity:0} }
+.is-player .to-lines span { background:var(--gold); }
+.is-bot    .to-lines span { background:var(--blue); }
+.to-text { font-family:var(--fd); font-size:clamp(50px,9vw,84px); letter-spacing:.1em; color:#fff; text-shadow:0 4px 28px rgba(0,0,0,.6); }
+.is-player .to-text { color:var(--gold); text-shadow:0 0 40px var(--glow); }
+.is-bot    .to-text { color:var(--blue); text-shadow:0 0 40px var(--blue-g); }
+.to-sub { font-family:var(--fu); font-size:12px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--text2); }
+/* Contenedor del Bot */
+.bot-sprite-wrap {
+  position: relative; /* Asegura que el transform funcione */
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  z-index: 10;
 
-  &:hover {
+  &.sprite-attack {
+    /* El bot salta hacia abajo (jugador) y crece un poco */
+    transform: translateY(120px) scale(1.5) !important;
     z-index: 9999 !important;
-    /* Subida masiva: ahora vuela bien alto para que el mouse no toque las vecinas */
-    transform: translateY(-160px) scale(2.8) rotate(0deg) !important;
-    
-    img {
-      border: 3px solid var(--gold);
-      box-shadow: 0 0 50px rgba(242, 192, 64, 0.9);
-    }
   }
 }
 
-/* ANTI-CONFUSIÓN: Cuando pasas el mouse por la mano, 
-   las cartas que NO estás tocando se hunden un poquito */
-.hand-cards:hover .hand-card:not(:hover) {
-  opacity: 0.6;
-  transform: translateY(10px) scale(3);
+/* Opcional: El flash de pantalla blanca */
+.impact-flash {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: white;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: opacity 0.1s;
+  &.active { opacity: 0.5; }
 }
-/* Efecto abanico cuando el mouse entra en el grupo */
-.hand-stack:hover {
-  z-index: 1000;
-  .hand-card {
-    /* Abrimos un poquito las cartas de la pila para que se vea qué hay */
-    transform: translate(calc((var(--ci) - (var(--ctot) - 1) / 2) * 50px), -15px);
-  }
+.loading-overlay {
+  position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.75); backdrop-filter:blur(4px);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+  .loader-ring { width:50px; height:50px; border-radius:50%; border:3px solid rgba(255,255,255,.08); border-top-color:var(--gold); animation:spin 1s linear infinite; }
+  span { font-family:var(--fd); font-size:18px; letter-spacing:.25em; color:var(--gold); }
 }
-/* 3. El texto "TOCA PARA JUGAR" que se vea mejor */
-.hand-hint {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 10px;
-  text-shadow: 0 0 10px rgba(0,0,0,0.8);
+@keyframes spin { to{transform:rotate(360deg)} }
+
+.impact-flash {
+  position: fixed; inset: 0; z-index: 2000; background: rgba(255, 255, 255, 0); pointer-events: none; transition: background .05s;
+  &.active { animation: iflash .35s ease forwards; }
+}
+@keyframes iflash {
+  0%   { background: rgba(255,255,255,0); }
+  20%  { background: rgba(255,255,255,.55); }
+  100% { background: rgba(255,255,255,0); }
 }
 
-  /* ══════════════════════════════════════════════════════════════
-    CARD-BACK
-    ══════════════════════════════════════════════════════════════ */
-  .card-back {
-    background: linear-gradient(145deg, #0c74d0, #0560b0 50%, #044494);
-    border: 2px solid rgba(255,255,255,.14);
-    border-radius: var(--r);
-    box-shadow: 0 5px 17px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12);
-    position: relative; overflow: hidden; display: block; flex-shrink: 0;
-    &::after {
-      content: ''; position: absolute; inset: 0;
-      background:
-        radial-gradient(circle at 50% 50%, transparent 26%, rgba(255,255,255,.05) 26%, rgba(255,255,255,.05) 28%, transparent 28%),
-        linear-gradient(0deg, transparent 46%, rgba(255,255,255,.06) 46%, rgba(255,255,255,.06) 54%, transparent 54%);
-    }
-    &.gold { background: linear-gradient(145deg, #8c6212, #6c4a0a, #4c3008); border-color: rgba(242,192,64,.22); }
-  }
+/* ══════════════════════════════════════════════════════════════
+   TABLERO Y NEOPRENE
+   ══════════════════════════════════════════════════════════════ */
+.playmat {
+  font-family: var(--fu);
+  position: fixed; inset: 0;
+  display: grid;
+  grid-template-columns: 130px 1fr 130px;
+  background: #06101a;
+  color: var(--text);
+  overflow: hidden;
+  opacity: 0; transition: opacity .6s ease;
+  &.board-visible { opacity: 1; }
+  &.impact-heavy { animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both; }
+}
 
-  /* ══════════════════════════════════════════════════════════════
-    RESPONSIVE
-    ══════════════════════════════════════════════════════════════ */
-  @media (max-height: 800px) {
-    .active-card { width: 100px; height: 140px; }
-    .hp-bar-ext  { width: 100px; }
-    .sprite-wrap { width: 75px; height: 66px; }
-    .bench-slot.occupied img { width: 52px; }
-.bench-slot.void {
-  transition: all 0.3s ease;
-  &.drag-over { // Clase que añadirás con TS al detectar el drag
-    border: 2px solid var(--gold);
-    background: rgba(242, 192, 64, 0.15);
-    box-shadow: inset 0 0 20px var(--glow), 0 0 15px var(--glow);
-    transform: scale(1.05);
-  }
-}    .hand-card  { width: 80px; }
-    .hand-cards { height: 116px; }
-    .bot-card   { width: 42px; height: 58px; }
-    .bot-hand   { height: 50px;  }
-  }
-  @media (max-width: 1100px) {
-    .playmat { grid-template-columns: 110px 1fr 110px; }
-    .active-card { width: 106px; height: 148px; }
-    .hp-bar-ext  { width: 106px; }
-  }
-
-  @keyframes shake {
+@keyframes shake {
   0% { transform: translate(0, 0); }
   25% { transform: translate(5px, -5px); }
   50% { transform: translate(-5px, 5px); }
@@ -1016,144 +189,605 @@ width: 130px; // Un poco más grandes
   100% { transform: translate(0, 0); }
 }
 
-.playmat.impact-heavy {
-  animation: shake 0.2s cubic-bezier(.36,.07,.19,.97) both;
+.neoprene-texture {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.02) 0%, transparent 70%);
+  &::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: 
+      linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+    background-size: 32px 32px;
+    animation: grid-drift 20s linear infinite;
+  }
+}
+.neo-grid {
+  opacity: 0.4;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+@keyframes grid-drift { to { background-position: 32px 32px, 32px 32px; } }
+
+.neo-glow {
+  position: absolute; left: 130px; right: 130px; height: 200px;
+  &.bot-glow    { top: 0;    background: radial-gradient(ellipse at 50% 0%, rgba(74, 184, 248, 0.671) 0%, transparent 70%); }
+  &.player-glow { bottom: 0; background: radial-gradient(ellipse at 50% 100%, rgba(242, 192, 64, 0.651) 0%, transparent 70%); }
 }
 
-.cdk-drag-preview {
-  box-sizing: border-box;
-  width: 100px; /* FIX: Fijamos el ancho para que no se deforme al salir de la mano */
-  height: 140px; 
-  border-radius: 8px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 2px var(--gold);
-  transform: scale(1.05) rotate(2deg) !important;
-  cursor: grabbing !important;
-  /* El z-index altísimo asegura que pase por encima de todo el tablero */
-  z-index: 9999 !important; 
+.neo-center-line {
+  position: absolute; top: 50%; left: 130px; right: 130px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(242,192,64,.18), transparent);
+  transform: translateY(-50%);
+  &::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    border: 1px solid rgba(242,192,64,.06);
+    box-shadow: 0 0 0 50px rgba(242,192,64,.015);
+  }
 }
-
-/* 2. EL HUECO EN LA MANO (Para que las otras cartas no salten de golpe) */
-.cdk-drag-placeholder {
-  opacity: 0 !important; /* Lo hacemos invisible, pero mantiene el espacio abierto */
-}
-
-/* 3. ANIMACIÓN SI TE ARREPENTÍS Y LA SOLTÁS AFUERA */
-.cdk-drag-animating {
-  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-}
-
-/* 4. BRILLO CUANDO ESTÁS POR SOLTAR EN LA BANCA */
-/* cdk-drop-list-receiving se activa SOLO cuando el mouse entra a la zona */
-.bench-cards.cdk-drop-list-receiving {
-  background: rgba(242, 192, 64, 0.15);
-  border: 2px dashed var(--gold);
-  border-radius: 12px;
-  box-shadow: inset 0 0 20px rgba(242, 192, 64, 0.2);
-  transition: background 0.2s, box-shadow 0.2s;
-}
-
-/* 5. BRILLO CUANDO ESTÁS POR SOLTAR EN EL ACTIVO */
-.combatant.player-combatant.cdk-drop-list-receiving .active-card-wrap {
-  border-radius: 15px;
-  border: 2px dashed var(--gold);
-  background: rgba(242, 192, 64, 0.15);
-  box-shadow: 0 0 30px var(--gold-g), inset 0 0 20px rgba(242, 192, 64, 0.2);
-  transform: scale(1.02);
-  transition: all 0.2s;
-}
-
-
 
 /* ══════════════════════════════════════════════════════════════
-   SISTEMA DE ENERGÍAS TCG REAL (FIX Z-INDEX)
+   COLUMNAS LATERALES
    ══════════════════════════════════════════════════════════════ */
-
-.active-card-wrap { 
-  position: relative; 
-  isolation: isolate; /* Crea una burbuja para que las energías no traspasen la mesa */
+.side-col {
+  display: flex; flex-direction: column; align-items: center;
+  height: 100%; background: var(--bg2); z-index: 10;
+  &.left  { border-right: 1px solid var(--brd); }
+  &.right { border-left:  1px solid var(--brd); }
 }
 
-.active-card {
-  position: relative;
-  z-index: 2; /* La carta activa va por encima */
+.prizes-section { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 12px 8px; }
+
+.turn-status {
+  font-size: 13px; font-family: var(--fd); letter-spacing: 0.15em; font-weight: 700;
+  background: rgba(124, 123, 123, 0.349); padding: 5px 15px; border-radius: 20px;
+  border: 1px solid var(--gold); color: rgba(255, 255, 255, 0.4); text-transform: uppercase; transition: all 0.4s ease;
+  &.active { color: #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.2); transform: scale(1.05); }
 }
 
-.energy-stack {
-  position: absolute; 
-  top: 0; left: 0; right: 0; bottom: 0;
-  pointer-events: none; 
-  z-index: 1; /* Las energías van por debajo de la carta activa, pero adentro de la burbuja */
+.prizes-title, .hand-title, .bench-label {
+  background: rgba(0, 0, 0, 0.85) !important; color: #fff !important; font-size: 12px !important; font-weight: 700;
+  padding: 4px 12px !important; border: 1px solid var(--gold); border-radius: 4px; text-transform: uppercase; letter-spacing: 2px; backdrop-filter: blur(5px);
 }
 
-.energy-attached {
-  position: absolute; 
-  width: 100%; 
+.prizes-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 5px; width: 100%; }
+.prize-cell { display: flex; align-items: center; justify-content: center; }
+.prize-mini { width: 42px; height: 58px; transition: transform .2s; &:hover { transform: scale(1.08) translateY(-2px); } }
+.prize-empty-cell { width: 42px; height: 58px; border: 1px dashed rgba(255,255,255,.1); border-radius: 4px; background: rgba(255,255,255,.02); }
+
+.prizes-count {
+  font-family: var(--fd); font-size: 26px; line-height: 1; color: #FFFFFF;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.3), 0 0 12px rgba(66, 153, 225, 0.6);  
+  em { font-size: 14px; opacity: .7; font-style: normal; color: #E2E8F0; margin-left: 2px; }
+  &.gold { color: #FFF2A1; text-shadow: 0 0 15px #FFD700; }
+}
+
+.side-divider { width: 70%; height: 1px; background: var(--brd); flex-shrink: 0; }
+
+.side-deck-block { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 10px 8px; }
+.deck-card { width: 72px; height: 100px; position: relative; flex-shrink: 0; &.deck-player { background: linear-gradient(145deg, #0d3c70, #082b50, #051a36); border-color: rgba(74,184,248,.2); } }
+.deck-count { position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,.8); font-family:var(--fu); font-size:13px; font-weight:700; padding: 1px 7px; border-radius: 20px; color: #fff; border: 1px solid rgba(255,255,255,.15); }
+
+.discard-container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; color: white; opacity: 0.7; pointer-events: none; }
+.discard-icon { font-size: 24px; margin-bottom: 4px; }
+.discard-label { font-size: 16px; font-weight: 800; letter-spacing: 1px; }
+.discard { width: 100px; height: 140px; border: 2px dashed rgba(255, 255, 255, 0.3); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; opacity: 0.6; margin-top: 10px; span:first-child { font-size: 24px; margin-bottom: 5px; } }
+
+.turn-block { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 10px 8px; }
+.btn-turn {
+  display: flex; flex-direction: column; margin-right: 10px;align-items: center; justify-content: center; width: 140px; height: 70px; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: radial-gradient(circle at top, #ffe14d 0%, #c88b00 100%); border: 2px solid #fff; border-radius: 12px;
+  color: #1a0f00; font-family: var(--fd); font-size: 18px; font-weight: 900; text-transform: uppercase;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.8), inset 0 -2px 10px rgba(0, 0, 0, 0.2);
+  &:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+  &:active:not(:disabled) { transform: translateY(1px); }
+  &.off, &:disabled { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); color: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); cursor: not-allowed; animation: none; }
+}
+
+.turn-dots { display: flex; gap: 6px; span { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.15); transition:background .4s, box-shadow .4s; &.on { background:var(--gold); box-shadow:0 0 8px var(--glow); } } }
+
+/* ══════════════════════════════════════════════════════════════
+   CAMPO CENTRAL Y BANCAS
+   ══════════════════════════════════════════════════════════════ */
+.center-field { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 140px; height: 100vh; overflow: hidden; }
+
+.bot-hand-row { position: relative; width: 100%; display: flex; justify-content: center; height: 60px; }
+.bot-card { position: absolute; width: 42px; height: 58px; left: calc(35% - 570px + (var(--bi) - (var(--btot) - 1) / 2) * 20px); top: 0; transform: rotate(180deg); box-shadow: 0 4px 8px rgba(0,0,0,0.6); }
+.bot-hand-tag { position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%); font-size: 8px; font-weight: 700; letter-spacing: .1em; color: var(--text2); background: var(--bg2); padding: 1px 8px; border-radius: 8px; border: 1px solid var(--brd); white-space: nowrap; }
+
+.bench-row { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; flex-shrink: 0; &.player-bench { flex-direction: column-reverse; } }
+.bench-cards { display: flex; gap: 5px; align-items: center; justify-content: center; width: 100%; padding: 5px 8px; background: var(--bg3); border: 1px solid var(--brd); border-radius: var(--r2); }
+.bench-slot { position: relative; flex-shrink: 0; width: 60px; height: 84px; display: flex; flex-direction: column; align-items: center; &.occupied { cursor: pointer; img { width: 60px; height: auto; border-radius: 5px; display: block; box-shadow: 0 3px 8px rgba(0,0,0,.5); transition: transform .2s, box-shadow .2s; } &:hover img { transform: translateY(-7px) scale(1.1); box-shadow: 0 12px 20px rgba(0,0,0,.7); } &.player-slot:hover img { box-shadow: 0 12px 20px rgba(0,0,0,.7), 0 0 0 2px var(--gold); } } &.void { width: 60px; height: 84px; border: 1px dashed rgba(255,255,255,.07); border-radius: 5px; transition: all 0.3s ease; } }
+.bench-bar { position:absolute; bottom:-1px; left:3px; right:3px; height:3px; background:rgba(0,0,0,.5); border-radius:2px; overflow:hidden; }
+.bench-fill { height:100%; background:var(--green); border-radius:2px; transition:width .5s; &.mid { background:var(--orange); } &.low { background:var(--red); animation:hpblink .8s ease-in-out infinite; } }
+@keyframes hpblink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.bench-hp { position:absolute; top:-8px; right:-7px; background:var(--red); border:1.5px solid var(--bg); border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; z-index:5; box-shadow:0 2px 5px var(--red-g); }
+
+/* ══════════════════════════════════════════════════════════════
+   ARENA
+   ══════════════════════════════════════════════════════════════ */
+.arena { flex: 1; width: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+.arena-particles { position: absolute; inset: 0; pointer-events: none; z-index: 0; span { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--gold); opacity: .35; left:  calc(8% + var(--pn) * 15%); top:  calc(5% + var(--pn) * 14%); animation: ap calc(3s + var(--pn)*.4s) ease-in-out infinite; animation-delay: calc(var(--pn) * -.5s); box-shadow: 0 0 4px var(--glow); } }
+@keyframes ap { 0%,to{transform:translateY(0) scale(1);opacity:.35} 50%{transform:translateY(-12px) scale(1.5);opacity:.6} }
+
+.arena-half { width: 100%; flex: 1; display: flex; align-items: center; justify-content: center; position: relative; z-index: 2; margin-top: 15px; &.bot-half { padding-top: 40px; align-items: flex-start; } &.player-half { padding-bottom: 40px; align-items: flex-end; } }
+
+.combatant { display: flex; align-items: center; gap: 18px; flex-shrink: 0; }
+.bot-combatant { flex-direction: row; .active-card-wrap { order: 1; } .sprite-wrap { order: 2; } margin-top: 20px; }
+.player-combatant { flex-direction: row; .sprite-wrap { order: 1; } .active-card-wrap { order: 2; } margin-bottom: 20px; }
+
+.active-card-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; position: relative; z-index: 10; }
+.active-card { width: 130px; height: 182px; border: 2px solid rgba(242,192,64,.28); border-radius: var(--r2); background: var(--bg3); position: relative; overflow: visible; flex-shrink: 0; transition: border-color .3s, box-shadow .3s; img { width: 100%; height: 100%; border-radius: 11px; object-fit: cover; display: block; } &.is-empty { border-style: dashed; border-color: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; } &.player-active { cursor: pointer; border-color: rgba(242,192,64,.45); &.can-attack { border-color: var(--gold); box-shadow: 0 0 18px var(--glow); animation: cagold 2s ease-in-out infinite; } &:hover::after { content:''; position:absolute; inset:-5px; border-radius:15px; box-shadow:0 0 24px 7px var(--glow); pointer-events:none; } } }
+@keyframes cagold { 0%,to{box-shadow:0 0 14px var(--glow)} 50%{box-shadow:0 0 28px rgba(242,192,64,.5)} }
+
+.hp-bar-ext { width: 100px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.hp-track { width: 100%; height: 8px; background: rgba(0, 0, 0, 0.7); border-radius: 4px; border: 1px solid rgba(255, 255, 255, 0.1); overflow: hidden; }
+.hp-fill {
   height: 100%;
-  border-radius: 8px; 
-  box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation: slide-energy-in 0.4s ease-out backwards;
+transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: linear-gradient(to right, #4ade80, #22c55e);
   
-  img { 
-    width: 100%; height: 100%; 
-    object-fit: contain; 
-    border-radius: 8px; 
-    background: #000;
-  }
-}
+  &.mid { background: linear-gradient(to right, #fbbf24, #f59e0b); }
+  &.low { background: linear-gradient(to right, #f87171, #ef4444); }
+}.hp-label { font-family: var(--fu); font-size: 11px; font-weight: 700; color: white; text-shadow: 1px 1px 2px black; background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 4px; }
 
-.player-stack .energy-attached { 
-  transform: translateY(calc(var(--ei) * -22px)) translateX(calc(var(--ei) * -8px)); 
-}
-
-.bot-stack .energy-attached { 
-  transform: translateY(calc(var(--ei) * 22px)) translateX(calc(var(--ei) * 8px)); 
-}
-
-@keyframes slide-energy-in { 
-  from { opacity: 0; transform: translateY(0) scale(0.8); } 
-}
-
+.empty-label { font-family: var(--fu); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.18); text-align: center; padding: 8px; &.player { color: rgba(242,192,64,.3); } }
 
 /* ══════════════════════════════════════════════════════════════
-   SISTEMA DE SPRITES DE ENERGÍA (ESTILO VIDEOJUEGO)
+   SPRITES Y ANIMACIONES
    ══════════════════════════════════════════════════════════════ */
+.sprite-wrap { position: relative; width: 90px; height: 80px; display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0; }
+.poke-sprite { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); &.sprite-back { animation: sfb 3.2s ease-in-out infinite; } &.sprite-front { animation: sff 2.8s ease-in-out infinite; } }
+@keyframes sfb { 0%,to{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes sff { 0%,to{transform:translateY(0)} 50%{transform:translateY(-7px)} }
 
-.energy-icons-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  justify-content: center;
-  align-items: center;
-  margin-top: 4px; 
-  margin-bottom: 8px;
-  z-index: 10;
-  position: relative;
+.sprite-shadow { position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); width: 52px; height: 8px; background: radial-gradient(ellipse, rgba(0,0,0,.38), transparent 70%); animation: sshad 2.8s ease-in-out infinite; }
+@keyframes sshad { 0%,to{transform:translateX(-50%) scaleX(1);opacity:.38} 50%{transform:translateX(-50%) scaleX(.65);opacity:.16} }
+
+.player-sprite-wrap.sprite-attack .poke-sprite { animation: player-lunge 0.65s cubic-bezier(.25,.8,.3,1) both !important; }
+@keyframes player-lunge { 0% { transform: translateY(0) scale(1); } 10% { transform: translateY(8px) scale(.92); } 45% { transform: translateY(-72px) scale(1.18); filter: drop-shadow(0 0 14px rgba(242,192,64,.8)); } 52% { transform: translateY(-78px) scale(1.2);  filter: drop-shadow(0 0 20px rgba(255,255,255,.9)); } 80% { transform: translateY(-10px) scale(1.04); } 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); } }
+
+bot-sprite-wrap {
+  transition: transform 0.3s ease-out;
+  &.sprite-attack {
+    /* El bot salta hacia el jugador (hacia abajo) */
+    transform: translate(-50%, 60px) scale(1.2) !important;
+    z-index: 100;
+  }
+}
+@keyframes bot-hit { 0% { transform: translateY(-5px); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); } 15% { transform: translateX(-9px) rotate(-3deg); filter: brightness(1.8) drop-shadow(0 0 18px var(--red)); } 35% { transform: translateX(9px) rotate(3deg);  filter: brightness(1.4) drop-shadow(0 0 12px var(--red)); } 55% { transform: translateX(-6px) rotate(-2deg); filter: brightness(1.6) drop-shadow(0 0 14px var(--red)); } 75% { transform: translateX(6px) rotate(2deg); } 100% { transform: translateY(0) rotate(0deg); filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); } }
+
+.active-card.vibrate { animation: card-hit .5s ease both; }
+@keyframes card-hit { 0%,to { transform: none; } 15% { transform: translateX(-7px) rotate(-1.5deg); } 35% { transform: translateX(7px) rotate(1.5deg); } 55% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+.sprite-container { display: flex; flex-direction: column; align-items: center; gap: 10px; z-index: 5; }
+
+/* ══════════════════════════════════════════════════════════════
+   BADGES DE ENERGÍA (ESTILO VIDEOJUEGO)
+   ══════════════════════════════════════════════════════════════ */
+.energy-icons-row { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; align-items: center; margin-top: 4px; margin-bottom: 8px; z-index: 10; position: relative; }
+.energy-badge { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.8); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9); overflow: hidden; background: #222; display: flex; align-items: center; justify-content: center; animation: pop-badge 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; img { width: 150%; height: 150%; object-fit: cover; object-position: center 25%; } }
+@keyframes pop-badge { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+/* ══════════════════════════════════════════════════════════════
+   PANEL DE HABILIDADES/ACCIONES PRO
+   ══════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════
+   PANEL DE SELECCIÓN DE HABILIDADES/ACCIONES PRO
+   ══════════════════════════════════════════════════════════════ */
+.habilidades-panel { 
+  position: absolute; 
+  /* 1. Lo bajamos un poquito para que alinee mejor con la carta */
+  bottom: 0%; 
+  /* 2. Lo corremos hacia la derecha de la carta */
+  left: 110%; 
+  /* 3. Le sacamos el translateX(-50%) para que no se centre */
+  transform: none; 
+  
+  width: 260px; 
+  background: linear-gradient(135deg, rgba(10, 10, 10, 0.98), rgba(25, 25, 25, 0.98)); 
+  border: 2px solid var(--gold); 
+  border-radius: 15px; 
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 25px var(--gold-g); 
+  padding: 18px 15px; 
+  z-index: 1000; 
+  cursor: default; 
+  /* 4. Cambiamos la animación para que entre desde la derecha */
+  animation: slide-panel-right 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
 }
 
-.energy-badge {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
-  overflow: hidden;
-  background: #222;
+/* Y agregá esta nueva animación abajo de las demás: */
+@keyframes slide-panel-right { 
+  from { opacity: 0; transform: translateX(-20px) scale(0.9); } 
+  to { opacity: 1; transform: translateX(0) scale(1); } 
+}.close-panel-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; color: #666; font-size: 16px; cursor: pointer; &:hover { color: #fff; } }
+.panel-title { color: var(--gold); font-size: 14px; font-weight: 1000; letter-spacing: 1px; text-align: center; margin-bottom: 15px; border-bottom: 1px solid rgba(242, 192, 64, 0.2); padding-bottom: 8px; }
+.habilidades-list { display: flex; flex-direction: column; gap: 10px; }
+.habilidad-card {
+  position: relative;
+  overflow: hidden; // Para que el overlay no se escape de las esquinas
+  background: #1a1a1a;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+
+  /* Si está bloqueado, le damos un tono rojizo general */
+  &.habilidad-locked {
+    border-color: rgba(229, 53, 53, 0.3);
+    
+    // Oscurecemos un poco el fondo original pero que se siga viendo
+    .hab-header, .hab-body {
+      opacity: 0.5; 
+      filter: grayscale(0.5);
+    }
+  }
+}.hab-header { position: relative; z-index: 2; display: flex; align-items: center; gap: 4px; background: rgba(30, 30, 30, 0.6); padding: 5px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.hab-cost { color: var(--gold); font-size: 14px; } .hab-type { color: #fff; font-size: 12px; margin-left: auto; } .hab-dano { color: #fff; font-size: 16px; font-weight: 1000; }
+.hab-body { position: relative; z-index: 2; padding: 8px 10px; } .hab-name { color: #fff; font-size: 14px; font-weight: 700; margin: 0; } .hab-desc { color: #aaa; font-size: 11px; font-style: italic; }
+.locked-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
   
-  animation: pop-badge 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  /* Gradiente: El centro es más oscuro para el texto, los bordes dejan ver la carta */
+  background: radial-gradient(circle, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%);
 
-  img {
-    width: 150%;
-    height: 150%;
-    object-fit: cover;
-    object-position: center 25%;
+  .lock-text {
+    font-family: var(--fd);
+    font-size: 14px; // Más chico para que no sea invasivo
+    letter-spacing: 1.5px;
+    color: #ff4444;
+    font-weight: 800;
+    text-transform: uppercase;
+    border: 1.5px solid #ff4444;
+    padding: 2px 10px;
+    transform: rotate(-3deg);
+    background: rgba(0,0,0,0.8);
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.4);
   }
 }
 
-@keyframes pop-badge {
-  0% { transform: scale(0); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+/* --- RESUMEN DE FALTANTES SIEMPRE ARRIBA --- */
+.missing-summary {
+  position: relative;
+  z-index: 200; // ¡POR ENCIMA DE TODO!
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  
+  .missing-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 68, 68, 0.5);
+  }
+}
+@keyframes slide-panel-up { from { opacity: 0; transform: translate(-50%, 20px) scale(0.9); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
+
+/* ══════════════════════════════════════════════════════════════
+   MANO DEL JUGADOR
+   ══════════════════════════════════════════════════════════════ */
+/* ── CONTENEDOR DE LA MANO ── */
+/* --- CONTENEDOR DE LA MANO --- */
+/* --- CONTENEDOR DE LA MANO --- */
+.hand-zone {
+  position: absolute;
+  bottom: -40px; 
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: 200px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.hand-cards {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: auto;
+  padding: 0 100px;
+}
+
+/* 🚩 1. EL HITBOX ESTÁTICO: Este detecta el mouse y NO SE MUEVE */
+.hand-card-hitbox {
+  position: relative;
+  width: 105px;
+  height: 146px;
+  margin-left: -45px; /* Solapamiento */
+  z-index: 10;
+  
+  /* Lógica de Curvatura (se aplica al hitbox) */
+  --dist: calc(var(--bi) - (var(--btot) - 1) / 2);
+  transform: 
+    rotate(calc(var(--dist) * 7deg)) 
+    translateY(calc(var(--dist) * var(--dist) * 6px));
+  transform-origin: bottom center;
+
+  /* 🚩 2. LA CARTA REAL: Esta es la que se anima */
+  .hand-card {
+    width: 100%;
+    height: 100%;
+    background: #111;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    img {
+      width: 100%; height: 100%; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+      display: block;
+    }
+  }
+
+  /* 🚩 3. EL HOVER PERFECTO: Si el hitbox detecta hover, movemos la carta interna */
+  &:hover {
+    z-index: 5000 !important;
+    margin: 0 40px !important; /* Abre la mano para que veas las de al lado */
+    
+    .hand-card {
+      /* La carta sube, pero el puntero sigue sobre el hitbox que está abajo */
+      transform: translateY(-110px) scale(1.9) rotate(0deg) !important;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+      filter: brightness(1.15);
+    }
+  }
+}
+
+/* Efecto de oscurecer el resto (basado en el hitbox) */
+.hand-cards:hover .hand-card-hitbox:not(:hover) {
+  opacity: 0.5;
+  filter: grayscale(0.5) brightness(0.4);
+}
+
+/* Efecto de oscurecer el resto (basado en el hitbox) */
+.hand-cards:hover .hand-card-hitbox:not(:hover) {
+  opacity: 0.5;
+  filter: grayscale(0.5) brightness(0.4);
+}
+/* Fix para que el Drag Preview no herede la rotación */
+.custom-drag-preview {
+  transform: scale(1) rotate(0deg) !important;
+  width: 120px !important;
+  z-index: 10000 !important;
+  opacity: 1 !important;
+  img { width: 100%; border-radius: 10px; box-shadow: 0 10px 30px #000; }
+}
+/* Evitar que la carta que queda en el mazo se vea rara mientras arrastrás */
+.card-placeholder {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  height: 160px; /* Ajustá al alto de tus cartas */
+}.hand-cards:hover .hand-card:not(:hover) { opacity: 0.6; transform: translateY(10px) scale(3); }
+.hand-hint { font-size: 13px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 10px; text-shadow: 0 0 10px rgba(0,0,0,0.8); }
+.hand-stack { position: absolute; bottom: 30px; width: 110px; height: 153px; left: 50%; transform: translateX(calc(-50% + (var(--si) - (var(--stot) - 1) / 2) * 115px)); transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); z-index: calc(var(--si) + 1); }
+.hand-stack:hover { z-index: 1000; .hand-card { transform: translate(calc((var(--ci) - (var(--ctot) - 1) / 2) * 50px), -15px); } }
+.hand-header { display: flex; align-items: center; gap: 8px; width: 100%; padding: 0 8px; margin-bottom: 15px;}
+.hand-title { font-size: 9px; font-weight: 700; letter-spacing: .22em; text-transform: uppercase; color: rgba(242,192,64,.5); }
+.hand-badge { background: rgba(242,192,64,.12); border: 1px solid rgba(242,192,64,.22); border-radius: 10px; padding: 0 7px; font-size: 10px; font-weight: 700; color: var(--gold); }
+
+/* ══════════════════════════════════════════════════════════════
+   DRAG & DROP
+   ══════════════════════════════════════════════════════════════ */
+.custom-drag-preview { box-sizing: border-box; width: 100px; height: 140px; border-radius: 8px; box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 2px var(--gold); transform: scale(1.05) rotate(2deg) !important; cursor: grabbing !important; z-index: 9999 !important; img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; display: block; } }
+.cdk-drag-placeholder { opacity: 0 !important; }
+.cdk-drag-animating { transition: transform 250ms cubic-bezier(0, 0, 0.2, 1); }
+.bench-cards.cdk-drop-list-receiving { background: rgba(242, 192, 64, 0.15); border: 2px dashed var(--gold); border-radius: 12px; box-shadow: inset 0 0 20px rgba(242, 192, 64, 0.2); transition: background 0.2s, box-shadow 0.2s; }
+.combatant.player-combatant.cdk-drop-list-receiving .active-card-wrap { border-radius: 15px; border: 2px dashed var(--gold); background: rgba(242, 192, 64, 0.15); box-shadow: 0 0 30px var(--gold-g), inset 0 0 20px rgba(242, 192, 64, 0.2); transform: scale(1.02); transition: all 0.2s; }
+.bench-slot.void.cdk-drop-list-receiving { border: 2px solid var(--gold); background: rgba(242, 192, 64, 0.15); box-shadow: inset 0 0 20px var(--glow), 0 0 15px var(--glow); transform: scale(1.05); }
+
+/* ══════════════════════════════════════════════════════════════
+   CARD-BACK Y RESPONSIVE
+   ══════════════════════════════════════════════════════════════ */
+.card-back { background: linear-gradient(145deg, #0c74d0, #0560b0 50%, #044494); border: 2px solid rgba(255,255,255,.14); border-radius: var(--r); box-shadow: 0 5px 17px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12); position: relative; overflow: hidden; display: block; flex-shrink: 0; &::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, transparent 26%, rgba(255,255,255,.05) 26%, rgba(255,255,255,.05) 28%, transparent 28%), linear-gradient(0deg, transparent 46%, rgba(255,255,255,.06) 46%, rgba(255,255,255,.06) 54%, transparent 54%); } &.gold { background: linear-gradient(145deg, #8c6212, #6c4a0a, #4c3008); border-color: rgba(242,192,64,.22); } }
+
+@media (max-height: 800px) {
+  .active-card { width: 100px; height: 140px; }
+  .hp-bar-ext  { width: 100px; }
+  .sprite-wrap { width: 75px; height: 66px; }
+  .bench-slot.occupied img { width: 52px; }
+  .hand-card  { width: 80px; }
+  .hand-cards { height: 116px; }
+  .bot-card   { width: 42px; height: 58px; }
+  .bot-hand   { height: 50px;  }
+}
+@media (max-width: 1100px) {
+  .playmat { grid-template-columns: 110px 1fr 110px; }
+  .active-card { width: 106px; height: 148px; }
+  .hp-bar-ext  { width: 106px; }
+}
+
+.hab-cost-container { 
+  display: flex; 
+  gap: 4px; 
+  align-items: center; 
+}
+.cost-dot { 
+  width: 14px; 
+  height: 14px; 
+  border-radius: 50%; 
+  border: 1px solid rgba(255,255,255,0.7); 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.8); 
+}
+.hab-type { 
+  margin-left: auto; 
+  color: rgba(255,255,255,0.4); 
+  font-size: 10px; 
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+}
+/* --- ANIMACIONES DE COMBATE DINÁMICAS --- */
+.particle-emitter {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  box-shadow: 0 0 10px rgba(255,255,255,0.4);
+  animation: explode-out forwards ease-out;
+}
+
+@keyframes explode-out {
+  0% { 
+    transform: translate(0, 0) scale(1); 
+    opacity: 1; 
+  }
+  100% { 
+    /* El ty + 100 hace que terminen más abajo de donde empezaron */
+    transform: translate(var(--tx), calc(var(--ty) + 100px)) scale(0); 
+    opacity: 0; 
+  }
+}
+
+.recibiendo-danio {
+  animation: shake-pokemon 0.2s ease-in-out 3;
+}
+
+@keyframes shake-pokemon {
+  0% { transform: translateX(0); filter: brightness(2); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); filter: brightness(1); }
+}
+
+/* --- EFECTOS DE IMPACTO --- */
+.sprite-container { position: relative; }
+.particle-emitter {
+  position: absolute; top: 45%; left: 50%;
+  transform: translate(-50%, -50%); z-index: 100; pointer-events: none;
+}
+.particle {
+  position: absolute; border-radius: 50%; opacity: 0;
+  box-shadow: 0 0 10px rgba(255,255,255,0.5);
+  animation: explode-out forwards ease-out;
+}
+@keyframes explode-out {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+.recibiendo-danio .poke-sprite {
+  animation: shake-damage 0.1s ease-in-out 4;
+  filter: brightness(1.6) saturate(1.5);
+}
+@keyframes shake-damage {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+.player-sprite-wrap {
+  transition: transform 0.3s ease, opacity 0.5s ease; /* Suaviza la desaparición */
+  
+  &.vibrar {
+    animation: shake-short 0.1s infinite;
+  }
+}
+
+@keyframes shake-short {
+  0%, 100% { transform: translate(-50%, 0); }
+  25% { transform: translate(-55%, 2px); }
+  75% { transform: translate(-45%, -2px); }
+}
+
+.cost-dot {
+  position: relative;
+  transition: all 0.3s;
+  
+  &.missing-energy {
+    filter: grayscale(0.8) brightness(0.5);
+    border: 2px solid var(--red); // Borde rojo para la energía que falta
+    box-shadow: 0 0 10px var(--red-g);
+    
+    &::after {
+      content: '✕';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--red);
+      font-size: 10px;
+      font-weight: 900;
+    }
+  }
+}
+
+.hab-desc.text-error {
+  color: #ff6b6b !important;
+  font-weight: 600;
+}
+
+
+
+.missing-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 3px solid var(--red);
+  position: relative;
+  z-index: 60; 
+  background: rgba(20, 20, 20, 0.9);
+  margin-top: 10px;
+  border: 1px solid rgba(255, 68, 68, 0.4);
+}
+
+.missing-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--red);
+  letter-spacing: 0.5px;
+}
+
+.missing-icons {
+  display: flex;
+  gap: 10px;
+}
+
+.missing-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.missing-count {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.missing-orb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  box-shadow: 0 0 5px rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.4);
 }

@@ -14,9 +14,9 @@ public class TableroJugador {
     private List<Card> mano = new ArrayList<>();
     // Premios (6, ocultos)
     private List<Card> premios = new ArrayList<>();
-    // Pokémon activo
+    // PokÃ©mon activo
     private CartaEnJuego activo;
-    // Banca (máximo 5 Pokémon básicos)
+    // Banca (mÃ¡ximo 5 PokÃ©mon bÃ¡sicos)
     private List<CartaEnJuego> banca = new ArrayList<>();
     // Pila de descarte
     private List<Card> pilaDescarte = new ArrayList<>();

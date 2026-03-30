@@ -26,7 +26,7 @@ public class Partida {
 
     // --- GETTERS Y SETTERS ---
 
-    // Este es el método que te pedía el compilador:
+    // Este es el mÃ©todo que te pedÃ­a el compilador:
     public void setId(String id) {
         this.id = id;
     }
