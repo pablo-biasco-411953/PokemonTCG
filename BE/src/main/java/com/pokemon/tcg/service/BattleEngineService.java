@@ -119,24 +119,32 @@ public class BattleEngineService {
     // ACCIONES DEL JUGADOR
     // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
-    public void jugarPokemon(String matchId, String cartaId, int posicion) {
+    public void jugarPokemon(String matchId, String cartaId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
         TableroJugador tablero = partida.getJugador();
         Card carta = encontrarCartaEnMano(tablero, cartaId);
-        if (carta == null) throw new IllegalArgumentException("Carta no encontrada en la mano.");
-        if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo podÃƒÂ©s bajar PokÃƒÂ©mon bÃƒÂ¡sicos.");
+
+        if (carta == null) throw new IllegalArgumentException("La carta no está en tu mano.");
+        if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo podés bajar Pokémon básicos.");
 
         CartaEnJuego nuevoPokemon = new CartaEnJuego(carta);
-        tablero.getMano().remove(carta);
 
+        // 🚩 LÓGICA DE POSICIONAMIENTO
         if (tablero.getActivo() == null) {
+            // Si no hay activo, va directo ahí (Regla obligatoria)
             tablero.setActivo(nuevoPokemon);
+            tablero.getMano().remove(carta);
+            System.out.println("✅ " + carta.getNombre() + " entró como Activo.");
         } else {
-            if (tablero.getBanca().size() >= 5)
-                throw new IllegalStateException("La banca estÃƒÂ¡ llena (mÃƒÂ¡ximo 5).");
+            // Si ya hay activo, intentamos ponerlo en la banca
+            if (tablero.getBanca().size() >= 5) {
+                throw new IllegalStateException("La banca está llena (máximo 5).");
+            }
             tablero.getBanca().add(nuevoPokemon);
+            tablero.getMano().remove(carta);
+            System.out.println("✅ " + carta.getNombre() + " se unió a la banca.");
         }
     }
 
@@ -148,11 +156,79 @@ public class BattleEngineService {
         CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaId);
         Card energia = encontrarCartaEnMano(tablero, energiaId);
 
-        if (objetivo == null) throw new IllegalArgumentException("PokÃƒÂ©mon objetivo no encontrado.");
-        if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("EnergÃƒÂ­a no encontrada.");
+        if (objetivo == null) throw new IllegalArgumentException("Pokemon objetivo no encontrado.");
+        if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("Energía no encontrada.");
 
         objetivo.getEnergiasUnidas().add(energia);
         tablero.getMano().remove(energia);
+    }
+
+    public void retirarActivo(CartaEnJuego activo) {
+        int energiasNecesarias = activo.getCard().getCostoRetirada();
+        int energiasActuales = activo.getEnergiasUnidas().size();
+
+        if (energiasActuales >= energiasNecesarias) {
+            System.out.println("Tenés " + energiasActuales + " energías. El retiro cuesta " + energiasNecesarias + ". ¡Podés huir!");
+            // Aquí va la lógica de mover a la banca y descartar las energías
+        } else {
+            System.out.println("Te faltan " + (energiasNecesarias - energiasActuales) + " energías para retirarte.");
+        }
+    }
+
+    public void realizarRetirada(String matchId, String nuevoActivoId) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurnoJugador(partida);
+        TableroJugador tablero = partida.getJugador();
+        CartaEnJuego activoViejo = tablero.getActivo();
+
+        if (activoViejo == null) throw new IllegalStateException("No hay un Pokémon activo para retirar.");
+        if (partida.isYaSeRetiroEsteTurno()) {
+            throw new IllegalStateException("Solo podés realizar una retirada por turno.");
+        }
+        // 1. Buscamos al suplente en la banca
+        CartaEnJuego suplente = tablero.getBanca().stream()
+                .filter(c -> c.getCard().getId().equals(nuevoActivoId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
+
+        // 2. Validar y Pagar Costo de Retirada
+        int costo = activoViejo.getCard().getCostoRetirada();
+        if (activoViejo.getEnergiasUnidas().size() < costo) {
+            throw new IllegalStateException("Energías insuficientes. Necesitás " + costo + " para retirar a " + activoViejo.getCard().getNombre());
+        }
+
+        // PAGO: Descontamos las energías y las mandamos al descarte
+        for (int i = 0; i < costo; i++) {
+            Card energia = activoViejo.getEnergiasUnidas().remove(0);
+            tablero.getPilaDescarte().add(energia);
+        }
+
+        // 3. 🚩 EL INTERCAMBIO (Swap)
+        tablero.getBanca().remove(suplente); // Sale de la banca
+        tablero.getBanca().add(activoViejo); // El viejo vuelve a la banca
+        tablero.setActivo(suplente);         // El nuevo pasa al frente
+        partida.setYaSeRetiroEsteTurno(true);
+        System.out.println("🔄 Retirada: " + activoViejo.getCard().getNombre() + " a la banca. Entra " + suplente.getCard().getNombre());
+    }
+
+    public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurnoJugador(partida);
+
+        TableroJugador tablero = partida.getJugador();
+
+        if (tablero.getActivo() != null) {
+            throw new IllegalStateException("Ya tenés un Pokémon activo. Debés retirarlo primero.");
+        }
+
+        CartaEnJuego elegido = tablero.getBanca().stream()
+                .filter(c -> c.getCard().getId().equals(cartaIdEnBanca))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Pokémon no encontrado en la banca."));
+
+        tablero.getBanca().remove(elegido);
+        tablero.setActivo(elegido);
+        System.out.println("🚀 " + elegido.getCard().getNombre() + " ahora es tu Pokémon activo.");
     }
 
     /**
@@ -219,7 +295,7 @@ public class BattleEngineService {
     public void pasarTurno(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
-
+        partida.setYaSeRetiroEsteTurno(false);
         // Resetear el flag de ataque del activo del jugador para el prÃƒÂ³ximo turno
         if (partida.getJugador().getActivo() != null)
             partida.getJugador().getActivo().setPuedeAtacar(true);
@@ -230,9 +306,7 @@ public class BattleEngineService {
         ejecutarTurnoBot(matchId);
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // TURNO DEL BOT (asÃƒÂ­ncrono)
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+    // TURNO DEL BOT
 
     /**
      * FIX: @Async evita que el request del frontend quede colgado esperando

@@ -24,31 +24,33 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/choose-turn`, { vaPrimero });
   }
 
-  jugarPokemon(matchId: string, cartaId: string, posicion: number): Observable<void> {
-    return this.http.post<void>(`${this.base}/${matchId}/play-pokemon`, { cartaId, posicion });
+  // 🚩 FIX: Quitamos 'posicion' porque el Backend ya no lo usa
+  jugarPokemon(matchId: string, cartaId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/play-pokemon`, { cartaId });
   }
 
- unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
-return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
+  unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
       cartaId: cartaId,
-    energiaId: energiaId
-  });
-}
+      energiaId: energiaId
+    });
+  }
 
- /**
-   * Realiza un ataque usando el nombre de la habilidad elegida.
-   * Se envía como Query Parameter (?nombreAtaque=...) porque el Backend 
-   * usa @RequestParam en el BattleController.
-   */
   atacar(matchId: string, nombreAtaque: string): Observable<void> {
-    // Usamos encodeURIComponent por si el nombre tiene espacios (ej: "Cluster Bolt")
     const url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
     return this.http.post<void>(url, {});
+  }
+
+  // 🚩 NUEVO: Para subir un Pokémon de la banca al puesto activo
+  subirAActivo(matchId: string, cartaId: string): Observable<void> {
+    // Enviamos el cartaId como un string plano en el body
+    return this.http.post<void>(`${this.base}/${matchId}/promote`, cartaId);
   }
 
   pasarTurno(matchId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/pass-turn`, {});
   }
-
-  
+  retirarPokemon(matchId: string, nuevoActivoId: string): Observable<void> {
+  return this.http.post<void>(`${this.base}/${matchId}/retreat`, nuevoActivoId);
+}
 }

@@ -23,7 +23,7 @@ public class BattleController {
         try {
             Partida partida = battleEngine.startBattle(username, request.getMazoId());
             return ResponseEntity.ok(partida);
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -40,7 +40,7 @@ public class BattleController {
         try {
             boolean jugadorGana = battleEngine.lanzarMoneda(matchId);
             return ResponseEntity.ok(jugadorGana);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -51,18 +51,19 @@ public class BattleController {
         try {
             battleEngine.elegirTurno(matchId, request.isVaPrimero());
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
+    // 🚩 ACÁ ESTÁ EL FIX: Solo 2 parámetros, sin 'posicion'
     @PostMapping("/{matchId}/play-pokemon")
     public ResponseEntity<?> jugarPokemon(@PathVariable String matchId,
                                           @RequestBody JugarPokemonRequest request) {
         try {
-            battleEngine.jugarPokemon(matchId, request.getCartaId(), request.getPosicion());
+            battleEngine.jugarPokemon(matchId, request.getCartaId());
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -73,18 +74,25 @@ public class BattleController {
         try {
             battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId());
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PostMapping("/{matchId}/attack")
-    public ResponseEntity<?> atacar(
-            @PathVariable String matchId, 
-            @RequestParam String nombreAtaque
-    ) {
+    public ResponseEntity<?> atacar(@PathVariable String matchId, @RequestParam String nombreAtaque) {
         try {
             battleEngine.realizarAtaque(matchId, nombreAtaque);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/promote")
+    public ResponseEntity<?> promoteToActive(@PathVariable String matchId, @RequestBody String cartaId) {
+        try {
+            battleEngine.subirAActivoDesdeBanca(matchId, cartaId);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -96,7 +104,19 @@ public class BattleController {
         try {
             battleEngine.pasarTurno(matchId);
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException | IllegalStateException e) {
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/retreat")
+    public ResponseEntity<?> retirarPokemon(@PathVariable String matchId,
+                                            @RequestBody String nuevoActivoId) {
+        try {
+            battleEngine.realizarRetirada(matchId, nuevoActivoId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            // Si no tiene energías suficientes, acá va a saltar el error
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

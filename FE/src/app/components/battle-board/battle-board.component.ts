@@ -30,7 +30,7 @@ public lanzada = false; // Para ocultar las instrucciones cuando ya voló
   introFadingOut    = false;
   showTurnOverlay   = false;
   turnoOverlayTipo: 'jugador' | 'bot' = 'jugador';
-
+public modoSeleccionRetirada = false;
   // Animaciones y Panel
   animandoAtaque    = false;
 public animandoBotAtaque = false;
@@ -578,10 +578,24 @@ forzarUpdate() {
 
     // B. Actualización normal (si no hubo cambio de turno)
     this.partida = data;
-    this.hpRenderJugador = data.jugador?.activo?.hpActual || 0;
+    this.hpRenderJugador = data.jugador?.activo?.hpActual || 0; 
     this.cdr.detectChanges();
   }
 });
+}
+
+puedePagarRetiro(): boolean {
+  const activo = this.partida?.jugador?.activo;
+  if (!activo) return false;
+  // Comparamos cantidad de energías unidas contra el costo de la carta
+  return activo.energiasUnidas.length >= activo.card.costoRetirada;
+}
+
+
+iniciarModoRetirada() {
+  this.showHabilidadesPanel = false; // Cerramos el menú
+  this.modoSeleccionRetirada = true;  // Empezamos a hacer brillar la banca
+  console.log("🔄 Modo retirada activo: Elegí un suplente de la banca.");
 }
 
 ejecutarIAEnemigaConData(estadoFinal: any) {
@@ -760,19 +774,68 @@ ejecutarIAEnemiga() {
     );
   }
 
-  jugarCarta(carta: any): void {
-    if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
-    if (this.esEnergia(carta)) this.gestionarUnionEnergia(carta);
-    else if (!(carta?.tipo?.toLowerCase() ?? '').includes('stage')) this.gestionarBajadaPokemon(carta);
-    else alert('Las evoluciones todavía no están implementadas.');
+ jugarCarta(carta: any): void {
+  // 1. Si no es mi turno o está cargando, ni hablamos.
+  if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+
+  // 2. ¿Es una Energía?
+  if (this.esEnergia(carta)) {
+    this.gestionarUnionEnergia(carta);
+    return;
   }
 
-  private gestionarBajadaPokemon(carta: any): void {
-    const posicion = this.partida.jugador.activo ? 1 : 0;
+  // 3. ¿Es un Pokémon?
+  if (this.esPokemon(carta)) {
+    // 🚩 REGLA DE ORO: Si el activo está vacío y TENÉS gente en la banca...
+    // ¡TENÉS QUE SUBIR UNO DE LA BANCA PRIMERO!
+    if (!this.partida.jugador.activo && this.partida.jugador.banca.length > 0) {
+      alert("¡Primero tenés que subir un Pokémon de tu banca al puesto activo!");
+      return; // Bloqueamos la jugada desde la mano
+    }
+
+    // Si el activo está vacío y la banca TAMBIÉN (ej: inicio del juego o te barrieron todo)
+    // ahí sí lo dejamos pasar directo al activo.
+    this.gestionarBajadaPokemon(carta);
+  }
+}
+
+retirarPokemon(suplente: any) {
+  if (this.cargandoAccion || this.partida.turnoActual !== 'JUGADOR') return;
+
+  const costo = this.partida.jugador.activo.card.costoRetirada;
+  
+  if (confirm(`¿Querés retirar a ${this.partida.jugador.activo.card.nombre}? Costará ${costo} energía(s).`)) {
     this.cargandoAccion = true;
-    this.battleService.jugarPokemon(this.matchId!, carta.id, posicion).subscribe({
-      next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-      error: () => (this.cargandoAccion = false)
+    
+    this.battleService.retirarPokemon(this.matchId!, suplente.card.id).subscribe({
+      next: () => {
+        console.log("🔄 Cambio realizado con éxito");
+        this.cargarEstado(); // Refrescamos el tablero
+        this.cargandoAccion = false;
+      },
+      error: (err) => {
+        this.cargandoAccion = false;
+        alert(err.error || "No tenés suficiente energía para retirarte.");
+      }
+    });
+  }
+}
+
+private gestionarBajadaPokemon(carta: any): void {
+    if (this.cargandoAccion) return;
+    
+    this.cargandoAccion = true;
+    // Quitamos 'posicion', el backend decide si va a Activo o Banca
+    this.battleService.jugarPokemon(this.matchId!, carta.id).subscribe({
+      next: () => {
+        this.cargandoAccion = false;
+        this.cargarEstado(); 
+      },
+      error: (err) => {
+        this.cargandoAccion = false;
+        console.error(err);
+        alert(err.error || 'No se pudo bajar el Pokémon.');
+      }
     });
   }
 
@@ -1094,16 +1157,39 @@ getEnergyName(tipo: string): string {
   }
 }
 
-  seleccionarBanca(pokemon: any): void {
-    if (!this.partida.jugador.activo && this.partida.turnoActual === 'JUGADOR') {
-      this.cargandoAccion = true;
-      this.battleService.jugarPokemon(this.matchId!, pokemon.card.id, 0).subscribe({
-        next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-        error: () => (this.cargandoAccion = false)
-      });
-    }
+seleccionarBanca(p: any) {
+  // 🔄 CASO 1: Estamos en medio de una RETIRADA (Swap voluntario)
+  if (this.modoSeleccionRetirada) {
+    this.cargandoAccion = true;
+    this.battleService.retirarPokemon(this.matchId!, p.card.id).subscribe({
+      next: () => {
+        this.modoSeleccionRetirada = false;
+        this.cargandoAccion = false;
+        this.cargarEstado();
+      },
+      error: (err) => {
+        this.modoSeleccionRetirada = false;
+        this.cargandoAccion = false;
+        alert(err.error || "No se pudo realizar la retirada.");
+      }
+    });
+  } 
+  // 🚀 CASO 2: PROMOCIÓN (El activo murió y hay que subir uno de la banca)
+  else if (!this.partida?.jugador?.activo) {
+    this.cargandoAccion = true;
+    this.battleService.subirAActivo(this.matchId!, p.card.id).subscribe({
+      next: () => {
+        this.cargandoAccion = false;
+        this.cargarEstado();
+      },
+      error: (err) => {
+        this.cargandoAccion = false;
+        console.error(err);
+        alert("No se pudo subir el Pokémon al puesto activo.");
+      }
+    });
   }
-
+}
   volverAlLobby(): void { this.router.navigate(['/lobby']); }
 
   // --- SISTEMA DE PARTÍCULAS DINÁMICO ---

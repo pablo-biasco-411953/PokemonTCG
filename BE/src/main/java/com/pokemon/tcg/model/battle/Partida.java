@@ -11,7 +11,7 @@ public class Partida {
     private TableroJugador bot;
     private Turno turnoActual;
     private Fase faseActual;
-
+    private boolean yaSeRetiroEsteTurno = false;
     public enum Turno { JUGADOR, BOT }
     public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, FIN_PARTIDA }
 
@@ -46,4 +46,8 @@ public class Partida {
 
     public Fase getFaseActual() { return faseActual; }
     public void setFaseActual(Fase faseActual) { this.faseActual = faseActual; }
+    public boolean isYaSeRetiroEsteTurno() { return yaSeRetiroEsteTurno; }
+    public void setYaSeRetiroEsteTurno(boolean yaSeRetiroEsteTurno) {
+        this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
+    }
 }

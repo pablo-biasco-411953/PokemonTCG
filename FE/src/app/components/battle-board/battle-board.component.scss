@@ -610,7 +610,7 @@ bot-sprite-wrap {
 .cdk-drag-placeholder { opacity: 0 !important; }
 .cdk-drag-animating { transition: transform 250ms cubic-bezier(0, 0, 0.2, 1); }
 .bench-cards.cdk-drop-list-receiving { background: rgba(242, 192, 64, 0.15); border: 2px dashed var(--gold); border-radius: 12px; box-shadow: inset 0 0 20px rgba(242, 192, 64, 0.2); transition: background 0.2s, box-shadow 0.2s; }
-.combatant.player-combatant.cdk-drop-list-receiving .active-card-wrap { border-radius: 15px; border: 2px dashed var(--gold); background: rgba(242, 192, 64, 0.15); box-shadow: 0 0 30px var(--gold-g), inset 0 0 20px rgba(242, 192, 64, 0.2); transform: scale(1.02); transition: all 0.2s; }
+.combatant.player-combatant.cdk-drop-list-receiving .active-card-wrap { position: relative; border-radius: 15px; border: 2px dashed var(--gold); background: rgba(242, 192, 64, 0.15); box-shadow: 0 0 30px var(--gold-g), inset 0 0 20px rgba(242, 192, 64, 0.2); transform: scale(1.02); transition: all 0.2s; }
 .bench-slot.void.cdk-drop-list-receiving { border: 2px solid var(--gold); background: rgba(242, 192, 64, 0.15); box-shadow: inset 0 0 20px var(--glow), 0 0 15px var(--glow); transform: scale(1.05); }
 
 /* ══════════════════════════════════════════════════════════════
@@ -986,13 +986,3 @@ bot-sprite-wrap {
   to { transform: rotateY(360deg); }
 }
 
-.rival-banca-slot {
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  opacity: 1;
-  transform: scale(1);
-
-  &.ng-enter {
-    opacity: 0;
-    transform: translateY(-50px) scale(0.5);
-  }
-}
