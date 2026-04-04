@@ -21,6 +21,9 @@ public Math = Math; // 👈 Agregá esto para usarlo en el template
 // Variables para el gesto
 private yStart = 0;
 private yEnd = 0;
+public cartasNuevas = new Set<string>();
+private manoAnteriorIds = new Set<string>();
+
 public lanzada = false; // Para ocultar las instrucciones cuando ya voló
   // Estado visual
   vibrarBot         = false;
@@ -36,7 +39,10 @@ public modoSeleccionRetirada = false;
 public animandoBotAtaque = false;
   showImpactFlash   = false;
   showHabilidadesPanel = false; // Controla el panel de acciones
-
+isDraggingEnergy = false;
+originPos = { x: 0, y: 0 };
+mousePos = { x: 0, y: 0 };
+selectedEnergyId: string | null = null;
   private ataqueRealizado = false;
   private pollingPartida: any;
 public botEstaAtacando = false;
@@ -292,6 +298,55 @@ async seleccionarTurno(yoVoyPrimero: boolean) {
   }
 }
 
+getCardFanTransform(index: number, total: number): string {
+  const maxAngle = Math.min(4 * total, 35); // Máximo 35° de spread total
+  const angleStep = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
+  const angle = total > 1 ? -maxAngle + angleStep * index : 0;
+  
+  // Offset horizontal: distribuimos las cartas simétricamente
+  const cardSpacing = Math.min(80, 480 / Math.max(total, 1));
+  const totalWidth = cardSpacing * (total - 1);
+  const offsetX = -totalWidth / 2 + cardSpacing * index;
+  
+  // Curvatura vertical (parabola): las del centro suben menos
+  const normalizedPos = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
+  const offsetY = normalizedPos * normalizedPos * 20; // Curvatura suave
+
+  return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
+}
+
+private manoAnteriorIdsBot = new Set<string>();
+public cartasNuevasBot = new Set<string>();
+
+private detectarCartasNuevasBot(nuevaMano: any[]): void {
+  nuevaMano.forEach((carta: any) => {
+    if (!this.manoAnteriorIdsBot.has(carta.id)) {
+      this.cartasNuevasBot.add(carta.id);
+      setTimeout(() => {
+        this.cartasNuevasBot.delete(carta.id);
+        this.cdr.detectChanges();
+      }, 500);
+    }
+  });
+  this.manoAnteriorIdsBot = new Set(nuevaMano.map((c: any) => c.id));
+}
+private detectarCartasNuevas(nuevaMano: any[]): void {
+  const nuevasIds = new Set(nuevaMano.map((c: any) => c.id));
+  
+  nuevaMano.forEach((carta: any) => {
+    if (!this.manoAnteriorIds.has(carta.id)) {
+      // Carta nueva: la marcamos y la desmarcamos después de la animación
+      this.cartasNuevas.add(carta.id);
+      setTimeout(() => {
+        this.cartasNuevas.delete(carta.id);
+        this.cdr.detectChanges();
+      }, 600);
+    }
+  });
+  
+  this.manoAnteriorIds = nuevasIds;
+}
+
 finalizarCoinFlip() {
   console.log("🏁 Sorteo terminado. Limpiando overlay y cargando tablero...");
   this.estadoCoinFlip = 'OCULTO';
@@ -335,6 +390,48 @@ private delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+
+onEnergyMouseMove = (event: MouseEvent) => {
+  this.mousePos = { x: event.clientX, y: event.clientY };
+}
+
+// Cambiamos 'onMouseUp' por 'onEnergyMouseUp'
+onEnergyMouseUp = (event: MouseEvent) => {
+  this.isDraggingEnergy = false;
+  window.removeEventListener('mousemove', this.onEnergyMouseMove);
+  window.removeEventListener('mouseup', this.onEnergyMouseUp);
+  this.checkDropTarget(event);
+}
+
+startEnergyDrag(event: MouseEvent, cartaId: string) {
+  // 🚩 IMPORTANTE: Asegurate de tener 'mano' declarada (ver paso siguiente)
+const card = this.partida?.jugador.mano.find((c: any) => c.id === cartaId);
+  if (card?.supertype !== 'Energy') return;
+
+  this.isDraggingEnergy = true;
+  this.selectedEnergyId = cartaId;
+  this.originPos = { x: event.clientX, y: event.clientY };
+  this.mousePos = { x: event.clientX, y: event.clientY };
+
+  window.addEventListener('mousemove', this.onEnergyMouseMove);
+  window.addEventListener('mouseup', this.onEnergyMouseUp);
+}
+
+// 🚩 El método que faltaba copiar
+checkDropTarget(event: MouseEvent) {
+  const element = document.elementFromPoint(event.clientX, event.clientY);
+  const pokemonElement = element?.closest('.pokemon-card-container'); 
+  
+  if (pokemonElement) {
+    const targetId = pokemonElement.getAttribute('data-card-id');
+    if (targetId && this.selectedEnergyId) {
+      // Aquí llamás a tu servicio para unir la energía
+      console.log(`Uniendo energía ${this.selectedEnergyId} a Pokémon ${targetId}`);
+      // this.attachEnergy(targetId, this.selectedEnergyId);
+    }
+  }
+}
+
 getCheckEnergiasAtaque(ataque: any): any[] {
   if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
   
@@ -369,32 +466,36 @@ cargarEstado(): void {
   if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando) return;
 
   this.battleService.getState(this.matchId).subscribe({
-    next: (data) => {
-      // 🚩 EL ESCUDO ABSOLUTO: 
-      // Si nos bloqueamos MIENTRAS la petición viajaba, ignoramos esta respuesta.
-      if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
-        console.log("🛡️ Polling interceptado y destruido para no pisar el overlay.");
-        return; 
-      }
+   next: (data) => {
+  if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
+    console.log("🛡️ Polling interceptado.");
+    return; 
+  }
+  if (!data) return;
 
-      if (!data) return;
+  const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
 
-      const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
+  if (data.turnoActual === 'BOT' && hpServidorJugador < this.hpRenderJugador) {
+    this.datosPendientesBot = data; 
+    this.ejecutarIAEnemiga(); 
+    return; 
+  }
 
-      // Interceptor de daño por polling (solo se ejecuta si la pantalla está libre)
-      if (data.turnoActual === 'BOT' && hpServidorJugador < this.hpRenderJugador) {
-        this.datosPendientesBot = data; 
-        this.ejecutarIAEnemiga(); 
-        return; 
-      }
-
-      // Actualización normal
-      this.partida = data;
-      if (!this.datosPendientesBot) {
-        this.hpRenderJugador = hpServidorJugador;
-      }
-      this.cdr.detectChanges();
-    }
+  // 🚩 PRIMERO detectamos, DESPUÉS asignamos
+  if (data.jugador?.mano) {
+    this.detectarCartasNuevas(data.jugador.mano);
+  }
+  
+  // Forzamos un tick para que Angular aplique la clase nueva-carta
+  // antes de que la carta exista en el DOM con su posición final
+  this.cdr.detectChanges();
+  
+  this.partida = data;
+  if (!this.datosPendientesBot) {
+    this.hpRenderJugador = hpServidorJugador;
+  }
+  this.cdr.detectChanges();
+}
   });
 }
 
@@ -757,12 +858,14 @@ ejecutarIAEnemiga() {
   getImagenCarta(id: string): string { return `images/cards/${id}.png`; }
   getEmptySlots(n: number): number[] { return Array(Math.max(0, 5 - n)).fill(0); }
 
-  esEnergia(carta: any): boolean {
-    const t = carta?.tipo?.toLowerCase() ?? '';
-    return t.includes('energy') || t.includes('energía');
+esEnergia(carta: any): boolean {
+    // 🚩 FIX: Ahora miramos el supertype oficial que manda el backend
+    return carta?.supertype === 'Energy';
   }
+
   esPokemon(carta: any): boolean {
-    return !this.esEnergia(carta) && !(carta?.tipo?.toLowerCase() ?? '').includes('stage');
+    // 🚩 FIX: Filtramos estrictamente por el supertype Pokémon
+    return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon';
   }
   puedeAtacar(): boolean {
     return !!(
@@ -1115,6 +1218,7 @@ getEnergyName(tipo: string): string {
         estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
     }
 
+    
     // MENTIMOS AL HTML: Actualizamos el tablero, pero tu HP sigue intacto
     this.partida = estadoIntermedio;
     this.hpRenderJugador = miVidaIntacta;

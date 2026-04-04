@@ -305,27 +305,24 @@
     </div>
 
 <div class="hand-zone">
-  <div class="hand-cards" cdkDropList cdkDropListOrientation="horizontal">
-    <div *ngFor="let carta of partida.jugador.mano; let i = index" 
-         class="hand-card-hitbox" 
-         [style.--bi]="i" 
-         [style.--btot]="partida.jugador.mano.length">
-         
-        <div class="hand-card" 
-     cdkDrag 
-     [cdkDragData]="carta"
-     [class.pokemon-bloqueado]="esPokemon(carta) && !partida?.jugador?.activo && partida?.jugador?.banca?.length > 0"
-     (click)="jugarCarta(carta)">
-              
-              <div *cdkDragPreview class="custom-drag-preview">
-                <img [src]="getImagenCarta(carta.id)">
-              </div>
+  <div class="hand-cards">
+    <div *ngFor="let carta of partida.jugador.mano; let i = index"
+         class="hand-card-hitbox"
+         [class.nueva-carta]="cartasNuevas.has(carta.id)"
+         [style.--bi]="i"
+         [style.transform]="getCardFanTransform(i, partida.jugador.mano.length)">
 
-              <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
-         </div>
+      <div class="hand-card"
+           cdkDrag
+           [cdkDragData]="carta"
+           (click)="jugarCarta(carta)">
+        <div *cdkDragPreview class="custom-drag-preview">
+          <img [src]="getImagenCarta(carta.id)">
+        </div>
+        <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre">
+      </div>
     </div>
   </div>
-
 </div>
   </main>
 
@@ -357,5 +354,18 @@
       <div class="card-back deck-card deck-player"><span class="deck-count">{{ partida.jugador.mazo.length }}</span></div>
     </div>
   </aside>
+
+<svg *ngIf="isDraggingEnergy" class="pointer-events-none fixed inset-0 z-50 h-full w-full">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4ecdc4" />
+    </marker>
+  </defs>
+  <line 
+    [attr.x1]="originPos.x" [attr.y1]="originPos.y" 
+    [attr.x2]="mousePos.x" [attr.y2]="mousePos.y"
+    stroke="#4ecdc4" stroke-width="4" stroke-dasharray="8,8"
+    marker-end="url(#arrowhead)" />
+</svg>
 
 </div>

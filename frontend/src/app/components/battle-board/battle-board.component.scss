@@ -505,10 +505,10 @@ bot-sprite-wrap {
 /* --- CONTENEDOR DE LA MANO --- */
 .hand-zone {
   position: absolute;
-  bottom: -40px; 
+  bottom: -30px;
   left: 50%;
   transform: translateX(-50%);
-  width: auto;
+  width: 700px; /* Ancho fijo para que el fan siempre tenga espacio */
   height: 200px;
   display: flex;
   justify-content: center;
@@ -518,29 +518,27 @@ bot-sprite-wrap {
 }
 
 .hand-cards {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: flex-end;
   pointer-events: auto;
-  padding: 0 100px;
+  width: 100%;
+  height: 100%;
 }
 
-/* 🚩 1. EL HITBOX ESTÁTICO: Este detecta el mouse y NO SE MUEVE */
+/* El hitbox: no usa margin negativo, usa transform absoluto desde el centro */
 .hand-card-hitbox {
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  left: 50%;
   width: 105px;
   height: 146px;
-  margin-left: -45px; /* Solapamiento */
-  z-index: 10;
-  
-  /* Lógica de Curvatura (se aplica al hitbox) */
-  --dist: calc(var(--bi) - (var(--btot) - 1) / 2);
-  transform: 
-    rotate(calc(var(--dist) * 7deg)) 
-    translateY(calc(var(--dist) * var(--dist) * 6px));
+  /* La posición la calcula el componente con [style.transform] */
   transform-origin: bottom center;
+  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), z-index 0s;
+  z-index: calc(var(--bi, 0) + 10);
 
-  /* 🚩 2. LA CARTA REAL: Esta es la que se anima */
   .hand-card {
     width: 100%;
     height: 100%;
@@ -548,7 +546,6 @@ bot-sprite-wrap {
     border-radius: 8px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    
     img {
       width: 100%; height: 100%; border-radius: 8px;
       border: 1px solid rgba(255,255,255,0.1);
@@ -556,32 +553,54 @@ bot-sprite-wrap {
     }
   }
 
-  /* 🚩 3. EL HOVER PERFECTO: Si el hitbox detecta hover, movemos la carta interna */
   &:hover {
     z-index: 5000 !important;
-    margin: 0 40px !important; /* Abre la mano para que veas las de al lado */
     
     .hand-card {
-      /* La carta sube, pero el puntero sigue sobre el hitbox que está abajo */
-      transform: translateY(-110px) scale(1.9) rotate(0deg) !important;
+      transform: translateY(-100px) scale(1.8) rotate(0deg) !important;
       box-shadow: 0 20px 50px rgba(0,0,0,0.9);
       filter: brightness(1.15);
     }
   }
 }
 
-/* Efecto de oscurecer el resto (basado en el hitbox) */
 .hand-cards:hover .hand-card-hitbox:not(:hover) {
-  opacity: 0.5;
-  filter: grayscale(0.5) brightness(0.4);
+  opacity: 0.55;
+  filter: grayscale(0.3) brightness(0.5);
+}
+@keyframes card-draw-player {
+  0% {
+    transform: translate(var(--draw-from-x, 300px), var(--draw-from-y, -300px)) scale(0.4) rotate(15deg);
+    opacity: 0;
+    z-index: 9999;
+  }
+  30% { opacity: 1; }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
 
-/* Efecto de oscurecer el resto (basado en el hitbox) */
-.hand-cards:hover .hand-card-hitbox:not(:hover) {
-  opacity: 0.5;
-  filter: grayscale(0.5) brightness(0.4);
+@keyframes card-draw-bot {
+  0% {
+    transform: translate(var(--draw-from-x, -300px), var(--draw-from-y, 300px)) scale(0.4) rotate(-15deg);
+    opacity: 0;
+  }
+  30% { opacity: 1; }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
 }
-/* Fix para que el Drag Preview no herede la rotación */
+
+.hand-card-hitbox.nueva-carta {
+  animation: card-draw-player 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+.bot-card.nueva-carta {
+  animation: card-draw-bot 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+/* Fix para que el Drag Preview no herede la rotación xd*/
 .custom-drag-preview {
   transform: scale(1) rotate(0deg) !important;
   width: 120px !important;
