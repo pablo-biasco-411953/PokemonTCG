@@ -43,26 +43,34 @@ public class BotAIService {
         CartaEnJuego miActivo = bot.getActivo();
         CartaEnJuego suActivo = jugador.getActivo();
 
-        // Si no hay combate activo, o la banca está vacía, o ya se retiró, no hace nada
         if (miActivo == null || suActivo == null || bot.getBanca().isEmpty() || partida.isYaSeRetiroEsteTurno()) {
             return;
         }
 
-        // 🎯 ANÁLISIS 1: ¿Me van a hacer concha en el próximo turno?
+        // 🚨 REGLA DE ORO: Si el bot está incapacitado o atrapado, NO PUEDE HUIR.
+        if (miActivo.getCondicionesEspeciales().contains("Asleep") ||
+                miActivo.getCondicionesEspeciales().contains("Paralyzed") ||
+                miActivo.getCondicionesEspeciales().contains("CantRetreat")) {
+            System.out.println("🤖 [BOT] Quería huir, pero está incapacitado o atrapado por un efecto.");
+            return; // Corta acá
+        }
+
         int danioInminente = calcularAmenazaMaxima(suActivo, miActivo);
         boolean peligroDeMuerte = miActivo.getHpActual() <= danioInminente;
 
-        // 🎯 ANÁLISIS 2: ¿Estoy estancado? (Ej: Mi ataque pide 3 energías y tengo 0)
         boolean estancado = miActivo.getCard().getAtaques().stream()
                 .mapToInt(a -> a.getCosto() != null ? a.getCosto().size() : 0)
-                .min().orElse(0) > (miActivo.getEnergiasUnidas().size() + 1); // Le falta más de 1 turno para hacer algo útil
+                .min().orElse(0) > (miActivo.getEnergiasUnidas().size() + 1);
 
-        if (peligroDeMuerte || estancado) {
-            // El bot sabe que tiene que huir. Revisa su billetera de energías.
+        // 🧠 NUEVA ESTRATEGIA: El bot detecta que se está muriendo lentamente por estados
+        boolean muriendoPorEstados = miActivo.getCondicionesEspeciales().contains("Poisoned") ||
+                miActivo.getCondicionesEspeciales().contains("Burned");
+
+        // Si corre peligro, está estancado, o se está pudriendo por veneno... ¡HUYE!
+        if (peligroDeMuerte || estancado || muriendoPorEstados) {
             int costoRetirada = miActivo.getCard().getCostoRetirada();
 
             if (miActivo.getEnergiasUnidas().size() >= costoRetirada) {
-                // Busca al suplente más resistente para usarlo de escudo
                 CartaEnJuego mejorSuplente = bot.getBanca().stream()
                         .max(java.util.Comparator.comparingInt(CartaEnJuego::getHpActual))
                         .orElse(null);
@@ -91,6 +99,7 @@ public class BotAIService {
 
         // Bloquea múltiples retiradas
         partida.setYaSeRetiroEsteTurno(true);
+        activoHuyendo.limpiarCondiciones();
     }
 
     private int calcularAmenazaMaxima(CartaEnJuego atacanteRival, CartaEnJuego miDefensor) {
@@ -311,28 +320,78 @@ public class BotAIService {
 
         if (activoBot == null || activoJugador == null) return;
 
+        // 🚨 REGLA DE ORO: El bot no puede atacar si está dormido o paralizado
+        if (activoBot.getCondicionesEspeciales().contains("Asleep") ||
+                activoBot.getCondicionesEspeciales().contains("Paralyzed")) {
+            System.out.println("🤖 [BOT] Intenta atacar, pero no puede porque está " + activoBot.getCondicionesEspeciales());
+            return;
+        }
+
         List<Ataque> ataques = activoBot.getCard().getAtaques();
         if (ataques == null || ataques.isEmpty()) return;
 
-        // Elegimos el primer ataque por ahora
         Ataque ataqueElegido = ataques.get(0);
 
-        // 1. Validar energía
         if (!puedePagarCosto(activoBot, ataqueElegido)) {
             System.out.println("🤖 [BOT] No tiene energía para " + ataqueElegido.getNombre());
             return;
         }
 
-        // 2. 🚩 CÁLCULO DE DAÑO (Acá estaba el error)
-        // Llamamos a la función que creamos y guardamos el resultado en 'danioFinal'
-        int danioFinal = calcularDanioFinal(activoBot, activoJugador, ataqueElegido);
+        // 1. CÁLCULO BASE + DEBILIDAD/RESISTENCIA
+        int danioBase = calcularDanioFinal(activoBot, activoJugador, ataqueElegido);
 
-        // 3. Aplicar el daño al jugador usando la variable correcta
+        // 2. 🧠 APLICAMOS REGLAS DE MONEDAS Y EFECTOS PARA EL BOT
+        String texto = ataqueElegido.getTexto() != null ? ataqueElegido.getTexto().toLowerCase() : "";
+        int danioFinal = danioBase;
+        int carasSacadas = 0;
+
+        if (!texto.isEmpty()) {
+            if (texto.contains("tails, this attack does nothing")) {
+                if (!random.nextBoolean()) danioFinal = 0;
+            } else if (texto.contains("times the number of heads") || texto.contains("x the number of heads")) {
+                int monedas = texto.contains("2 coins") ? 2 : (texto.contains("3 coins") ? 3 : 1);
+                for (int i = 0; i < monedas; i++) { if (random.nextBoolean()) carasSacadas++; }
+                danioFinal = danioBase * carasSacadas;
+            } else if (texto.contains("if heads") && texto.contains("more damage")) {
+                if (random.nextBoolean()) danioFinal += danioBase;
+            }
+        }
+
+        // 3. APLICAR DAÑO
         int nuevaHp = activoJugador.getHpActual() - danioFinal;
         activoJugador.setHpActual(Math.max(0, nuevaHp));
 
-        System.out.println("🤖 [BOT] Atacó con " + ataqueElegido.getNombre() +
-                " haciendo " + danioFinal + " de daño.");
+        System.out.println("🤖 [BOT] Atacó con " + ataqueElegido.getNombre() + " haciendo " + danioFinal + " de daño.");
+
+        // 4. APLICAR ESTADOS SECUNDARIOS AL JUGADOR
+        if (activoJugador.getHpActual() > 0 && (danioFinal > 0 || ataqueElegido.getDanio() == 0)) {
+            if (texto.contains("is now paralyzed")) {
+                if (!texto.contains("flip a coin") || random.nextBoolean()) {
+                    activoJugador.agregarCondicion("Paralyzed");
+                    System.out.println("⚡ [BOT] ¡Te ha Paralizado!");
+                }
+            }
+            if (texto.contains("is now poisoned")) {
+                activoJugador.agregarCondicion("Poisoned");
+                System.out.println("☠️ [BOT] ¡Te ha Envenenado!");
+            }
+            if (texto.contains("is now asleep")) {
+                activoJugador.agregarCondicion("Asleep");
+                System.out.println("💤 [BOT] ¡Te ha Dormido!");
+            }
+            if (texto.contains("discard an energy")) {
+                int aRomper = texto.contains("for each heads") ? carasSacadas : 1;
+                for (int i = 0; i < aRomper; i++) {
+                    if (!activoJugador.getEnergiasUnidas().isEmpty()) {
+                        System.out.println("💥 [BOT] ¡Destruyó tu " + activoJugador.getEnergiasUnidas().remove(0).getNombre() + "!");
+                    }
+                }
+            }
+            if (texto.contains("can't retreat")) {
+                activoJugador.agregarCondicion("CantRetreat");
+                System.out.println("🪤 [BOT] ¡Te atrapó! No podés retirarte tu próximo turno.");
+            }
+        }
 
         if (activoJugador.getHpActual() <= 0) {
             resolverKO(partida, activoBot, activoJugador);
