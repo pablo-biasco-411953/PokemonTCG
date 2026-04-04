@@ -22,6 +22,7 @@ com\pokemon\tcg\model\battle\Partida$Turno.class
 com\pokemon\tcg\BackendApplication.class
 com\pokemon\tcg\model\Card.class
 com\pokemon\tcg\controller\AuthController.class
+com\pokemon\tcg\model\Card$5.class
 com\pokemon\tcg\config\DataLoader.class
 com\pokemon\tcg\controller\SobreController.class
 com\pokemon\tcg\model\Jugador.class
@@ -34,6 +35,7 @@ com\pokemon\tcg\service\BattleEngineService.class
 com\pokemon\tcg\controller\JugadorController.class
 com\pokemon\tcg\dto\JugadorDTO.class
 com\pokemon\tcg\dto\UnirEnergiaRequest.class
+com\pokemon\tcg\model\Card$4.class
 com\pokemon\tcg\dto\ChooseTurnRequest.class
 com\pokemon\tcg\service\BattleService.class
 com\pokemon\tcg\controller\CardController.class

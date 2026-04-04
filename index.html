@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon TCG Engine - Documentación Técnica</title>
+    <style>
+        :root {
+            --poke-red: #ff6b6b;
+            --poke-blue: #4ecdc4;
+            --poke-dark: #2d3436;
+            --poke-light: #f8f9fa;
+            --bg-gradient: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--poke-dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 4px solid var(--poke-blue);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+        }
+
+        header img {
+            width: 100px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            color: var(--poke-red);
+            font-size: 2.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            color: #636e72;
+            font-style: italic;
+            font-size: 1.1rem;
+        }
+
+        h2 {
+            color: var(--poke-blue);
+            margin: 30px 0 15px 0;
+            display: flex;
+            align-items: center;
+            border-left: 5px solid var(--poke-red);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: var(--poke-red);
+            margin-top: 20px;
+        }
+
+        p { margin-bottom: 15px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .card-feature {
+            background: var(--poke-light);
+            padding: 20px;
+            border-radius: 12px;
+            border-top: 3px solid var(--poke-blue);
+            transition: transform 0.3s ease;
+        }
+
+        .card-feature:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-feature h4 {
+            color: var(--poke-dark);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        code {
+            background: #dfe6e9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            color: #d63031;
+        }
+
+        pre {
+            background: #2d3436;
+            color: #fab1a0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 15px 0;
+            font-size: 0.9rem;
+            border-left: 5px solid var(--poke-blue);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .done { background: #55efc4; color: #00b894; }
+        .pending { background: #ffeaa7; color: #d6a031; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th { background: var(--poke-blue); color: white; }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9rem;
+            color: #636e72;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/98/International_Pok%C3%A9mon_logo.svg" alt="Pokemon Logo">
+        <h1>Digital Battle Engine</h1>
+        <p class="tagline">Simulador Estratégico de TCG basado en Spring Boot y Angular</p>
+    </header>
+
+    <section id="intro">
+        <h2>Descripción del Proyecto</h2>
+        <p>Este sistema implementa un motor de reglas complejo para el juego de cartas coleccionables <strong>Pokémon TCG</strong>. A diferencia de una aplicación estática, el proyecto gestiona una máquina de estados de batalla en tiempo real, validación de recursos y una Inteligencia Artificial estratégica.</p>
+    </section>
+
+    <section id="tech">
+        <h2>Arquitectura Técnica</h2>
+        <div class="grid">
+            <div class="card-feature">
+                <h4>🧠 Backend (Spring Boot)</h4>
+                <ul>
+                    <li><strong>Java 21:</strong> Uso de Virtual Threads y Pattern Matching.</li>
+                    <li><strong>H2 Database:</strong> Persistencia ágil en memoria para testing.</li>
+                    <li><strong>Jackson:</strong> Hidratación de JSON para modelos polimórficos.</li>
+                    <li><strong>Async Service:</strong> Procesamiento asíncrono para el turno de la IA.</li>
+                </ul>
+            </div>
+            <div class="card-feature">
+                <h4>🎨 Frontend (Angular)</h4>
+                <ul>
+                    <li><strong>Angular 17:</strong> Componentes reactivos y Standalone API.</li>
+                    <li><strong>RxJS:</strong> Gestión de estado mediante observables.</li>
+                    <li><strong>Tailwind CSS:</strong> Layout dinámico para el tablero de juego.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="ai">
+        <h2>Inteligencia Artificial Estratégica</h2>
+        <p>El <code>BotAIService</code> no realiza movimientos aleatorios. Utiliza un <strong>Sistema de Evaluación Heurística</strong> para puntuar cada carta en mano y banca antes de actuar:</p>
+        <pre>
+// Fragmento de la lógica de decisión de la IA
+int score = (energiaUnida * 50) + (hpActual * 1);
+if (esDebilAlRival) score -= 1000;  // Evita el K.O. técnico
+if (esFuerteContraRival) score += 500; // Prioriza la ventaja elemental
+        </pre>
+        <div class="grid">
+            <div class="card-feature">
+                <h4>🛡️ Retirada Táctica</h4>
+                <p>Si el activo del Bot está a punto de ser derrotado o no tiene energías para atacar, la IA paga el costo de retirada y sube un "tanque" de la banca.</p>
+            </div>
+            <div class="card-feature">
+                <h4>⚔️ Análisis de Matchup</h4>
+                <p>Evaluación constante de <strong>Weakness</strong> (x2) y <strong>Resistance</strong> (-20) para determinar la efectividad del ataque.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="data">
+        <h2>Gestión de Datos y Colección</h2>
+        <p>El sistema cuenta con un <code>DataLoader</code> automático que sincroniza datos de la API oficial con el entorno local del desarrollador.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Entidad</th>
+                    <th>Estado</th>
+                    <th>Funcionalidad</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Carga de Cartas</td>
+                    <td><span class="status-badge done">Listo</span></td>
+                    <td>Importación de 255 cartas (Pokémon, Trainers, Energy).</td>
+                </tr>
+                <tr>
+                    <td>Manejo de Sobres</td>
+                    <td><span class="status-badge done">Listo</span></td>
+                    <td>Generación de boosters con ratio 30/70 energía/pokes.</td>
+                </tr>
+                <tr>
+                    <td>Mazo Automático</td>
+                    <td><span class="status-badge done">Listo</span></td>
+                    <td>Creación de mazo legal de 60 cartas para el usuario "Pablo".</td>
+                </tr>
+                <tr>
+                    <td>Estados Alterados</td>
+                    <td><span class="status-badge pending">En Desarrollo</span></td>
+                    <td>Implementación de Confused, Paralyzed y Poisoned.</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section id="endpoints">
+        <h2>API REST - Endpoints Principales</h2>
+        <pre>
+POST /api/battle/start/{user}     // Inicializa el tablero y mezcla mazos
+POST /api/battle/{id}/attach      // Une energía de la mano a un Pokémon
+POST /api/battle/{id}/attack      // Calcula daño real considerando debilidades
+GET  /api/battle/{id}/state       // Sincroniza el estado visual del tablero
+        </pre>
+    </section>
+
+    <footer>
+        <p>Desarrollado por <strong>Pablo Biasco</strong></p>
+        <p>Programación III - Tecnicatura Universitaria en Programación - UTN FRC - 2026</p>
+    </footer>
+</div>
+
+</body>
+</html>
