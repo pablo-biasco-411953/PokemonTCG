@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang='es'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Pokemon TCG - Sistema de Juego</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #ff6b6b;
+            font-size: 3rem;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            color: #4ecdc4;
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        h2 {
+            color: #ff6b6b;
+            border-bottom: 3px solid #4ecdc4;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        h3 {
+            color: #4ecdc4;
+            margin: 20px 0 10px 0;
+        }
+        
+        .tech-stack {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .tech-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .tech-item h4 {
+            color: #ff6b6b;
+            margin-bottom: 10px;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h4 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .checklist {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .checklist li {
+            margin: 10px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .checklist li:before {
+            content: '?';
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .pending-list {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .pending-list li {
+            margin: 10px 0;
+            position: relative;
+            padding-left: 30px;
+        }
+        
+        .pending-list li:before {
+            content: '??';
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        
+        .diagram {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        
+        .pokemon-icon {
+            font-size: 3rem;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tech-stack {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <header>
+            <h1>Pokémon Trading Card Game</h1>
+            <p class='subtitle'>Sistema completo de juego para Pokémon TCG con backend en Spring Boot y frontend en Angular</p>
+            <div class='pokemon-icon'>??</div>
+        </header>
+        
+        <div class='card'>
+            <h2>Descripción General</h2>
+            <p>El proyecto <strong>PokemonTCG</strong> es un sistema completo que permite jugar al juego de cartas coleccionables Pokémon TCG (Trading Card Game) en una plataforma digital. El juego implementa las reglas básicas del TCG, incluyendo batallas entre jugadores, manejo de mazos, cartas, energía y ataques.</p>
+        </div>
+        
+        <div class='card'>
+            <h2>Estructura del Proyecto</h2>
+            <pre>PokemonTCG/
++-- backend/                 # Servidor Spring Boot
+¦   +-- src/main/java/com/pokemon/tcg/
+¦   ¦   +-- controller/      # Controladores REST API
+¦   ¦   +-- model/           # Modelos de datos
+¦   ¦   ¦   +-- battle/      # Modelos de batalla
+¦   ¦   +-- repository/      # Repositorios de datos
+¦   ¦   +-- service/         # Lógica de negocio
+¦   +-- src/main/resources/
+¦       +-- cards.json       # Datos de cartas
++-- frontend/                # Frontend Angular
++-- README.md                # Documentación</pre>
+        </div>
+        
+        <div class='card'>
+            <h2>Tecnologías Utilizadas</h2>
+            <div class='tech-stack'>
+                <div class='tech-item'>
+                    <h4>Backend (Spring Boot)</h4>
+                    <p>Lenguaje: Java 21</p>
+                    <p>Framework: Spring Boot 3.2.4</p>
+                    <p>Base de Datos: H2 Database</p>
+                </div>
+                <div class='tech-item'>
+                    <h4>Frontend (Angular)</h4>
+                    <p>Framework: Angular 17</p>
+                    <p>Lenguaje: TypeScript</p>
+                    <p>Herramientas: Node.js, npm</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class='card'>
+            <h2>Estructura de Datos</h2>
+            <h3>Modelos Principales</h3>
+            <div class='features'>
+                <div class='feature-card'>
+                    <h4>Carta (Card)</h4>
+                    <p>Identificador único, nombre, hp, tipo, imagen, supertype, subtypes, evolucionDe, ataques, debilidades y resistencias.</p>
+                </div>
+                <div class='feature-card'>
+                    <h4>Jugador (Jugador)</h4>
+                    <p>Identificador único, username y mazos del jugador.</p>
+                </div>
+                <div class='feature-card'>
+                    <h4>Mazo (Mazo)</h4>
+                    <p>Identificador único, nombre y lista de cartas en el mazo.</p>
+                </div>
+                <div class='feature-card'>
+                    <h4>Partida (Partida)</h4>
+                    <p>Identificador de la partida, jugadores, tableros y estado actual.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class='card'>
+            <h2>Funcionalidades Implementadas</h2>
+            <ul class='checklist'>
+                <li>Sistema de autenticación de usuarios</li>
+                <li>Gestión de mazos y cartas</li>
+                <li>Inicio de batallas entre jugadores</li>
+                <li>Lanzamiento de moneda para turnos</li>
+                <li>Juego de cartas en tablero</li>
+                <li>Manejo de energía y ataques</li>
+                <li>Sistema de HP y estado de Pokémon</li>
+            </ul>
+        </div>
+        
+        <div class='card'>
+            <h2>Funcionalidades Pendientes</h2>
+            <ul class='pending-list'>
+                <li>Regla del Turno: Implementar correctamente el sistema de turnos con fases completas (Draw, Main, End)</li>
+                <li>Regla de Energía: Añadir soporte para diferentes tipos de energía y manejo de recursos</li>
+                <li>Regla de Evolución: Mejorar la lógica de evolución de cartas con condiciones específicas</li>
+                <li>Regla de Ataques: Implementar ataques que requieran más de un tipo de energía</li>
+                <li>Regla de Debuffs/Condiciones: Añadir efectos como Paralized, Confused, etc.</li>
+                <li>Regla de Energía Excedente: Manejo de energía sobrante al final del turno</li>
+            </ul>
+        </div>
+        
+        <div class='card'>
+            <h2>Diagrama de Clases</h2>
+            <div class='diagram'>
+                <p>Diagrama de clases resumido en el archivo README.md</p>
+                <p>Representa las relaciones entre Carta, Ataque, Jugador, Mazo, Partida y TableroJugador</p>
+            </div>
+        </div>
+        
+        <footer>
+            <h2>Objetivos del Proyecto</h2>
+            <p><strong>Objetivo Inmediato:</strong> Crear un sistema funcional de batalla Pokémon TCG con reglas básicas</p>
+            <p><strong>Objetivo Mediano Plazo:</strong> Implementar todas las reglas del juego de cartas Pokémon TCG</p>
+            <p><strong>Objetivo Largo Plazo:</strong> Convertirlo en una plataforma completa para jugadores de Pokémon TCG</p>
+            <div class='pokemon-icon'>??</div>
+        </footer>
+    </div>
+</body>
+</html>
