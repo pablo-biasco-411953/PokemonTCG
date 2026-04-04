@@ -14,17 +14,24 @@ import { firstValueFrom } from 'rxjs';
   imports: [CommonModule, DragDropModule]
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
-public Math = Math; // 👈 Agregá esto para usarlo en el template
+  public Math = Math;
   matchId: string | null = null;
   partida: any = null;
   jugadorNombre = '';
-// Variables para el gesto
-private yStart = 0;
-private yEnd = 0;
-public cartasNuevas = new Set<string>();
-private manoAnteriorIds = new Set<string>();
 
-public lanzada = false; // Para ocultar las instrucciones cuando ya voló
+  // Gesto moneda
+  private yStart = 0;
+  private yEnd = 0;
+  public lanzada = false;
+
+  // Tracking de cartas nuevas (jugador)
+  public cartasNuevas = new Set<string>();
+  private manoAnteriorIds = new Set<string>();
+
+  // Tracking de cartas nuevas (bot)
+  public cartasNuevasBot = new Set<string>();
+  private manoAnteriorIdsBot = new Set<string>();
+
   // Estado visual
   vibrarBot         = false;
   cargandoAccion    = false;
@@ -33,20 +40,49 @@ public lanzada = false; // Para ocultar las instrucciones cuando ya voló
   introFadingOut    = false;
   showTurnOverlay   = false;
   turnoOverlayTipo: 'jugador' | 'bot' = 'jugador';
-public modoSeleccionRetirada = false;
+  public modoSeleccionRetirada = false;
+
   // Animaciones y Panel
-  animandoAtaque    = false;
-public animandoBotAtaque = false;
-  showImpactFlash   = false;
-  showHabilidadesPanel = false; // Controla el panel de acciones
-isDraggingEnergy = false;
-originPos = { x: 0, y: 0 };
-mousePos = { x: 0, y: 0 };
-selectedEnergyId: string | null = null;
+  animandoAtaque       = false;
+  public animandoBotAtaque = false;
+  showImpactFlash      = false;
+  showHabilidadesPanel = false;
+
+  isDraggingEnergy  = false;
+  originPos         = { x: 0, y: 0 };
+  mousePos          = { x: 0, y: 0 };
+  selectedEnergyId: string | null = null;
+
   private ataqueRealizado = false;
   private pollingPartida: any;
-public botEstaAtacando = false;
-private datosPendientesBot: any = null;
+  public botEstaAtacando = false;
+  private datosPendientesBot: any = null;
+
+  // Variables internas
+  public activoVisualJugador: any = null;
+  public hpRenderJugador: number = 0;
+  public bloqueadoPorAnimacion: boolean = false;
+  public anguloFinal: number = 0;
+
+  private intentosBotSinAccion = 0;
+  private ultimaCantidadCartasBot = -1;
+  private ciclosSinCambio = 0;
+  private hpVisualInterno: number = 0;
+
+  // CoinFlip
+  public estadoCoinFlip: 'ELEGIR_LADO' | 'ESPERANDO_TIRO' | 'GIRANDO' | 'ELEGIR_TURNO' | 'RESULTADO_BOT' | 'OCULTO' = 'OCULTO';
+  eleccionJugador: 'CARA' | 'CRUZ' = 'CARA';
+  resultadoMoneda: 'CARA' | 'CRUZ' = 'CARA';
+  public girando: boolean = false;
+
+  // Partículas
+  mostrarEfectoBot     = false;
+  mostrarEfectoJugador = false;
+  particulasBot:     any[] = [];
+  particulasJugador: any[] = [];
+  animandoBotDanio     = false;
+  animandoJugadorDanio = false;
+
   private readonly pokedexNum: Record<string, number> = {
     'bulbasaur':1,'ivysaur':2,'venusaur':3,
     'charmander':4,'charmeleon':5,'charizard':6,
@@ -97,7 +133,7 @@ private datosPendientesBot: any = null;
     'lickitung':108,'koffing':109,'weezing':110,
     'rhyhorn':111,'rhydon':112,
     'chansey':113,'tangela':114,'kangaskhan':115,
-    'tangrowth': 465,
+    'tangrowth':465,
     'horsea':116,'seadra':117,
     'goldeen':118,'seaking':119,
     'staryu':120,'starmie':121,
@@ -243,584 +279,710 @@ private datosPendientesBot: any = null;
     private cdr: ChangeDetectorRef
   ) {}
 
-ngOnInit(): void {
-  this.matchId = this.route.snapshot.paramMap.get('id');
-  if (!this.matchId) return;
+  // ═══════════════════════════════════════════════
+  // LIFECYCLE
+  // ═══════════════════════════════════════════════
 
-  // Mostramos la intro de "Battle Start"
-  this.showIntro = true;
-  setTimeout(() => this.introFadingOut = true, 2000);
-  setTimeout(() => this.showIntro = false, 3000);
+  ngOnInit(): void {
+    this.matchId = this.route.snapshot.paramMap.get('id');
+    if (!this.matchId) return;
 
-  // Consultamos el estado inicial
-  this.battleService.getState(this.matchId).subscribe({
-    next: (data) => {
-      if (data.faseActual === 'LANZAMIENTO_MONEDA') {
-        // Esperamos que pase la intro y mostramos el sorteo
-        setTimeout(() => {
-          this.estadoCoinFlip = 'ELEGIR_LADO';
-          this.cdr.detectChanges();
-        }, 3200);
-      } else {
-        // Partida ya iniciada, vamos directo al tablero
-        this.partida = data;
-        this.finalizarCoinFlip();
+    this.showIntro = true;
+    setTimeout(() => this.introFadingOut = true, 2000);
+    setTimeout(() => this.showIntro = false, 3000);
+
+    this.battleService.getState(this.matchId).subscribe({
+      next: (data) => {
+        if (data.faseActual === 'LANZAMIENTO_MONEDA') {
+          setTimeout(() => {
+            this.estadoCoinFlip = 'ELEGIR_LADO';
+            this.cdr.detectChanges();
+          }, 3200);
+        } else {
+          this.partida = data;
+          // Inicializamos los sets para que en el primer cargarEstado no marquemos todo como "nuevo"
+          this.manoAnteriorIds    = new Set((data.jugador?.mano || []).map((c: any) => c.id));
+          this.manoAnteriorIdsBot = new Set((data.bot?.mano    || []).map((c: any) => c.id));
+          this.finalizarCoinFlip();
+        }
       }
-    }
-  });
-}
+    });
+  }
+
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
   }
 
-public estadoCoinFlip: 'ELEGIR_LADO' | 'ESPERANDO_TIRO' | 'GIRANDO' | 'ELEGIR_TURNO' | 'RESULTADO_BOT' | 'OCULTO' = 'OCULTO';
-eleccionJugador: 'CARA' | 'CRUZ' = 'CARA';
-resultadoMoneda: 'CARA' | 'CRUZ' = 'CARA';
-public girando: boolean = false;
+  // ═══════════════════════════════════════════════
+  // COIN FLIP
+  // ═══════════════════════════════════════════════
 
-
-// Variables para el gesto del Swipe
-
-iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
-  this.eleccionJugador = eleccion;
-  this.estadoCoinFlip = 'ESPERANDO_TIRO';
-  this.lanzada = false;
-  this.cdr.detectChanges();
-}
-
-async seleccionarTurno(yoVoyPrimero: boolean) {
-  try {
-    await firstValueFrom(this.battleService.elegirTurno(this.matchId!, yoVoyPrimero));
-    this.finalizarCoinFlip();
-  } catch (error) {
-    console.error("Error al elegir turno:", error);
-    this.finalizarCoinFlip();
-  }
-}
-
-getCardFanTransform(index: number, total: number): string {
-  const maxAngle = Math.min(4 * total, 35); // Máximo 35° de spread total
-  const angleStep = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
-  const angle = total > 1 ? -maxAngle + angleStep * index : 0;
-  
-  // Offset horizontal: distribuimos las cartas simétricamente
-  const cardSpacing = Math.min(80, 480 / Math.max(total, 1));
-  const totalWidth = cardSpacing * (total - 1);
-  const offsetX = -totalWidth / 2 + cardSpacing * index;
-  
-  // Curvatura vertical (parabola): las del centro suben menos
-  const normalizedPos = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
-  const offsetY = normalizedPos * normalizedPos * 20; // Curvatura suave
-
-  return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
-}
-
-private manoAnteriorIdsBot = new Set<string>();
-public cartasNuevasBot = new Set<string>();
-
-private detectarCartasNuevasBot(nuevaMano: any[]): void {
-  nuevaMano.forEach((carta: any) => {
-    if (!this.manoAnteriorIdsBot.has(carta.id)) {
-      this.cartasNuevasBot.add(carta.id);
-      setTimeout(() => {
-        this.cartasNuevasBot.delete(carta.id);
-        this.cdr.detectChanges();
-      }, 500);
-    }
-  });
-  this.manoAnteriorIdsBot = new Set(nuevaMano.map((c: any) => c.id));
-}
-private detectarCartasNuevas(nuevaMano: any[]): void {
-  const nuevasIds = new Set(nuevaMano.map((c: any) => c.id));
-  
-  nuevaMano.forEach((carta: any) => {
-    if (!this.manoAnteriorIds.has(carta.id)) {
-      // Carta nueva: la marcamos y la desmarcamos después de la animación
-      this.cartasNuevas.add(carta.id);
-      setTimeout(() => {
-        this.cartasNuevas.delete(carta.id);
-        this.cdr.detectChanges();
-      }, 600);
-    }
-  });
-  
-  this.manoAnteriorIds = nuevasIds;
-}
-
-finalizarCoinFlip() {
-  console.log("🏁 Sorteo terminado. Limpiando overlay y cargando tablero...");
-  this.estadoCoinFlip = 'OCULTO';
-  this.lanzada = false;
-  this.girando = false;
-  this.boardVisible = true; // 🚩 ASEGURATE DE QUE ESTO ESTÉ EN TRUE
-  
-  // 🚩 ACÁ ESTÁ EL SECRETO: 
-  // Pedimos los datos del servidor para que el tablero deje de estar vacío
-  this.cargarEstado(); 
-  
-  // Si usás Polling (setInterval), asegurate de que esté prendido acá
-  this.cdr.detectChanges();
-}
-  private reproducirIntro(): void {
-    setTimeout(() => { this.introFadingOut = true;  this.cdr.detectChanges(); }, 2500);
-    setTimeout(() => { this.boardVisible   = true;  this.cdr.detectChanges(); }, 2700);
-    setTimeout(() => { this.showIntro      = false; this.cdr.detectChanges(); }, 3300);
-  }
-
-private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
-  this.turnoOverlayTipo = turno;
-  this.showTurnOverlay = true;
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
-    this.showTurnOverlay = false;
+  iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
+    this.eleccionJugador = eleccion;
+    this.estadoCoinFlip  = 'ESPERANDO_TIRO';
+    this.lanzada         = false;
     this.cdr.detectChanges();
-
-    // Si es el turno del bot, esperamos un segundo más para que "piense"
-    if (turno === 'bot') {
-      setTimeout(() => {
-        this.ejecutarIAEnemiga();
-      }, 1200); // 1.2 segundos de "pensamiento"
-    }
-  }, 2000);
-}
-
-
-private delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-
-onEnergyMouseMove = (event: MouseEvent) => {
-  this.mousePos = { x: event.clientX, y: event.clientY };
-}
-
-// Cambiamos 'onMouseUp' por 'onEnergyMouseUp'
-onEnergyMouseUp = (event: MouseEvent) => {
-  this.isDraggingEnergy = false;
-  window.removeEventListener('mousemove', this.onEnergyMouseMove);
-  window.removeEventListener('mouseup', this.onEnergyMouseUp);
-  this.checkDropTarget(event);
-}
-
-startEnergyDrag(event: MouseEvent, cartaId: string) {
-  // 🚩 IMPORTANTE: Asegurate de tener 'mano' declarada (ver paso siguiente)
-const card = this.partida?.jugador.mano.find((c: any) => c.id === cartaId);
-  if (card?.supertype !== 'Energy') return;
-
-  this.isDraggingEnergy = true;
-  this.selectedEnergyId = cartaId;
-  this.originPos = { x: event.clientX, y: event.clientY };
-  this.mousePos = { x: event.clientX, y: event.clientY };
-
-  window.addEventListener('mousemove', this.onEnergyMouseMove);
-  window.addEventListener('mouseup', this.onEnergyMouseUp);
-}
-
-// 🚩 El método que faltaba copiar
-checkDropTarget(event: MouseEvent) {
-  const element = document.elementFromPoint(event.clientX, event.clientY);
-  const pokemonElement = element?.closest('.pokemon-card-container'); 
-  
-  if (pokemonElement) {
-    const targetId = pokemonElement.getAttribute('data-card-id');
-    if (targetId && this.selectedEnergyId) {
-      // Aquí llamás a tu servicio para unir la energía
-      console.log(`Uniendo energía ${this.selectedEnergyId} a Pokémon ${targetId}`);
-      // this.attachEnergy(targetId, this.selectedEnergyId);
-    }
-  }
-}
-
-getCheckEnergiasAtaque(ataque: any): any[] {
-  if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
-  
-  const poseidas = [...this.partida.jugador.activo.energiasUnidas];
-  const resultado: any[] = [];
-
-  // Recorremos el costo del ataque (ej: ['Fire', 'Colorless'])
-  ataque.costo.forEach((tipoRequerido: string) => {
-    // Buscamos si tenemos esa energía
-    // Si es 'Colorless', cualquier energía sirve
-    const index = poseidas.findIndex(e => 
-      e.tipo === tipoRequerido || (tipoRequerido === 'Colorless')
-    );
-
-    if (index !== -1) {
-      resultado.push({ tipo: tipoRequerido, cumplido: true });
-      poseidas.splice(index, 1); // La "usamos" para el check
-    } else {
-      resultado.push({ tipo: tipoRequerido, cumplido: false });
-    }
-  });
-
-  return resultado;
-}
-// 1. Agregá esta variable al principio de tu clase BattleBoardComponent
-public activoVisualJugador: any = null; // 👈 El HTML mirará ESTE objeto
-public hpRenderJugador: number = 0;
-public bloqueadoPorAnimacion: boolean = false;
-
-cargarEstado(): void {
-  // Candado exterior (para no pedir datos si ya estamos animados)
-  if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando) return;
-
-  this.battleService.getState(this.matchId).subscribe({
-   next: (data) => {
-  if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
-    console.log("🛡️ Polling interceptado.");
-    return; 
-  }
-  if (!data) return;
-
-  const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
-
-  if (data.turnoActual === 'BOT' && hpServidorJugador < this.hpRenderJugador) {
-    this.datosPendientesBot = data; 
-    this.ejecutarIAEnemiga(); 
-    return; 
   }
 
-  // 🚩 PRIMERO detectamos, DESPUÉS asignamos
-  if (data.jugador?.mano) {
-    this.detectarCartasNuevas(data.jugador.mano);
-  }
-  
-  // Forzamos un tick para que Angular aplique la clase nueva-carta
-  // antes de que la carta exista en el DOM con su posición final
-  this.cdr.detectChanges();
-  
-  this.partida = data;
-  if (!this.datosPendientesBot) {
-    this.hpRenderJugador = hpServidorJugador;
-  }
-  this.cdr.detectChanges();
-}
-  });
-}
-
-public anguloFinal: number = 0;
-onMouseDown(event: MouseEvent) {
-  this.yStart = event.clientY;
-}
-async onMouseUp(event: MouseEvent) {
-  if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
-  
-  this.yEnd = event.clientY;
-  const diferencia = this.yStart - this.yEnd;
-  const fuerza = Math.min(Math.max(diferencia, 50), 400); 
-
-  if (fuerza > 50) {
-    this.lanzada = true;
-    this.girando = true; // Empieza el giro rápido (CSS animation)
-    this.estadoCoinFlip = 'GIRANDO';
-
-    // 1. Calculamos la física del vuelo
-    const duracionVuelo = 1.8; // Segundos fijos para consistencia
-    const vueltasBase = 5 + Math.floor(fuerza / 50); // Mínimo 5 vueltas, más según fuerza
-    
-    document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza * 1.3}px`);
-    document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
-
-    this.cdr.detectChanges();
-
+  async seleccionarTurno(yoVoyPrimero: boolean) {
     try {
-      // 2. Pedimos el resultado al servidor
-      const salioCara = await firstValueFrom(this.battleService.lanzarMoneda(this.matchId!));
-      this.resultadoMoneda = salioCara ? 'CARA' : 'CRUZ';
-
-      // 3. Calculamos el ángulo final para que la cara sea la correcta
-      // Cada vuelta son 360 grados. Cruz es 180 grados extra.
-      if (this.resultadoMoneda === 'CARA') {
-        this.anguloFinal = vueltasBase * 360; 
-      } else {
-        this.anguloFinal = (vueltasBase * 360) + 180;
-      }
-
-      console.log(`🎰 Resultado: ${this.resultadoMoneda} | Ángulo: ${this.anguloFinal}deg`);
-
-      // 4. Esperamos a que la moneda esté por aterrizar (un poco antes del final)
-      await this.delay(duracionVuelo * 1000 - 300); 
-
-      // 5. 🚩 FRENADO: Apagamos el giro infinito. 
-      // El HTML aplicará el [style.transform] y el CSS hará el frenado suave (Ease-out)
-      this.girando = false;
-      this.cdr.detectChanges();
-
-      await this.delay(1200); // Pausa para ver el resultado quieto
-
-      // 6. Resolución
-      if (this.eleccionJugador === this.resultadoMoneda) {
-        this.estadoCoinFlip = 'ELEGIR_TURNO';
-      } else {
-        this.estadoCoinFlip = 'RESULTADO_BOT';
-        this.cdr.detectChanges();
-        await this.delay(2000);
-        await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
-        this.finalizarCoinFlip();
-      }
-
-    } catch (e) {
-      console.error("Error en sorteo:", e);
+      await firstValueFrom(this.battleService.elegirTurno(this.matchId!, yoVoyPrimero));
+      this.finalizarCoinFlip();
+    } catch (error) {
+      console.error('Error al elegir turno:', error);
       this.finalizarCoinFlip();
     }
+  }
+
+  finalizarCoinFlip() {
+    this.estadoCoinFlip = 'OCULTO';
+    this.lanzada        = false;
+    this.girando        = false;
+    this.boardVisible   = true;
+    this.cargarEstado();
     this.cdr.detectChanges();
   }
-}
 
-procesarCambioDeTurnoDramatico(dataServidor: any) {
-  this.bloqueadoPorAnimacion = true;
-
-  // Primero: Mostramos el resultado de TU ataque (si bajó la vida del bot)
-  this.partida = dataServidor; 
-  // Pero OJO: mantenemos TU vida alta manualmente un momento
-  // para que no parezca reflect.
-  
-  setTimeout(() => {
-    // Segundo: Mostramos el cartel gigante de "TURNO DEL BOT"
-    this.turnoOverlayTipo = 'bot';
-    this.showTurnOverlay = true;
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      this.showTurnOverlay = false;
-      this.bloqueadoPorAnimacion = false; // Aquí liberamos para que el próximo poll anime el golpe del bot
-      this.cdr.detectChanges();
-    }, 2000); // 2 segundos de cartel
-
-  }, 1000); // 1 segundo de delay después de tu ataque
-}
-
-iniciarTransicionTurnoBot(nuevoEstado: any) {
-  this.bloqueadoPorAnimacion = true; // Frenamos cualquier otra actualización
-  
-  // 🚩 MOSTRAMOS EL OVERLAY "TURNO DEL BOT"
-  this.turnoOverlayTipo = 'bot';
-  this.showTurnOverlay = true;
-  this.cdr.detectChanges();
-
-  // Esperamos 2 segundos de "aire"
-  setTimeout(() => {
-    this.showTurnOverlay = false;
-    
-    // Ahora sí, actualizamos el estado visual
-    this.partida = nuevoEstado;
-    this.cdr.detectChanges();
-
-    // Le damos 500ms más antes de que el Caterpie salte
-    setTimeout(() => {
-      this.bloqueadoPorAnimacion = false;
-      // Si el nuevo estado dice que el bot ya atacó, 
-      // la función ejecutarIAEnemiga() se disparará en el próximo poll
-    }, 500);
-
-  }, 2000); // 2 segundos es el tiempo ideal para el cartel
-}
-
-actualizarSeguridadEstado(data: any) {
-  if (data.turnoActual === 'JUGADOR') {
-    // Si es mi turno, el bot NO puede estar atacando, reseteamos por seguridad
-    this.botEstaAtacando = false;
-    this.bloqueadoPorAnimacion = false;
-    this.cargandoAccion = false;
+  onMouseDown(event: MouseEvent) {
+    this.yStart = event.clientY;
   }
-}
-private intentosBotSinAccion = 0;
-private ultimaCantidadCartasBot = -1;
-private ciclosSinCambio = 0;
-private hpVisualInterno: number = 0;
 
+  async onMouseUp(event: MouseEvent) {
+    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
 
-iniciarPolling(): void {
-  if (this.pollingPartida) clearInterval(this.pollingPartida);
+    this.yEnd = event.clientY;
+    const diferencia = this.yStart - this.yEnd;
+    const fuerza = Math.min(Math.max(diferencia, 50), 400);
 
-  this.pollingPartida = setInterval(() => {
-    // Si estamos animando, ni siquiera pedimos datos para no ensuciar el flujo
-    if (this.partida?.turnoActual === 'BOT' && !this.bloqueadoPorAnimacion) {
-this.cargarEstado();    }
-  }, 2000);
-}
-forzarUpdate() {
-  this.battleService.getState(this.matchId!).subscribe({
-  next: async (data) => {
-    if (!data) return;
+    if (fuerza > 50) {
+      this.lanzada         = true;
+      this.girando         = true;
+      this.estadoCoinFlip  = 'GIRANDO';
 
-    // A. ¿DETECTAMOS CAMBIO DE TURNO EN ESTE PAQUETE?
-    if (this.partida?.turnoActual === 'JUGADOR' && data.turnoActual === 'BOT') {
-      
-      this.bloqueadoPorAnimacion = true; // Frenamos cualquier otro polling
+      const duracionVuelo = 1.8;
+      const vueltasBase   = 5 + Math.floor(fuerza / 50);
 
-      // 1. MOSTRAR TU ATAQUE PRIMERO
-      // Actualizamos la partida pero "MANTENEMOS" tu HP viejo para que no baje ya.
-      const miHpAntesDeQueMePeguen = this.hpRenderJugador; 
-      this.partida = data; 
-      this.hpRenderJugador = miHpAntesDeQueMePeguen; // Forzamos tu vida llena
+      document.documentElement.style.setProperty('--altura-vuelo',   `-${fuerza * 1.3}px`);
+      document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
+
       this.cdr.detectChanges();
 
-      console.log("🎬 Paso 1: Tu ataque impactó (Vida del bot bajó).");
-      await new Promise(f => setTimeout(f, 1200)); // Pausa para que el usuario vea su daño
+      try {
+        const salioCara      = await firstValueFrom(this.battleService.lanzarMoneda(this.matchId!));
+        this.resultadoMoneda = salioCara ? 'CARA' : 'CRUZ';
 
-      // 2. ANUNCIAR EL TURNO DEL BOT
-      this.turnoOverlayTipo = 'bot';
-      this.showTurnOverlay = true;
-      this.cdr.detectChanges();
-      
-      await new Promise(f => setTimeout(f, 2000)); // El cartel de "TURNO DEL BOT"
-      this.showTurnOverlay = false;
-      this.cdr.detectChanges();
+        this.anguloFinal = this.resultadoMoneda === 'CARA'
+          ? vueltasBase * 360
+          : vueltasBase * 360 + 180;
 
-      // 3. EJECUTAR EL ATAQUE DEL BOT
-      // Ahora sí, disparamos la animación del bicho saltando
-      console.log("🎬 Paso 3: El Bot inicia su salto.");
-      this.ejecutarIAEnemigaConData(data); 
-      
-      return; // Salimos para que el código de abajo no pise nada
+        await this.delay(duracionVuelo * 1000 - 300);
+        this.girando = false;
+        this.cdr.detectChanges();
+
+        await this.delay(1200);
+
+        if (this.eleccionJugador === this.resultadoMoneda) {
+          this.estadoCoinFlip = 'ELEGIR_TURNO';
+        } else {
+          this.estadoCoinFlip = 'RESULTADO_BOT';
+          this.cdr.detectChanges();
+          await this.delay(2000);
+          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
+          this.finalizarCoinFlip();
+        }
+      } catch (e) {
+        console.error('Error en sorteo:', e);
+        this.finalizarCoinFlip();
+      }
+      this.cdr.detectChanges();
     }
-
-    // B. Actualización normal (si no hubo cambio de turno)
-    this.partida = data;
-    this.hpRenderJugador = data.jugador?.activo?.hpActual || 0; 
-    this.cdr.detectChanges();
   }
-});
-}
 
-puedePagarRetiro(): boolean {
-  const activo = this.partida?.jugador?.activo;
-  if (!activo) return false;
-  // Comparamos cantidad de energías unidas contra el costo de la carta
-  return activo.energiasUnidas.length >= activo.card.costoRetirada;
-}
+  // ═══════════════════════════════════════════════
+  // CARGA DE ESTADO
+  // ═══════════════════════════════════════════════
 
+  cargarEstado(): void {
+    if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando) return;
 
-iniciarModoRetirada() {
-  this.showHabilidadesPanel = false; // Cerramos el menú
-  this.modoSeleccionRetirada = true;  // Empezamos a hacer brillar la banca
-  console.log("🔄 Modo retirada activo: Elegí un suplente de la banca.");
-}
+    this.battleService.getState(this.matchId).subscribe({
+      next: (data) => {
+        if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
+          console.log('🛡️ Polling interceptado.');
+          return;
+        }
+        if (!data) return;
 
-ejecutarIAEnemigaConData(estadoFinal: any) {
-  this.botEstaAtacando = true;
-  this.animandoBotAtaque = true; 
-  this.cdr.detectChanges();
+        const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
 
-  // El bicho viaja hacia vos
-  setTimeout(() => {
-    
-    // 💥 IMPACTO: Mostramos el flash primero
-    this.showImpactFlash = true;
+        if (data.turnoActual === 'BOT' && hpServidorJugador < this.hpRenderJugador) {
+          this.datosPendientesBot = data;
+          this.ejecutarIAEnemiga();
+          return;
+        }
+
+        // ═══ DETECCIÓN DE CARTAS NUEVAS ═══
+        // PRIMERO detectamos (antes de asignar this.partida),
+        // luego forzamos detectChanges para que Angular aplique la clase,
+        // DESPUÉS asignamos los datos nuevos.
+        if (data.jugador?.mano) {
+          this.detectarCartasNuevas(data.jugador.mano);
+        }
+        if (data.bot?.mano) {
+          this.detectarCartasNuevasBot(data.bot.mano);
+        }
+
+        this.cdr.detectChanges(); // tick intermedio → Angular registra las clases nueva-carta
+
+        this.partida = data;
+        if (!this.datosPendientesBot) {
+          this.hpRenderJugador = hpServidorJugador;
+        }
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════
+  // DETECCIÓN DE CARTAS NUEVAS
+  // ═══════════════════════════════════════════════
+
+  private detectarCartasNuevas(nuevaMano: any[]): void {
+    nuevaMano.forEach((carta: any) => {
+      if (!this.manoAnteriorIds.has(carta.id)) {
+        this.cartasNuevas.add(carta.id);
+        setTimeout(() => {
+          this.cartasNuevas.delete(carta.id);
+          this.cdr.detectChanges();
+        }, 700);
+      }
+    });
+    this.manoAnteriorIds = new Set(nuevaMano.map((c: any) => c.id));
+  }
+
+  private detectarCartasNuevasBot(nuevaMano: any[]): void {
+    nuevaMano.forEach((carta: any) => {
+      if (!this.manoAnteriorIdsBot.has(carta.id)) {
+        this.cartasNuevasBot.add(carta.id);
+        setTimeout(() => {
+          this.cartasNuevasBot.delete(carta.id);
+          this.cdr.detectChanges();
+        }, 550);
+      }
+    });
+    this.manoAnteriorIdsBot = new Set(nuevaMano.map((c: any) => c.id));
+  }
+
+  // ═══════════════════════════════════════════════
+  // FAN DE CARTAS (posicionamiento sin bugs)
+  // ═══════════════════════════════════════════════
+
+  getCardFanTransform(index: number, total: number): string {
+    const maxAngle   = Math.min(4 * total, 35);
+    const angleStep  = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
+    const angle      = total > 1 ? -maxAngle + angleStep * index : 0;
+    const cardSpacing = Math.min(80, 480 / Math.max(total, 1));
+    const totalWidth  = cardSpacing * (total - 1);
+    const offsetX     = -totalWidth / 2 + cardSpacing * index;
+    const normalizedPos = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
+    const offsetY     = normalizedPos * normalizedPos * 20;
+    return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
+  }
+
+  // ═══════════════════════════════════════════════
+  // POLLING
+  // ═══════════════════════════════════════════════
+
+  iniciarPolling(): void {
+    if (this.pollingPartida) clearInterval(this.pollingPartida);
+    this.pollingPartida = setInterval(() => {
+      if (this.partida?.turnoActual === 'BOT' && !this.bloqueadoPorAnimacion) {
+        this.cargarEstado();
+      }
+    }, 2000);
+  }
+
+  // ═══════════════════════════════════════════════
+  // TURNOS Y OVERLAYS
+  // ═══════════════════════════════════════════════
+
+  private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
+    this.turnoOverlayTipo = turno;
+    this.showTurnOverlay  = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.showTurnOverlay = false;
+      this.cdr.detectChanges();
+      if (turno === 'bot') {
+        setTimeout(() => this.ejecutarIAEnemiga(), 1200);
+      }
+    }, 2000);
+  }
+
+  procesarCambioDeTurnoDramatico(dataServidor: any) {
+    this.bloqueadoPorAnimacion = true;
+    this.partida = dataServidor;
+    setTimeout(() => {
+      this.turnoOverlayTipo = 'bot';
+      this.showTurnOverlay  = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.showTurnOverlay       = false;
+        this.bloqueadoPorAnimacion = false;
+        this.cdr.detectChanges();
+      }, 2000);
+    }, 1000);
+  }
+
+  iniciarTransicionTurnoBot(nuevoEstado: any) {
+    this.bloqueadoPorAnimacion = true;
+    this.turnoOverlayTipo      = 'bot';
+    this.showTurnOverlay       = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.showTurnOverlay = false;
+      this.partida         = nuevoEstado;
+      this.cdr.detectChanges();
+      setTimeout(() => { this.bloqueadoPorAnimacion = false; }, 500);
+    }, 2000);
+  }
+
+  actualizarSeguridadEstado(data: any) {
+    if (data.turnoActual === 'JUGADOR') {
+      this.botEstaAtacando       = false;
+      this.bloqueadoPorAnimacion = false;
+      this.cargandoAccion        = false;
+    }
+  }
+
+  // ═══════════════════════════════════════════════
+  // IA ENEMIGA
+  // ═══════════════════════════════════════════════
+
+  ejecutarIAEnemiga() {
+    this.botEstaAtacando  = true;
+    this.animandoBotAtaque = true;
     this.cdr.detectChanges();
 
-    // 🚩 FIX NG0100: Retrasamos un toque la actualización de la muerte
-    // para que Angular termine su ciclo anterior en paz.
     setTimeout(() => {
-      this.partida = estadoFinal;
-      
-      // ⚠️ CLAVE: Si el Pokémon muere, 'activo' puede venir en null desde el server.
-      // Usamos los signos de pregunta (?) para que no explote.
-      this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
-      
+      this.showImpactFlash = true;
+      if (this.datosPendientesBot) {
+        this.partida           = this.datosPendientesBot;
+        this.hpRenderJugador   = this.partida.jugador.activo.hpActual;
+        this.datosPendientesBot = null;
+      }
+      this.cdr.detectChanges();
+
+      setTimeout(() => { this.showImpactFlash = false; this.cdr.detectChanges(); }, 150);
+
+      setTimeout(() => {
+        this.animandoBotAtaque = false;
+        this.botEstaAtacando   = false;
+        this.cdr.detectChanges();
+      }, 600);
+    }, 450);
+  }
+
+  ejecutarIAEnemigaConData(estadoFinal: any) {
+    this.botEstaAtacando  = true;
+    this.animandoBotAtaque = true;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.showImpactFlash = true;
+      this.cdr.detectChanges();
+
+      setTimeout(() => {
+        this.partida         = estadoFinal;
+        this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
+        this.showImpactFlash = false;
+        this.cdr.detectChanges();
+      }, 150);
+
+      setTimeout(() => {
+        Promise.resolve().then(() => {
+          this.animandoBotAtaque     = false;
+          this.botEstaAtacando       = false;
+          this.cargandoAccion        = false;
+          this.bloqueadoPorAnimacion = false;
+          this.ataqueRealizado       = false;
+          this.cdr.detectChanges();
+        });
+      }, 600);
+    }, 450);
+  }
+
+  forzarUpdate() {
+    this.battleService.getState(this.matchId!).subscribe({
+      next: async (data) => {
+        if (!data) return;
+        if (this.partida?.turnoActual === 'JUGADOR' && data.turnoActual === 'BOT') {
+          this.bloqueadoPorAnimacion = true;
+          const miHp = this.hpRenderJugador;
+          this.partida         = data;
+          this.hpRenderJugador = miHp;
+          this.cdr.detectChanges();
+          await new Promise(f => setTimeout(f, 1200));
+          this.turnoOverlayTipo = 'bot';
+          this.showTurnOverlay  = true;
+          this.cdr.detectChanges();
+          await new Promise(f => setTimeout(f, 2000));
+          this.showTurnOverlay = false;
+          this.cdr.detectChanges();
+          this.ejecutarIAEnemigaConData(data);
+          return;
+        }
+        this.partida         = data;
+        this.hpRenderJugador = data.jugador?.activo?.hpActual || 0;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ═══════════════════════════════════════════════
+  // ACCIONES DE JUEGO
+  // ═══════════════════════════════════════════════
+
+  async ejecutarAtaqueSecuencia(nombreAtaque: string) {
+    if (this.cargandoAccion || !nombreAtaque) return;
+
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion        = true;
+    this.ataqueRealizado       = true;
+
+    const miVidaIntacta = this.hpRenderJugador;
+    const habilidad     = this.partida.jugador.activo.card.ataques.find((a: any) => a.nombre === nombreAtaque);
+    const tipoEnergia   = habilidad?.costo[0] || 'Colorless';
+
+    try {
+      await firstValueFrom(this.battleService.atacar(this.matchId!, nombreAtaque));
+
+      this.animandoAtaque = true;
+      this.cdr.detectChanges();
+
+      await this.delay(400);
+      this.dispararParticulas('bot', tipoEnergia);
+      this.showImpactFlash = true;
+      this.cdr.detectChanges();
+
+      await this.delay(200);
       this.showImpactFlash = false;
       this.cdr.detectChanges();
-    }, 150); // Lo actualizamos junto con el fin del flash rojo
 
-    // El bicho vuelve y liberamos TODO de forma asíncrona segura
-    setTimeout(() => {
-      // Usamos Promise.resolve().then() que es la forma más pro de evitar NG0100
-      // Le dice a Angular: "Hacé esto justo después de terminar lo que estás haciendo"
-      Promise.resolve().then(() => {
-        this.animandoBotAtaque = false;
-        this.botEstaAtacando = false;
-        this.cargandoAccion = false;
-        this.bloqueadoPorAnimacion = false;
-        this.ataqueRealizado = false;
+      await this.delay(400);
+      this.animandoAtaque = false;
+      this.cdr.detectChanges();
+
+      const estadoFinal      = await firstValueFrom(this.battleService.getState(this.matchId!));
+      const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
+      estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
+
+      this.partida         = estadoIntermedio;
+      this.hpRenderJugador = miVidaIntacta;
+      this.cdr.detectChanges();
+
+      const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
+
+      if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
+        await this.delay(1000);
+        this.cargandoAccion   = false;
+        this.turnoOverlayTipo = 'bot';
+        this.showTurnOverlay  = true;
         this.cdr.detectChanges();
-        console.log("✅ Turno del bot terminado. UI liberada (Sin NG0100).");
+        await this.delay(2000);
+        this.showTurnOverlay = false;
+        this.cdr.detectChanges();
+        await this.delay(400);
+        this.ejecutarIAEnemigaConData(estadoFinal);
+      } else {
+        this.partida               = estadoFinal;
+        this.hpRenderJugador       = miVidaDespuesDelBot;
+        this.cargandoAccion        = false;
+        this.bloqueadoPorAnimacion = false;
+        this.ataqueRealizado       = false;
+        this.cdr.detectChanges();
+      }
+    } catch (error: any) {
+      this.cargandoAccion        = false;
+      this.ataqueRealizado       = false;
+      this.bloqueadoPorAnimacion = false;
+      alert('Error al atacar: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
+    }
+  }
+
+  async pasarTurno(): Promise<void> {
+    if (this.partida?.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+
+    this.cargandoAccion        = true;
+    this.bloqueadoPorAnimacion = true;
+    const miVidaIntacta        = this.hpRenderJugador;
+
+    try {
+      await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
+      const estadoFinal      = await firstValueFrom(this.battleService.getState(this.matchId!));
+      const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
+      if (this.partida?.jugador) {
+        estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
+      }
+
+      this.partida         = estadoIntermedio;
+      this.hpRenderJugador = miVidaIntacta;
+      this.cdr.detectChanges();
+
+      const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
+
+      if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
+        this.turnoOverlayTipo = 'bot';
+        this.showTurnOverlay  = true;
+        this.cdr.detectChanges();
+        await this.delay(2000);
+        this.showTurnOverlay = false;
+        this.cdr.detectChanges();
+        await this.delay(400);
+        this.ejecutarIAEnemigaConData(estadoFinal);
+      } else {
+        this.partida               = estadoFinal;
+        this.hpRenderJugador       = miVidaDespuesDelBot;
+        this.cargandoAccion        = false;
+        this.bloqueadoPorAnimacion = false;
+        this.cdr.detectChanges();
+      }
+    } catch (error: any) {
+      this.cargandoAccion        = false;
+      this.bloqueadoPorAnimacion = false;
+      alert('Error al pasar turno: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
+    }
+  }
+
+  realizarAccion(habilidad: any): void {
+    this.showHabilidadesPanel = false;
+    if (!this.validarEnergiaAtaque(habilidad)) {
+      alert('¡No tenés suficiente energía para usar ' + habilidad.nombre + '!');
+      return;
+    }
+    this.ejecutarAtaqueSecuencia(habilidad.nombre);
+  }
+
+  intentarAbrirHabilidades(event?: MouseEvent): void {
+    if (event) { event.stopPropagation(); event.preventDefault(); }
+    if (this.partida?.turnoActual === 'JUGADOR') {
+      this.botEstaAtacando       = false;
+      this.bloqueadoPorAnimacion = false;
+    }
+    if (this.cargandoAccion) { console.warn('⚠️ Bloqueado por cargandoAccion'); return; }
+    this.showHabilidadesPanel = !this.showHabilidadesPanel;
+    this.cdr.detectChanges();
+  }
+
+  jugarCarta(carta: any): void {
+    if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+    if (this.esEnergia(carta)) { this.gestionarUnionEnergia(carta); return; }
+    if (this.esPokemon(carta)) {
+      if (!this.partida.jugador.activo && this.partida.jugador.banca.length > 0) {
+        alert('¡Primero tenés que subir un Pokémon de tu banca al puesto activo!');
+        return;
+      }
+      this.gestionarBajadaPokemon(carta);
+    }
+  }
+
+  seleccionarBanca(p: any) {
+    if (this.modoSeleccionRetirada) {
+      this.cargandoAccion = true;
+      this.battleService.retirarPokemon(this.matchId!, p.card.id).subscribe({
+        next: () => { this.modoSeleccionRetirada = false; this.cargandoAccion = false; this.cargarEstado(); },
+        error: (err) => { this.modoSeleccionRetirada = false; this.cargandoAccion = false; alert(err.error || 'No se pudo realizar la retirada.'); }
       });
-    }, 600);
+    } else if (!this.partida?.jugador?.activo) {
+      this.cargandoAccion = true;
+      this.battleService.subirAActivo(this.matchId!, p.card.id).subscribe({
+        next: () => { this.cargandoAccion = false; this.cargarEstado(); },
+        error: (err) => { this.cargandoAccion = false; console.error(err); alert('No se pudo subir el Pokémon al puesto activo.'); }
+      });
+    }
+  }
 
-  }, 450); 
-}
-// Helper para no llenar de setTimeouts
+  iniciarModoRetirada() {
+    this.showHabilidadesPanel  = false;
+    this.modoSeleccionRetirada = true;
+  }
 
-getFaltantesAtaque(ataque: any): any[] {
-  if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
-  
-  const poseidas = [...this.partida.jugador.activo.energiasUnidas];
-  const faltantesMap: { [key: string]: number } = {};
+  retirarPokemon(suplente: any) {
+    if (this.cargandoAccion || this.partida.turnoActual !== 'JUGADOR') return;
+    const costo = this.partida.jugador.activo.card.costoRetirada;
+    if (confirm(`¿Querés retirar a ${this.partida.jugador.activo.card.nombre}? Costará ${costo} energía(s).`)) {
+      this.cargandoAccion = true;
+      this.battleService.retirarPokemon(this.matchId!, suplente.card.id).subscribe({
+        next: () => { this.cargarEstado(); this.cargandoAccion = false; },
+        error: (err) => { this.cargandoAccion = false; alert(err.error || 'No tenés suficiente energía para retirarte.'); }
+      });
+    }
+  }
 
-  // 1. Clonamos el costo para no romper el original
-  const costoRestante = [...ataque.costo];
+  soltarCarta(event: CdkDragDrop<any[]>, zona: 'activo' | 'banca'): void {
+    if (event.previousContainer === event.container) return;
+    const cartaArrastrada = event.item.data;
+    if (this.esEnergia(cartaArrastrada)) {
+      this.gestionarUnionEnergia(cartaArrastrada);
+    } else if (this.esPokemon(cartaArrastrada)) {
+      this.jugarCarta(cartaArrastrada);
+    }
+  }
 
-  // 2. Primero restamos las específicas (Fuego, Agua, etc.)
-  for (let i = costoRestante.length - 1; i >= 0; i--) {
-    const tipoReq = costoRestante[i];
-    if (tipoReq !== 'Colorless') {
-      const index = poseidas.findIndex(p => p.tipo === tipoReq);
-      if (index !== -1) {
-        poseidas.splice(index, 1);
-        costoRestante.splice(i, 1);
+  private gestionarBajadaPokemon(carta: any): void {
+    if (this.cargandoAccion) return;
+    this.cargandoAccion = true;
+    this.battleService.jugarPokemon(this.matchId!, carta.id).subscribe({
+      next: () => { this.cargandoAccion = false; this.cargarEstado(); },
+      error: (err) => { this.cargandoAccion = false; console.error(err); alert(err.error || 'No se pudo bajar el Pokémon.'); }
+    });
+  }
+
+  private gestionarUnionEnergia(cartaEnergia: any): void {
+    if (!this.partida.jugador.activo) { alert('¡Necesitás un Pokémon activo!'); return; }
+    this.cargandoAccion = true;
+    this.battleService.unirEnergia(this.matchId!, this.partida.jugador.activo.card.id, cartaEnergia.id).subscribe({
+      next: () => { this.cargandoAccion = false; this.cargarEstado(); },
+      error: (err: any) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energía.'); }
+    });
+  }
+
+  puedePagarRetiro(): boolean {
+    const activo = this.partida?.jugador?.activo;
+    if (!activo) return false;
+    return activo.energiasUnidas.length >= activo.card.costoRetirada;
+  }
+
+  puedeAtacar(): boolean {
+    return !!(
+      this.partida?.jugador?.activo &&
+      this.partida?.bot?.activo &&
+      this.partida?.turnoActual === 'JUGADOR' &&
+      !this.ataqueRealizado &&
+      (this.partida?.jugador?.activo?.energiasUnidas?.length ?? 0) > 0
+    );
+  }
+
+  // ═══════════════════════════════════════════════
+  // ENERGÍA DRAG
+  // ═══════════════════════════════════════════════
+
+  onEnergyMouseMove = (event: MouseEvent) => { this.mousePos = { x: event.clientX, y: event.clientY }; };
+
+  onEnergyMouseUp = (event: MouseEvent) => {
+    this.isDraggingEnergy = false;
+    window.removeEventListener('mousemove', this.onEnergyMouseMove);
+    window.removeEventListener('mouseup',   this.onEnergyMouseUp);
+    this.checkDropTarget(event);
+  };
+
+  startEnergyDrag(event: MouseEvent, cartaId: string) {
+    const card = this.partida?.jugador.mano.find((c: any) => c.id === cartaId);
+    if (card?.supertype !== 'Energy') return;
+    this.isDraggingEnergy  = true;
+    this.selectedEnergyId  = cartaId;
+    this.originPos         = { x: event.clientX, y: event.clientY };
+    this.mousePos          = { x: event.clientX, y: event.clientY };
+    window.addEventListener('mousemove', this.onEnergyMouseMove);
+    window.addEventListener('mouseup',   this.onEnergyMouseUp);
+  }
+
+  checkDropTarget(event: MouseEvent) {
+    const element       = document.elementFromPoint(event.clientX, event.clientY);
+    const pokemonElement = element?.closest('.pokemon-card-container');
+    if (pokemonElement) {
+      const targetId = pokemonElement.getAttribute('data-card-id');
+      if (targetId && this.selectedEnergyId) {
+        console.log(`Uniendo energía ${this.selectedEnergyId} a Pokémon ${targetId}`);
       }
     }
   }
 
-  // 3. Luego restamos las Incoloras con lo que sobre
-  for (let i = costoRestante.length - 1; i >= 0; i--) {
-    if (costoRestante[i] === 'Colorless' && poseidas.length > 0) {
-      poseidas.splice(0, 1);
-      costoRestante.splice(i, 1);
+  // ═══════════════════════════════════════════════
+  // VALIDACIÓN DE ENERGÍAS
+  // ═══════════════════════════════════════════════
+
+  validarEnergiaAtaque(ataque: any): boolean {
+    if (!ataque || !this.partida?.jugador?.activo) return false;
+
+    const normalizarTipo = (tipo: string): string => {
+      const t = tipo.toLowerCase();
+      if (t.includes('grass')     || t.includes('planta'))              return 'Grass';
+      if (t.includes('fire')      || t.includes('fuego'))               return 'Fire';
+      if (t.includes('water')     || t.includes('agua'))                return 'Water';
+      if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
+      if (t.includes('psychic')   || t.includes('psíquica')  || t.includes('psiquica'))  return 'Psychic';
+      if (t.includes('fighting')  || t.includes('lucha'))               return 'Fighting';
+      if (t.includes('darkness')  || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
+      if (t.includes('metal')     || t.includes('acero'))               return 'Metal';
+      if (t.includes('dragon')    || t.includes('dragón'))              return 'Dragon';
+      if (t.includes('fairy')     || t.includes('hada'))                return 'Fairy';
+      return tipo;
+    };
+
+    const misEnergias = this.partida.jugador.activo.energiasUnidas.map((e: any) => {
+      const texto = (e.tipo === 'Energy' || !e.tipo) ? e.nombre : e.tipo;
+      return normalizarTipo(texto);
+    });
+
+    const costoRequerido = [...ataque.costo].map((t: string) => normalizarTipo(t));
+
+    for (let i = costoRequerido.length - 1; i >= 0; i--) {
+      const tipoReq = costoRequerido[i];
+      if (tipoReq !== 'Colorless') {
+        const index = misEnergias.indexOf(tipoReq);
+        if (index !== -1) { misEnergias.splice(index, 1); costoRequerido.splice(i, 1); }
+        else { return false; }
+      }
     }
+    return misEnergias.length >= costoRequerido.length;
   }
 
-  // 4. Lo que quedó en costoRestante es lo que falta. Agrupamos:
-  costoRestante.forEach(tipo => {
-    faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1;
-  });
+  getCheckEnergiasAtaque(ataque: any): any[] {
+    if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
+    const poseidas  = [...this.partida.jugador.activo.energiasUnidas];
+    const resultado: any[] = [];
+    ataque.costo.forEach((tipoRequerido: string) => {
+      const index = poseidas.findIndex(e => e.tipo === tipoRequerido || tipoRequerido === 'Colorless');
+      if (index !== -1) { resultado.push({ tipo: tipoRequerido, cumplido: true  }); poseidas.splice(index, 1); }
+      else              { resultado.push({ tipo: tipoRequerido, cumplido: false }); }
+    });
+    return resultado;
+  }
 
-  // Convertimos a array para el *ngFor
-  return Object.keys(faltantesMap).map(tipo => ({
-    tipo,
-    cantidad: faltantesMap[tipo]
-  }));
-}
+  getFaltantesAtaque(ataque: any): any[] {
+    if (!this.partida?.jugador?.activo?.energiasUnidas) return [];
+    const poseidas      = [...this.partida.jugador.activo.energiasUnidas];
+    const costoRestante = [...ataque.costo];
+    const faltantesMap: { [key: string]: number } = {};
 
-ejecutarIAEnemiga() {
-  this.botEstaAtacando = true;
-  this.animandoBotAtaque = true; // El Caterpie salta (CSS transition)
-  this.cdr.detectChanges();
-
-  // El tiempo del salto suele ser 400ms-500ms
-  setTimeout(() => {
-    // 💥 IMPACTO: Momento exacto donde el bicho toca al jugador
-    this.showImpactFlash = true;
-    
-    // RECIÉN ACÁ soltamos el daño que teníamos guardado
-    if (this.datosPendientesBot) {
-      this.partida = this.datosPendientesBot;
-      this.hpRenderJugador = this.partida.jugador.activo.hpActual;
-      this.datosPendientesBot = null;
+    for (let i = costoRestante.length - 1; i >= 0; i--) {
+      const tipoReq = costoRestante[i];
+      if (tipoReq !== 'Colorless') {
+        const index = poseidas.findIndex(p => p.tipo === tipoReq);
+        if (index !== -1) { poseidas.splice(index, 1); costoRestante.splice(i, 1); }
+      }
     }
-    
-    this.cdr.detectChanges();
+    for (let i = costoRestante.length - 1; i >= 0; i--) {
+      if (costoRestante[i] === 'Colorless' && poseidas.length > 0) {
+        poseidas.splice(0, 1); costoRestante.splice(i, 1);
+      }
+    }
+    costoRestante.forEach(tipo => { faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1; });
+    return Object.keys(faltantesMap).map(tipo => ({ tipo, cantidad: faltantesMap[tipo] }));
+  }
 
-    // Limpiamos el flash rápido
-    setTimeout(() => { this.showImpactFlash = false; this.cdr.detectChanges(); }, 150);
+  // ═══════════════════════════════════════════════
+  // SPRITES Y UTILIDADES
+  // ═══════════════════════════════════════════════
 
-    // El bicho vuelve a su lugar (800ms total)
-    setTimeout(() => {
-      this.animandoBotAtaque = false;
-      this.botEstaAtacando = false;
-      this.cdr.detectChanges();
-    }, 600);
-  }, 450);
-}
   private normalizarNombre(nombre: string): string {
     if (!nombre) return '';
     return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
   private getPokemonNum(nombreCarta: string): number {
-    const norm = this.normalizarNombre(nombreCarta);
+    const norm    = this.normalizarNombre(nombreCarta);
     if (this.pokedexNum[norm]) return this.pokedexNum[norm];
     const palabras = norm.split(/[\s'']+/).reverse();
     for (const p of palabras) { if (this.pokedexNum[p]) return this.pokedexNum[p]; }
@@ -841,14 +1003,11 @@ ejecutarIAEnemiga() {
     return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${num}.png`;
   }
 
-  onSpriteError(event: Event): void {
-    (event.target as HTMLImageElement).style.display = 'none';
-  }
+  onSpriteError(event: Event): void { (event.target as HTMLImageElement).style.display = 'none'; }
 
   getHpPercent(pokemon: any): number {
     if (!pokemon?.hpActual) return 0;
-    const max = this.getHpMax(pokemon);
-    return Math.max(0, Math.min(100, (pokemon.hpActual / max) * 100));
+    return Math.max(0, Math.min(100, (pokemon.hpActual / this.getHpMax(pokemon)) * 100));
   }
 
   getHpMax(pokemon: any): number {
@@ -858,477 +1017,55 @@ ejecutarIAEnemiga() {
   getImagenCarta(id: string): string { return `images/cards/${id}.png`; }
   getEmptySlots(n: number): number[] { return Array(Math.max(0, 5 - n)).fill(0); }
 
-esEnergia(carta: any): boolean {
-    // 🚩 FIX: Ahora miramos el supertype oficial que manda el backend
-    return carta?.supertype === 'Energy';
-  }
+  esEnergia(carta: any): boolean  { return carta?.supertype === 'Energy'; }
+  esPokemon(carta: any): boolean  { return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon'; }
 
-  esPokemon(carta: any): boolean {
-    // 🚩 FIX: Filtramos estrictamente por el supertype Pokémon
-    return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon';
-  }
-  puedeAtacar(): boolean {
-    return !!(
-      this.partida?.jugador?.activo &&
-      this.partida?.bot?.activo &&
-      this.partida?.turnoActual === 'JUGADOR' &&
-      !this.ataqueRealizado &&
-      (this.partida?.jugador?.activo?.energiasUnidas?.length ?? 0) > 0
-    );
-  }
-
- jugarCarta(carta: any): void {
-  // 1. Si no es mi turno o está cargando, ni hablamos.
-  if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
-
-  // 2. ¿Es una Energía?
-  if (this.esEnergia(carta)) {
-    this.gestionarUnionEnergia(carta);
-    return;
-  }
-
-  // 3. ¿Es un Pokémon?
-  if (this.esPokemon(carta)) {
-    // 🚩 REGLA DE ORO: Si el activo está vacío y TENÉS gente en la banca...
-    // ¡TENÉS QUE SUBIR UNO DE LA BANCA PRIMERO!
-    if (!this.partida.jugador.activo && this.partida.jugador.banca.length > 0) {
-      alert("¡Primero tenés que subir un Pokémon de tu banca al puesto activo!");
-      return; // Bloqueamos la jugada desde la mano
-    }
-
-    // Si el activo está vacío y la banca TAMBIÉN (ej: inicio del juego o te barrieron todo)
-    // ahí sí lo dejamos pasar directo al activo.
-    this.gestionarBajadaPokemon(carta);
-  }
-}
-
-retirarPokemon(suplente: any) {
-  if (this.cargandoAccion || this.partida.turnoActual !== 'JUGADOR') return;
-
-  const costo = this.partida.jugador.activo.card.costoRetirada;
-  
-  if (confirm(`¿Querés retirar a ${this.partida.jugador.activo.card.nombre}? Costará ${costo} energía(s).`)) {
-    this.cargandoAccion = true;
-    
-    this.battleService.retirarPokemon(this.matchId!, suplente.card.id).subscribe({
-      next: () => {
-        console.log("🔄 Cambio realizado con éxito");
-        this.cargarEstado(); // Refrescamos el tablero
-        this.cargandoAccion = false;
-      },
-      error: (err) => {
-        this.cargandoAccion = false;
-        alert(err.error || "No tenés suficiente energía para retirarte.");
-      }
-    });
-  }
-}
-
-private gestionarBajadaPokemon(carta: any): void {
-    if (this.cargandoAccion) return;
-    
-    this.cargandoAccion = true;
-    // Quitamos 'posicion', el backend decide si va a Activo o Banca
-    this.battleService.jugarPokemon(this.matchId!, carta.id).subscribe({
-      next: () => {
-        this.cargandoAccion = false;
-        this.cargarEstado(); 
-      },
-      error: (err) => {
-        this.cargandoAccion = false;
-        console.error(err);
-        alert(err.error || 'No se pudo bajar el Pokémon.');
-      }
-    });
-  }
-
-  private gestionarUnionEnergia(cartaEnergia: any): void {
-    if (!this.partida.jugador.activo) { alert('¡Necesitás un Pokémon activo!'); return; }
-    this.cargandoAccion = true;
-    this.battleService.unirEnergia(this.matchId!, this.partida.jugador.activo.card.id, cartaEnergia.id).subscribe({
-      next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-      error: (err: any) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energía.'); }
-    });
-  }
-
-  soltarCarta(event: CdkDragDrop<any[]>, zona: 'activo' | 'banca'): void {
-    if (event.previousContainer === event.container) return;
-    const cartaArrastrada = event.item.data;
-    if (this.esEnergia(cartaArrastrada)) {
-      this.gestionarUnionEnergia(cartaArrastrada);
-    } else if (this.esPokemon(cartaArrastrada)) {
-      this.jugarCarta(cartaArrastrada); 
-    }
-  }
-
-  // Refactorizado: Muestra panel si hay ataques cargados, sino ataca directo (fallback)
-intentarAbrirHabilidades(event?: MouseEvent): void {
-  if (event) {
-    event.stopPropagation();
-    event.preventDefault();
-  }
-
-  // SIEMPRE resetear estados de bloqueo si es el turno del jugador
-  if (this.partida?.turnoActual === 'JUGADOR') {
-    this.botEstaAtacando = false;
-    this.bloqueadoPorAnimacion = false;
-  }
-
-  // 🚩 El bloqueo: Si alguna animación quedó trabada, la ignoramos si el turno es nuestro
-  if (this.cargandoAccion) {
-    console.warn("⚠️ Intento de apertura bloqueado por cargandoAccion");
-    return;
-  }
-
-  console.log("🔥 Abriendo panel de habilidades...");
-  this.showHabilidadesPanel = !this.showHabilidadesPanel;
-  
-  // Forzamos a Angular a que dibuje el modal AHORA
-  this.cdr.detectChanges();
-}
-validarEnergiaAtaque(ataque: any): boolean {
-  if (!ataque || !this.partida?.jugador?.activo) return false;
-
-  // --- MAPEO DE NORMALIZACIÓN ---
-  // Esta función convierte cualquier nombre raro al estándar de la API ("Grass", "Fire", etc.)
-  const normalizarTipo = (tipo: string): string => {
-    const t = tipo.toLowerCase();
-    if (t.includes('grass') || t.includes('planta')) return 'Grass';
-    if (t.includes('fire') || t.includes('fuego')) return 'Fire';
-    if (t.includes('water') || t.includes('agua')) return 'Water';
-    if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
-    if (t.includes('psychic') || t.includes('psíquica') || t.includes('psiquica')) return 'Psychic';
-    if (t.includes('fighting') || t.includes('lucha')) return 'Fighting';
-    if (t.includes('darkness') || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
-    if (t.includes('metal') || t.includes('acero')) return 'Metal';
-    if (t.includes('dragon') || t.includes('dragón')) return 'Dragon';
-    if (t.includes('fairy') || t.includes('hada')) return 'Fairy';
-    return tipo; // Si no lo conoce, lo deja igual
-  };
-
-  // 1. Obtenemos y normalizamos las energías que tiene el Pokémon
-const misEnergias = this.partida.jugador.activo.energiasUnidas.map((e: any) => {
-    // Si el 'tipo' es genérico ("Energy"), buscamos en el 'nombre' (ej: "Grass Energy")
-    const textoParaValidar = (e.tipo === 'Energy' || !e.tipo) ? e.nombre : e.tipo;
-    return normalizarTipo(textoParaValidar);
-});  
-  // 2. Obtenemos y normalizamos el costo requerido del ataque
-  const costoRequerido = [...ataque.costo].map(t => normalizarTipo(t));
-
-  // LOGS DE DEBUG
-  console.log(`--- Validando ataque: ${ataque.nombre} ---`);
-  console.log("Mis Energías (Normalizadas):", misEnergias);
-  console.log("Costo Requerido (Normalizado):", costoRequerido);
-
-  // 3. Primero validamos y descontamos las energías específicas (no incoloras)
-  for (let i = costoRequerido.length - 1; i >= 0; i--) {
-    const tipoReq = costoRequerido[i];
-    
-    if (tipoReq !== 'Colorless') {
-      const index = misEnergias.indexOf(tipoReq);
-      if (index !== -1) {
-        misEnergias.splice(index, 1);
-        costoRequerido.splice(i, 1);
-      } else {
-        console.warn(`❌ Falta energía específica: ${tipoReq}`);
-        return false;
-      }
-    }
-  }
-
-  // 4. Lo que queda son 'Colorless' (comodines)
-  const puede = misEnergias.length >= costoRequerido.length;
-  
-  if (!puede) {
-    console.warn(`❌ Faltan ${costoRequerido.length - misEnergias.length} energías Incoloras`);
-  } else {
-    console.log(`✅ ${ataque.nombre} Habilitado`);
-  }
-
-  return puede;
-}
-
-realizarAccion(habilidad: any): void {
-    this.showHabilidadesPanel = false;
-    
-    if (!this.validarEnergiaAtaque(habilidad)) {
-      alert('¡No tenés suficiente energía para usar ' + habilidad.nombre + '!');
-      return;
-    }
-    
-    // Cambiamos 'h.nombre' por 'habilidad.nombre' para que coincida con el parámetro
-    this.ejecutarAtaqueSecuencia(habilidad.nombre); 
-  }
-
- async ejecutarAtaqueSecuencia(nombreAtaque: string) {
-  if (this.cargandoAccion || !nombreAtaque) return;
-  
-  // 1. BLOQUEO TOTAL AL INICIO
-this.bloqueadoPorAnimacion = true; 
-  this.cargandoAccion = true;
-  this.ataqueRealizado = true;
-
-  // Guardamos tu vida intacta
-  const miVidaIntacta = this.hpRenderJugador;
-  const habilidad = this.partida.jugador.activo.card.ataques.find((a: any) => a.nombre === nombreAtaque);
-  const tipoEnergia = habilidad?.costo[0] || 'Colorless';
-
-  try {
-    // 2. MANDAMOS EL ATAQUE Y ESPERAMOS QUE TERMINE EN EL SERVER
-    await firstValueFrom(this.battleService.atacar(this.matchId!, nombreAtaque));
-
-    // 3. SECUENCIA DE TU ANIMACIÓN (Línea por línea)
-    this.animandoAtaque = true;
-    this.cdr.detectChanges();
-
-    await this.delay(400); // Esperamos a que tu carta se mueva
-    this.dispararParticulas('bot', tipoEnergia);
-    this.showImpactFlash = true;
-    this.cdr.detectChanges();
-
-    await this.delay(200); // El flash de impacto dura 200ms
-    this.showImpactFlash = false;
-    this.cdr.detectChanges();
-
-    await this.delay(400); // Tu carta vuelve a su lugar
-    this.animandoAtaque = false;
-    this.cdr.detectChanges();
-
-   // 4. BUSCAMOS CÓMO QUEDÓ EL TABLERO TRAS LA MASACRE
-    const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId!));
-
-    // 🚩 EL ESTADO FRANKENSTEIN (El Anti-Reflect definitivo)
-    // Clonamos el estado final (para ver al bot lastimado)...
-    const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
-    // ...¡Pero REESCRIBIMOS a tu jugador con los datos viejos intactos!
-    estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
-
-    // MENTIMOS ABSOLUTAMENTE AL HTML:
-    this.partida = estadoIntermedio;
-    this.hpRenderJugador = miVidaIntacta; 
-    this.cdr.detectChanges();
-
-    // Calculamos si en el futuro (estadoFinal) nos hicieron daño
-    const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
-
-    // 5. ¿EL BOT NOS PEGÓ O NOS MATÓ?
-    if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
-      
-      console.log("🎬 Pausa para ver tu daño al bot...");
-      await this.delay(1000); 
-
-      console.log("🎬 Cartel de Turno Enemigo");
-      this.cargandoAccion = false; // Matamos el "Procesando" SÍ O SÍ acá
-      this.turnoOverlayTipo = 'bot';
-      this.showTurnOverlay = true;
-      this.cdr.detectChanges();
-
-      await this.delay(2000); // 2 Segundos de cartel
-      
-      this.showTurnOverlay = false;
-      this.cdr.detectChanges();
-
-      await this.delay(400); // Pausa para que el CSS limpie el cartel
-
-      console.log("🎬 Salto del bot");
-      // ACÁ RECIÉN LE PASAMOS EL 'estadoFinal' PARA QUE HAGA DAÑO AL IMPACTAR
-      this.ejecutarIAEnemigaConData(estadoFinal);
-
-    } else {
-      // Si no nos atacó, liberamos y ponemos el estado final real
-      this.partida = estadoFinal;
-      this.hpRenderJugador = miVidaDespuesDelBot;
-      this.cargandoAccion = false;
-      this.bloqueadoPorAnimacion = false;
-      this.ataqueRealizado = false;
-      this.cdr.detectChanges();
-    }
-  } catch (error: any) {
-    this.cargandoAccion = false;
-    this.ataqueRealizado = false;
-    this.bloqueadoPorAnimacion = false;
-    alert('Error al atacar: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
-  }
-}
   get manoAgrupada(): any[][] {
     const tamañoStack = 4;
-    const mano = this.partida.jugador.mano;
-    const stacks = [];
+    const mano        = this.partida.jugador.mano;
+    const stacks      = [];
     for (let i = 0; i < mano.length; i += tamañoStack) stacks.push(mano.slice(i, i + tamañoStack));
     return stacks;
   }
 
-getEnergyName(tipo: string): string {
-    const t = (tipo || '').toLowerCase();
-    const nombres: any = {
-      'grass': 'Planta',
-      'fire': 'Fuego',
-      'water': 'Agua',
-      'lightning': 'Eléctrico',
-      'psychic': 'Psíquico',
-      'fighting': 'Lucha',
-      'darkness': 'Siniestro',
-      'metal': 'Acero',
-      'colorless': 'Incolora',
-      'fairy': 'Hada',
-      'dragon': 'Dragón'
-    };
-    return nombres[t] || 'Energía';
+  getEnergyName(tipo: string): string {
+    const t: any = { grass:'Planta', fire:'Fuego', water:'Agua', lightning:'Eléctrico',
+                     psychic:'Psíquico', fighting:'Lucha', darkness:'Siniestro',
+                     metal:'Acero', colorless:'Incolora', fairy:'Hada', dragon:'Dragón' };
+    return t[(tipo || '').toLowerCase()] || 'Energía';
   }
 
   getEnergyColor(tipo: string): string {
-    const t = (tipo || '').toLowerCase();
-    const colors: any = {
-      'grass': '#78C850',
-      'fire': '#F08030',
-      'water': '#6890F0',
-      'lightning': '#F8D030',
-      'psychic': '#F85888',
-      'fighting': '#C03028',
-      'darkness': '#705848',
-      'metal': '#B8B8D0',
-      'colorless': '#A8A878',
-      'fairy': '#EE99AC',
-      'dragon': '#7038F8'
-    };
-    return colors[t] || '#A8A878'; // Colorless por defecto
+    const c: any = { grass:'#78C850', fire:'#F08030', water:'#6890F0', lightning:'#F8D030',
+                     psychic:'#F85888', fighting:'#C03028', darkness:'#705848',
+                     metal:'#B8B8D0', colorless:'#A8A878', fairy:'#EE99AC', dragon:'#7038F8' };
+    return c[(tipo || '').toLowerCase()] || '#A8A878';
   }
 
-  async pasarTurno(): Promise<void> {
-  if (this.partida?.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
-
-  // 1. BLOQUEO TOTAL AL INICIO
-  this.cargandoAccion = true;
-  this.bloqueadoPorAnimacion = true; // Cortamos cualquier polling rebelde
-
-  // 2. Guardamos tu vida intacta para el "Estado Frankenstein"
-  const miVidaIntacta = this.hpRenderJugador;
-
-  try {
-    // 3. AVISAMOS AL SERVER QUE TERMINAMOS
-    await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
-
-    // 4. BUSCAMOS LA FOTO FINAL (El bot ya jugó su turno fantasma en Spring Boot)
-    const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId!));
-
-    // 🚩 EL ESTADO FRANKENSTEIN
-    const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
-    if (this.partida?.jugador) {
-        // Mantenemos a tu jugador exactamente igual que antes de pasar turno
-        estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
-    }
-
-    
-    // MENTIMOS AL HTML: Actualizamos el tablero, pero tu HP sigue intacto
-    this.partida = estadoIntermedio;
-    this.hpRenderJugador = miVidaIntacta;
-    this.cdr.detectChanges();
-
-    const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
-
-    // 5. ¿EL BOT NOS PEGÓ DURANTE SU TURNO?
-    if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
-
-      console.log("🎬 Cartel de Turno Enemigo (Pasar Turno)");
-      this.turnoOverlayTipo = 'bot';
-      this.showTurnOverlay = true;
-      this.cdr.detectChanges();
-
-      await this.delay(2000); // 2 Segundos literales viendo el cartel
-
-      this.showTurnOverlay = false;
-      this.cdr.detectChanges();
-
-      await this.delay(400); // Pausa para que el CSS limpie la pantalla negra
-
-      console.log("🎬 Salto del bot");
-      // ACÁ RECIÉN el bot salta, impacta y baja tu vida
-      this.ejecutarIAEnemigaConData(estadoFinal);
-
-    } else {
-      // Si el bot fue pacífico (solo robó carta o puso en banca), liberamos la UI
-      this.partida = estadoFinal;
-      this.hpRenderJugador = miVidaDespuesDelBot;
-      this.cargandoAccion = false;
-      this.bloqueadoPorAnimacion = false;
-      this.cdr.detectChanges();
-    }
-
-  } catch (error: any) {
-    this.cargandoAccion = false;
-    this.bloqueadoPorAnimacion = false;
-    alert('Error al pasar turno: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
-  }
-}
-
-seleccionarBanca(p: any) {
-  // 🔄 CASO 1: Estamos en medio de una RETIRADA (Swap voluntario)
-  if (this.modoSeleccionRetirada) {
-    this.cargandoAccion = true;
-    this.battleService.retirarPokemon(this.matchId!, p.card.id).subscribe({
-      next: () => {
-        this.modoSeleccionRetirada = false;
-        this.cargandoAccion = false;
-        this.cargarEstado();
-      },
-      error: (err) => {
-        this.modoSeleccionRetirada = false;
-        this.cargandoAccion = false;
-        alert(err.error || "No se pudo realizar la retirada.");
-      }
-    });
-  } 
-  // 🚀 CASO 2: PROMOCIÓN (El activo murió y hay que subir uno de la banca)
-  else if (!this.partida?.jugador?.activo) {
-    this.cargandoAccion = true;
-    this.battleService.subirAActivo(this.matchId!, p.card.id).subscribe({
-      next: () => {
-        this.cargandoAccion = false;
-        this.cargarEstado();
-      },
-      error: (err) => {
-        this.cargandoAccion = false;
-        console.error(err);
-        alert("No se pudo subir el Pokémon al puesto activo.");
-      }
-    });
-  }
-}
-  volverAlLobby(): void { this.router.navigate(['/lobby']); }
-
-  // --- SISTEMA DE PARTÍCULAS DINÁMICO ---
-  mostrarEfectoBot = false;
-  mostrarEfectoJugador = false;
-  particulasBot: any[] = [];
-  particulasJugador: any[] = [];
-  animandoBotDanio = false;
-  animandoJugadorDanio = false;
+  // ═══════════════════════════════════════════════
+  // PARTÍCULAS
+  // ═══════════════════════════════════════════════
 
   dispararParticulas(objetivo: 'bot' | 'jugador', tipoEnergia: string) {
-    const color = this.getEnergyColor(tipoEnergia) || '#ffffff';
+    const color           = this.getEnergyColor(tipoEnergia) || '#ffffff';
     const nuevasParticulas = [];
     for (let i = 0; i < 20; i++) {
-      const angulo = Math.random() * Math.PI * 2;
+      const angulo    = Math.random() * Math.PI * 2;
       const distancia = 40 + Math.random() * 80;
       nuevasParticulas.push({
-        color: color,
-        tx: Math.cos(angulo) * distancia,
-        ty: Math.sin(angulo) * distancia,
-        size: 5 + Math.random() * 7,
-        duracion: 0.4 + Math.random() * 0.5
+        color, tx: Math.cos(angulo) * distancia, ty: Math.sin(angulo) * distancia,
+        size: 5 + Math.random() * 7, duracion: 0.4 + Math.random() * 0.5
       });
     }
-
     if (objetivo === 'bot') {
-      this.particulasBot = nuevasParticulas;
+      this.particulasBot    = nuevasParticulas;
       this.mostrarEfectoBot = true;
       this.animandoBotDanio = true;
     } else {
-      this.particulasJugador = nuevasParticulas;
+      this.particulasJugador    = nuevasParticulas;
       this.mostrarEfectoJugador = true;
       this.animandoJugadorDanio = true;
     }
-
     this.cdr.detectChanges();
     setTimeout(() => {
       if (objetivo === 'bot') { this.mostrarEfectoBot = false; this.animandoBotDanio = false; }
@@ -1336,4 +1073,12 @@ seleccionarBanca(p: any) {
       this.cdr.detectChanges();
     }, 800);
   }
+
+  // ═══════════════════════════════════════════════
+  // NAVEGACIÓN
+  // ═══════════════════════════════════════════════
+
+  volverAlLobby(): void { this.router.navigate(['/lobby']); }
+
+  private delay(ms: number): Promise<void> { return new Promise(resolve => setTimeout(resolve, ms)); }
 }
