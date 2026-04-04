@@ -3,7 +3,7 @@ const fs = require('fs');
 const fsPromises = require('fs').promises;
 const path = require('path');
 
-// Configuración de rutas
+// --- CONFIGURACIÓN DE RUTAS ---
 const API_URL = 'https://api.pokemontcg.io/v2/cards?pageSize=250';
 const IMG_DIR = path.join(__dirname, 'frontend', 'src', 'assets', 'images', 'cards');
 const JSON_PATH = path.join(__dirname, 'backend', 'src', 'main', 'resources', 'cards.json');
@@ -17,9 +17,10 @@ const ENERGIAS_BASICAS = [
   { id: 'energy-fighting', name: 'Energía Lucha', imgUrl: 'https://images.pokemontcg.io/base1/97.png', tipo: 'Fighting' }
 ];
 
+// --- FUNCIONES AUXILIARES ---
 async function fetchJSON(url) {
   return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    https.get(url, { headers: { 'X-Api-Key': 'TU_API_KEY_OPCIONAL' } }, (res) => {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
@@ -33,103 +34,138 @@ async function downloadImage(url, dest) {
   return new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
     https.get(url, (res) => {
+      // Si no es 200, cerramos el archivo y rechazamos para que el try/catch de arriba lo agarre
+      if (res.statusCode !== 200) {
+        file.close();
+        fs.unlink(prop, () => {}); // Borramos el archivo vacío
+        reject(new Error(`Status ${res.statusCode}`));
+        return;
+      }
       res.pipe(file);
-      file.on('finish', () => { file.close(resolve); });
+      file.on('finish', () => file.close(resolve));
     }).on('error', err => {
+      file.close();
       fsPromises.unlink(dest).catch(() => {});
       reject(err);
     });
   });
 }
-
+// --- PROCESO PRINCIPAL ---
 async function main() {
   try {
-    console.log('🚀 Iniciando generación de datos con Debilidades...');
-    const data = await fetchJSON(API_URL);
-    const cards = data.data;
+    console.log('🚀 Iniciando descarga estratégica (2000 cartas de varias eras)...');
+    let allCards = [];
+    
+    // Definimos cuotas para asegurar rarezas y tipos de carta
+    const CUOTAS = [
+      { filtro: 'rarity:"Rare Holo GX" OR rarity:"Rare Holo V" OR rarity:"Rare Ultra"', cantidad: 200, label: '🌟 ÉPICAS (V/GX/VMAX)' },
+      { filtro: 'rarity:"Rare Holo" OR rarity:"Rare"', cantidad: 300, label: '💎 RARAS' },
+      { filtro: 'supertype:trainer', cantidad: 400, label: '🎒 ENTRENADORES' },
+      { filtro: 'supertype:pokemon', cantidad: 1100, label: '🃏 COMUNES / INFRECUENTES' }
+    ];
 
     await fsPromises.mkdir(IMG_DIR, { recursive: true });
-    const cleanedCards = [];
 
-    for (const card of cards) {
-      if (card.supertype !== 'Pokémon') continue;
+    for (const cuota of CUOTAS) {
+      let page = 1;
+      let countEnCuota = 0;
+      console.log(`\n🔹 Buscando ${cuota.label}...`);
 
-      const id = card.id;
-      const nombre = card.name;
-      const tipo = (card.types && card.types.length > 0) ? card.types[0] : 'Colorless';
-      
-      const hp = card.hp || '60';
-      const costoRetirada = card.convertedRetreatCost || 0;
-      // 1. Mapeo de Ataques
-      const ataques = (card.attacks || []).map(a => {
-        let damageValue = 0;
-        if (a.damage) {
-          damageValue = parseInt(a.damage.replace(/[^0-9]/g, '')) || 0;
+      while (countEnCuota < cuota.cantidad) {
+        const url = `${API_URL}&q=${encodeURIComponent(cuota.filtro)}&page=${page}`;
+        const response = await fetchJSON(url);
+        const cards = response.data;
+
+        if (!cards || cards.length === 0) break;
+
+        for (const card of cards) {
+          if (countEnCuota >= cuota.cantidad) break;
+          if (allCards.some(c => c.id === card.id)) continue;
+
+          // Mapeo detallado para el Backend
+          const id = card.id;
+          const ataques = (card.attacks || []).map(a => ({
+            nombre: a.name,
+            costo: a.cost || [],
+            danio: parseInt(a.damage?.replace(/[^0-9]/g, '')) || 0,
+            texto: a.text || ""
+          }));
+
+          const habilidades = (card.abilities || []).map(ab => ({
+            nombre: ab.name,
+            texto: ab.text,
+            tipo: ab.type
+          }));
+
+        const imgPath = path.join(IMG_DIR, `${id}.png`);
+try {
+  await fsPromises.access(imgPath);
+} catch {
+  try {
+    process.stdout.write(`📥 [Total: ${allCards.length + 1}] Descargando ${card.name}...          \r`);
+    await downloadImage(card.images.small, imgPath);
+  } catch (imgErr) {
+    // 🚩 ACÁ ESTÁ EL SECRETO: 
+    // Si falla la imagen, logueamos el error pero NO cortamos el proceso.
+    console.log(`\n⚠️ Saltando imagen de ${card.name} (Error: ${imgErr.message})`);
+    // Opcional: Podés elegir NO agregar la carta al JSON si no tiene imagen
+    // continue; 
+  }
+}
+
+          allCards.push({
+            id,
+            nombre: card.name,
+            supertype: card.supertype,
+            subtypes: card.subtypes || [],
+            evolucionDe: card.evolvesFrom || null,
+            tipo: card.types ? card.types[0] : 'Colorless',
+            hp: card.hp || '0',
+            costoRetirada: card.convertedRetreatCost || 0,
+            ataques,
+            habilidades,
+            debilidades: (card.weaknesses || []).map(w => ({ tipo: w.type, valor: w.value })),
+            resistencias: (card.resistances || []).map(r => ({ tipo: r.type, valor: r.value })),
+            reglas: card.rules || [],
+            rareza: card.rarity || 'Common',
+            imagen: `/assets/images/cards/${id}.png`
+          });
+
+          countEnCuota++;
         }
-        return { 
-          nombre: a.name, 
-          costo: a.cost || [], 
-          dano: damageValue 
-        };
-      });
-
-      // 2. 🚩 NUEVO: Mapeo de Debilidades (Weaknesses)
-      const debilidades = (card.weaknesses || []).map(w => ({
-        tipo: w.type,
-        valor: w.value // Guardamos el "x2"
-      }));
-
-      // 3. 🚩 NUEVO: Mapeo de Resistencias (Resistances)
-      const resistencias = (card.resistances || []).map(r => ({
-        tipo: r.type,
-        valor: r.value // Guardamos el "-20"
-      }));
-
-      let rutaImagenLocal = `/assets/images/cards/${id}.png`;
-      const imgPath = path.join(IMG_DIR, `${id}.png`);
-      
-      try {
-        await fsPromises.access(imgPath);
-      } catch {
-        console.log(`  📥 Descargando: ${nombre}...`);
-        await downloadImage(card.images.small, imgPath);
+        page++;
+        if (page > 15) break; 
+        await new Promise(r => setTimeout(r, 400)); // Delay para evitar baneo de IP
       }
-
-      cleanedCards.push({ 
-        id, 
-        nombre, 
-        tipo, 
-        hp, 
-        costoRetirada, // 👈 Lo agregamos al objeto final
-        ataques, 
-        debilidades, 
-        resistencias, 
-        imagen: rutaImagenLocal 
-      });
     }
 
-    // 4. Inyección de Energías Básicas
-    console.log('⚡ Inyectando energías...');
+    // Inyectar Energías Básicas
+    console.log('\n\n⚡ Verificando energías básicas...');
     for (const energia of ENERGIAS_BASICAS) {
       const imgPath = path.join(IMG_DIR, `${energia.id}.png`);
       try { await fsPromises.access(imgPath); } catch {
         await downloadImage(energia.imgUrl, imgPath);
       }
-      
-      cleanedCards.push({
-        id: energia.id,
-        nombre: energia.name,
-        tipo: 'Energy',
-        hp: '0',
-        ataques: [],
-        debilidades: [],
-        resistencias: [],
-        imagen: `/assets/images/cards/${energia.id}.png`
-      });
+      if (!allCards.some(c => c.id === energia.id)) {
+        allCards.push({
+          id: energia.id,
+          nombre: energia.name,
+          supertype: 'Energy',
+          subtypes: ['Basic'],
+          tipo: 'Energy',
+          hp: '0',
+          ataques: [],
+          habilidades: [],
+          debilidades: [],
+          resistencias: [],
+          imagen: `/assets/images/cards/${energia.id}.png`
+        });
+      }
     }
 
-    await fsPromises.writeFile(JSON_PATH, JSON.stringify(cleanedCards, null, 2), 'utf-8');
-    console.log(`\n✅ Proceso terminado. ${cleanedCards.length} cartas con debilidades guardadas.`);
+    await fsPromises.writeFile(JSON_PATH, JSON.stringify(allCards, null, 2), 'utf-8');
+    console.log(`\n✅ ¡ÉXITO! Se generó el archivo con ${allCards.length} cartas.`);
+    console.log(`Ubicación: ${JSON_PATH}`);
 
   } catch (err) {
     console.error('❌ Error crítico:', err);
