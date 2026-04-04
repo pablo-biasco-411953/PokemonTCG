@@ -37,6 +37,7 @@ com\pokemon\tcg\dto\JugadorDTO.class
 com\pokemon\tcg\dto\UnirEnergiaRequest.class
 com\pokemon\tcg\model\Card$4.class
 com\pokemon\tcg\dto\ChooseTurnRequest.class
+com\pokemon\tcg\model\battle\ResultadoAtaque.class
 com\pokemon\tcg\service\BattleService.class
 com\pokemon\tcg\controller\CardController.class
 com\pokemon\tcg\service\BotAIService.class

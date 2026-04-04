@@ -16,8 +16,7 @@ import java.util.Map;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.UUID;
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Service
 public class BattleEngineService {
 
@@ -35,10 +34,6 @@ public class BattleEngineService {
         this.cardRepo = cardRepo;
         this.botAIService = botAIService;
     }
-
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // INICIO DE PARTIDA
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public Partida startBattle(String username, Long mazoId) {
         Jugador jugador = jugadorRepo.findByUsername(username);
@@ -65,12 +60,11 @@ public class BattleEngineService {
         prepararJuegoInicial(tableroJugador);
         prepararJuegoInicial(tableroBot);
 
-        // FIX: Partida genera su propio UUID en el constructor Ã¢â‚¬â€ lo reutilizamos directamente
         Partida partida = new Partida(tableroJugador, tableroBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
 
         partidasEnCurso.put(partida.getId(), partida);
-        System.out.println("Ã¢Å“â€¦ Partida creada con ID: " + partida.getId());
+        System.out.println("✅ Partida creada con ID: " + partida.getId());
         return partida;
     }
 
@@ -85,10 +79,6 @@ public class BattleEngineService {
         }
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // SETUP INICIAL
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
     public boolean lanzarMoneda(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
         boolean jugadorGana = random.nextBoolean();
@@ -101,23 +91,14 @@ public class BattleEngineService {
         if (vaPrimero) {
             partida.setTurnoActual(Partida.Turno.JUGADOR);
         } else {
-            // FIX: bot corre en hilo separado para no bloquear el HTTP request
             partida.setTurnoActual(Partida.Turno.BOT);
             ejecutarTurnoBot(matchId);
         }
     }
 
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // CONSULTA DE ESTADO
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-
     public Partida getEstadoPartida(String matchId) {
         return partidasEnCurso.get(matchId);
     }
-
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // ACCIONES DEL JUGADOR
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     public void jugarPokemon(String matchId, String cartaId) {
         Partida partida = getPartidaOThrow(matchId);
@@ -131,14 +112,11 @@ public class BattleEngineService {
 
         CartaEnJuego nuevoPokemon = new CartaEnJuego(carta);
 
-        // 🚩 LÓGICA DE POSICIONAMIENTO
         if (tablero.getActivo() == null) {
-            // Si no hay activo, va directo ahí (Regla obligatoria)
             tablero.setActivo(nuevoPokemon);
             tablero.getMano().remove(carta);
             System.out.println("✅ " + carta.getNombre() + " entró como Activo.");
         } else {
-            // Si ya hay activo, intentamos ponerlo en la banca
             if (tablero.getBanca().size() >= 5) {
                 throw new IllegalStateException("La banca está llena (máximo 5).");
             }
@@ -163,18 +141,6 @@ public class BattleEngineService {
         tablero.getMano().remove(energia);
     }
 
-    public void retirarActivo(CartaEnJuego activo) {
-        int energiasNecesarias = activo.getCard().getCostoRetirada();
-        int energiasActuales = activo.getEnergiasUnidas().size();
-
-        if (energiasActuales >= energiasNecesarias) {
-            System.out.println("Tenés " + energiasActuales + " energías. El retiro cuesta " + energiasNecesarias + ". ¡Podés huir!");
-            // Aquí va la lógica de mover a la banca y descartar las energías
-        } else {
-            System.out.println("Te faltan " + (energiasNecesarias - energiasActuales) + " energías para retirarte.");
-        }
-    }
-
     public void realizarRetirada(String matchId, String nuevoActivoId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
@@ -185,30 +151,38 @@ public class BattleEngineService {
         if (partida.isYaSeRetiroEsteTurno()) {
             throw new IllegalStateException("Solo podés realizar una retirada por turno.");
         }
-        // 1. Buscamos al suplente en la banca
+
+        // 🚩 BLOQUEO POR ESTADOS Y TRAMPAS
+        if (activoViejo.getCondicionesEspeciales().contains("Asleep") ||
+                activoViejo.getCondicionesEspeciales().contains("Paralyzed") ||
+                activoViejo.getCondicionesEspeciales().contains("CantRetreat")) {
+            throw new IllegalStateException("No podés retirarte por un estado alterado o efecto de ataque.");
+        }
+
         CartaEnJuego suplente = tablero.getBanca().stream()
                 .filter(c -> c.getCard().getId().equals(nuevoActivoId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
 
-        // 2. Validar y Pagar Costo de Retirada
         int costo = activoViejo.getCard().getCostoRetirada();
         if (activoViejo.getEnergiasUnidas().size() < costo) {
-            throw new IllegalStateException("Energías insuficientes. Necesitás " + costo + " para retirar a " + activoViejo.getCard().getNombre());
+            throw new IllegalStateException("Energías insuficientes. Necesitás " + costo + " para retirar.");
         }
 
-        // PAGO: Descontamos las energías y las mandamos al descarte
         for (int i = 0; i < costo; i++) {
             Card energia = activoViejo.getEnergiasUnidas().remove(0);
             tablero.getPilaDescarte().add(energia);
         }
 
-        // 3. 🚩 EL INTERCAMBIO (Swap)
-        tablero.getBanca().remove(suplente); // Sale de la banca
-        tablero.getBanca().add(activoViejo); // El viejo vuelve a la banca
-        tablero.setActivo(suplente);         // El nuevo pasa al frente
+        // 🚩 CURA AL VOLVER A LA BANCA
+        activoViejo.limpiarCondiciones();
+
+        tablero.getBanca().remove(suplente);
+        tablero.getBanca().add(activoViejo);
+        tablero.setActivo(suplente);
         partida.setYaSeRetiroEsteTurno(true);
-        System.out.println("🔄 Retirada: " + activoViejo.getCard().getNombre() + " a la banca. Entra " + suplente.getCard().getNombre());
+
+        System.out.println("🔄 Retirada: " + activoViejo.getCard().getNombre() + " a la banca (Curado). Entra " + suplente.getCard().getNombre());
     }
 
     public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca) {
@@ -231,10 +205,6 @@ public class BattleEngineService {
         System.out.println("🚀 " + elegido.getCard().getNombre() + " ahora es tu Pokémon activo.");
     }
 
-    /**
-     * FIX: El jugador ataca con su PokÃƒÂ©mon activo al activo del bot.
-     * Ya no recibe atacante/defensor como parÃƒÂ¡metros Ã¢â‚¬â€ los deduce del estado.
-     */
     public void realizarAtaque(String matchId, String nombreAtaqueElegido) {
         Partida partida = partidasEnCurso.get(matchId);
 
@@ -246,35 +216,46 @@ public class BattleEngineService {
         CartaEnJuego activoJugador = partida.getJugador().getActivo();
         CartaEnJuego activoBot = partida.getBot().getActivo();
 
-        if (activoJugador == null) {
-            throw new IllegalStateException("No tenÃƒÂ©s un PokÃƒÂ©mon activo.");
+        if (activoJugador == null) throw new IllegalStateException("No tenés un Pokémon activo.");
+        if (activoJugador.getEnergiasUnidas().isEmpty()) throw new IllegalStateException("Necesitás al menos 1 energía unida para atacar.");
+        if (activoJugador.getCondicionesEspeciales().contains("Asleep") ||
+                activoJugador.getCondicionesEspeciales().contains("Paralyzed")) {
+            throw new IllegalStateException("Tu Pokémon activo no puede atacar porque está " +
+                    (activoJugador.getCondicionesEspeciales().contains("Asleep") ? "Dormido 💤" : "Paralizado ⚡"));
         }
-
-        if (activoJugador.getEnergiasUnidas().isEmpty()) {
-            throw new IllegalStateException("NecesitÃƒÂ¡s al menos 1 energÃƒÂ­a unida para atacar.");
-        }
-
         if (activoBot != null) {
-            // Ã°Å¸Å¡Â¨ BUSCAMOS EL DAÃƒâ€˜O REAL DEL ATAQUE Ã°Å¸Å¡Â¨
-            int danio = 20; // DaÃƒÂ±o base por si falla
+            Ataque ataqueUsado = null;
 
-            // Buscamos en la lista de ataques del PokÃƒÂ©mon el que coincida con el nombre que mandÃƒÂ³ Angular
             List<Ataque> ataques = activoJugador.getCard().getAtaques();
             if (ataques != null) {
                 for (Ataque atk : ataques) {
                     if (atk.getNombre().equals(nombreAtaqueElegido)) {
-                        danio = atk.getDanio();
+                        ataqueUsado = atk;
                         break;
                     }
                 }
             }
 
-            int nuevaHp = activoBot.getHpActual() - danio;
+            if (ataqueUsado == null) throw new IllegalStateException("Ataque no encontrado.");
+
+            // 🚩 1. CALCULAMOS DAÑO Y MONEDAS CON EL RECORD NUEVO
+            ResultadoAtaque resultado = calcularDanioPorEfectos(ataqueUsado);
+
+            // 🚩 2. APLICAMOS EL DAÑO
+            int nuevaHp = activoBot.getHpActual() - resultado.danioFinal();
             activoBot.setHpActual(Math.max(0, nuevaHp));
 
-            System.out.println("Ã¢Å¡â€Ã¯Â¸Â [BATTLE] " + activoJugador.getCard().getNombre() +
-                    " usÃƒÂ³ [" + nombreAtaqueElegido + "] y atacÃƒÂ³ a " + activoBot.getCard().getNombre() + " por " + danio);
+            System.out.println("⚔️ [BATTLE] " + activoJugador.getCard().getNombre() +
+                    " usó [" + nombreAtaqueElegido + "] y atacó a " + activoBot.getCard().getNombre() + " por " + resultado.danioFinal());
 
+            // 🚩 3. LECTOR DE EFECTOS (Le pasamos las caras)
+            if (activoBot.getHpActual() > 0) {
+                if (resultado.danioFinal() > 0 || ataqueUsado.getDanio() == 0) {
+                    aplicarEfectosSecundarios(ataqueUsado, activoJugador, activoBot, resultado.carasSacadas());
+                }
+            }
+
+            // 🚩 4. VERIFICAMOS KO
             if (activoBot.getHpActual() <= 0) {
                 resolverKO(partida, activoJugador, activoBot);
             }
@@ -283,36 +264,205 @@ public class BattleEngineService {
             this.pasarTurno(matchId);
 
         } else {
-            throw new IllegalStateException("El oponente no tiene un Pokémon activo al cual atacar.");
+            throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
         }
     }
+
+    // 🪙 EL CEREBRO DE LAS MONEDAS (Devuelve ResultadoAtaque)
+    private ResultadoAtaque calcularDanioPorEfectos(Ataque ataque) {
+        int danioBase = ataque.getDanio();
+        String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
+
+        if (texto.isEmpty()) return new ResultadoAtaque(danioBase, 0);
+
+        if (texto.contains("tails, this attack does nothing") || texto.contains("tails, that attack does nothing")) {
+            if (!random.nextBoolean()) {
+                System.out.println("🪙 Salió CRUZ. El ataque falló completamente.");
+                return new ResultadoAtaque(0, 0);
+            }
+            System.out.println("🪙 Salió CARA. ¡El ataque acierta!");
+            return new ResultadoAtaque(danioBase, 1);
+        }
+
+        if (texto.contains("times the number of heads") || texto.contains("x the number of heads") || texto.contains("for each heads")) {
+            int monedas = 1;
+            if (texto.contains("2 coins")) monedas = 2;
+            else if (texto.contains("3 coins")) monedas = 3;
+            else if (texto.contains("4 coins")) monedas = 4;
+            else if (texto.contains("5 coins")) monedas = 5;
+
+            int caras = 0;
+            for (int i = 0; i < monedas; i++) {
+                if (random.nextBoolean()) caras++;
+            }
+            int danioFinal = danioBase * caras;
+            System.out.println("🪙 Se tiraron " + monedas + " monedas. Caras: " + caras + ". Daño calculado: " + danioFinal);
+            return new ResultadoAtaque(danioFinal, caras);
+        }
+
+        if (texto.contains("if heads") && (texto.contains("more damage") || texto.contains("damage plus"))) {
+            if (random.nextBoolean()) {
+                System.out.println("🪙 ¡Salió CARA! Daño extra aplicado.");
+                return new ResultadoAtaque(danioBase + danioBase, 1);
+            }
+            System.out.println("🪙 Salió CRUZ. Solo hace el daño base.");
+            return new ResultadoAtaque(danioBase, 0);
+        }
+
+        return new ResultadoAtaque(danioBase, 0);
+    }
+
+    // 🚩 EL LECTOR DE TEXTO DE LA CARTA (Actualizado)
+    private void aplicarEfectosSecundarios(Ataque ataque, CartaEnJuego atacante, CartaEnJuego defensor, int carasSacadas) {
+        String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
+        if (texto.isEmpty()) return;
+
+        // ⚡ PARÁLISIS
+        if (texto.contains("is now paralyzed")) {
+            if (texto.contains("flip a coin")) {
+                if (random.nextBoolean()) {
+                    defensor.agregarCondicion("Paralyzed");
+                    System.out.println("⚡ ¡Salió CARA! " + defensor.getCard().getNombre() + " fue Paralizado.");
+                } else {
+                    System.out.println("💨 Salió CRUZ. Se salvó de la Parálisis.");
+                }
+            } else {
+                defensor.agregarCondicion("Paralyzed");
+                System.out.println("⚡ " + defensor.getCard().getNombre() + " fue Paralizado (100% de chance).");
+            }
+        }
+
+        // 💥 ROMPER ENERGÍA (Pinsir)
+        if (texto.contains("discard an energy") || texto.contains("discard 1 energy")) {
+            int aRomper = 1;
+            if (texto.contains("for each heads")) {
+                aRomper = carasSacadas;
+            }
+
+            for (int i = 0; i < aRomper; i++) {
+                if (!defensor.getEnergiasUnidas().isEmpty()) {
+                    Card energiaRota = defensor.getEnergiasUnidas().remove(0);
+                    System.out.println("💥 ¡CRÍTICO! " + atacante.getCard().getNombre() +
+                            " le destrozó la energía [" + energiaRota.getNombre() + "] a " + defensor.getCard().getNombre());
+                }
+            }
+        }
+
+        // 🪤 BLOQUEO DE RETIRADA (Pinsir)
+        if (texto.contains("can't retreat during your opponent's next turn") || texto.contains("cannot retreat")) {
+            defensor.agregarCondicion("CantRetreat");
+            System.out.println("🪤 ¡" + defensor.getCard().getNombre() + " quedó atrapado! No podrá huir el próximo turno.");
+        }
+
+        // ☠️ VENENO
+        if (texto.contains("is now poisoned")) {
+            defensor.agregarCondicion("Poisoned");
+            System.out.println("☠️ " + defensor.getCard().getNombre() + " fue Envenenado.");
+        }
+
+        // 💤 SUEÑO
+        if (texto.contains("is now asleep")) {
+            defensor.agregarCondicion("Asleep");
+            System.out.println("💤 " + defensor.getCard().getNombre() + " se quedó Dormido.");
+        }
+
+        // 🔥 QUEMADURA
+        if (texto.contains("is now burned")) {
+            defensor.agregarCondicion("Burned");
+            System.out.println("🔥 " + defensor.getCard().getNombre() + " se Quemó.");
+        }
+
+        // 🌀 CONFUSIÓN
+        if (texto.contains("is now confused")) {
+            if (texto.contains("flip a coin")) {
+                if (random.nextBoolean()) {
+                    defensor.agregarCondicion("Confused");
+                    System.out.println("🌀 ¡Salió CARA! " + defensor.getCard().getNombre() + " se Confundió.");
+                }
+            } else {
+                defensor.agregarCondicion("Confused");
+                System.out.println("🌀 " + defensor.getCard().getNombre() + " se Confundió.");
+            }
+        }
+    }
+
+    private void aplicarMantenimientoEntreTurnos(Partida partida) {
+        System.out.println("🔄 --- INICIANDO MANTENIMIENTO ENTRE TURNOS ---");
+
+        // Revisamos los estados del Pokémon del Jugador
+        procesarEstado(partida.getJugador(), partida.getBot(), partida);
+        // Revisamos los estados del Pokémon del Bot
+        procesarEstado(partida.getBot(), partida.getJugador(), partida);
+
+        System.out.println("🔄 --- FIN MANTENIMIENTO ---");
+    }
+
+    private void procesarEstado(TableroJugador dueno, TableroJugador rival, Partida partida) {
+        CartaEnJuego activo = dueno.getActivo();
+        if (activo == null) return;
+
+        // ☠️ VENENO: Saca 10 de vida fijo
+        if (activo.getCondicionesEspeciales().contains("Poisoned")) {
+            System.out.println("☠️ Veneno: " + activo.getCard().getNombre() + " recibe 10 de daño.");
+            activo.setHpActual(Math.max(0, activo.getHpActual() - 10));
+        }
+
+        // 🔥 QUEMADURA: Saca 20 de vida y tira moneda para curarse
+        if (activo.getCondicionesEspeciales().contains("Burned")) {
+            System.out.println("🔥 Quemadura: " + activo.getCard().getNombre() + " recibe 20 de daño.");
+            activo.setHpActual(Math.max(0, activo.getHpActual() - 20));
+
+            if (random.nextBoolean()) {
+                System.out.println("🔥 ¡Salió CARA! " + activo.getCard().getNombre() + " se curó de la Quemadura.");
+                activo.getCondicionesEspeciales().remove("Burned");
+            } else {
+                System.out.println("🔥 Salió CRUZ. " + activo.getCard().getNombre() + " sigue Quemado.");
+            }
+        }
+
+        // 💤 SUEÑO: Tira moneda para despertar
+        if (activo.getCondicionesEspeciales().contains("Asleep")) {
+            if (random.nextBoolean()) {
+                System.out.println("💤 ¡Salió CARA! " + activo.getCard().getNombre() + " se despertó.");
+                activo.getCondicionesEspeciales().remove("Asleep");
+            } else {
+                System.out.println("💤 Salió CRUZ. " + activo.getCard().getNombre() + " sigue Dormido.");
+            }
+        }
+
+        // 💀 VERIFICAR MUERTE POR ESTADOS: Si el veneno/fuego lo mató, el rival roba premio
+        if (activo.getHpActual() <= 0) {
+            System.out.println("💀 " + activo.getCard().getNombre() + " murió por un estado alterado.");
+            resolverKO(partida, rival.getActivo(), activo);
+        }
+    }
+
     public void pasarTurno(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
-        // 🚩 REGLA: No podés pasar de turno si no tenés un activo y tenés banca
         TableroJugador jugador = partida.getJugador();
+
+        // REGLA: Obligatorio subir un Pokémon si tu activo murió
         if (jugador.getActivo() == null && !jugador.getBanca().isEmpty()) {
             throw new IllegalStateException("Debés subir un Pokémon de tu banca a la posición Activa antes de terminar tu turno.");
         }
 
+        // 🚩 LIMPIAMOS TRAMPAS Y PARÁLISIS DE TU POKÉMON (Duran hasta el final de tu turno)
+        if (jugador.getActivo() != null) {
+            jugador.getActivo().getCondicionesEspeciales().remove("CantRetreat");
+            jugador.getActivo().getCondicionesEspeciales().remove("Paralyzed"); // <-- SE CURA LA PARÁLISIS
+            jugador.getActivo().setPuedeAtacar(true);
+        }
+
+        // 🚩 APLICAMOS EL VENENO Y EL FUEGO A TODOS
+        aplicarMantenimientoEntreTurnos(partida);
+
         partida.setYaSeRetiroEsteTurno(false);
-        // Resetear el flag de ataque del activo del jugador para el próximo turno
-        if (partida.getJugador().getActivo() != null)
-            partida.getJugador().getActivo().setPuedeAtacar(true);
-
         partida.setTurnoActual(Partida.Turno.BOT);
-
-        // FIX: turno del bot en hilo separado
         ejecutarTurnoBot(matchId);
     }
 
-    // TURNO DEL BOT
-
-    /**
-     * FIX: @Async evita que el request del frontend quede colgado esperando
-     * que el bot termine. Requiere @EnableAsync en la clase de configuraciÃƒÂ³n.
-     */
     @Async
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
@@ -324,24 +474,22 @@ public class BattleEngineService {
             Thread.currentThread().interrupt();
         }
 
-        // 🚩 ¡ACÁ ESTÁ EL ARREGLO! 🚩
-        // El bot DEBE robar antes de que la IA decida qué hacer
         robarCarta(partida.getBot());
-
         botAIService.ejecutarTurno(partida);
-
-        // Al finalizar el turno del bot, el JUGADOR roba su carta para su nuevo turno
         robarCarta(partida.getJugador());
 
-        if (partida.getBot().getActivo() != null)
+        // 🚩 LIMPIAMOS TRAMPAS Y PARÁLISIS DEL BOT
+        if (partida.getBot().getActivo() != null) {
             partida.getBot().getActivo().setPuedeAtacar(true);
+            partida.getBot().getActivo().getCondicionesEspeciales().remove("CantRetreat");
+            partida.getBot().getActivo().getCondicionesEspeciales().remove("Paralyzed"); // <-- SE CURA EL BOT
+        }
+
+        // 🚩 APLICAMOS EL VENENO Y EL FUEGO A TODOS (Versión post-turno del bot)
+        aplicarMantenimientoEntreTurnos(partida);
 
         partida.setTurnoActual(Partida.Turno.JUGADOR);
     }
-
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // LÃƒâ€œGICA INTERNA
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
         TableroJugador tableroVictima  = encontrarTableroPorCarta(partida, defensor);
@@ -349,7 +497,6 @@ public class BattleEngineService {
 
         if (tableroVictima == null || tableroGanador == null) return;
 
-        // Mover el PokÃƒÂ©mon K.O. al descarte
         tableroVictima.getPilaDescarte().add(defensor.getCard());
         if (defensor.equals(tableroVictima.getActivo())) {
             tableroVictima.setActivo(null);
@@ -357,29 +504,22 @@ public class BattleEngineService {
             tableroVictima.getBanca().remove(defensor);
         }
 
-        // El ganador toma una carta de premio
         if (!tableroGanador.getPremios().isEmpty()) {
             tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
         }
 
-        System.out.println("Ã°Å¸â€™â‚¬ K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
+        System.out.println("💀 K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
 
-        // Verificar fin de partida
         boolean ganadorSinPremios = tableroGanador.getPremios().isEmpty();
-        boolean victimasinPokemon = tableroVictima.getActivo() == null
-                && tableroVictima.getBanca().isEmpty();
+        boolean victimasinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
 
         if (ganadorSinPremios || victimasinPokemon) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
             System.out.println("🏆 ¡Partida terminada!");
-        }
-        // 🚩 AGREGÁ ESTO ACÁ ABAJO:
-        else if (tableroVictima.getActivo() == null && !tableroVictima.getBanca().isEmpty()) {
+        } else if (tableroVictima.getActivo() == null && !tableroVictima.getBanca().isEmpty()) {
             if (tableroVictima == partida.getBot()) {
-
                 CartaEnJuego rivalActivo = partida.getJugador().getActivo();
 
-                // 🧠 EL BOT AHORA EVALÚA MÚLTIPLES VARIABLES
                 CartaEnJuego mejorReemplazo = tableroVictima.getBanca().stream()
                         .max((c1, c2) -> {
                             int score1 = calcularPuntajeEstrategico(c1, rivalActivo);
@@ -388,7 +528,6 @@ public class BattleEngineService {
                         })
                         .get();
 
-                // Efectúa el cambio inteligente
                 tableroVictima.getBanca().remove(mejorReemplazo);
                 tableroVictima.setActivo(mejorReemplazo);
 
@@ -397,69 +536,43 @@ public class BattleEngineService {
         }
     }
 
-        // 🧠 EVALUADOR ESTRATÉGICO DEL BOT
-        private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
-            int puntaje = 0;
+    private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
+        int puntaje = 0;
+        puntaje += candidato.getEnergiasUnidas().size() * 50;
+        puntaje += candidato.getHpActual();
 
-            // 1. Prioridad base: Energía y Vida
-            puntaje += candidato.getEnergiasUnidas().size() * 50; // Mucho peso a tener munición
-            puntaje += candidato.getHpActual(); // Desempata con el que esté más sano
-
-            // Si por alguna razón el jugador no tiene activo, devolvemos el puntaje base
-            if (rival == null || rival.getCard() == null || rival.getCard().getTipo() == null) {
-                return puntaje;
-            }
-
-            String tipoRival = rival.getCard().getTipo();
-            String miTipo = candidato.getCard().getTipo();
-
-            // 2. ¿Soy DÉBIL contra el rival? (Evitar a toda costa)
-            if (candidato.getCard().getDebilidades() != null) {
-                boolean esDebil = candidato.getCard().getDebilidades().stream()
-                        .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoRival));
-                if (esDebil) puntaje -= 1000; // Penalización letal, que ni se asome
-            }
-
-            // 3. ¿Tengo RESISTENCIA contra el rival? (Es un gran tanque)
-            if (candidato.getCard().getResistencias() != null) {
-                boolean esResistente = candidato.getCard().getResistencias().stream()
-                        .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoRival));
-                if (esResistente) puntaje += 300; // Bono defensivo
-            }
-
-            // 4. ¿El rival es DÉBIL contra MÍ? (Oportunidad de hacer K.O. rápido)
-            if (rival.getCard().getDebilidades() != null && miTipo != null) {
-                boolean rivalEsDebil = rival.getCard().getDebilidades().stream()
-                        .anyMatch(w -> w.get("tipo").equalsIgnoreCase(miTipo));
-                if (rivalEsDebil) puntaje += 500; // Bono ofensivo brutal
-            }
-
+        if (rival == null || rival.getCard() == null || rival.getCard().getTipo() == null) {
             return puntaje;
         }
 
-    /**
-     * Obtiene el daÃƒÂ±o base del primer ataque de la carta.
-     * Si la carta no tiene ataques parseados, devuelve 10 como fallback.
-     */
-    private int calcularDanio(CartaEnJuego cartaEnJuego) {
-        Card card = cartaEnJuego.getCard();
+        String tipoRival = rival.getCard().getTipo();
+        String miTipo = candidato.getCard().getTipo();
 
-        if (card.getAtaques() != null && !card.getAtaques().isEmpty()) {
-            // Como no tenÃƒÂ©s daÃƒÂ±o real, devolvemos un valor base
-            return 20;
+        if (candidato.getCard().getDebilidades() != null) {
+            boolean esDebil = candidato.getCard().getDebilidades().stream()
+                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoRival));
+            if (esDebil) puntaje -= 1000;
         }
 
-        return 10;
+        if (candidato.getCard().getResistencias() != null) {
+            boolean esResistente = candidato.getCard().getResistencias().stream()
+                    .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoRival));
+            if (esResistente) puntaje += 300;
+        }
+
+        if (rival.getCard().getDebilidades() != null && miTipo != null) {
+            boolean rivalEsDebil = rival.getCard().getDebilidades().stream()
+                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(miTipo));
+            if (rivalEsDebil) puntaje += 500;
+        }
+
+        return puntaje;
     }
 
     private void robarCarta(TableroJugador tablero) {
         if (!tablero.getMazo().isEmpty())
             tablero.getMano().add(tablero.getMazo().remove(0));
     }
-
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
-    // HELPERS / FINDERS
-    // Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 
     private Partida getPartidaOThrow(String matchId) {
         Partida p = partidasEnCurso.get(matchId);
@@ -492,20 +605,16 @@ public class BattleEngineService {
         return null;
     }
 
-    // Así tiene que quedar para que el Bot no se confunda
     private boolean esPokemonBasico(Card c) {
         if (c == null) return false;
 
-        // 1. Verificar si el supertype es nulo
         if (c.getSupertype() == null) {
             System.out.println("❌ ERROR: La carta " + c.getNombre() + " no tiene supertype.");
             return false;
         }
 
-        // 2. Verificar que sea Pokémon
         boolean esPokemon = "Pokémon".equalsIgnoreCase(c.getSupertype()) || "Pokemon".equalsIgnoreCase(c.getSupertype());
 
-        // 3. Verificar que sea Básico (Si la lista es nula, asumimos que no lo es)
         boolean esBasico = false;
         if (c.getSubtypes() != null) {
             for (String subtype : c.getSubtypes()) {
@@ -514,8 +623,6 @@ public class BattleEngineService {
                     break;
                 }
             }
-        } else {
-            System.out.println("❌ ERROR: La carta " + c.getNombre() + " no tiene la lista de subtipos.");
         }
 
         return esPokemon && esBasico;
@@ -523,9 +630,6 @@ public class BattleEngineService {
 
     private boolean esEnergia(Card c) {
         if (c == null || c.getSupertype() == null) return false;
-
-        // 🚩 Si el supertype es Energy, no importa el tipo elemental (Fire, Water, etc)
         return c.getSupertype().equalsIgnoreCase("Energy");
     }
 }
-

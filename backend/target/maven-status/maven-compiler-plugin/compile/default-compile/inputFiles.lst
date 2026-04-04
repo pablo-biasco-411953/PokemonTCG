@@ -4,6 +4,7 @@ C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ChooseTurnRe
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\JugadorController.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\AuthService.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleService.java
+C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\ResultadoAtaque.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\AtaqueController.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\AuthController.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\UnirEnergiaRequest.java
