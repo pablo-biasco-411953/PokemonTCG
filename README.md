@@ -1,9 +1,8 @@
-
-
 <div align='center'>
   <img src='https://img.icons8.com/color/48/000000/pokeball.png' alt='Pokeball'/>
 </div>
-a# ⚡ Pokémon TCG - Sistema de Batalla
+
+# ⚡ Pokémon TCG - Sistema de Batalla
 
 <div align="center">
   <img src="https://img.icons8.com/color/96/000000/pokemon.png" alt="Pokemon Logo"/>
@@ -24,33 +23,39 @@ a# ⚡ Pokémon TCG - Sistema de Batalla
 
 Desarrollado como Proyecto Integrador para la cátedra de **Programación III** de la **Tecnicatura Universitaria en Programación (UTN FRC)**.
 
+---
+
 ## 🛠️ Stack Tecnológico
 
 ### Backend
-- **Core:** Java 21 LTS + Spring Boot 3.2.4
+- **Core:** Java 21 LTS (Uso de `Records` y features modernas) + Spring Boot 3.2.4
 - **Persistencia:** Spring Data JPA + H2 Database (In-Memory)
 - **Seguridad:** Spring Security (Autenticación de usuarios)
-- **JSON Engine:** Jackson para el parseo dinámico de cartas reales.
+- **JSON Engine:** Jackson para el parseo dinámico de atributos de cartas reales.
 
 ### Frontend
 - **Framework:** Angular 17 (Standalone Components)
-- **Estilos:** Tailwind CSS / CSS3 para el tablero de juego.
+- **Estilos:** Tailwind CSS / CSS3 para el tablero de juego inmersivo.
 - **Estado:** RxJS para la gestión de eventos de batalla en tiempo real.
 
 ---
 
-## 🧠 Inteligencia Artificial y Motor de Juego
+## 🧠 Core Features: Motor de Juego e IA
 
-El proyecto destaca por su lógica de negocio aplicada al combate:
+El diferencial técnico de este proyecto reside en su robusto **Battle Engine**, diseñado para replicar fielmente las mecánicas oficiales del TCG:
 
-1.  **IA Estratégica:** El bot evalúa el estado del tablero mediante pesos heurísticos:
-    * **Ventaja de Tipos:** Prioriza ataques que apliquen `Weakness (x2)`.
-    * **Retirada Táctica:** Si el Pokémon activo tiene poco HP, la IA busca un relevo con mejor balance de energía en la banca.
-    * **Gestión de Recursos:** Optimiza el uso de cartas de energía según el costo de los ataques disponibles.
-2.  **Motor de Daño:** Cálculo automático que considera:
-    * Debilidades y Resistencias elementales.
-    * Validación de requisitos de energía previos al ataque.
-    * Gestión de estados y reemplazo automático tras un K.O.
+### ⚙️ Motor de Reglas (BattleEngineService)
+- **Condiciones Especiales (Estados):** Soporte completo para Veneno ☠️, Quemadura 🔥, Sueño 💤, Parálisis ⚡ y Confusión 🌀.
+- **Fase de Mantenimiento (Pokémon Checkup):** Resolución automática de daño por estados y lanzamiento de monedas de curación entre turnos.
+- **RNG & Lanzamiento de Monedas:** Parseo dinámico de textos de ataques para calcular probabilidades de éxito, multiplicadores de daño y efectos colaterales (ej: destrucción de energía rival o bloqueo de retirada).
+- **Cura en la Banca:** Sistema de retirada que limpia automáticamente los estados alterados al volver a la banca.
+
+### 🤖 Inteligencia Artificial Heurística (BotAIService)
+El bot no juega al azar; utiliza un sistema de **Puntaje Estratégico** en constante evolución:
+- **Detección de Peligro por Estados:** El bot analiza si morirá por Veneno/Quemadura entre turnos y fuerza una retirada estratégica para curarse.
+- **Respeto de Bloqueos:** Reconoce si está Dormido o Paralizado y omite ataques inválidos.
+- **Ventaja Elemental:** Prioriza bajar a la banca y subir al activo a Pokémon que exploten la `Weakness (x2)` del rival o posean `Resistance (-20)`.
+- **Gestión de Recursos:** Optimiza la unión de cartas de energía evaluando el costo específico (y el costo incoloro) de sus ataques disponibles.
 
 ---
 
@@ -61,32 +66,12 @@ PokemonTCG/
 ├── backend/                # API REST (Java)
 │   └── src/main/java/com/pokemon/tcg/
 │       ├── controller/     # Endpoints de la API
-│       ├── model/          # Entidades (Card, Jugador, Partida)
-│       ├── service/        # Lógica de Batalla e IA
+│       ├── model/          # Entidades (Card, Jugador, Partida, ResultadoAtaque)
+│       ├── service/        # Lógica de Batalla, Procesamiento de Textos e IA
 │       └── repository/     # Interfaces JPA
 ├── frontend/               # Interfaz de Usuario (Angular)
-└── data/                   # Archivos JSON de cartas
-
-
-🧠 Core Features: IA y Motor de Juego
-El diferencial técnico de este proyecto reside en su Battle Engine:
-
-IA Heurística (BotAIService): * El bot no juega al azar; utiliza un sistema de Puntaje Estratégico.
-
-Evalúa debilidades del rival para maximizar el daño.
-
-Prioriza la supervivencia: si un Pokémon está en peligro de K.O., busca en la banca al suplente con mayor resistencia elemental.
-
-Motor de Reglas:
-
-Gestión de estados de cartas en juego (HP dinámico, energías unidas).
-
-Validación de Costo de Retirada y una sola retirada por turno.
-
-Sistema de premios (6 cartas) y verificación de condiciones de victoria.
-
-
-🔌 Documentación de la API (Endpoints)
+└── data/                   # Archivos JSON estructurados de cartas
+🔌 Documentación de la API (Endpoints Principales)
 🛡️ Autenticación y Jugadores
 POST /api/auth/login: Login/Registro automático.
 
@@ -95,52 +80,43 @@ GET /api/jugadores/{username}/datos: Perfil, sobres y estadísticas.
 GET /api/jugadores/{username}/coleccion: Lista de cartas obtenidas.
 
 ⚔️ Sistema de Batalla
-POST /api/battle/start/{username}: Inicia match contra la IA.
+POST /api/battle/start/{username}: Inicia un match contra la IA.
 
-POST /api/battle/{id}/play-pokemon: Baja un Pokémon básico a Activo o Banca.
+POST /api/battle/{id}/play-pokemon: Baja un Pokémon básico a la posición Activa o a la Banca.
 
-POST /api/battle/{id}/attach-energy: Une una carta de energía a un Pokémon.
+POST /api/battle/{id}/attach-energy: Une una carta de energía a un Pokémon específico.
 
-POST /api/battle/{id}/attack?nombreAtaque=X: Ejecuta daño y calcula debilidades.
+POST /api/battle/{id}/attack?nombreAtaque=X: Ejecuta un ataque, calculando RNG, debilidades y estados.
 
-POST /api/battle/{id}/retreat: Retira al activo pagando el costo de energía.
+POST /api/battle/{id}/retreat: Retira al activo pagando el costo de energía (y validando bloqueos).
 
-POST /api/battle/{id}/pass-turn: Finaliza el turno actual.
+POST /api/battle/{id}/pass-turn: Finaliza el turno actual y dispara la fase de Mantenimiento.
 
 🃏 Cartas y Mazos
 GET /api/cards: Catálogo completo de cartas.
 
-POST /api/sobres/abrir/{username}: Gacha system para obtener nuevas cartas.
+POST /api/sobres/abrir/{username}: Sistema Gacha para obtener nuevas cartas.
 
-POST /api/mazos/guardar: Persiste un mazo de 60 cartas.
+POST /api/mazos/guardar: Persiste un mazo customizado de 60 cartas.
 
-🚀 Guía de Ejecución
-Backend: Ejecutar BackendApplication.java o vía Maven:
-
-Bash
-mvn spring-boot:run
-Frontend:
-
-Bash
-npm install && ng serve
-Acceso: http://localhost:4200
-
-🗺️ Roadmap de Desarrollo (Futuras Implementaciones)
-🎯 Fase Actual: Bug Fixes & Refactor
+🗺️ Roadmap de Desarrollo
+🎯 Fase Actual: Lógica de Combate y Estados
 [x] Corregido error de posicionamiento en banca.
 
 [x] Implementado robo de carta automático al iniciar turno.
 
-[x] Optimización de IA para reemplazo inteligente post-K.O.
+[x] Sistema de Swap / Retirada táctica validando costos.
+
+[x] Efectos Especiales: Implementación de lógica para habilidades pasivas, lanzamiento de monedas y estados alterados (Veneno, Parálisis, etc.).
+
+[x] Optimización de IA para reemplazo inteligente post-K.O. y supervivencia a estados.
 
 🛠️ Próximos Desafíos Técnicos
-[ ] Evoluciones: Implementación de lógica para Stage 1 y Stage 2 validando el nombre del Pokémon base.
+[ ] Evoluciones: Implementación de lógica para Stage 1 y Stage 2 validando el nombre del Pokémon base (evolvesFrom).
 
 [ ] WebSockets (Online Real-Time): Migración del sistema de turnos a Spring WebSocket (STOMP) para permitir batallas PvP reales entre usuarios.
 
-[ ] Efectos Especiales: Implementar lógica para cartas con habilidades pasivas y estados alterados (Veneno, Parálisis).
-
-[ ] Sistema de Swap: Interfaz avanzada para el cambio de Pokémon Activo sin interrumpir el flujo de la partida.
+[ ] Animaciones en Frontend: Representación visual (UI) de los lanzamientos de monedas y los iconos de estado sobre las cartas.
 
 🎓 Créditos
 Desarrollador: Pablo Alejandro Biasco
