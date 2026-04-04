@@ -14,9 +14,6 @@ public class Ataque {
     @JsonProperty("costo")
     private List<String> tiposEnergia;
 
-    // 🚩 NUEVO: El texto del ataque (para los estados alterados)
-    private String texto;
-
     public Ataque() {}
 
     public String getNombre() { return nombre; }
@@ -25,13 +22,9 @@ public class Ataque {
     public int getDanio() { return danio; }
     public void setDanio(int danio) { this.danio = danio; }
 
-    @JsonProperty("costo")
+    @JsonProperty("costo") // Para que Jackson sepa leerlo del JSON
     public List<String> getCosto() { return tiposEnergia; }
 
-    @JsonProperty("costo")
+    @JsonProperty("costo") // Para que Jackson sepa escribirlo
     public void setTiposEnergia(List<String> tiposEnergia) { this.tiposEnergia = tiposEnergia; }
-
-    // 🚩 GETTER Y SETTER NUEVO
-    public String getTexto() { return texto; }
-    public void setTexto(String texto) { this.texto = texto; }
 }
