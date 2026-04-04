@@ -295,14 +295,21 @@ public class BattleEngineService {
     public void pasarTurno(String matchId) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
+
+        // 🚩 REGLA: No podés pasar de turno si no tenés un activo y tenés banca
+        TableroJugador jugador = partida.getJugador();
+        if (jugador.getActivo() == null && !jugador.getBanca().isEmpty()) {
+            throw new IllegalStateException("Debés subir un Pokémon de tu banca a la posición Activa antes de terminar tu turno.");
+        }
+
         partida.setYaSeRetiroEsteTurno(false);
-        // Resetear el flag de ataque del activo del jugador para el prÃƒÂ³ximo turno
+        // Resetear el flag de ataque del activo del jugador para el próximo turno
         if (partida.getJugador().getActivo() != null)
             partida.getJugador().getActivo().setPuedeAtacar(true);
 
         partida.setTurnoActual(Partida.Turno.BOT);
 
-        // FIX: turno del bot en hilo separado Ã¢â‚¬â€ no bloquea el thread HTTP
+        // FIX: turno del bot en hilo separado
         ejecutarTurnoBot(matchId);
     }
 
@@ -370,9 +377,71 @@ public class BattleEngineService {
 
         if (ganadorSinPremios || victimasinPokemon) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println("Ã°Å¸Ââ€  Ã‚Â¡Partida terminada!");
+            System.out.println("🏆 ¡Partida terminada!");
+        }
+        // 🚩 AGREGÁ ESTO ACÁ ABAJO:
+        else if (tableroVictima.getActivo() == null && !tableroVictima.getBanca().isEmpty()) {
+            if (tableroVictima == partida.getBot()) {
+
+                CartaEnJuego rivalActivo = partida.getJugador().getActivo();
+
+                // 🧠 EL BOT AHORA EVALÚA MÚLTIPLES VARIABLES
+                CartaEnJuego mejorReemplazo = tableroVictima.getBanca().stream()
+                        .max((c1, c2) -> {
+                            int score1 = calcularPuntajeEstrategico(c1, rivalActivo);
+                            int score2 = calcularPuntajeEstrategico(c2, rivalActivo);
+                            return Integer.compare(score1, score2);
+                        })
+                        .get();
+
+                // Efectúa el cambio inteligente
+                tableroVictima.getBanca().remove(mejorReemplazo);
+                tableroVictima.setActivo(mejorReemplazo);
+
+                System.out.println("🤖 [BOT] Analizó tipos y subió a " + mejorReemplazo.getCard().getNombre() + " como la mejor respuesta táctica.");
+            }
         }
     }
+
+        // 🧠 EVALUADOR ESTRATÉGICO DEL BOT
+        private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
+            int puntaje = 0;
+
+            // 1. Prioridad base: Energía y Vida
+            puntaje += candidato.getEnergiasUnidas().size() * 50; // Mucho peso a tener munición
+            puntaje += candidato.getHpActual(); // Desempata con el que esté más sano
+
+            // Si por alguna razón el jugador no tiene activo, devolvemos el puntaje base
+            if (rival == null || rival.getCard() == null || rival.getCard().getTipo() == null) {
+                return puntaje;
+            }
+
+            String tipoRival = rival.getCard().getTipo();
+            String miTipo = candidato.getCard().getTipo();
+
+            // 2. ¿Soy DÉBIL contra el rival? (Evitar a toda costa)
+            if (candidato.getCard().getDebilidades() != null) {
+                boolean esDebil = candidato.getCard().getDebilidades().stream()
+                        .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoRival));
+                if (esDebil) puntaje -= 1000; // Penalización letal, que ni se asome
+            }
+
+            // 3. ¿Tengo RESISTENCIA contra el rival? (Es un gran tanque)
+            if (candidato.getCard().getResistencias() != null) {
+                boolean esResistente = candidato.getCard().getResistencias().stream()
+                        .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoRival));
+                if (esResistente) puntaje += 300; // Bono defensivo
+            }
+
+            // 4. ¿El rival es DÉBIL contra MÍ? (Oportunidad de hacer K.O. rápido)
+            if (rival.getCard().getDebilidades() != null && miTipo != null) {
+                boolean rivalEsDebil = rival.getCard().getDebilidades().stream()
+                        .anyMatch(w -> w.get("tipo").equalsIgnoreCase(miTipo));
+                if (rivalEsDebil) puntaje += 500; // Bono ofensivo brutal
+            }
+
+            return puntaje;
+        }
 
     /**
      * Obtiene el daÃƒÂ±o base del primer ataque de la carta.
