@@ -49,18 +49,33 @@ async function main() {
     const cards = data.data;
 
     await fsPromises.mkdir(IMG_DIR, { recursive: true });
-    const cleanedCards = [];
+   const cleanedCards = [];
 
     for (const card of cards) {
-      if (card.supertype !== 'Pokémon') continue;
+      // 🚩 CAMBIO 1: Ahora dejamos pasar a los Pokémon Y a las cartas de Entrenador
+      if (card.supertype !== 'Pokémon' && card.supertype !== 'Trainer') continue;
 
       const id = card.id;
       const nombre = card.name;
-      const tipo = (card.types && card.types.length > 0) ? card.types[0] : 'Colorless';
+      const supertype = card.supertype; // 'Pokémon' o 'Trainer'
+      const subtypes = card.subtypes || []; // Ej: ['Basic'], ['Stage 1'], ['Item']
       
-      const hp = card.hp || '60';
+      // Si es Trainer no tiene tipo elemental, le clavamos 'Trainer'
+      const tipo = (card.types && card.types.length > 0) ? card.types[0] : supertype; 
+      
+      const hp = card.hp || '0';
       const costoRetirada = card.convertedRetreatCost || 0;
-      // 1. Mapeo de Ataques
+      const evolvesFrom = card.evolvesFrom || null; // 🚩 NUEVO: Para evoluciones
+      const reglas = card.rules || []; // 🚩 NUEVO: Para saber qué hace un Objeto/Partidario
+
+      // 🚩 NUEVO: Mapeo de Habilidades Pasivas
+      const habilidades = (card.abilities || []).map(ab => ({
+        nombre: ab.name,
+        tipo: ab.type,
+        texto: ab.text
+      }));
+
+      // 1. Mapeo de Ataques Mejorado
       const ataques = (card.attacks || []).map(a => {
         let damageValue = 0;
         if (a.damage) {
@@ -69,23 +84,22 @@ async function main() {
         return { 
           nombre: a.name, 
           costo: a.cost || [], 
-          dano: damageValue 
+          dano: damageValue,
+          texto: a.text || '' // 🚩 ¡ACÁ ESTÁ LA MAGIA DE LOS EFECTOS!
         };
       });
 
-      // 2. 🚩 NUEVO: Mapeo de Debilidades (Weaknesses)
       const debilidades = (card.weaknesses || []).map(w => ({
         tipo: w.type,
-        valor: w.value // Guardamos el "x2"
+        valor: w.value
       }));
 
-      // 3. 🚩 NUEVO: Mapeo de Resistencias (Resistances)
       const resistencias = (card.resistances || []).map(r => ({
         tipo: r.type,
-        valor: r.value // Guardamos el "-20"
+        valor: r.value
       }));
 
-      let rutaImagenLocal = `/assets/images/cards/${id}.png`;
+      let rutaImagenLocal = `/images/cards/${id}.png`;
       const imgPath = path.join(IMG_DIR, `${id}.png`);
       
       try {
@@ -95,20 +109,26 @@ async function main() {
         await downloadImage(card.images.small, imgPath);
       }
 
+      // Agregamos todo al objeto final
       cleanedCards.push({ 
         id, 
         nombre, 
+        supertype,
+        subtypes,
         tipo, 
         hp, 
-        costoRetirada, // 👈 Lo agregamos al objeto final
+        costoRetirada, 
+        evolvesFrom,
+        habilidades,
         ataques, 
         debilidades, 
-        resistencias, 
+        resistencias,
+        reglas,
         imagen: rutaImagenLocal 
       });
     }
 
-    // 4. Inyección de Energías Básicas
+    // 4. Inyección de Energías Básicas (Cambiamos un poquito para que coincida con el nuevo formato)
     console.log('⚡ Inyectando energías...');
     for (const energia of ENERGIAS_BASICAS) {
       const imgPath = path.join(IMG_DIR, `${energia.id}.png`);
@@ -119,12 +139,18 @@ async function main() {
       cleanedCards.push({
         id: energia.id,
         nombre: energia.name,
-        tipo: 'Energy',
+        supertype: 'Energy',
+        subtypes: ['Basic'],
+        tipo: energia.tipo,
         hp: '0',
+        costoRetirada: 0,
+        evolvesFrom: null,
+        habilidades: [],
         ataques: [],
         debilidades: [],
         resistencias: [],
-        imagen: `/assets/images/cards/${energia.id}.png`
+        reglas: [],
+        imagen: `/images/cards/${energia.id}.png`
       });
     }
 

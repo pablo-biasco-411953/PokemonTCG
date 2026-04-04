@@ -66,3 +66,89 @@ PokemonTCG/
 │       └── repository/     # Interfaces JPA
 ├── frontend/               # Interfaz de Usuario (Angular)
 └── data/                   # Archivos JSON de cartas
+
+
+🧠 Core Features: IA y Motor de Juego
+El diferencial técnico de este proyecto reside en su Battle Engine:
+
+IA Heurística (BotAIService): * El bot no juega al azar; utiliza un sistema de Puntaje Estratégico.
+
+Evalúa debilidades del rival para maximizar el daño.
+
+Prioriza la supervivencia: si un Pokémon está en peligro de K.O., busca en la banca al suplente con mayor resistencia elemental.
+
+Motor de Reglas:
+
+Gestión de estados de cartas en juego (HP dinámico, energías unidas).
+
+Validación de Costo de Retirada y una sola retirada por turno.
+
+Sistema de premios (6 cartas) y verificación de condiciones de victoria.
+
+
+🔌 Documentación de la API (Endpoints)
+🛡️ Autenticación y Jugadores
+POST /api/auth/login: Login/Registro automático.
+
+GET /api/jugadores/{username}/datos: Perfil, sobres y estadísticas.
+
+GET /api/jugadores/{username}/coleccion: Lista de cartas obtenidas.
+
+⚔️ Sistema de Batalla
+POST /api/battle/start/{username}: Inicia match contra la IA.
+
+POST /api/battle/{id}/play-pokemon: Baja un Pokémon básico a Activo o Banca.
+
+POST /api/battle/{id}/attach-energy: Une una carta de energía a un Pokémon.
+
+POST /api/battle/{id}/attack?nombreAtaque=X: Ejecuta daño y calcula debilidades.
+
+POST /api/battle/{id}/retreat: Retira al activo pagando el costo de energía.
+
+POST /api/battle/{id}/pass-turn: Finaliza el turno actual.
+
+🃏 Cartas y Mazos
+GET /api/cards: Catálogo completo de cartas.
+
+POST /api/sobres/abrir/{username}: Gacha system para obtener nuevas cartas.
+
+POST /api/mazos/guardar: Persiste un mazo de 60 cartas.
+
+🚀 Guía de Ejecución
+Backend: Ejecutar BackendApplication.java o vía Maven:
+
+Bash
+mvn spring-boot:run
+Frontend:
+
+Bash
+npm install && ng serve
+Acceso: http://localhost:4200
+
+🗺️ Roadmap de Desarrollo (Futuras Implementaciones)
+🎯 Fase Actual: Bug Fixes & Refactor
+[x] Corregido error de posicionamiento en banca.
+
+[x] Implementado robo de carta automático al iniciar turno.
+
+[x] Optimización de IA para reemplazo inteligente post-K.O.
+
+🛠️ Próximos Desafíos Técnicos
+[ ] Evoluciones: Implementación de lógica para Stage 1 y Stage 2 validando el nombre del Pokémon base.
+
+[ ] WebSockets (Online Real-Time): Migración del sistema de turnos a Spring WebSocket (STOMP) para permitir batallas PvP reales entre usuarios.
+
+[ ] Efectos Especiales: Implementar lógica para cartas con habilidades pasivas y estados alterados (Veneno, Parálisis).
+
+[ ] Sistema de Swap: Interfaz avanzada para el cambio de Pokémon Activo sin interrumpir el flujo de la partida.
+
+🎓 Créditos
+Desarrollador: Pablo Alejandro Biasco
+
+Institución: UTN - Facultad Regional Córdoba
+
+Materia: Programación III
+
+<div align="center">
+<img src="https://img.icons8.com/color/48/000000/pokeball.png" alt="Pokeball"/>
+</div>

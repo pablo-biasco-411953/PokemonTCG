@@ -392,15 +392,36 @@ public class BotAIService {
         return resultado;
     }
 
-    private boolean esPokemonBasico(Card carta) {
-        if (carta.getTipo() == null) return false;
-        String tipo = carta.getTipo().toLowerCase();
-        return !tipo.contains("energy") && !tipo.contains("energía") && !tipo.contains("stage");
+    private boolean esPokemonBasico(Card c) {
+        if (c == null) return false;
+
+        System.out.print("🔍 [BOT SCAN] Analizando: " + c.getNombre() + " -> ");
+
+        // 1. FILTRO ANTI-ENERGÍAS: Si dice "Energía" o su HP es 0, arafue.
+        if (c.getNombre().toLowerCase().contains("energ") || "Energy".equalsIgnoreCase(c.getSupertype()) || "0".equals(c.getHp())) {
+            System.out.println("❌ Es una Energía.");
+            return false;
+        }
+
+        // 2. FILTRO ANTI-EVOLUCIONES: Si evoluciona de alguien, arafue.
+        if (c.getEvolvesFrom() != null && !c.getEvolvesFrom().trim().isEmpty()) {
+            System.out.println("❌ Es Evolución (Viene de " + c.getEvolvesFrom() + ").");
+            return false;
+        }
+
+        // 3. FILTRO ANTI-STAGE: Revisamos la base de datos cruda por las dudas.
+        if (c.getSubtypesJson() != null && c.getSubtypesJson().contains("Stage")) {
+            System.out.println("❌ Es Fase 1 o 2 (Lo dice su JSON).");
+            return false;
+        }
+
+        // Si pasó todos estos filtros de seguridad, es un Básico real.
+        System.out.println("✅ ¡ES BÁSICO Y LEGAL!");
+        return true;
     }
 
-    private boolean esEnergia(Card carta) {
-        if (carta.getTipo() == null) return false;
-        String tipo = carta.getTipo().toLowerCase();
-        return tipo.contains("energy") || tipo.contains("energía");
+    private boolean esEnergia(Card c) {
+        if (c == null || c.getSupertype() == null) return false;
+        return c.getSupertype().equalsIgnoreCase("Energy");
     }
 }

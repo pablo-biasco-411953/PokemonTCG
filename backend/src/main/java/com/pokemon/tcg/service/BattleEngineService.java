@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 @Service
 public class BattleEngineService {
 
@@ -277,19 +277,13 @@ public class BattleEngineService {
 
             if (activoBot.getHpActual() <= 0) {
                 resolverKO(partida, activoJugador, activoBot);
-
-                if (!partida.getBot().getBanca().isEmpty()) {
-                    CartaEnJuego nuevoActivoBot = partida.getBot().getBanca().remove(0);
-                    partida.getBot().setActivo(nuevoActivoBot);
-                    System.out.println("Ã°Å¸Â¤â€“ [BOT] ReemplazÃƒÂ³ su activo derrotado por: " + nuevoActivoBot.getCard().getNombre());
-                }
             }
 
-            System.out.println("Ã°Å¸â€â€ž Ataque finalizado. Pasando turno al BOT...");
+            System.out.println("🔄 Ataque finalizado. Pasando turno al BOT...");
             this.pasarTurno(matchId);
 
         } else {
-            throw new IllegalStateException("El oponente no tiene un PokÃƒÂ©mon activo al cual atacar.");
+            throw new IllegalStateException("El oponente no tiene un Pokémon activo al cual atacar.");
         }
     }
     public void pasarTurno(String matchId) {
@@ -498,16 +492,40 @@ public class BattleEngineService {
         return null;
     }
 
+    // Así tiene que quedar para que el Bot no se confunda
     private boolean esPokemonBasico(Card c) {
-        if (c.getTipo() == null) return false;
-        String tipo = c.getTipo().toLowerCase();
-        return !tipo.contains("stage") && !tipo.contains("energy") && !tipo.contains("energÃƒÂ­a");
+        if (c == null) return false;
+
+        // 1. Verificar si el supertype es nulo
+        if (c.getSupertype() == null) {
+            System.out.println("❌ ERROR: La carta " + c.getNombre() + " no tiene supertype.");
+            return false;
+        }
+
+        // 2. Verificar que sea Pokémon
+        boolean esPokemon = "Pokémon".equalsIgnoreCase(c.getSupertype()) || "Pokemon".equalsIgnoreCase(c.getSupertype());
+
+        // 3. Verificar que sea Básico (Si la lista es nula, asumimos que no lo es)
+        boolean esBasico = false;
+        if (c.getSubtypes() != null) {
+            for (String subtype : c.getSubtypes()) {
+                if ("Basic".equalsIgnoreCase(subtype)) {
+                    esBasico = true;
+                    break;
+                }
+            }
+        } else {
+            System.out.println("❌ ERROR: La carta " + c.getNombre() + " no tiene la lista de subtipos.");
+        }
+
+        return esPokemon && esBasico;
     }
 
     private boolean esEnergia(Card c) {
-        return c.getTipo() != null &&
-                (c.getTipo().toLowerCase().contains("energy") ||
-                        c.getTipo().toLowerCase().contains("energÃƒÂ­a"));
+        if (c == null || c.getSupertype() == null) return false;
+
+        // 🚩 Si el supertype es Energy, no importa el tipo elemental (Fire, Water, etc)
+        return c.getSupertype().equalsIgnoreCase("Energy");
     }
 }
 
