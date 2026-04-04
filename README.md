@@ -1,31 +1,27 @@
 # Pokemon TCG - Sistema de Juego
 
-# Pokemon TCG - Sistema de Juego
 
 <div align='center'>
   <img src='https://img.icons8.com/color/96/000000/pokemon.png' alt='Pokemon Logo'/>
-  <h1>Pok�mon Trading Card Game</h1>
-  <p>Sistema completo de juego para Pok�mon TCG con backend en Spring Boot y frontend en Angular</p>
+  <h1>Pokémon Trading Card Game</h1>
+  <p>Sistema completo de juego para Pokémon TCG con backend en Spring Boot y frontend en Angular</p>
 </div>
 
 ## Descripci�n General
 
-El proyecto PokemonTCG es un sistema completo que permite jugar al juego de cartas coleccionables Pok�mon TCG (Trading Card Game) en una plataforma digital. El juego implementa las reglas b�sicas del TCG, incluyendo batallas entre jugadores, manejo de mazos, cartas, energ�a y ataques.
+El proyecto PokemonTCG es un sistema completo que permite jugar al juego de cartas coleccionables Pokémon TCG (Trading Card Game) en una plataforma digital. El juego implementa las reglas b�sicas del TCG, incluyendo batallas entre jugadores, manejo de mazos, cartas, energía y ataques.
 
 ## Estructura del Proyecto
 
 PokemonTCG/
-+-- backend/                 # Servidor Spring Boot
-�   +-- src/main/java/com/pokemon/tcg/
-�   �   +-- controller/      # Controladores REST API
-�   �   +-- model/           # Modelos de datos
-�   �   �   +-- battle/      # Modelos de batalla
-�   �   +-- repository/      # Repositorios de datos
-�   �   +-- service/         # L�gica de negocio
-�   +-- src/main/resources/
-�       +-- cards.json       # Datos de cartas
-+-- frontend/                # Frontend Angular
-+-- README.md                # Documentaci�n
+├── backend/                # Servidor Spring Boot (Java 21)
+│   └── src/main/java/com/pokemon/tcg/
+│       ├── controller/     # Endpoints REST
+│       ├── model/          # Entidades y lógica de batalla
+│       ├── repository/     # Persistencia JPA
+│       └── service/        # Lógica de negocio e IA
+├── frontend/               # Interfaz Angular 17
+└── README.md
 
 ## Tecnolog�as Utilizadas
 
@@ -48,26 +44,26 @@ PokemonTCG/
 ### Modelos Principales
 
 #### Carta (Card)
-Representa una carta de Pok�mon TCG con las siguientes propiedades:
-- id: Identificador �nico de la carta
+Representa una carta de Pokémon TCG con las siguientes propiedades:
+- id: Identificador único de la carta
 - nombre: Nombre de la carta
 - hp: Puntos de salud
-- tipo: Tipo de Pok�mon (Fire, Water, Grass, etc.)
+- tipo: Tipo de Pokémon (Fire, Water, Grass, etc.)
 - imagen: URL de la imagen de la carta
-- supertype: Tipo de carta (Pok�mon, Trainer, Energy)
+- supertype: Tipo de carta (Pokémon, Trainer, Energy)
 - subtypes: Subtipos como Basic, Stage 1, Stage 2
 - evolucionDe: Nombre de la carta de la que evoluciona
 - ataques: Lista de ataques disponibles
-- debilidades: Debilidades del Pok�mon
-- resistencias: Resistencias del Pok�mon
+- debilidades: Debilidades del Pokémon
+- resistencias: Resistencias del Pokémon
 
 #### Jugador (Jugador)
-- id: Identificador �nico
+- id: Identificador único
 - username: Nombre de usuario
 - mazos: Lista de mazos del jugador
 
 #### Mazo (Mazo)
-- id: Identificador �nico
+- id: Identificador único
 - nombre: Nombre del mazo
 - cartas: Lista de cartas en el mazo
 
@@ -82,27 +78,27 @@ Representa una batalla en curso con:
 ## Funcionalidades Implementadas
 
 ### 1. Gesti�n de Usuarios y Mazos
-- Registro y autenticaci�n de usuarios
-- Creaci�n y gesti�n de mazos de cartas
+- Registro y autenticación de usuarios
+- Creación y gestión de mazos de cartas
 - Almacenamiento de mazos por jugador
 
 ### 2. Sistema de Batalla
 - Inicio de batallas entre dos jugadores
-- Lanzamiento de moneda para determinar qui�n comienza
-- Selecci�n del turno inicial
+- Lanzamiento de moneda para determinar quién comienza
+- Selección del turno inicial
 - Manejo de turnos y fases de juego
 
 ### 3. Juego en Tiempo Real
-- Jugar cartas Pok�mon al tablero
-- Adjuntar energ�a a Pok�mon
-- Ejecutar ataques entre Pok�mon
-- Gesti�n de HP y estado de las cartas
+- Jugar cartas Pokémon al tablero
+- Adjuntar energía a Pokémon
+- Ejecutar ataques entre Pokémon
+- Gestión de HP y estado de las cartas
 
 ### 4. Sistema de Cartas
 - Carga de datos desde archivo JSON
-- Manejo de tipos de energ�a requeridos para ataques
-- Implementaci�n de debilidades y resistencias
-- Evoluci�n de cartas
+- Manejo de tipos de energía requeridos para ataques
+- Implementación de debilidades y resistencias
+- Evolución de cartas
 
 
 ## API Endpoints
@@ -112,7 +108,7 @@ Representa una batalla en curso con:
 - POST /api/auth/register - Registrar nuevo usuario
 
 ### Usuarios
-- GET /api/users/{username} - Obtener informaci�n del usuario
+- GET /api/users/{username} - Obtener información del usuario
 - PUT /api/users/{username} - Actualizar datos del usuario
 
 ### Mazos
@@ -123,14 +119,14 @@ Representa una batalla en curso con:
 
 ### Cartas
 - GET /api/cards - Listar todas las cartas
-- GET /api/cards/{id} - Obtener carta espec�fica
+- GET /api/cards/{id} - Obtener carta específica
 
 ### Batallas
 - POST /api/battle/start/{username} - Iniciar batalla
 - POST /api/battle/{matchId}/coin-flip - Lanzar moneda
 - POST /api/battle/{matchId}/choose-turn - Elegir turno
-- POST /api/battle/{matchId}/attach-energy - Adjuntar energ�a
-- POST /api/battle/{matchId}/play-pokemon - Jugar Pok�mon
+- POST /api/battle/{matchId}/attach-energy - Adjuntar energía
+- POST /api/battle/{matchId}/play-pokemon - Jugar Pokémon
 - GET /api/battle/{matchId}/state - Obtener estado de la partida
 
 ## C�mo Ejecutar el Proyecto
@@ -154,50 +150,50 @@ ng serve
 `
 
 ### Base de Datos
-El proyecto utiliza H2 Database en modo memoria. La base de datos se crea autom�ticamente al iniciar la aplicaci�n.
+El proyecto utiliza H2 Database en modo memoria. La base de datos se crea automáticamente al iniciar la aplicación.
 
 ## Implementaci�n Actual
 
 ### Funcionalidades Completas
-- ? Sistema de autenticaci�n de usuarios
-- ? Gesti�n de mazos y cartas
+- ? Sistema de autenticación de usuarios
+- ? Gestión de mazos y cartas
 - ? Inicio de batallas entre jugadores
 - ? Lanzamiento de moneda para turnos
 - ? Juego de cartas en tablero
-- ? Manejo de energ�a y ataques
-- ? Sistema de HP y estado de Pok�mon
+- ? Manejo de energía y ataques
+- ? Sistema de HP y estado de Pokémon
 
 ### Reglas Implementadas
 - ? Juego de 60 cartas por mazo
 - ? Turnos alternados entre jugadores
-- ? Tipos de energ�a requeridos para ataques
+- ? Tipos de energía requeridos para ataques
 - ? Debilidades y resistencias
-- ? Evoluci�n de cartas
+- ? Evolución de cartas
 
 ## Funcionalidades Pendientes
 
 ### Reglas TCG Completas
 1. Regla del Turno: Implementar correctamente el sistema de turnos con fases completas (Draw, Main, End)
-2. Regla de Energ�a: A�adir soporte para diferentes tipos de energ�a y manejo de recursos
-3. Regla de Evoluci�n: Mejorar la l�gica de evoluci�n de cartas con condiciones espec�ficas
-4. Regla de Ataques: Implementar ataques que requieran m�s de un tipo de energ�a
+2. Regla de energía: Añadir soporte para diferentes tipos de energía y manejo de recursos
+3. Regla de Evolución: Mejorar la l�gica de evolución de cartas con condiciones específicas
+4. Regla de Ataques: Implementar ataques que requieran máss de un tipo de energía
 5. Regla de Debuffs/Condiciones: A�adir efectos como Paralized, Confused, etc.
-6. Regla de Energ�a Excedente: Manejo de energ�a sobrante al final del turno
+6. Regla de energía Excedente: Manejo de energía sobrante al final del turno
 
 ### Funcionalidades Adicionales
-1. Sistema de Nivelaci�n: Implementar niveles y experiencia para jugadores
-2. Sistema de Colecci�n: A�adir m�canicas de colecci�n de cartas raras
+1. Sistema de Nivelación: Implementar niveles y experiencia para jugadores
+2. Sistema de Colección: A�adir m�canicas de colección de cartas raras
 3. Sistema de Torneos: Crear competencias entre jugadores
 4. Sistema de Intercambio: Permitir intercambio de cartas entre jugadores
-5. Sistema de Inventario: Gesti�n avanzada de cartas y mazos
-6. Sistema de Chat: Comunicaci�n en tiempo real durante las batallas
+5. Sistema de Inventario: Gestión avanzada de cartas y mazos
+6. Sistema de Chat: Comunicación en tiempo real durante las batallas
 
-### Mejoras T�cnicas
-1. Documentaci�n API: Generar documentaci�n completa con Swagger
+### Mejoras Técnicas
+1. Documentación API: Generar documentación completa con Swagger
 2. Tests Unitarios: Implementar tests para todas las funcionalidades
-3. Validaciones: A�adir validaciones completas de datos
+3. Validaciones: Añadir validaciones completas de datos
 4. Logs: Implementar sistema de logs completo
-5. Caching: A�adir mecanismos de cache para mejor rendimiento
+5. Caching: Añadir mecanismos de cache para mejor rendimiento
 
 ## Diagrama de Clases (Resumen)
 
@@ -256,27 +252,41 @@ classDiagram
     Partida --> Jugador : participa
     Partida --> TableroJugador : tiene
 `
-
+¡Entendido! El problema es que el archivo de texto original se guardó con una codificación antigua. Te paso el README.md completamente limpio, optimizado y sin caracteres especiales problemáticos para que no tengas más esos símbolos extraños.Copiá y pegá esto directamente en tu archivo README.md:Pokémon TCG - Sistema de Juego<div align='center'><img src='https://img.icons8.com/color/96/000000/pokemon.png' alt='Pokemon Logo'/><h1>Pokémon Trading Card Game</h1><p>Sistema completo de juego para Pokémon TCG con backend en Spring Boot y frontend en Angular</p></div>Descripción GeneralEl proyecto PokemonTCG es un simulador avanzado que permite jugar al juego de cartas coleccionables Pokémon en una plataforma digital. Implementa un motor de reglas complejo, gestión de estados de batalla y una IA estratégica basada en pesos heurísticos.Estructura del ProyectoPlaintextPokemonTCG/
+├── backend/                # Servidor Spring Boot (Java 21)
+│   └── src/main/java/com/pokemon/tcg/
+│       ├── controller/     # Endpoints REST
+│       ├── model/          # Entidades y lógica de batalla
+│       ├── repository/     # Persistencia JPA
+│       └── service/        # Lógica de negocio e IA
+├── frontend/               # Interfaz Angular 17
+└── README.md               # Documentación
+Tecnologías Utilizadas BackendJava 21 LTSSpring Boot 3.2.4H2 Database: Base de datos en memoria para desarrollo ágil.Jackson: Procesamiento de JSON dinámico para carga de cartas.FrontendAngular 17TypeScript & RxJSTailwind CSS: Para el diseño del tablero dinámico.Mecánicas de IA y Combate🧠 Inteligencia Artificial EstratégicaEl bot evalúa el tablero en tiempo real para tomar decisiones lógicas:Análisis de Tipos: Prioriza Pokémon con ventaja elemental (Weakness x2) y evita exponer cartas con debilidad frente al rival.Retirada Táctica: Si un Pokémon está en peligro de K.O. o estancado sin energía, la IA busca en la banca al suplente con mejor puntaje (HP/Energía) para cubrir la posición.Gestión de Mano: Evalúa qué Pokémon básico bajar a la banca basándose en las energías disponibles para cargarlo a futuro.⚔️ Motor de DañoCálculo automático de Debilidades y Resistencias.Validación de costos de energía por ataque.Sistema de reemplazo automático de Pokémon Activo tras un K.O.API Endpoints PrincipalesAcciónMétodoEndpointIniciar SesiónPOST/api/auth/loginAbrir SobrePOST/api/sobres/abrir/{username}Listar MazosGET/api/mazos/listar/{username}Iniciar BatallaPOST/api/battle/start/{username}Jugar PokémonPOST/api/battle/{matchId}/play-pokemonAtacarPOST/api/battle/{matchId}/attackCómo Ejecutar el ProyectoRequisitosJava 21+Node.js 18+MavenBackendBashcd backend
+mvn clean spring-boot:run
+FrontendBashcd frontend
+npm install
+ng serve
+Implementación Actual y RoadmapFuncionalidades Completas ✅Autenticación de usuarios.Carga automática de 255 cartas reales vía JSON.IA Estratégica con lógica de pesos.Sistema de apertura de sobres y colección persistente.Tablero de batalla funcional con lógica de turnos.Próximas Mejoras 🚧Estados Alterados: Implementar Confusión, Parálisis y Veneno.Cartas Trainer: Añadir Objetos y Partidarios para mejorar el flujo del mazo.Evolución: Lógica para transformar Pokémon de Básico a Stage 1/2.Nota Educativa: Proyecto desarrollado para la cátedra de Programación III - Tecnicatura Universitaria en Programación - UTN FRC.<div align='center'><img src='https://img.icons8.com/color/48/000000/pokeball.png' alt='Pokeball'/></div>
 ## Objetivos del Proyecto
 
 ### Objetivo Inmediato
-- Crear un sistema funcional de batalla Pok�mon TCG con reglas b�sicas
+- Crear un sistema funcional de batalla Pokémon TCG con reglas b�sicas
 - Implementar una interfaz de usuario intuitiva para jugar
 - Asegurar la persistencia de datos y usuarios
 
 ### Objetivo Mediano Plazo
-- Implementar todas las reglas del juego de cartas Pok�mon TCG
+- Implementar todas las reglas del juego de cartas Pokémon TCG
 - Mejorar el rendimiento y escalabilidad del sistema
 - A�adir funcionalidades avanzadas como torneos y colecciones
 
 ### Objetivo Largo Plazo
-- Convertirlo en una plataforma completa para jugadores de Pok�mon TCG
+- Convertirlo en una plataforma completa para jugadores de Pokémon TCG
 - Integrar con APIs externas de cartas
-- Crear un ecosistema completo de juego y socializaci�n
+- Crear un ecosistema completo de juego y socialización
 
 ## Contacto
 
-Para m�s informaci�n o colaboraciones, puedes contactarme a trav�s de:
+Para m�s información o colaboraciones, puedes contactarme a trav�s de:
 
 - Email: [tu-email@ejemplo.com]
 - GitHub: [github.com/tu-usuario/PokemonTCG]
