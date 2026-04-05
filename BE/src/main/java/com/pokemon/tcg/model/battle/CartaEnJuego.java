@@ -11,7 +11,7 @@ import java.util.Set;
  */
 public class CartaEnJuego {
     private Set<String> condicionesEspeciales = new HashSet<>();
-    private final Card card; // referencia a la carta original
+    private  Card card; // referencia a la carta original
     private int hpActual;
     private List<Card> energiasUnidas = new ArrayList<>();
     private boolean puedeAtacar = true;
@@ -43,5 +43,9 @@ public class CartaEnJuego {
 
     public void limpiarCondiciones() {
         this.condicionesEspeciales.clear();
+    }
+
+    public void setCard(Card card) {
+        this.card = card;
     }
 }
