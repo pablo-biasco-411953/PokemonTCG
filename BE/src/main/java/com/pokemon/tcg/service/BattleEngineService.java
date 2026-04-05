@@ -572,47 +572,44 @@ public class BattleEngineService {
             throw new IllegalStateException("Debés subir un Pokémon de tu banca a la posición Activa antes de terminar tu turno.");
         }
 
-        // 🚩 LIMPIAMOS TRAMPAS Y PARÁLISIS DE TU POKÉMON (Duran hasta el final de tu turno)
+        // LIMPIAMOS TRAMPAS Y PARÁLISIS DEL JUGADOR
         if (jugador.getActivo() != null) {
             jugador.getActivo().getCondicionesEspeciales().remove("CantRetreat");
-            jugador.getActivo().getCondicionesEspeciales().remove("Paralyzed"); // <-- SE CURA LA PARÁLISIS
+            jugador.getActivo().getCondicionesEspeciales().remove("Paralyzed");
             jugador.getActivo().setPuedeAtacar(true);
         }
 
-        // 🚩 APLICAMOS EL VENENO Y EL FUEGO A TODOS
         aplicarMantenimientoEntreTurnos(partida);
 
         partida.setYaSeRetiroEsteTurno(false);
+        // 🚩 LE PASAMOS LA PELOTA AL BOT, PERO NO LO EJECUTAMOS ACÁ.
+        // Angular se va a encargar de despertarlo.
         partida.setTurnoActual(Partida.Turno.BOT);
-        ejecutarTurnoBot(matchId);
     }
 
-    @Async
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
 
-        try {
-            Thread.sleep(1200);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
+        // 1. El bot empieza su turno robando una carta
         robarCarta(partida.getBot());
-        botAIService.ejecutarTurno(partida);
-        robarCarta(partida.getJugador());
 
-        // 🚩 LIMPIAMOS TRAMPAS Y PARÁLISIS DEL BOT
+        // 2. 🧠 ¡DESPERTAMOS AL CEREBRO! (Esta es la línea que faltaba)
+        botAIService.ejecutarTurno(partida);
+
+        // 3. LIMPIAMOS TRAMPAS Y PARÁLISIS DEL BOT
         if (partida.getBot().getActivo() != null) {
             partida.getBot().getActivo().setPuedeAtacar(true);
             partida.getBot().getActivo().getCondicionesEspeciales().remove("CantRetreat");
             partida.getBot().getActivo().getCondicionesEspeciales().remove("Paralyzed"); // <-- SE CURA EL BOT
         }
 
-        // 🚩 APLICAMOS EL VENENO Y EL FUEGO A TODOS (Versión post-turno del bot)
+        // 4. APLICAMOS EL VENENO Y EL FUEGO A TODOS (Mantenimiento post-turno del bot)
         aplicarMantenimientoEntreTurnos(partida);
 
+        // 5. Le devolvemos el turno al jugador y hacemos que robe su carta para arrancar
         partida.setTurnoActual(Partida.Turno.JUGADOR);
+        robarCarta(partida.getJugador());
     }
 
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
