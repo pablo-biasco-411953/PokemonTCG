@@ -1,5 +1,6 @@
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Jugador.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\MazoRepository.java
+C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\EvolveRequest.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ChooseTurnRequest.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\JugadorController.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\AuthService.java

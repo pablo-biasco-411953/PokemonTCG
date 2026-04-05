@@ -13,6 +13,7 @@ com\pokemon\tcg\model\Card$1.class
 com\pokemon\tcg\dto\LoginRequest.class
 com\pokemon\tcg\repository\CardRepository.class
 com\pokemon\tcg\service\MazoService.class
+com\pokemon\tcg\dto\EvolveRequest.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\controller\MazoController.class
