@@ -753,4 +753,55 @@ public class BattleEngineService {
         if (c == null || c.getSupertype() == null) return false;
         return c.getSupertype().equalsIgnoreCase("Energy");
     }
+
+
+    public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurnoJugador(partida);
+
+        TableroJugador tablero = partida.getJugador();
+
+        // 1. Buscar la carta en la mano (la Evolución)
+        Card cartaEvolucion = encontrarCartaEnMano(tablero, cartaManoId);
+        if (cartaEvolucion == null) {
+            throw new IllegalArgumentException("La carta de evolución no está en tu mano.");
+        }
+
+        // 2. Buscar el objetivo en el tablero (El Básico/Fase 1)
+        CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaTableroId);
+        if (objetivo == null) {
+            throw new IllegalArgumentException("El Pokémon objetivo no está en tu tablero.");
+        }
+
+        // 3. 🛡️ REGLA OFICIAL: Validar el linaje de evolución
+        String evolvesFrom = cartaEvolucion.getEvolvesFrom();
+        String nombreObjetivo = objetivo.getCard().getNombre();
+
+        if (evolvesFrom == null || !evolvesFrom.equalsIgnoreCase(nombreObjetivo)) {
+            throw new IllegalStateException("¡Evolución inválida! " + cartaEvolucion.getNombre() +
+                    " evoluciona de " + evolvesFrom + ", no de " + nombreObjetivo + ".");
+        }
+
+        System.out.println("✨ ¡Evolución inminente! " + nombreObjetivo + " está evolucionando a " + cartaEvolucion.getNombre() + "...");
+
+        // 4. 🛡️ REGLA OFICIAL: Calcular daño previo para mantenerlo
+        // Si el básico tenía 50 HP y le quedaban 30, tiene 20 de daño acumulado.
+        int hpMaximoAnterior = Integer.parseInt(objetivo.getCard().getHp());
+        int danioAcumulado = hpMaximoAnterior - objetivo.getHpActual();
+
+        // 5. ¡PISAR LOS DATOS! Transformamos la carta base en la evolución
+        objetivo.setCard(cartaEvolucion); // Actualizamos la referencia de la carta
+
+        // 6. 🛡️ REGLA OFICIAL: Aplicar el nuevo HP restando el daño viejo
+        int nuevoHpMaximo = Integer.parseInt(cartaEvolucion.getHp());
+        objetivo.setHpActual(Math.max(0, nuevoHpMaximo - danioAcumulado));
+
+        // 7. 🛡️ REGLA OFICIAL: ¡Milagro médico! Curar todos los estados alterados
+        objetivo.limpiarCondiciones();
+
+        // 8. Quitar la carta usada de la mano
+        tablero.getMano().remove(cartaEvolucion);
+
+        System.out.println("✅ Evolución completada con éxito. HP actual: " + objetivo.getHpActual() + "/" + nuevoHpMaximo);
+    }
 }

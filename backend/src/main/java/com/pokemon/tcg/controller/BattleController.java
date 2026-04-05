@@ -37,6 +37,17 @@ public class BattleController {
         return ResponseEntity.ok(partida);
     }
 
+    @PostMapping("/{matchId}/evolve")
+    public ResponseEntity<?> evolucionarPokemon(@PathVariable String matchId,
+                                                @RequestBody EvolveRequest request) {
+        try {
+            battleEngine.evolucionarPokemon(matchId, request.getCartaManoId(), request.getCartaTableroId());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/jugar-bot")
     public ResponseEntity<?> jugarBot(@PathVariable String matchId) {
         try {
