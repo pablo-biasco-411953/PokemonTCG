@@ -47,10 +47,6 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/promote`, cartaId);
   }
 
-  jugarBot(matchId: string) {
-    return this.http.post(`${this.base}/${matchId}/jugar-bot`, {});
-  }
-
   pasarTurno(matchId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/pass-turn`, {});
   }
