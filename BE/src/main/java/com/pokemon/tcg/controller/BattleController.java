@@ -28,11 +28,37 @@ public class BattleController {
         }
     }
 
+
+
     @GetMapping("/state/{matchId}")
     public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId) {
         Partida partida = battleEngine.getEstadoPartida(matchId);
         if (partida == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(partida);
+    }
+
+    @PostMapping("/{matchId}/evolve")
+    public ResponseEntity<?> evolucionarPokemon(@PathVariable String matchId,
+                                                @RequestBody EvolveRequest request) {
+        try {
+            battleEngine.evolucionarPokemon(matchId, request.getCartaManoId(), request.getCartaTableroId());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/jugar-bot")
+    public ResponseEntity<?> jugarBot(@PathVariable String matchId) {
+        try {
+            battleEngine.ejecutarTurnoBot(matchId);
+            Partida partidaActualizada = battleEngine.getEstadoPartida(matchId);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            // 🚩 ESTA LÍNEA ES CLAVE: Nos va a imprimir en rojo exactamente dónde falló el bot
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error del bot: " + e.getMessage());
+        }
     }
 
     @PostMapping("/{matchId}/coin-flip")
