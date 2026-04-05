@@ -1,10 +1,10 @@
-﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef,HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BattleService } from '../../services/battle.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
-
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-battle-board',
@@ -12,18 +12,21 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./battle-board.component.scss'],
   standalone: true,
   imports: [CommonModule, DragDropModule]
+  
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
   public Math = Math;
   matchId: string | null = null;
   partida: any = null;
   jugadorNombre = '';
-
   // Gesto moneda
   private yStart = 0;
   private yEnd = 0;
   public lanzada = false;
-
+hoveredCard: any = null;
+  hoveredCardStatuses: any[] = [];
+  hoveredCardList: any[] = []; // La lista de cartas actual (ej: tu mano)
+  hoveredCardIndex: number = -1; // En qué posición de la lista estás
   // Tracking de cartas nuevas (jugador)
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
@@ -31,7 +34,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // Tracking de cartas nuevas (bot)
   public cartasNuevasBot = new Set<string>();
   private manoAnteriorIdsBot = new Set<string>();
+healedTextPlayer: string | null = null;
+  curingParalysisPlayer: boolean = false;
+  curingSleepPlayer: boolean = false;
 
+  healedTextBot: string | null = null;
+  curingParalysisBot: boolean = false;
+  curingSleepBot: boolean = false;
   // Estado visual
   vibrarBot         = false;
   cargandoAccion    = false;
@@ -39,6 +48,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   showIntro         = true;
   introFadingOut    = false;
   showTurnOverlay   = false;
+  tiempoTurnoMaximo: number = 60;
+  tiempoRestante: number = 60;
+  porcentajeTimer: number = 100;
+  timerInterval: any;
+  botPensando: boolean = false;
+  esperandoMiNuevoTurno: boolean = false;
   turnoOverlayTipo: 'jugador' | 'bot' = 'jugador';
   public modoSeleccionRetirada = false;
 
@@ -57,17 +72,33 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private pollingPartida: any;
   public botEstaAtacando = false;
   private datosPendientesBot: any = null;
-
+  animandoEvolucionId: string | null = null;
   // Variables internas
   public activoVisualJugador: any = null;
   public hpRenderJugador: number = 0;
   public bloqueadoPorAnimacion: boolean = false;
-  public anguloFinal: number = 0;
-
+  public anguloFinal: number = 0; 
+  isScrollingMode: boolean = false;
+  scrollTimeout: any;
+  lastScrollTime: number = 0;
   private intentosBotSinAccion = 0;
   private ultimaCantidadCartasBot = -1;
   private ciclosSinCambio = 0;
   private hpVisualInterno: number = 0;
+mostrarModalDescarte: boolean = false;
+  cartasParaVerEnDescarte: any[] = [];
+  tituloDescarteActual: string = '';
+
+
+puedeEvolucionar(cartaMano: any): boolean {
+    if (!cartaMano.evolvesFrom || !this.partida) return false;
+    
+    // ¿Está en el activo?
+    if (this.partida.jugador?.activo?.card?.nombre === cartaMano.evolvesFrom) return true;
+    
+    // ¿Está en la banca?
+    return this.partida.jugador?.banca?.some((b: any) => b.card.nombre === cartaMano.evolvesFrom);
+  }
 
   // CoinFlip
   public estadoCoinFlip: 'ELEGIR_LADO' | 'ESPERANDO_TIRO' | 'GIRANDO' | 'ELEGIR_TURNO' | 'RESULTADO_BOT' | 'OCULTO' = 'OCULTO';
@@ -286,7 +317,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleService: BattleService,
     private route: ActivatedRoute,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer 
   ) {}
 
   // ═══════════════════════════════════════════════
@@ -343,6 +375,42 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.finalizarCoinFlip();
     }
   }
+
+ iniciarRelojTurno() {
+    this.detenerRelojTurno();
+    this.tiempoRestante = this.tiempoTurnoMaximo;
+    this.porcentajeTimer = 100;
+
+    this.timerInterval = setInterval(() => {
+      if (this.partida?.turnoActual !== 'JUGADOR' || this.cargandoAccion || this.bloqueadoPorAnimacion) {
+         return;
+      }
+
+      this.tiempoRestante--;
+      this.porcentajeTimer = (this.tiempoRestante / this.tiempoTurnoMaximo) * 100;
+
+      // 🚩 CLAVE: Forzamos a Angular a actualizar la barra y el texto
+      this.cdr.detectChanges();
+
+      if (this.tiempoRestante <= 0) {
+        this.ejecutarTimeOut();
+      }
+    }, 1000);
+  }
+
+  detenerRelojTurno() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+async ejecutarTimeOut() {
+    this.detenerRelojTurno();
+    console.log("🔥 ¡TIEMPO AGOTADO! Pasando turno automáticamente...");
+    await this.pasarTurno(); 
+  }
+
 
   finalizarCoinFlip() {
     this.estadoCoinFlip = 'OCULTO';
@@ -485,6 +553,207 @@ async mostrarKOAnim(): Promise<void> {
     }
   }
 
+clearHoveredCard() {
+    if (this.isScrollingMode) return; 
+
+    this.hoveredCard = null;
+    this.hoveredCardStatuses = [];
+    this.hoveredCardList = [];
+    this.hoveredCardIndex = -1;
+  }
+
+// 3. 🖱️ LA MAGIA DE LA RUEDITA (Solo para la mano)
+  @HostListener('window:wheel', ['$event'])
+  onScrollCard(event: WheelEvent) {
+    if (this.hoveredCard && this.hoveredCardList === this.partida?.jugador?.mano && this.hoveredCardList.length > 1) {
+      event.preventDefault();
+
+      const now = Date.now();
+
+      // 🚩 A. Bloqueamos el mouse físico temporalmente
+      this.isScrollingMode = true;
+      clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = setTimeout(() => {
+        this.isScrollingMode = false; // Se desbloquea 200ms después de dejar de girar
+      }, 200);
+
+      // 🚩 B. Freno de velocidad: Solo permite 1 salto de carta cada 120 milisegundos
+      if (now - this.lastScrollTime < 120) return;
+      this.lastScrollTime = now;
+
+      // C. Lógica de cambio de índice (Igual que antes)
+      if (event.deltaY > 0) {
+        this.hoveredCardIndex = (this.hoveredCardIndex + 1) % this.hoveredCardList.length;
+      } else if (event.deltaY < 0) {
+        this.hoveredCardIndex = (this.hoveredCardIndex - 1 + this.hoveredCardList.length) % this.hoveredCardList.length;
+      }
+
+      // D. Actualizamos el panel
+      const nextItem = this.hoveredCardList[this.hoveredCardIndex];
+      const cartaReal = nextItem.card ? nextItem.card : nextItem;
+      
+      this.hoveredCard = cartaReal;
+      this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
+    }
+  }
+
+  // 4. 🎯 CLICK CENTRAL (Ruedita) PARA JUGAR LA CARTA
+  @HostListener('window:mousedown', ['$event'])
+  onMiddleClick(event: MouseEvent) {
+    // event.button === 1 significa que tocaste la ruedita (el botón del medio)
+    if (event.button === 1 && this.hoveredCard && this.hoveredCardList === this.partida?.jugador?.mano) {
+      event.preventDefault(); // Evita que salga la crucecita molesta de Windows
+      
+      console.log("🖱️ ¡Click central! Jugando carta:", this.hoveredCard.nombre);
+      this.jugarCarta(this.hoveredCard); // Juega la carta que estás viendo en el panel grande
+    }
+  }
+
+
+showDebugPanel: boolean = false;
+  fps: number = 0;
+  memoryUsage: string = 'N/A';
+  
+  private frameCount = 0;
+  private lastTime = performance.now();
+  private animFrameId: number | null = null;
+
+  // 🛠️ DETECTOR DE TECLA F3
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'F3') {
+      event.preventDefault();
+      this.showDebugPanel = !this.showDebugPanel;
+      
+      // Prendemos o apagamos el medidor para no gastar recursos si está cerrado
+      if (this.showDebugPanel) {
+        this.iniciarMedidorRendimiento();
+      } else {
+        this.detenerMedidorRendimiento();
+      }
+    }
+  }
+
+  // 🚀 LÓGICA DE RENDIMIENTO (FPS Y MEMORIA)
+  iniciarMedidorRendimiento() {
+    const loop = () => {
+      const now = performance.now();
+      this.frameCount++;
+      
+      // Actualizamos las métricas cada 1 segundo (1000ms)
+      if (now >= this.lastTime + 1000) {
+        this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
+        this.frameCount = 0;
+        this.lastTime = now;
+
+        // Intentar leer memoria (API específica de navegadores basados en Chromium)
+        const mem = (performance as any).memory;
+        if (mem) {
+          this.memoryUsage = (mem.usedJSHeapSize / 1048576).toFixed(2) + ' MB';
+        }
+        
+        // Forzamos que Angular pinte estos numeritos sin afectar la partida
+        this.cdr.detectChanges(); 
+      }
+      this.animFrameId = requestAnimationFrame(loop);
+    };
+    loop();
+  }
+
+  detenerMedidorRendimiento() {
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
+  }
+
+async procesarCheckupEstados(estadoFinal: any) {
+  const estadoAntiguo = this.partida;
+  const activoJugadorAntiguo = estadoAntiguo?.jugador?.activo;
+  const activoJugadorNuevo = estadoFinal?.jugador?.activo;
+
+  // 😴 CASO: Estaba Dormido y el server lanzó moneda
+  if (activoJugadorAntiguo?.condicionesEspeciales?.includes('Asleep')) {
+    
+    const sigueDormido = activoJugadorNuevo?.condicionesEspeciales?.includes('Asleep');
+    const resultadoCara = !sigueDormido; // Si ya no está dormido, es porque salió CARA
+    
+    console.log("🎲 Lanzando moneda de despertar...");
+    
+    // Usamos tu sistema de monedas existente
+    // Creamos un "ataque ficticio" para el texto del overlay
+    const configFicticia = { 
+        cantidadMonedas: 1, 
+        esSoloEstado: true, 
+        danioBase: 0, 
+        danioExtraPorCara: 0 
+    };
+
+    await this.animarMonedasSincronizadas("¿Se despierta?", configFicticia, resultadoCara ? 1 : 0, true);
+    
+    if (resultadoCara) {
+      console.log("✨ ¡Se despertó!");
+      // Podés disparar un sonido de "Ding!" o una animación de chispitas
+    } else {
+      console.log("💤 Sigue roncando...");
+    }
+  }
+}
+
+extraerGlosario(carta: any): any[] {
+    const statuses = [];
+    // Juntamos todo el texto de la carta para analizarlo
+    const fullText = (carta.ataques || []).map((a: any) => a.texto || '').join(' ').toLowerCase();
+
+    if (fullText.includes('paralyz') || fullText.includes('paraliz')) {
+      statuses.push({ nombre: 'Paralizado', css: 'kw-paralyze', desc: 'El Pokémon no puede atacar ni retirarse este turno.' });
+    }
+    if (fullText.includes('poison') || fullText.includes('envene')) {
+      statuses.push({ nombre: 'Envenenado', css: 'kw-poison', desc: 'Recibe 10 de daño entre turnos.' });
+    }
+    if (fullText.includes('asleep') || fullText.includes('dormi') || fullText.includes('duerm')) {
+      statuses.push({ nombre: 'Dormido', css: 'kw-sleep', desc: 'No puede atacar ni retirar. Lanza moneda al final del turno para despertar.' });
+    }
+    if (fullText.includes('confus') || fullText.includes('confund')) {
+      statuses.push({ nombre: 'Confundido', css: 'kw-confuse', desc: 'Lanza moneda al atacar. Si es cruz, falla y recibe 30 de daño.' });
+    }
+    if (fullText.includes('burn') || fullText.includes('quem')) {
+      statuses.push({ nombre: 'Quemado', css: 'kw-burn', desc: 'Recibe 20 de daño entre turnos. Lanza moneda para curarse.' });
+    }
+    
+    return statuses;
+  }
+
+formatTextoAtaque(texto: string): SafeHtml {
+    if (!texto) return '';
+    let f = texto;
+    
+    // Reemplaza las palabras por un <span> con la clase del color correspondiente
+    f = f.replace(/(paralyzed|paralyzes|paraliza|paralizado)/gi, '<span class="kw-paralyze">$&</span>');
+    f = f.replace(/(poisoned|poisons|envenena|envenenado)/gi, '<span class="kw-poison">$&</span>');
+    f = f.replace(/(asleep|sleeps|duerme|dormido)/gi, '<span class="kw-sleep">$&</span>');
+    f = f.replace(/(confused|confuses|confunde|confundido)/gi, '<span class="kw-confuse">$&</span>');
+    f = f.replace(/(burned|burns|quema|quemado)/gi, '<span class="kw-burn">$&</span>');
+    f = f.replace(/(does nothing|no hace nada)/gi, '<span class="kw-neutral">$&</span>');
+
+    // Le decimos a Angular que este HTML es seguro de renderizar
+    return this.sanitizer.bypassSecurityTrustHtml(f);
+  }
+
+setHoveredCard(item: any, list: any[] = [], index: number = -1) {
+    // 🚩 FIX: Si estamos girando la ruedita, ignoramos los choques físicos del mouse
+    if (this.isScrollingMode) return; 
+
+    if (!item) {
+      this.clearHoveredCard();
+      return;
+    }
+    const cartaReal = item.card ? item.card : item;
+    this.hoveredCard = cartaReal;
+    this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
+    this.hoveredCardList = list;
+    this.hoveredCardIndex = index;
+  }
 
 async ejecutarCoinFlipAtaque(
     nombreAtaque: string,
@@ -671,9 +940,8 @@ private traducirEfectoCoinFlip(
   // CARGA DE ESTADO
   // ═══════════════════════════════════════════════
 
-  cargarEstado(): void {
-    if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando) return;
-
+ cargarEstado(): void {
+if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando || this.botPensando) return;
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => {
         if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
@@ -691,9 +959,6 @@ private traducirEfectoCoinFlip(
         }
 
         // ═══ DETECCIÓN DE CARTAS NUEVAS ═══
-        // PRIMERO detectamos (antes de asignar this.partida),
-        // luego forzamos detectChanges para que Angular aplique la clase,
-        // DESPUÉS asignamos los datos nuevos.
         if (data.jugador?.mano) {
           this.detectarCartasNuevas(data.jugador.mano);
         }
@@ -701,13 +966,36 @@ private traducirEfectoCoinFlip(
           this.detectarCartasNuevasBot(data.bot.mano);
         }
 
-        this.cdr.detectChanges(); // tick intermedio → Angular registra las clases nueva-carta
+        this.cdr.detectChanges(); // tick intermedio
 
+        // 🚩 1. GUARDAMOS DE QUIÉN ERA EL TURNO ANTES DE ACTUALIZAR
+        const turnoAnterior = this.partida?.turnoActual; 
+
+        // ═══ ACTUALIZACIÓN DEL ESTADO ═══
         this.partida = data;
+
+if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
+            this.esperandoMiNuevoTurno = false;
+            this.iniciarRelojTurno(); // ¡Prende la mecha de 60 segundos!
+        } 
+        else if (this.partida.turnoActual === 'BOT') {
+            this.detenerRelojTurno();
+        }
+
+        // 🚩 2. CHEQUEAMOS SI ARRANCÓ TU TURNO PARA PRENDER LA MECHA
+        if (turnoAnterior !== 'JUGADOR' && this.partida.turnoActual === 'JUGADOR') {
+            this.iniciarRelojTurno();
+        } 
+        // 🚩 3. SI EL TURNO ES DEL BOT, APAGAMOS TU RELOJ
+        else if (this.partida.turnoActual === 'BOT') {
+            this.detenerRelojTurno();
+        }
+
         if (!this.datosPendientesBot) {
           this.hpRenderJugador = hpServidorJugador;
         }
-        this.cdr.detectChanges();
+        
+        this.cdr.detectChanges(); // Actualizamos la UI, incluyendo la barra del timer
       }
     });
   }
@@ -837,94 +1125,190 @@ ejecutarIAEnemiga() {
   }
 
 async ejecutarIAEnemigaConData(estadoFinal: any) {
-  const activoBotDespues = estadoFinal?.bot?.activo;
-  const hpJugadorAntes = this.hpRenderJugador;
-  const hpJugadorDespues = estadoFinal?.jugador?.activo?.hpActual || 0;
-  const danioHecho = hpJugadorAntes - hpJugadorDespues;
-  
-  let botAtaco = false;
+    // 🚩 1. GUARDAMOS LA FOTO ANTES DE QUE EL BOT ACTÚE
+    const estadoAntiguo = JSON.parse(JSON.stringify(this.partida));
+    const botEstabaParalizado = estadoAntiguo?.bot?.activo?.condicionesEspeciales?.includes('Paralyzed');
+    const botEstabaDormido = estadoAntiguo?.bot?.activo?.condicionesEspeciales?.includes('Asleep');
 
-  // 1. Detección de ataque
-  if (danioHecho > 0) {
-    botAtaco = true; 
-  } else if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
-    const ataqueBot = activoBotDespues.card.ataques[0];
-    const costoReq = ataqueBot.costo?.length || 0;
-    const energiasBot = activoBotDespues.energiasUnidas?.length || 0;
-    if (energiasBot >= costoReq) botAtaco = true;
-  }
+    const activoBotDespues = estadoFinal?.bot?.activo;
+    const hpJugadorAntes = this.hpRenderJugador;
+    const hpJugadorDespues = estadoFinal?.jugador?.activo?.hpActual || 0;
+    const danioHecho = hpJugadorAntes - hpJugadorDespues;
+    
+    let botAtaco = false;
 
-  if (!botAtaco) {
-    this.partida = estadoFinal;
-    this.hpRenderJugador = hpJugadorDespues;
-    this.cargandoAccion = false;
-    this.bloqueadoPorAnimacion = false;
-    this.cdr.detectChanges();
-    return;
-  }
-
-  // 2. Inicio de secuencia
-  this.botEstaAtacando = true;
-  this.animandoBotAtaque = true;
-  this.cdr.detectChanges();
-
-  if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
-    const habilidadBot = activoBotDespues.card.ataques[0];
-    const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
-
-    if (coinConfig) {
-      let carasReales = 0;
-      
-      if (coinConfig.esSoloEstado) {
-        // 🚩 CHEQUEO DIRECTO AL JSON DEL BACKEND
-        const condicionesActuales = estadoFinal.jugador?.activo?.condicionesEspeciales || [];
-        const estaParalizado = condicionesActuales.includes('Paralyzed');
-        carasReales = estaParalizado ? 1 : 0;
-        
-        // FORZAMOS el resultado para que el modal no use basura anterior
-        (this as any).resultadoMoneda = estaParalizado ? 'CARA' : 'CRUZ';
-      } else {
-        // Lógica de daño normal
-        const txt = (habilidadBot.texto || '').toLowerCase();
-        if (txt.includes('does nothing')) {
-          carasReales = danioHecho > 0 ? 1 : 0;
-        } else if (txt.includes('heads')) {
-          if (coinConfig.danioExtraPorCara > 0) {
-             const base = txt.includes('more') || txt.includes('plus') ? coinConfig.danioBase : 0;
-             carasReales = Math.min(coinConfig.cantidadMonedas, Math.round((danioHecho - base) / coinConfig.danioExtraPorCara));
-          }
+    // 🚩 2. CHECK DE SENTIDO COMÚN
+    if (!botEstabaParalizado && !botEstabaDormido) {
+        if (danioHecho > 0) {
+            botAtaco = true; 
+        } else if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
+            const ataqueBot = activoBotDespues.card.ataques[0];
+            const costoReq = ataqueBot.costo?.length || 0;
+            const energiasBot = activoBotDespues.energiasUnidas?.length || 0;
+            if (energiasBot >= costoReq) botAtaco = true;
         }
-        (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
-      }
+    }
 
-      // Esperamos a que la moneda termine de girar
-      await this.animarMonedasSincronizadas(habilidadBot.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
+    // 🚩 3. ESCANEAMOS CURACIONES
+    await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
+
+    // ⏩ 4. SALIDA SIN ATAQUE (Ej: pasó turno por parálisis)
+    if (!botAtaco) {
+        this.partida = estadoFinal;
+        this.hpRenderJugador = hpJugadorDespues;
+        
+        // Limpieza de banderas
+        this.cargandoAccion = false;
+        this.bloqueadoPorAnimacion = false;
+        this.ataqueRealizado = false;
+        this.botPensando = false;
+
+        // 🚩 EL REFUERZO: Si el turno volvió a mí, prendo el reloj
+        if (this.partida.turnoActual === 'JUGADOR') {
+            this.iniciarRelojTurno();
+        }
+await this.procesarCheckupEstados(estadoFinal); // 🚩 La moneda de despertar
+        this.cdr.detectChanges();
+        return;
+    }
+
+    // 💥 5. SI ATACÓ REALMENTE
+    this.botEstaAtacando = true;
+    this.animandoBotAtaque = true;
+    this.cdr.detectChanges();
+
+    if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
+        const habilidadBot = activoBotDespues.card.ataques[0];
+        const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
+
+        if (coinConfig) {
+            let carasReales = 0;
+            if (coinConfig.esSoloEstado) {
+                const condicionesActuales = estadoFinal.jugador?.activo?.condicionesEspeciales || [];
+                const estaParalizado = condicionesActuales.includes('Paralyzed');
+                carasReales = estaParalizado ? 1 : 0;
+                (this as any).resultadoMoneda = estaParalizado ? 'CARA' : 'CRUZ';
+            } else {
+                const txt = (habilidadBot.texto || '').toLowerCase();
+                if (txt.includes('does nothing')) {
+                  carasReales = danioHecho > 0 ? 1 : 0;
+                } else if (txt.includes('heads')) {
+                  if (coinConfig.danioExtraPorCara > 0) {
+                     const base = txt.includes('more') || txt.includes('plus') ? coinConfig.danioBase : 0;
+                     carasReales = Math.min(coinConfig.cantidadMonedas, Math.round((danioHecho - base) / coinConfig.danioExtraPorCara));
+                  }
+                }
+                (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
+            }
+            await this.animarMonedasSincronizadas(habilidadBot.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
+        }
+    }
+
+    // 6. EL MOMENTO DEL IMPACTO
+    this.showImpactFlash = true;
+    this.partida = JSON.parse(JSON.stringify(estadoFinal)); 
+    this.hpRenderJugador = hpJugadorDespues;
+    this.cdr.detectChanges();
+
+    await this.delay(150);
+    this.showImpactFlash = false;
+    this.cdr.detectChanges();
+
+    // 🚩 7. FINAL DE LA SECUENCIA DEL BOT
+    await this.delay(600); // Un pequeño respiro antes de devolver el control
+    
+    this.animandoBotAtaque     = false;
+    this.botEstaAtacando       = false;
+    this.cargandoAccion        = false;
+    this.bloqueadoPorAnimacion = false;
+    this.ataqueRealizado       = false;
+    this.botPensando           = false;
+    this.esperandoMiNuevoTurno = false; // Reset de nuestra bandera manual
+    
+    (this as any).resultadoMoneda = ''; 
+
+    // 🚩 EL REFUERZO FINAL: Si el bot terminó de pegar y me toca a mí, prendo el reloj
+    if (this.partida.turnoActual === 'JUGADOR') {
+        console.log("⏰ Turno del bot finalizado. Iniciando reloj de jugador.");
+        this.iniciarRelojTurno();
+    }
+
+    this.cdr.detectChanges();
+  }
+
+
+abrirModalDescarte(quien: 'JUGADOR' | 'BOT') {
+  console.log("Capa de descarte cliqueada:", quien); // <-- Agregá esto
+  const pila = quien === 'JUGADOR' ? this.partida?.jugador?.pilaDescarte : this.partida?.bot?.pilaDescarte;
+  
+  if (pila) { // Quitale el .length > 0 para que abra aunque esté vacío si querés testear
+    this.tituloDescarteActual = quien === 'JUGADOR' ? 'TU DESCARTE' : 'DESCARTE RIVAL';
+    this.cartasParaVerEnDescarte = [...pila].reverse(); // El reverse es para que la última que cayó esté arriba
+    this.mostrarModalDescarte = true;
+    this.cdr.detectChanges();
+  }
+}
+
+async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) {
+    if (quien === 'jugador') {
+      this.healedTextPlayer = texto;
+      if (estado === 'Paralyzed') this.curingParalysisPlayer = true;
+      if (estado === 'Asleep') this.curingSleepPlayer = true;
+    } else {
+      this.healedTextBot = texto;
+      if (estado === 'Paralyzed') this.curingParalysisBot = true;
+      if (estado === 'Asleep') this.curingSleepBot = true;
+    }
+    
+    this.cdr.detectChanges();
+
+    // Dejamos la animación por 2 segundos (exactamente lo que pediste)
+    await this.delay(2000);
+
+    // Apagamos todo y se disuelve
+    if (quien === 'jugador') {
+      this.healedTextPlayer = null;
+      this.curingParalysisPlayer = false;
+      this.curingSleepPlayer = false;
+    } else {
+      this.healedTextBot = null;
+      this.curingParalysisBot = false;
+      this.curingSleepBot = false;
+    }
+    
+    this.cdr.detectChanges();
+  }
+
+  async verificarEstadosCurados(estadoAnterior: any, estadoNuevo: any) {
+    if (!estadoAnterior || !estadoNuevo) return;
+
+    // --- REVISAMOS AL JUGADOR ---
+    const condViejoJugador = estadoAnterior.jugador?.activo?.condicionesEspeciales || [];
+    const condNuevoJugador = estadoNuevo.jugador?.activo?.condicionesEspeciales || [];
+
+    if (condViejoJugador.includes('Paralyzed') && !condNuevoJugador.includes('Paralyzed')) {
+      console.log("⚡ ¡Jugador curado de parálisis!");
+      await this.animarCuraEstado('jugador', 'Paralyzed', '¡Parálisis curada!');
+    }
+    if (condViejoJugador.includes('Asleep') && !condNuevoJugador.includes('Asleep')) {
+      console.log("💤 ¡Jugador despertó!");
+      await this.animarCuraEstado('jugador', 'Asleep', '¡Se despertó!');
+    }
+
+    // --- REVISAMOS AL BOT ---
+    const condViejoBot = estadoAnterior.bot?.activo?.condicionesEspeciales || [];
+    const condNuevoBot = estadoNuevo.bot?.activo?.condicionesEspeciales || [];
+
+    if (condViejoBot.includes('Paralyzed') && !condNuevoBot.includes('Paralyzed')) {
+      console.log("⚡ ¡Bot curado de parálisis!");
+      await this.animarCuraEstado('bot', 'Paralyzed', '¡Parálisis curada!');
+    }
+    if (condViejoBot.includes('Asleep') && !condNuevoBot.includes('Asleep')) {
+      console.log("💤 ¡Bot despertó!");
+      await this.animarCuraEstado('bot', 'Asleep', '¡Se despertó!');
     }
   }
 
-  // 3. EL MOMENTO DEL IMPACTO
-  // Solo acá actualizamos la data para que el HP baje y los estados aparezcan
-  this.showImpactFlash = true;
-  this.partida = JSON.parse(JSON.stringify(estadoFinal)); // Clonamos para forzar el refresh de Angular
-  this.hpRenderJugador = hpJugadorDespues;
-  this.cdr.detectChanges();
-
-  await this.delay(150);
-  this.showImpactFlash = false;
-  this.cdr.detectChanges();
-
-  await this.delay(450);
-  this.animandoBotAtaque     = false;
-  this.botEstaAtacando       = false;
-  this.cargandoAccion        = false;
-  this.bloqueadoPorAnimacion = false;
-  this.ataqueRealizado       = false;
-  
-  // Limpieza final de la moneda para que no quede el cartel viejo en el próximo turno
-  (this as any).resultadoMoneda = ''; 
-  
-  this.cdr.detectChanges();
-}
   forzarUpdate() {
     this.battleService.getState(this.matchId!).subscribe({
       next: async (data) => {
@@ -967,13 +1351,57 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
     const tipoEnergia = habilidad?.costo[0] || 'Colorless';
 
     try {
-      // 1. Mandamos la orden de ataque al backend
+      // 🚩 1. CHECK DE CONFUSIÓN (Antes de atacar de verdad)
+      if (this.partida.jugador.activo.condicionesEspeciales.includes('Confused')) {
+        const configConfusion = {
+          descripcion: "Tu Pokémon está confundido. Lanzá una moneda. Si sale cruz, te hacés 30 de daño y el ataque falla.",
+          cantidadMonedas: 1,
+          danioBase: 0,
+          danioExtraPorCara: 0,
+          esSoloEstado: true
+        };
+
+        // Acá usamos una moneda "pura" (random en frontend) porque el backend
+        // asume que si llega el request de ataque, ya pasaste el check.
+        // Ojo: Si tu backend ya maneja la confusión y rechaza el ataque, ajustá esto.
+        const exitoConfusion = Math.random() >= 0.5 ? 1 : 0; 
+        
+        await this.animarMonedasSincronizadas(
+            "Check de Confusión", 
+            configConfusion, 
+            exitoConfusion, 
+            true
+        );
+
+    if (this.resultadoMoneda === 'CRUZ') {
+          // El ataque falló por confusión. Avisamos al backend para que pase turno.
+          console.log("¡Confusión! Te pegaste a vos mismo.");
+          
+          // 🚩 EL FIX: Primero pasamos turno, DESPUÉS pedimos el estado
+          await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
+          const estadoFallo: any = await firstValueFrom(this.battleService.getState(this.matchId!));
+          
+          // Animación de auto-golpe
+          this.animandoJugadorDanio = true;
+          this.partida = JSON.parse(JSON.stringify(estadoFallo));
+          this.hpRenderJugador = estadoFallo.jugador?.activo?.hpActual || 0;
+          this.cdr.detectChanges();
+          
+          await this.delay(600);
+          this.animandoJugadorDanio = false;
+          
+          // Pasamos al bloque del bot
+          return this.iniciarTurnoBot(estadoFallo); 
+        }
+      }
+
+      // 2. Mandamos la orden de ataque al backend (Si no había confusión, o si salió CARA)
       await firstValueFrom(this.battleService.atacar(this.matchId!, nombreAtaque));
 
-      // 2. Pedimos la foto actualizada
+      // 3. Pedimos la foto actualizada
       const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
 
-      // 3. Magia de monedas (RECARGADA)
+      // 4. Magia de monedas (RECARGADA)
       const coinConfig = this.detectarCoinFlipAtaque(habilidad);
       if (coinConfig) {
         const hpBotAntes = this.partida.bot?.activo?.hpActual || 0;
@@ -984,15 +1412,12 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
 
         // 🚩 SOLUCIÓN AL "SIEMPRE CRUZ":
         if (coinConfig.esSoloEstado) {
-            // Si el ataque es de estado, miramos si el activo del BOT tiene condiciones ahora
             const condicionesBot = estadoFinal.bot?.activo?.condicionesEspeciales || [];
             const tieneEstado = ['Paralyzed', 'Asleep', 'Confused', 'Poisoned'].some(c => condicionesBot.includes(c));
             
             carasReales = tieneEstado ? 1 : 0;
-            // Forzamos la variable global para el modal
             (this as any).resultadoMoneda = tieneEstado ? 'CARA' : 'CRUZ';
         } else {
-            // Lógica normal para ataques de DAÑO (Kricketot, Tangela, etc.)
             const txt = (habilidad.texto || '').toLowerCase();
             if (txt.includes('does nothing')) {
                 carasReales = danioHecho > 0 ? 1 : 0;
@@ -1005,11 +1430,10 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
             (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
         }
 
-        // Llamamos a la animación con el valor REAL
         await this.animarMonedasSincronizadas(habilidad.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
       }
 
-      // 4. Animación de impacto
+      // 5. Animación de impacto
       this.animandoAtaque = true;
       this.cdr.detectChanges();
 
@@ -1017,7 +1441,7 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
       this.dispararParticulas('bot', tipoEnergia);
       this.showImpactFlash = true;
       
-      // 🚩 ACTUALIZACIÓN FÍSICA: Usamos un clon para que Angular refresque bien los estados (iconos)
+      // 🚩 ACTUALIZACIÓN FÍSICA: Clonamos para que Angular refresque bien los estados (iconos)
       this.partida = JSON.parse(JSON.stringify(estadoFinal));
       this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
       this.cdr.detectChanges();
@@ -1030,27 +1454,9 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
       this.animandoAtaque = false;
       this.cdr.detectChanges();
 
-      // 5. Turno del Bot
+      // 6. Turno del Bot
       if (estadoFinal.turnoActual === 'BOT') {
-        await this.delay(1000);
-        this.cargandoAccion   = false;
-        this.turnoOverlayTipo = 'bot';
-        this.showTurnOverlay  = true;
-        this.cdr.detectChanges();
-        
-        await this.delay(2000);
-        this.showTurnOverlay = false;
-        this.cdr.detectChanges();
-        
-        await this.delay(400);
-
-        try {
-           const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
-           this.ejecutarIAEnemigaConData(estadoPostBot);
-        } catch (err: any) {
-           console.error("Error al ejecutar bot:", err);
-           this.bloqueadoPorAnimacion = false;
-        }
+          await this.iniciarTurnoBot(estadoFinal);
       } else {
         this.cargandoAccion        = false;
         this.bloqueadoPorAnimacion = false;
@@ -1064,66 +1470,175 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
       console.error("Error en ataque:", error);
     }
   }
+async iniciarTurnoBot(estadoFinal: any) {
+      await this.delay(1000);
+      this.cargandoAccion   = false;
+      this.turnoOverlayTipo = 'bot';
+      this.showTurnOverlay  = true;
+      this.cdr.detectChanges();
+      
+      await this.delay(2000);
+      this.showTurnOverlay = false;
+      this.cdr.detectChanges();
+      
+      await this.delay(400);
 
-  async pasarTurno(): Promise<void> {
+      try {
+         const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
+         this.ejecutarIAEnemigaConData(estadoPostBot);
+      } catch (err: any) {
+         console.error("Error al ejecutar bot:", err);
+         this.bloqueadoPorAnimacion = false;
+      }
+  }
+async pasarTurno(): Promise<void> {
     console.log("👉 Botón 'Pasar Turno' presionado.");
-    console.log("Turno actual del tablero:", this.partida?.turnoActual);
-    console.log("¿Está cargando acción (cargandoAccion)?:", this.cargandoAccion);
-    console.log("¿Bloqueado por animación?:", this.bloqueadoPorAnimacion);
 
+    // 🛡️ 1. VALIDACIONES DE SEGURIDAD
     if (this.partida?.turnoActual !== 'JUGADOR') {
-        console.warn("⛔ Bloqueado: Angular piensa que no es el turno del jugador.");
-        return;
+      console.warn("⛔ Bloqueado: No es tu turno.");
+      return;
     }
     if (this.cargandoAccion) {
-        console.warn("⛔ Bloqueado: 'cargandoAccion' se quedó trabado en TRUE en alguna acción anterior.");
-        return; // ¡Acá seguro está el fantasma!
+      console.warn("⛔ Bloqueado: Hay una acción en curso.");
+      return;
     }
 
-    this.cargandoAccion        = true;
+    // ⚡ 2. BLOQUEO INMEDIATO Y RESET DE RELOJ
+    this.cargandoAccion = true;
     this.bloqueadoPorAnimacion = true;
+    this.detenerRelojTurno();
+
+    // Reseteamos visualmente la barra para que no quede a la mitad
+    this.tiempoRestante = this.tiempoTurnoMaximo;
+    this.porcentajeTimer = 100;
+    this.esperandoMiNuevoTurno = true;
+    this.cdr.detectChanges();
+
+    // Guardamos "la foto" de la mesa antes del cambio para comparar estados
+    const estadoAntiguo = JSON.parse(JSON.stringify(this.partida));
 
     try {
-      console.log("⏳ Enviando petición al backend para pasar turno...");
+      console.log("⏳ Enviando fin de turno al servidor (Java)...");
+      // Avisamos al backend que termine nuestro turno
       await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
-      console.log("✅ El Backend aceptó el fin de turno.");
 
+      // Pedimos el nuevo estado (donde el server ya procesó estados y moneda de Checkup)
       const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
-      console.log("📸 Foto de la mesa recibida. El turno ahora es de:", estadoFinal.turnoActual);
+      console.log("📸 Datos de Checkup recibidos del server.");
 
-      if (estadoFinal.turnoActual === 'BOT') {
-        this.turnoOverlayTipo = 'bot';
-        this.showTurnOverlay  = true;
+      // --- 🪙 3. FASE DE CHECKUP: MONEDA DE DESPERTAR (TS-SAFE) ---
+      const estabaDormido = estadoAntiguo?.jugador?.activo?.condicionesEspeciales?.includes('Asleep');
+      const sigueDormido = estadoFinal?.jugador?.activo?.condicionesEspeciales?.includes('Asleep');
+
+      if (estabaDormido) {
+        const seDesperto = !sigueDormido;
+
+        // Seteamos el objeto para el attack-coinflip-overlay con todos los campos requeridos
+        this.coinFlipAtaque = {
+          nombreAtaque: 'FASE DE MANTENIMIENTO',
+          descripcion: '¿Se despierta tu Pokémon?',
+          cantidadMonedas: 1,
+          danioBase: 0,
+          danioExtraPorCara: 0,
+          monedas: [{ estado: 'girando' }],
+          terminado: false,
+          progreso: 0,
+          esSoloEstado: true,
+          danioTotal: 0
+        };
         this.cdr.detectChanges();
-        
+
+        // Tiempo de suspenso mientras gira la moneda
+        await this.delay(1500);
+
+        // Actualizamos el resultado (Validación para evitar error de objeto posiblemente nulo)
+        if (this.coinFlipAtaque && this.coinFlipAtaque.monedas[0]) {
+          this.coinFlipAtaque.monedas[0].estado = seDesperto ? 'cara' : 'cruz';
+          this.coinFlipAtaque.terminado = true;
+        }
+
+        this.resultadoMoneda = seDesperto ? 'CARA' : 'CRUZ';
+        this.cdr.detectChanges();
+
+        // Pausa para que el usuario asimile el resultado
+        await this.delay(2000);
+
+        // Limpiamos el overlay
+        this.coinFlipAtaque = null;
+        this.cdr.detectChanges();
+
+        if (seDesperto) {
+          console.log("✨ ¡Suerte! El Pokémon se despertó.");
+        } else {
+          console.log("💤 Sigue dormido.");
+        }
+      }
+
+      // --- ✨ 4. ESCANEO DE CURACIONES / DAÑOS PASIVOS ---
+      // Compara vida y estados entre el antes y el después para animar rayitos o impactos
+      await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
+
+      // --- 🔄 5. ACTUALIZACIÓN VISUAL DEL TABLERO ---
+      // Ahora sí, actualizamos la partida con los datos reales del server
+      this.partida = JSON.parse(JSON.stringify(estadoFinal));
+      this.cdr.detectChanges();
+
+      // --- 🤖 6. LÓGICA DEL TURNO DEL RIVAL (BOT) ---
+      if (estadoFinal.turnoActual === 'BOT') {
+        // Mostramos el cartel de "TURNO RIVAL"
+        this.turnoOverlayTipo = 'bot';
+        this.showTurnOverlay = true;
+        this.cdr.detectChanges();
+
         await this.delay(2000);
         this.showTurnOverlay = false;
         this.cdr.detectChanges();
         await this.delay(400);
 
         try {
-           console.log("🤖 Disparando endpoint para despertar al bot...");
-           const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
-           console.log("✅ El bot terminó de pensar. Animando impacto...");
-           this.ejecutarIAEnemigaConData(estadoPostBot);
+          // FINGIMOS QUE EL BOT PIENSA (UX)
+          this.botPensando = true;
+          this.cdr.detectChanges();
+
+          // Pausa aleatoria para humanizar la IA
+          const tiempoPensamiento = Math.floor(Math.random() * 1500) + 1000;
+          await this.delay(tiempoPensamiento);
+
+          console.log("🤖 Disparando IA en el backend...");
+          const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
+
+          // El bot ya decidió, apagamos el cartelito de "pensando"
+          this.botPensando = false;
+          this.cdr.detectChanges();
+
+          console.log("✅ IA finalizada. Animando ataques del bot...");
+          // Esta función debe procesar el estado final y activar el reloj de tu turno al terminar
+          this.ejecutarIAEnemigaConData(estadoPostBot);
+
         } catch (err: any) {
-           console.error("❌ Error CRÍTICO del bot en Java:", err);
-           this.bloqueadoPorAnimacion = false;
-           this.cargandoAccion = false;
+          console.error("❌ Error crítico en la IA del Bot:", err);
+          this.botPensando = false;
+          this.bloqueadoPorAnimacion = false;
+          this.cargandoAccion = false;
+          this.cdr.detectChanges();
         }
 
       } else {
-        console.log("⚠️ Qué raro, se pasó turno pero sigue siendo de JUGADOR.");
-        this.partida = estadoFinal;
-        this.cargandoAccion        = false;
+        // Caso borde: el turno volvió a vos (ej: el bot no pudo jugar)
+        console.log("⚠️ Turno devuelto al jugador inmediatamente.");
+        this.cargandoAccion = false;
         this.bloqueadoPorAnimacion = false;
+        this.iniciarRelojTurno();
         this.cdr.detectChanges();
       }
+
     } catch (error: any) {
-      this.cargandoAccion        = false;
+      // En caso de error, liberamos la UI para que no quede trabada
+      this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
       console.error("❌ Error del servidor al pasar turno:", error);
-      alert('Error al pasar turno: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
+      alert('Error de conexión: ' + (error?.error ?? 'El servidor no responde'));
     }
   }
 realizarAccion(habilidad: any): void {
@@ -1215,15 +1730,80 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     this.cdr.detectChanges();
   }
 
-  jugarCarta(carta: any): void {
+ async jugarCarta(carta: any): Promise<void> {
     if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
-    if (this.esEnergia(carta)) { this.gestionarUnionEnergia(carta); return; }
+    
+    // 1. Manejo de Energías
+    if (this.esEnergia(carta)) { 
+      this.gestionarUnionEnergia(carta); 
+      return; 
+    }
+    
+    // 2. Manejo de Pokémon
     if (this.esPokemon(carta)) {
+      
+      // 🚩 A. CHEQUEO DE EVOLUCIÓN (Se revisa antes que la bajada normal)
+      if (carta.evolvesFrom && this.puedeEvolucionar(carta)) {
+        
+        // Buscamos a quién evolucionar (Prioriza al Activo, sino busca en la Banca)
+        let target = null;
+        if (this.partida.jugador.activo?.card?.nombre === carta.evolvesFrom) {
+            target = this.partida.jugador.activo;
+        } else {
+            target = this.partida.jugador.banca.find((b: any) => b.card.nombre === carta.evolvesFrom);
+        }
+
+        if (target) {
+            await this.ejecutarEvolucionVisual(carta, target);
+        }
+        return; // 🛑 Cortamos la ejecución acá para que no intente bajarlo a la banca como Básico
+      }
+
+      // B. VALIDACIÓN DE ACTIVO VACÍO
       if (!this.partida.jugador.activo && this.partida.jugador.banca.length > 0) {
         alert('¡Primero tenés que subir un Pokémon de tu banca al puesto activo!');
         return;
       }
+      
+      // C. BAJADA DE POKÉMON BÁSICO A LA BANCA O ACTIVO
       this.gestionarBajadaPokemon(carta);
+    }
+  }
+
+  async ejecutarEvolucionVisual(cartaEvolucion: any, target: any) {
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion = true;
+
+    try {
+      // 1. Avisamos al backend
+      await firstValueFrom(this.battleService.evolucionar(this.matchId!, cartaEvolucion.id, target.card.id));
+
+      // 2. Disparamos la luz blanca sobre el Pokémon objetivo
+      this.animandoEvolucionId = target.card.id;
+      this.cdr.detectChanges();
+
+      // Dejamos que el brillo suba (600ms)
+      await this.delay(600);
+
+      // 3. Justo en el pico de la luz, pedimos la foto nueva con el Pokémon ya evolucionado
+      const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
+      this.partida = JSON.parse(JSON.stringify(estadoFinal));
+      this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
+      this.cdr.detectChanges();
+
+      // Dejamos que el brillo baje y muestre el nuevo sprite
+      await this.delay(600);
+
+      // 4. Limpiamos
+      this.animandoEvolucionId = null;
+      this.bloqueadoPorAnimacion = false;
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+
+    } catch (error: any) {
+      this.bloqueadoPorAnimacion = false;
+      this.cargandoAccion = false;
+      alert("Error al evolucionar: " + (error.error || error.message));
     }
   }
 
