@@ -57,4 +57,8 @@ export class BattleService {
   retirarPokemon(matchId: string, nuevoActivoId: string): Observable<void> {
   return this.http.post<void>(`${this.base}/${matchId}/retreat`, nuevoActivoId);
 }
+
+evolucionar(matchId: string, cartaManoId: string, cartaTableroId: string) {
+    return this.http.post(`${this.base}/${matchId}/evolve`, { cartaManoId, cartaTableroId });
+  }
 }

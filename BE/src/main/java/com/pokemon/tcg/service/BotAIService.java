@@ -440,40 +440,26 @@ public class BotAIService {
 
             // APLICAR ESTADOS AL JUGADOR
             if (activoJugador.getHpActual() > 0 && (danioFinal > 0 || ataqueElegido.getDanio() == 0)) {
-
                 if (texto.contains("is now paralyzed")) {
-                    if (!texto.contains("flip a coin")) {
+                    if (!texto.contains("flip a coin") || random.nextBoolean()) {
                         activoJugador.agregarCondicion("Paralyzed");
-                        System.out.println("⚡ [BOT] ¡Te ha Paralizado! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Paralyzed");
-                        System.out.println("⚡ [BOT] ¡Salió CARA! Te ha Paralizado.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en paralizarte.");
+                        System.out.println("⚡ [BOT] ¡Te ha Paralizado!");
                     }
                 }
-
+                if (texto.contains("is now poisoned")) {
+                    activoJugador.agregarCondicion("Poisoned");
+                    System.out.println("☠️ [BOT] ¡Te ha Envenenado!");
+                }
                 if (texto.contains("is now asleep")) {
-                    if (!texto.contains("flip a coin")) {
+                    if (!texto.contains("flip a coin") || random.nextBoolean()) { // FIX: el bot también tira moneda si dice "flip a coin" para dormir
                         activoJugador.agregarCondicion("Asleep");
-                        System.out.println("💤 [BOT] ¡Te ha Dormido! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Asleep");
-                        System.out.println("💤 [BOT] ¡Salió CARA! Te ha Dormido.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en dormirte.");
+                        System.out.println("💤 [BOT] ¡Te ha Dormido!");
                     }
                 }
-
                 if (texto.contains("is now confused")) {
-                    if (!texto.contains("flip a coin")) {
+                    if (!texto.contains("flip a coin") || random.nextBoolean()) {
                         activoJugador.agregarCondicion("Confused");
-                        System.out.println("🌀 [BOT] ¡Te ha Confundido! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Confused");
-                        System.out.println("🌀 [BOT] ¡Salió CARA! Te ha Confundido.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en confundirte.");
+                        System.out.println("🌀 [BOT] ¡Te ha Confundido!");
                     }
                 }
                 if (texto.contains("is now burned")) {
