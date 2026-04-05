@@ -15,7 +15,8 @@ public class CartaEnJuego {
     private int hpActual;
     private List<Card> energiasUnidas = new ArrayList<>();
     private boolean puedeAtacar = true;
-
+    private int reduccionDanioRecibido = 0;
+    private int aumentoDanioCausado = 0;
     public CartaEnJuego(Card card) {
         this.card = card;
         try {
