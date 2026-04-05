@@ -86,7 +86,104 @@
 
 <!-- ══════════ IMPACT FLASH ══════════ -->
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
+<div class="attack-coinflip-overlay" *ngIf="coinFlipAtaque">
+  <div class="acf-backdrop"></div>
+  <div class="acf-panel">
+ 
+    <!-- Nombre del ataque -->
+    <p class="acf-attack-name">{{ coinFlipAtaque.nombreAtaque }}</p>
+ 
+    <!-- Descripción traducida (texto del efecto del ataque) -->
+    <p class="acf-description" *ngIf="coinFlipAtaque.descripcion">
+      {{ coinFlipAtaque.descripcion }}
+    </p>
+ 
+    <!-- Monedas lanzándose -->
+    <div class="acf-coins-row">
+      <div *ngFor="let moneda of coinFlipAtaque.monedas; let i = index"
+           class="acf-coin"
+           [class.flipping]="moneda.estado === 'girando'"
+           [class.cara]="moneda.estado === 'cara'"
+           [class.cruz]="moneda.estado === 'cruz'">
+        <span *ngIf="moneda.estado === 'cara'">🌟</span>
+        <span *ngIf="moneda.estado === 'cruz'">🌑</span>
+        <span *ngIf="moneda.estado === 'girando'">🪙</span>
+      </div>
+    </div>
+ 
+    <!-- Barra de progreso mientras se tiran -->
+    <div class="acf-progress" *ngIf="!coinFlipAtaque.terminado">
+      <div class="acf-progress-fill"
+           [style.width.%]="coinFlipAtaque.progreso"></div>
+    </div>
+ 
+    <!-- Etiquetas CARA / CRUZ bajo cada moneda -->
+    <div class="acf-results-row" *ngIf="coinFlipAtaque.terminado">
+      <div *ngFor="let moneda of coinFlipAtaque.monedas"
+           class="acf-result-label"
+           [class.cara]="moneda.estado === 'cara'"
+           [class.cruz]="moneda.estado === 'cruz'"
+           [class.pending]="moneda.estado === 'girando'">
+        {{ moneda.estado === 'cara' ? 'CARA' : (moneda.estado === 'cruz' ? 'CRUZ' : '...') }}
+      </div>
+    </div>
+ 
+<div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0">
+  <span>+{{ coinFlipAtaque.danioTotal }}</span> de daño extra
+</div>
 
+<div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0">
+  ¡Sin daño extra!
+</div>
+
+<div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
+  <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
+{{ resultadoMoneda === 'CARA' ? '¡EFECTO LOGRADO!' : '¡EL EFECTO FALLÓ!' }}
+  </span>
+</div>
+ 
+  </div>
+</div>
+<div class="inter-turn-overlay" *ngIf="interTurnOverlay">
+  <div class="ito-backdrop"></div>
+  <div class="ito-content">
+ 
+    <!-- Fase del juego (inicio de turno, fin de turno...) -->
+    <p class="ito-phase-label">{{ interTurnOverlay.fase }}</p>
+ 
+    <!-- Líneas decorativas -->
+    <div class="ito-lines" [class.player]="interTurnOverlay.tipo === 'jugador'" [class.bot]="interTurnOverlay.tipo === 'bot'">
+      <span></span><span></span><span></span>
+    </div>
+ 
+    <!-- Texto principal -->
+    <p class="ito-main-text"
+       [class.player]="interTurnOverlay.tipo === 'jugador'"
+       [class.bot]="interTurnOverlay.tipo === 'bot'">
+      {{ interTurnOverlay.titulo }}
+    </p>
+ 
+    <!-- Subtítulo -->
+    <p class="ito-sub-text" *ngIf="interTurnOverlay.subtitulo">{{ interTurnOverlay.subtitulo }}</p>
+ 
+    <!-- Barra de countdown -->
+    <div class="ito-timer-bar">
+      <div class="ito-timer-fill"
+           [class.player]="interTurnOverlay.tipo === 'jugador'"
+           [class.bot]="interTurnOverlay.tipo === 'bot'"
+           [style.animationDuration]="interTurnOverlay.duracion + 'ms'">
+      </div>
+    </div>
+ 
+  </div>
+</div>
+
+<div class="ko-overlay" *ngIf="mostrarKO">
+  <div class="ko-badge">KO!</div>
+</div>
+ 
+ 
+ 
 <!-- ══════════ TABLERO ══════════ -->
 <div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible">
 
@@ -173,6 +270,12 @@
           </div>
 
           <div class="sprite-container" [class.recibiendo-danio]="animandoBotDanio">
+            <div class="damage-number"
+     *ngIf="damageNumberBot"
+     [class.big]="damageNumberBot.valor > 80"
+     [class.heal]="damageNumberBot.esCuracion">
+  {{ damageNumberBot.esCuracion ? '+' : '-' }}{{ damageNumberBot.valor }}
+</div>
             <div class="particle-emitter" *ngIf="mostrarEfectoBot">
               <div *ngFor="let p of particulasBot" class="particle"
                    [style.backgroundColor]="p.color"
@@ -184,14 +287,29 @@
               </div>
             </div>
 
-            <div class="sprite-wrap bot-sprite-wrap" [class.sprite-attack]="animandoBotAtaque">
-              <ng-container *ngIf="partida.bot.activo">
-                <img class="poke-sprite sprite-front"
-                     [src]="getSpriteFront(partida.bot.activo.card.nombre)"
-                     (error)="onSpriteError($event)">
-                <div class="sprite-shadow"></div>
-              </ng-container>
-            </div>
+           <div class="sprite-wrap bot-sprite-wrap"
+     [class.sprite-attack]="animandoBotAtaque"
+     [class.status-confused]="partida?.bot?.activo?.estado === 'CONFUSED'"
+     [class.status-heal]="mostrarAuraCuracionBot"
+     [class.status-paralyzed]="partida?.bot?.activo?.estado === 'PARALYZED'"
+     [class.status-burned]="partida?.bot?.activo?.estado === 'BURNED'"
+     [class.status-poisoned]="partida?.bot?.activo?.estado === 'POISONED'"
+     [class.status-asleep]="partida?.bot?.activo?.estado === 'ASLEEP'">
+ 
+  <!-- Envolvé el sprite en .status-fx-wrap: -->
+  <div class="status-fx-wrap">
+    <ng-container *ngIf="partida.bot.activo">
+      <img class="poke-sprite sprite-front"
+           [src]="getSpriteFront(partida.bot.activo.card.nombre)"
+           (error)="onSpriteError($event)">
+      <div class="sprite-shadow"></div>
+    </ng-container>
+    <!-- Partículas de curación (se muestran si mostrarAuraCuracionBot) -->
+    <div class="heal-particles" *ngIf="mostrarAuraCuracionBot">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
 
             <div class="energy-icons-row" *ngIf="partida.bot.activo?.energiasUnidas?.length">
               <div *ngFor="let energia of partida.bot.activo.energiasUnidas" class="energy-badge" [title]="energia.nombre">
@@ -216,6 +334,12 @@
         <div class="combatant player-combatant" cdkDropList (cdkDropListDropped)="soltarCarta($event, 'activo')">
 
           <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
+            <div class="damage-number"
+     *ngIf="damageNumberPlayer"
+     [class.big]="damageNumberPlayer.valor > 80"
+     [class.heal]="damageNumberPlayer.esCuracion">
+  {{ damageNumberPlayer.esCuracion ? '+' : '-' }}{{ damageNumberPlayer.valor }}
+</div>
             <div class="particle-emitter" *ngIf="mostrarEfectoJugador">
               <div *ngFor="let p of particulasJugador" class="particle"
                    [style.backgroundColor]="p.color"
@@ -227,16 +351,27 @@
               </div>
             </div>
 
-            <div class="sprite-wrap player-sprite-wrap"
-                 [class.pokemon-defeated]="partida?.jugador?.activo?.hpActual <= 0"
-                 [class.sprite-attack]="animandoAtaque">
-              <ng-container *ngIf="partida.jugador.activo">
-                <img class="poke-sprite sprite-back"
-                     [src]="getSpriteBack(partida.jugador.activo.card.nombre)"
-                     (error)="onSpriteError($event)">
-                <div class="sprite-shadow"></div>
-              </ng-container>
-            </div>
+           <div class="sprite-wrap player-sprite-wrap"
+     [class.pokemon-defeated]="partida?.jugador?.activo?.hpActual <= 0"
+     [class.sprite-attack]="animandoAtaque"
+     [class.status-confused]="partida?.jugador?.activo?.estado === 'CONFUSED'"
+     [class.status-heal]="mostrarAuraCuracionPlayer"
+     [class.status-paralyzed]="partida?.jugador?.activo?.estado === 'PARALYZED'"
+     [class.status-burned]="partida?.jugador?.activo?.estado === 'BURNED'"
+     [class.status-poisoned]="partida?.jugador?.activo?.estado === 'POISONED'"
+     [class.status-asleep]="partida?.jugador?.activo?.estado === 'ASLEEP'">
+  <div class="status-fx-wrap">
+    <ng-container *ngIf="partida.jugador.activo">
+      <img class="poke-sprite sprite-back"
+           [src]="getSpriteBack(partida.jugador.activo.card.nombre)"
+           (error)="onSpriteError($event)">
+      <div class="sprite-shadow"></div>
+    </ng-container>
+    <div class="heal-particles" *ngIf="mostrarAuraCuracionPlayer">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+</div>
 
             <div class="energy-icons-row" *ngIf="partida.jugador.activo?.energiasUnidas?.length">
               <div *ngFor="let energia of partida.jugador.activo.energiasUnidas" class="energy-badge" [title]="energia.nombre">
@@ -406,3 +541,4 @@
   </svg>
 
 </div>
+

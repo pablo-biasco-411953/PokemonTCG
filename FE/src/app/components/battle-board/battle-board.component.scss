@@ -1005,3 +1005,470 @@ bot-sprite-wrap {
   to { transform: rotateY(360deg); }
 }
 
+/* ══════════════════════════════════════════════════════════════
+   BATTLE FX — Pegá este bloque al FINAL de battle-board.component.scss
+   Incluye: efectos de estado, aura de curación, coin-flip de ataque,
+   overlay entre turnos, flujo natural entre animaciones.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────
+   1. EFECTOS DE ESTADO (Confused, Paralyzed, Burned, Poisoned, Asleep)
+   ───────────────────────────────────────────────────────────── */
+
+/* Wrapper que rodea el sprite o la carta con el efecto */
+.status-fx-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── CONFUNDIDO: espirales giratorias ── */
+.status-confused .status-fx-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 2px dashed rgba(160, 80, 220, 0.7);
+  animation: confused-spin 1.2s linear infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+.status-confused .status-fx-wrap::after {
+  content: '😵';
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  animation: confused-float 1s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 11;
+}
+@keyframes confused-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes confused-float {
+  0%,100% { transform: translateX(-50%) translateY(0) rotate(-8deg); }
+  50%      { transform: translateX(-50%) translateY(-4px) rotate(8deg); }
+}
+
+/* ── CURADO: aura verde pulsante ── */
+.status-heal .status-fx-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(50,212,110,.25) 0%, rgba(50,212,110,0) 70%);
+  animation: heal-pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 10;
+}
+.status-heal .status-fx-wrap::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(50,212,110,.55);
+  animation: heal-ring 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 11;
+}
+/* Partículas de curación que flotan hacia arriba */
+.heal-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+  overflow: visible;
+
+  span {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #32d46e;
+    box-shadow: 0 0 6px #32d46e;
+    animation: heal-particle 1.6s ease-out infinite;
+    opacity: 0;
+
+    &:nth-child(1) { left: 20%; animation-delay: 0s; }
+    &:nth-child(2) { left: 45%; animation-delay: .3s; }
+    &:nth-child(3) { left: 70%; animation-delay: .6s; }
+    &:nth-child(4) { left: 30%; animation-delay: .9s; }
+    &:nth-child(5) { left: 60%; animation-delay: 1.2s; }
+  }
+}
+@keyframes heal-pulse {
+  0%,100% { transform: scale(.9); opacity: .6; }
+  50%     { transform: scale(1.15); opacity: 1; }
+}
+@keyframes heal-ring {
+  0%,100% { transform: scale(1); opacity: .8; }
+  50%     { transform: scale(1.12); opacity: .4; }
+}
+@keyframes heal-particle {
+  0%   { transform: translateY(0) scale(1); opacity: .9; }
+  100% { transform: translateY(-40px) scale(.3); opacity: 0; }
+}
+
+/* ── PARALIZADO: parpadeo amarillo eléctrico ── */
+.status-paralyzed .status-fx-wrap {
+  animation: paralyzed-flash .4s ease-in-out infinite;
+}
+@keyframes paralyzed-flash {
+  0%,100% { filter: none; }
+  50%     { filter: brightness(1.6) sepia(.6) hue-rotate(20deg); }
+}
+
+/* ── QUEMADO: brillo anaranjado ── */
+.status-burned .status-fx-wrap {
+  animation: burned-glow .8s ease-in-out infinite;
+}
+@keyframes burned-glow {
+  0%,100% { filter: drop-shadow(0 0 4px rgba(240,80,20,.5)); }
+  50%     { filter: drop-shadow(0 0 12px rgba(240,80,20,.9)); }
+}
+
+/* ── ENVENENADO: pulso morado ── */
+.status-poisoned .status-fx-wrap {
+  animation: poisoned-pulse 1s ease-in-out infinite;
+}
+@keyframes poisoned-pulse {
+  0%,100% { filter: drop-shadow(0 0 3px rgba(130,30,180,.5)); }
+  50%     { filter: drop-shadow(0 0 10px rgba(130,30,180,.85)); }
+}
+
+/* ── DORMIDO: ZZZ flotante ── */
+.status-asleep .status-fx-wrap::after {
+  content: 'ZZZ';
+  position: absolute;
+  top: -20px; right: -8px;
+  font-size: 11px; font-weight: 700; letter-spacing: .05em;
+  color: rgba(150,200,255,.8);
+  animation: sleep-float 2s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 11;
+}
+@keyframes sleep-float {
+  0%,100% { transform: translateY(0); opacity: .9; }
+  50%     { transform: translateY(-6px); opacity: .5; }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   2. COIN FLIP DE ATAQUE
+   Se muestra sobre el tablero cuando un ataque requiere lanzar monedas.
+   ───────────────────────────────────────────────────────────── */
+
+.attack-coinflip-overlay {
+  position: fixed; inset: 0; z-index: 700;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.attack-coinflip-overlay .acf-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px);
+}
+
+.acf-panel {
+  position: relative; z-index: 2;
+  background: linear-gradient(135deg, rgba(10,18,32,.97), rgba(18,30,52,.97));
+  border: 1.5px solid rgba(242,192,64,.4);
+  border-radius: 20px;
+  padding: 24px 28px 20px;
+  min-width: 320px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  box-shadow: 0 0 50px rgba(242,192,64,.15), 0 16px 40px rgba(0,0,0,.8);
+  animation: acf-in .35s cubic-bezier(.22,.61,.36,1) both;
+  pointer-events: auto;
+}
+@keyframes acf-in {
+  from { transform: scale(.8) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);     opacity: 1; }
+}
+
+.acf-attack-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px; letter-spacing: .18em;
+  color: var(--gold, #f2c040);
+  text-align: center;
+}
+
+.acf-description {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 13px; color: rgba(196,212,228,.75);
+  text-align: center; line-height: 1.4;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.04);
+  padding: 8px 12px; border-radius: 8px;
+}
+
+/* Fila de monedas */
+.acf-coins-row {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+
+.acf-coin {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  border: 3px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.05);
+  position: relative;
+  overflow: hidden;
+  transition: all .3s;
+
+  /* Estado pendiente (girando) */
+  &.flipping {
+    animation: coin-spin .25s linear infinite;
+    border-color: rgba(242,192,64,.5);
+    background: rgba(242,192,64,.08);
+  }
+
+  /* Cara */
+  &.cara {
+    background: linear-gradient(145deg, #fceabb, #fccd4d, #f8b500);
+    border-color: #b58900;
+    box-shadow: 0 0 16px rgba(248,181,0,.45);
+    animation: coin-land .4s cubic-bezier(.22,.61,.36,1) both;
+  }
+
+  /* Cruz */
+  &.cruz {
+    background: linear-gradient(145deg, #e0e0e0, #bdbdbd, #9e9e9e);
+    border-color: #757575;
+    box-shadow: 0 0 16px rgba(200,200,200,.3);
+    animation: coin-land .4s cubic-bezier(.22,.61,.36,1) both;
+  }
+}
+@keyframes coin-spin {
+  to { transform: rotateY(360deg); }
+}
+@keyframes coin-land {
+  from { transform: scale(.5) rotateY(180deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotateY(5deg); }
+  to   { transform: scale(1) rotateY(0); opacity: 1; }
+}
+
+/* Resultados de cada moneda debajo */
+.acf-results-row {
+  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+}
+.acf-result-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12px; font-weight: 700; letter-spacing: .08em;
+  padding: 3px 10px; border-radius: 20px;
+  min-width: 52px; text-align: center;
+
+  &.cara { background: rgba(248,181,0,.2); color: #ffd700; border: 1px solid rgba(248,181,0,.4); }
+  &.cruz { background: rgba(180,180,180,.15); color: #ccc; border: 1px solid rgba(180,180,180,.3); }
+  &.pending { background: rgba(255,255,255,.05); color: rgba(255,255,255,.3); border: 1px dashed rgba(255,255,255,.1); }
+}
+
+/* Resumen de daño */
+.acf-damage-summary {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: .1em;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(242,192,64,.6);
+  text-align: center;
+  animation: acf-dmg-in .5s cubic-bezier(.22,.61,.36,1) both;
+
+  span { color: var(--gold, #f2c040); font-size: 36px; }
+}
+@keyframes acf-dmg-in {
+  from { transform: scale(.5); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Barra de progreso mientras se tiran las monedas */
+.acf-progress {
+  width: 100%; height: 3px;
+  background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden;
+}
+.acf-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold, #f2c040), #ffe07a);
+  border-radius: 2px;
+  transition: width .3s ease;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   3. OVERLAY ENTRE TURNOS (tiempo muerto dramático)
+   Se muestra entre el final de un turno y el inicio del siguiente.
+   ───────────────────────────────────────────────────────────── */
+
+.inter-turn-overlay {
+  position: fixed; inset: 0; z-index: 650;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+.inter-turn-overlay .ito-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.6);
+  backdrop-filter: blur(5px);
+  animation: ito-back-in .3s ease both;
+}
+@keyframes ito-back-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.ito-content {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  animation: ito-in .4s cubic-bezier(.22,.61,.36,1) both;
+}
+@keyframes ito-in {
+  from { transform: scale(.7) translateY(30px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);     opacity: 1; }
+}
+
+/* Líneas decorativas horizontales */
+.ito-lines {
+  display: flex; gap: 8px; align-items: center;
+  span {
+    display: block; height: 2px; border-radius: 1px;
+    &:nth-child(1),&:nth-child(3) { width: 60px; }
+    &:nth-child(2) { width: 120px; }
+  }
+}
+.ito-lines.player span { background: var(--gold, #f2c040); }
+.ito-lines.bot span    { background: var(--blue, #4ab8f8); }
+
+.ito-phase-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 700; letter-spacing: .3em;
+  text-transform: uppercase; color: rgba(196,212,228,.6);
+}
+
+.ito-main-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(42px,8vw,70px);
+  letter-spacing: .12em; line-height: 1;
+  color: #fff;
+  text-shadow: 0 4px 30px rgba(0,0,0,.7);
+  text-align: center;
+}
+.ito-main-text.player { color: var(--gold, #f2c040); text-shadow: 0 0 40px rgba(242,192,64,.4); }
+.ito-main-text.bot    { color: var(--blue, #4ab8f8); text-shadow: 0 0 40px rgba(74,184,248,.4); }
+
+.ito-sub-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: rgba(196,212,228,.6);
+}
+
+/* Barra de progreso que muestra cuánto dura el tiempo muerto */
+.ito-timer-bar {
+  width: 200px; height: 3px;
+  background: rgba(255,255,255,.1); border-radius: 2px; overflow: hidden;
+  margin-top: 6px;
+}
+.ito-timer-fill {
+  height: 100%; border-radius: 2px;
+  animation: ito-timer linear forwards;
+}
+.ito-timer-fill.player { background: var(--gold, #f2c040); }
+.ito-timer-fill.bot    { background: var(--blue, #4ab8f8); }
+@keyframes ito-timer {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+/* Efectos KO — mensaje cuando un Pokémon es derrotado */
+.ko-overlay {
+  position: fixed; inset: 0; z-index: 680;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+  animation: ko-flash .15s ease both;
+}
+@keyframes ko-flash {
+  from { background: rgba(255,80,80,.25); }
+  to   { background: transparent; }
+}
+
+.ko-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 72px; letter-spacing: .2em; line-height: 1;
+  color: var(--red, #e53535);
+  text-shadow:
+    0 0 40px rgba(229,53,53,.8),
+    0 4px 0 rgba(0,0,0,.6);
+  animation: ko-in .5s cubic-bezier(.17,.89,.32,1.27) both;
+}
+@keyframes ko-in {
+  from { transform: scale(3) rotate(-12deg); opacity: 0; filter: blur(10px); }
+  60%  { transform: scale(.95) rotate(2deg); filter: none; }
+  to   { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* Premio ganado — aparece sobre los premios */
+.prize-gained-fx {
+  position: fixed;
+  z-index: 700;
+  pointer-events: none;
+  animation: prize-float 1.2s ease-out both;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px; letter-spacing: .1em;
+  color: var(--gold, #f2c040);
+  text-shadow: 0 0 14px rgba(242,192,64,.6);
+}
+@keyframes prize-float {
+  from { transform: translateY(0); opacity: 1; }
+  to   { transform: translateY(-60px); opacity: 0; }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   4. EFECTOS DE DAÑO EN NÚMEROS (damage numbers flotantes)
+   ───────────────────────────────────────────────────────────── */
+
+.damage-number {
+  position: absolute;
+  z-index: 200;
+  pointer-events: none;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px; letter-spacing: .05em;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,.8), 0 0 20px rgba(229,53,53,.6);
+  animation: dmg-float .9s cubic-bezier(.22,.61,.36,1) forwards;
+  white-space: nowrap;
+  top: 20%; left: 50%; transform: translateX(-50%);
+
+  &.big { font-size: 44px; color: var(--red, #e53535); text-shadow: 0 0 30px rgba(229,53,53,.9); }
+  &.heal { color: var(--green, #32d46e); text-shadow: 0 0 20px rgba(50,212,110,.7); }
+}
+@keyframes dmg-float {
+  0%   { transform: translateX(-50%) translateY(0) scale(.8); opacity: 1; }
+  40%  { transform: translateX(-50%) translateY(-30px) scale(1.1); opacity: 1; }
+  100% { transform: translateX(-50%) translateY(-70px) scale(.9); opacity: 0; }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   5. ANIMACIONES ENTRE TURNOS — tiempo muerto natural
+   Estas clases se aplican al .playmat durante la transición
+   ───────────────────────────────────────────────────────────── */
+
+/* Leve pulso del campo cuando cambia el turno */
+.playmat.turn-changing {
+  animation: field-pulse .6s ease both;
+}
+@keyframes field-pulse {
+  0%,100% { filter: none; }
+  50%     { filter: brightness(1.08) saturate(1.1); }
+}
+
+/* El Pokémon activo que acaba de atacar hace un "retroceso" */
+.active-card.post-attack {
+  animation: post-attack-settle .5s ease both;
+}
+@keyframes post-attack-settle {
+  0%  { transform: translateY(-8px) scale(1.04); }
+  100%{ transform: translateY(0) scale(1); }
+}
