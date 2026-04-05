@@ -75,6 +75,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   resultadoMoneda: 'CARA' | 'CRUZ' = 'CARA';
   public girando: boolean = false;
 
+  // ── Estado de efectos ──
+  mostrarAuraCuracionBot    = false;
+  mostrarAuraCuracionPlayer = false;
+  mostrarKO                 = false;
+ 
+  // ── Números de daño flotantes ──
+  damageNumberBot:    { valor: number; esCuracion: boolean } | null = null;
+  damageNumberPlayer: { valor: number; esCuracion: boolean } | null = null;
+
+
   // Partículas
   mostrarEfectoBot     = false;
   mostrarEfectoJugador = false;
@@ -347,6 +357,83 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.yStart = event.clientY;
   }
 
+   interTurnOverlay: {
+    titulo: string;
+    subtitulo?: string;
+    fase: string;
+    tipo: 'jugador' | 'bot' | 'neutral';
+    duracion: number;
+  } | null = null;
+ 
+  // ── Coin flip de ataque ──
+  coinFlipAtaque: {
+    nombreAtaque: string;
+    descripcion: string;
+    cantidadMonedas: number;
+    danioBase: number;
+    danioExtraPorCara: number;
+    monedas: { estado: 'girando' | 'cara' | 'cruz' }[];
+    danioTotal: number;
+    terminado: boolean;
+    progreso: number;
+    esSoloEstado: boolean; // <-- ACÁ SOLO EL TIPO, SIN " = config..."
+  } | null = null;
+
+  async mostrarInterTurn(
+    tipo: 'jugador' | 'bot' | 'neutral',
+    titulo: string,
+    subtitulo = '',
+    duracion  = 2000
+  ): Promise<void> {
+    const fase = tipo === 'jugador' ? 'INICIO DE TURNO' :
+                 tipo === 'bot'     ? 'TURNO DEL RIVAL'  : 'ENTRE TURNOS';
+ 
+    this.interTurnOverlay = { titulo, subtitulo, fase, tipo, duracion };
+    this.cdr.detectChanges();
+ 
+    await this.delay(duracion);
+ 
+    // Fade out
+    this.interTurnOverlay = null;
+    this.cdr.detectChanges();
+ 
+    // Pequeña pausa de limpieza
+    await this.delay(200);
+  }
+
+
+async mostrarKOAnim(): Promise<void> {
+    this.mostrarKO = true;
+    this.cdr.detectChanges();
+    await this.delay(1200);
+    this.mostrarKO = false;
+    this.cdr.detectChanges();
+  }
+ async mostrarCuracion(objetivo: 'bot' | 'jugador', duracion = 1500): Promise<void> {
+    if (objetivo === 'bot')     this.mostrarAuraCuracionBot    = true;
+    else                        this.mostrarAuraCuracionPlayer = true;
+    this.cdr.detectChanges();
+ 
+    await this.delay(duracion);
+ 
+    if (objetivo === 'bot')     this.mostrarAuraCuracionBot    = false;
+    else                        this.mostrarAuraCuracionPlayer = false;
+    this.cdr.detectChanges();
+  }
+
+   mostrarDamageNumber(objetivo: 'bot' | 'jugador', valor: number, esCuracion = false): void {
+    const num = { valor, esCuracion };
+    if (objetivo === 'bot') {
+      this.damageNumberBot = num;
+      setTimeout(() => { this.damageNumberBot = null; this.cdr.detectChanges(); }, 1000);
+    } else {
+      this.damageNumberPlayer = num;
+      setTimeout(() => { this.damageNumberPlayer = null; this.cdr.detectChanges(); }, 1000);
+    }
+    this.cdr.detectChanges();
+  }
+
+
   async onMouseUp(event: MouseEvent) {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
 
@@ -398,6 +485,188 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+
+async ejecutarCoinFlipAtaque(
+    nombreAtaque: string,
+    descripcion: string,
+    cantidadMonedas: number,
+    danioBase: number,
+    danioExtraPorCara: number,
+    esSoloEstado: boolean // 🚩 1. Agregamos el parámetro acá
+  ): Promise<number> {
+    // Inicializamos el estado del coin flip
+    this.coinFlipAtaque = {
+      nombreAtaque,
+      descripcion,
+      cantidadMonedas,
+      danioBase,
+      danioExtraPorCara,
+      monedas: Array(cantidadMonedas).fill(null).map(() => ({ estado: 'girando' as const })),
+      danioTotal: 0,
+      terminado: false,
+      progreso: 0,
+      esSoloEstado: esSoloEstado // 🚩 2. Usamos el parámetro que entra, NO 'config'
+    };
+
+    this.cdr.detectChanges();
+    // Pequeña pausa para que el overlay aparezca
+    await this.delay(600);
+ 
+    let caras = 0;
+ 
+    // Lanzamos cada moneda con un delay entre ellas
+    for (let i = 0; i < cantidadMonedas; i++) {
+      // Progreso de la barra
+      this.coinFlipAtaque!.progreso = ((i + 1) / cantidadMonedas) * 100;
+      this.cdr.detectChanges();
+ 
+      // Delay de "giro" antes de revelar
+      await this.delay(600 + Math.random() * 400);
+ 
+      // Resultado aleatorio
+      const esCara = Math.random() < 0.5;
+      if (esCara) caras++;
+ 
+      this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
+      this.cdr.detectChanges();
+ 
+      // Pausa entre monedas
+      await this.delay(300);
+    }
+ 
+    // Calculamos el daño total
+    const danioTotal = danioBase + (caras * danioExtraPorCara);
+    this.coinFlipAtaque!.danioTotal = danioTotal;
+    this.coinFlipAtaque!.terminado  = true;
+    this.cdr.detectChanges();
+ 
+    // Mostramos el resultado un momento
+    await this.delay(2000);
+ 
+    // Cerramos el overlay
+    this.coinFlipAtaque = null;
+    this.cdr.detectChanges();
+ 
+    return danioTotal;
+  }
+
+
+detectarCoinFlipAtaque(ataque: any): {
+    cantidadMonedas: number;
+    danioBase: number;
+    danioExtraPorCara: number;
+    descripcion: string;
+    esSoloEstado: boolean; // 🚩 Nueva bandera
+  } | null {
+    if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
+
+    const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
+
+    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
+    if (!flipMatch) return null;
+
+    const numStr = (flipMatch[1] || flipMatch[2] || 'a').toLowerCase();
+    const numMap: Record<string, number> = { a:1, an:1, one:1, una:1, 'un':1, '1':1, two:2, dos:2, '2':2, three:3, tres:3, '3':3 };
+    const cantidadMonedas = (numMap[numStr] ?? parseInt(numStr, 10)) || 1; 
+
+    let danioBase = parseInt(ataque.danio || ataque.dano || '0', 10) || 0;
+    let danioExtraPorCara = 0;
+    let esMultiplicador = false;
+    let esFalloCruz = false;
+    let esSoloEstado = false;
+
+    // 🕵️‍♂️ Lógica de detección mejorada
+    if (texto.includes('paralyzed') || texto.includes('asleep') || texto.includes('confused') || texto.includes('poisoned')) {
+        // Si el daño no depende de la moneda (como Dratini), es solo efecto de estado
+        if (!texto.includes('more damage') && !texto.includes('damage times')) {
+            esSoloEstado = true;
+        }
+    }
+
+    if (texto.includes('does nothing')) {
+        esFalloCruz = true;
+        danioExtraPorCara = danioBase;
+        danioBase = 0; 
+    } else if (texto.includes('times the number of heads') || texto.includes('x the number of heads') || texto.includes('for each heads')) {
+        esMultiplicador = true;
+        const multiMatch = texto.match(/does (\d+) damage times/i);
+        danioExtraPorCara = multiMatch ? parseInt(multiMatch[1], 10) : (danioBase > 0 ? danioBase : 10);
+        danioBase = 0; 
+    } else if (texto.includes('more damage') || texto.includes('additional damage')) {
+        const damageMatch = texto.match(/(\d+)\s*(?:more|extra|additional)/i);
+        danioExtraPorCara = damageMatch ? parseInt(damageMatch[1], 10) : 10;
+    }
+
+    const descripcion = this.traducirEfectoCoinFlip(texto, cantidadMonedas, danioExtraPorCara, esMultiplicador, esFalloCruz, esSoloEstado);
+
+    return { cantidadMonedas, danioBase, danioExtraPorCara, descripcion, esSoloEstado };
+  }
+
+ async procesarEventosPostEstado(estadoAnterior: any, estadoNuevo: any): Promise<void> {
+    // ── KO del Pokémon del bot ──
+    const botActivoAntes  = estadoAnterior?.bot?.activo;
+    const botActivoAhora  = estadoNuevo?.bot?.activo;
+    if (botActivoAntes && !botActivoAhora) {
+      await this.mostrarKOAnim();
+    }
+
+    // ── KO del Pokémon del jugador ──
+    const playerActivoAntes = estadoAnterior?.jugador?.activo;
+    const playerActivoAhora = estadoNuevo?.jugador?.activo;
+    if (playerActivoAntes && !playerActivoAhora) {
+      await this.mostrarKOAnim();
+    }
+
+    // ── Daño al bot ──
+    const hpBotAntes  = botActivoAntes?.hpActual  ?? 0;
+    const hpBotAhora  = botActivoAhora?.hpActual  ?? 0;
+    if (botActivoAntes && botActivoAhora && hpBotAhora < hpBotAntes) {
+      this.mostrarDamageNumber('bot', hpBotAntes - hpBotAhora);
+    }
+
+    // ── Curación del bot ──
+    if (botActivoAntes && botActivoAhora && hpBotAhora > hpBotAntes) {
+      const curado = hpBotAhora - hpBotAntes;
+      this.mostrarDamageNumber('bot', curado, true);
+      this.mostrarCuracion('bot');
+    }
+
+    // ── Daño al jugador ──
+    const hpPlayerAntes = playerActivoAntes?.hpActual ?? 0;
+    const hpPlayerAhora = playerActivoAhora?.hpActual ?? 0;
+    if (playerActivoAntes && playerActivoAhora && hpPlayerAhora < hpPlayerAntes) {
+      this.mostrarDamageNumber('jugador', hpPlayerAntes - hpPlayerAhora);
+    }
+
+    // ── Curación del jugador ──
+    if (playerActivoAntes && playerActivoAhora && hpPlayerAhora > hpPlayerAntes) {
+      const curado = hpPlayerAhora - hpPlayerAntes;
+      this.mostrarDamageNumber('jugador', curado, true);
+      this.mostrarCuracion('jugador');
+    }
+  }
+ 
+private traducirEfectoCoinFlip(
+    textoOriginal: string,
+    monedas: number,
+    danio: number,
+    esMultiplicador: boolean,
+    esFalloCruz: boolean,
+    esSoloEstado: boolean
+  ): string {
+    const numStr = monedas === 1 ? 'una moneda' : `${monedas} monedas`;
+    
+    if (esSoloEstado) {
+        if (textoOriginal.includes('paralyzed')) return `Lanzá ${numStr}. Si sale CARA, el rival queda Paralizado.`;
+        if (textoOriginal.includes('asleep')) return `Lanzá ${numStr}. Si sale CARA, el rival queda Dormido.`;
+        return `Lanzá ${numStr} para aplicar un efecto especial.`;
+    }
+    
+    if (esFalloCruz) return `Lanzá ${numStr}. Si sale CRUZ, el ataque falla.`;
+    if (esMultiplicador) return `Lanzá ${numStr}. Hace ${danio} de daño por cada CARA.`;
+    
+    return `Lanzá ${numStr}. Hace ${danio} de daño extra por cada CARA.`;
+  }
   // ═══════════════════════════════════════════════
   // CARGA DE ESTADO
   // ═══════════════════════════════════════════════
@@ -559,59 +828,103 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // IA ENEMIGA
   // ═══════════════════════════════════════════════
 
-  ejecutarIAEnemiga() {
-    this.botEstaAtacando  = true;
-    this.animandoBotAtaque = true;
-    this.cdr.detectChanges();
+ejecutarIAEnemiga() {
+    if (this.datosPendientesBot) {
+      const data = this.datosPendientesBot;
+      this.datosPendientesBot = null;
+      this.ejecutarIAEnemigaConData(data);
+    }
+  }
 
-    setTimeout(() => {
-      this.showImpactFlash = true;
-      if (this.datosPendientesBot) {
-        this.partida           = this.datosPendientesBot;
-        this.hpRenderJugador   = this.partida.jugador.activo.hpActual;
-        this.datosPendientesBot = null;
+async ejecutarIAEnemigaConData(estadoFinal: any) {
+  const activoBotDespues = estadoFinal?.bot?.activo;
+  const hpJugadorAntes = this.hpRenderJugador;
+  const hpJugadorDespues = estadoFinal?.jugador?.activo?.hpActual || 0;
+  const danioHecho = hpJugadorAntes - hpJugadorDespues;
+  
+  let botAtaco = false;
+
+  // 1. Detección de ataque
+  if (danioHecho > 0) {
+    botAtaco = true; 
+  } else if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
+    const ataqueBot = activoBotDespues.card.ataques[0];
+    const costoReq = ataqueBot.costo?.length || 0;
+    const energiasBot = activoBotDespues.energiasUnidas?.length || 0;
+    if (energiasBot >= costoReq) botAtaco = true;
+  }
+
+  if (!botAtaco) {
+    this.partida = estadoFinal;
+    this.hpRenderJugador = hpJugadorDespues;
+    this.cargandoAccion = false;
+    this.bloqueadoPorAnimacion = false;
+    this.cdr.detectChanges();
+    return;
+  }
+
+  // 2. Inicio de secuencia
+  this.botEstaAtacando = true;
+  this.animandoBotAtaque = true;
+  this.cdr.detectChanges();
+
+  if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
+    const habilidadBot = activoBotDespues.card.ataques[0];
+    const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
+
+    if (coinConfig) {
+      let carasReales = 0;
+      
+      if (coinConfig.esSoloEstado) {
+        // 🚩 CHEQUEO DIRECTO AL JSON DEL BACKEND
+        const condicionesActuales = estadoFinal.jugador?.activo?.condicionesEspeciales || [];
+        const estaParalizado = condicionesActuales.includes('Paralyzed');
+        carasReales = estaParalizado ? 1 : 0;
+        
+        // FORZAMOS el resultado para que el modal no use basura anterior
+        (this as any).resultadoMoneda = estaParalizado ? 'CARA' : 'CRUZ';
+      } else {
+        // Lógica de daño normal
+        const txt = (habilidadBot.texto || '').toLowerCase();
+        if (txt.includes('does nothing')) {
+          carasReales = danioHecho > 0 ? 1 : 0;
+        } else if (txt.includes('heads')) {
+          if (coinConfig.danioExtraPorCara > 0) {
+             const base = txt.includes('more') || txt.includes('plus') ? coinConfig.danioBase : 0;
+             carasReales = Math.min(coinConfig.cantidadMonedas, Math.round((danioHecho - base) / coinConfig.danioExtraPorCara));
+          }
+        }
+        (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
       }
-      this.cdr.detectChanges();
 
-      setTimeout(() => { this.showImpactFlash = false; this.cdr.detectChanges(); }, 150);
-
-      setTimeout(() => {
-        this.animandoBotAtaque = false;
-        this.botEstaAtacando   = false;
-        this.cdr.detectChanges();
-      }, 600);
-    }, 450);
+      // Esperamos a que la moneda termine de girar
+      await this.animarMonedasSincronizadas(habilidadBot.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
+    }
   }
 
-  ejecutarIAEnemigaConData(estadoFinal: any) {
-    this.botEstaAtacando  = true;
-    this.animandoBotAtaque = true;
-    this.cdr.detectChanges();
+  // 3. EL MOMENTO DEL IMPACTO
+  // Solo acá actualizamos la data para que el HP baje y los estados aparezcan
+  this.showImpactFlash = true;
+  this.partida = JSON.parse(JSON.stringify(estadoFinal)); // Clonamos para forzar el refresh de Angular
+  this.hpRenderJugador = hpJugadorDespues;
+  this.cdr.detectChanges();
 
-    setTimeout(() => {
-      this.showImpactFlash = true;
-      this.cdr.detectChanges();
+  await this.delay(150);
+  this.showImpactFlash = false;
+  this.cdr.detectChanges();
 
-      setTimeout(() => {
-        this.partida         = estadoFinal;
-        this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
-        this.showImpactFlash = false;
-        this.cdr.detectChanges();
-      }, 150);
-
-      setTimeout(() => {
-        Promise.resolve().then(() => {
-          this.animandoBotAtaque     = false;
-          this.botEstaAtacando       = false;
-          this.cargandoAccion        = false;
-          this.bloqueadoPorAnimacion = false;
-          this.ataqueRealizado       = false;
-          this.cdr.detectChanges();
-        });
-      }, 600);
-    }, 450);
-  }
-
+  await this.delay(450);
+  this.animandoBotAtaque     = false;
+  this.botEstaAtacando       = false;
+  this.cargandoAccion        = false;
+  this.bloqueadoPorAnimacion = false;
+  this.ataqueRealizado       = false;
+  
+  // Limpieza final de la moneda para que no quede el cartel viejo en el próximo turno
+  (this as any).resultadoMoneda = ''; 
+  
+  this.cdr.detectChanges();
+}
   forzarUpdate() {
     this.battleService.getState(this.matchId!).subscribe({
       next: async (data) => {
@@ -643,26 +956,70 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // ACCIONES DE JUEGO
   // ═══════════════════════════════════════════════
 
-  async ejecutarAtaqueSecuencia(nombreAtaque: string) {
+async ejecutarAtaqueSecuencia(nombreAtaque: string) {
     if (this.cargandoAccion || !nombreAtaque) return;
 
     this.bloqueadoPorAnimacion = true;
     this.cargandoAccion        = true;
     this.ataqueRealizado       = true;
 
-    const miVidaIntacta = this.hpRenderJugador;
-    const habilidad     = this.partida.jugador.activo.card.ataques.find((a: any) => a.nombre === nombreAtaque);
-    const tipoEnergia   = habilidad?.costo[0] || 'Colorless';
+    const habilidad = this.partida.jugador.activo.card.ataques.find((a: any) => a.nombre === nombreAtaque);
+    const tipoEnergia = habilidad?.costo[0] || 'Colorless';
 
     try {
+      // 1. Mandamos la orden de ataque al backend
       await firstValueFrom(this.battleService.atacar(this.matchId!, nombreAtaque));
 
+      // 2. Pedimos la foto actualizada
+      const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
+
+      // 3. Magia de monedas (RECARGADA)
+      const coinConfig = this.detectarCoinFlipAtaque(habilidad);
+      if (coinConfig) {
+        const hpBotAntes = this.partida.bot?.activo?.hpActual || 0;
+        const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
+        const danioHecho = hpBotAntes - hpBotDespues;
+
+        let carasReales = 0;
+
+        // 🚩 SOLUCIÓN AL "SIEMPRE CRUZ":
+        if (coinConfig.esSoloEstado) {
+            // Si el ataque es de estado, miramos si el activo del BOT tiene condiciones ahora
+            const condicionesBot = estadoFinal.bot?.activo?.condicionesEspeciales || [];
+            const tieneEstado = ['Paralyzed', 'Asleep', 'Confused', 'Poisoned'].some(c => condicionesBot.includes(c));
+            
+            carasReales = tieneEstado ? 1 : 0;
+            // Forzamos la variable global para el modal
+            (this as any).resultadoMoneda = tieneEstado ? 'CARA' : 'CRUZ';
+        } else {
+            // Lógica normal para ataques de DAÑO (Kricketot, Tangela, etc.)
+            const txt = (habilidad.texto || '').toLowerCase();
+            if (txt.includes('does nothing')) {
+                carasReales = danioHecho > 0 ? 1 : 0;
+            } else if (txt.includes('heads')) {
+                if (coinConfig.danioExtraPorCara > 0) {
+                    const base = (txt.includes('more') || txt.includes('plus')) ? coinConfig.danioBase : 0;
+                    carasReales = Math.min(coinConfig.cantidadMonedas, Math.round(Math.max(0, danioHecho - base) / coinConfig.danioExtraPorCara));
+                }
+            }
+            (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
+        }
+
+        // Llamamos a la animación con el valor REAL
+        await this.animarMonedasSincronizadas(habilidad.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
+      }
+
+      // 4. Animación de impacto
       this.animandoAtaque = true;
       this.cdr.detectChanges();
 
       await this.delay(400);
       this.dispararParticulas('bot', tipoEnergia);
       this.showImpactFlash = true;
+      
+      // 🚩 ACTUALIZACIÓN FÍSICA: Usamos un clon para que Angular refresque bien los estados (iconos)
+      this.partida = JSON.parse(JSON.stringify(estadoFinal));
+      this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
       this.cdr.detectChanges();
 
       await this.delay(200);
@@ -673,30 +1030,28 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.animandoAtaque = false;
       this.cdr.detectChanges();
 
-      const estadoFinal      = await firstValueFrom(this.battleService.getState(this.matchId!));
-      const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
-      estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
-
-      this.partida         = estadoIntermedio;
-      this.hpRenderJugador = miVidaIntacta;
-      this.cdr.detectChanges();
-
-      const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
-
-      if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
+      // 5. Turno del Bot
+      if (estadoFinal.turnoActual === 'BOT') {
         await this.delay(1000);
         this.cargandoAccion   = false;
         this.turnoOverlayTipo = 'bot';
         this.showTurnOverlay  = true;
         this.cdr.detectChanges();
+        
         await this.delay(2000);
         this.showTurnOverlay = false;
         this.cdr.detectChanges();
+        
         await this.delay(400);
-        this.ejecutarIAEnemigaConData(estadoFinal);
+
+        try {
+           const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
+           this.ejecutarIAEnemigaConData(estadoPostBot);
+        } catch (err: any) {
+           console.error("Error al ejecutar bot:", err);
+           this.bloqueadoPorAnimacion = false;
+        }
       } else {
-        this.partida               = estadoFinal;
-        this.hpRenderJugador       = miVidaDespuesDelBot;
         this.cargandoAccion        = false;
         this.bloqueadoPorAnimacion = false;
         this.ataqueRealizado       = false;
@@ -706,43 +1061,60 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cargandoAccion        = false;
       this.ataqueRealizado       = false;
       this.bloqueadoPorAnimacion = false;
-      alert('Error al atacar: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
+      console.error("Error en ataque:", error);
     }
   }
 
   async pasarTurno(): Promise<void> {
-    if (this.partida?.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+    console.log("👉 Botón 'Pasar Turno' presionado.");
+    console.log("Turno actual del tablero:", this.partida?.turnoActual);
+    console.log("¿Está cargando acción (cargandoAccion)?:", this.cargandoAccion);
+    console.log("¿Bloqueado por animación?:", this.bloqueadoPorAnimacion);
+
+    if (this.partida?.turnoActual !== 'JUGADOR') {
+        console.warn("⛔ Bloqueado: Angular piensa que no es el turno del jugador.");
+        return;
+    }
+    if (this.cargandoAccion) {
+        console.warn("⛔ Bloqueado: 'cargandoAccion' se quedó trabado en TRUE en alguna acción anterior.");
+        return; // ¡Acá seguro está el fantasma!
+    }
 
     this.cargandoAccion        = true;
     this.bloqueadoPorAnimacion = true;
-    const miVidaIntacta        = this.hpRenderJugador;
 
     try {
+      console.log("⏳ Enviando petición al backend para pasar turno...");
       await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
-      const estadoFinal      = await firstValueFrom(this.battleService.getState(this.matchId!));
-      const estadoIntermedio = JSON.parse(JSON.stringify(estadoFinal));
-      if (this.partida?.jugador) {
-        estadoIntermedio.jugador = JSON.parse(JSON.stringify(this.partida.jugador));
-      }
+      console.log("✅ El Backend aceptó el fin de turno.");
 
-      this.partida         = estadoIntermedio;
-      this.hpRenderJugador = miVidaIntacta;
-      this.cdr.detectChanges();
+      const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
+      console.log("📸 Foto de la mesa recibida. El turno ahora es de:", estadoFinal.turnoActual);
 
-      const miVidaDespuesDelBot = estadoFinal.jugador?.activo?.hpActual || 0;
-
-      if (miVidaDespuesDelBot < miVidaIntacta || estadoFinal.jugador?.activo?.card?.id !== this.partida.jugador?.activo?.card?.id) {
+      if (estadoFinal.turnoActual === 'BOT') {
         this.turnoOverlayTipo = 'bot';
         this.showTurnOverlay  = true;
         this.cdr.detectChanges();
+        
         await this.delay(2000);
         this.showTurnOverlay = false;
         this.cdr.detectChanges();
         await this.delay(400);
-        this.ejecutarIAEnemigaConData(estadoFinal);
+
+        try {
+           console.log("🤖 Disparando endpoint para despertar al bot...");
+           const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
+           console.log("✅ El bot terminó de pensar. Animando impacto...");
+           this.ejecutarIAEnemigaConData(estadoPostBot);
+        } catch (err: any) {
+           console.error("❌ Error CRÍTICO del bot en Java:", err);
+           this.bloqueadoPorAnimacion = false;
+           this.cargandoAccion = false;
+        }
+
       } else {
-        this.partida               = estadoFinal;
-        this.hpRenderJugador       = miVidaDespuesDelBot;
+        console.log("⚠️ Qué raro, se pasó turno pero sigue siendo de JUGADOR.");
+        this.partida = estadoFinal;
         this.cargandoAccion        = false;
         this.bloqueadoPorAnimacion = false;
         this.cdr.detectChanges();
@@ -750,18 +1122,87 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.cargandoAccion        = false;
       this.bloqueadoPorAnimacion = false;
+      console.error("❌ Error del servidor al pasar turno:", error);
       alert('Error al pasar turno: ' + (error?.error ?? 'No se pudo comunicar con el servidor'));
     }
   }
-
-  realizarAccion(habilidad: any): void {
+realizarAccion(habilidad: any): void {
     this.showHabilidadesPanel = false;
     if (!this.validarEnergiaAtaque(habilidad)) {
       alert('¡No tenés suficiente energía para usar ' + habilidad.nombre + '!');
       return;
     }
+    // IMPORTANTE: Ahora pasamos por acá siempre
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
   }
+async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzadas: number, esSoloEstado: boolean): Promise<void> {   
+  // 1. Reiniciamos el estado visual
+  (this as any).resultadoMoneda = ''; 
+  
+  this.coinFlipAtaque = {
+    nombreAtaque,
+    descripcion: config.descripcion,
+    cantidadMonedas: config.cantidadMonedas,
+    danioBase: config.danioBase,
+    danioExtraPorCara: config.danioExtraPorCara,
+    monedas: Array(config.cantidadMonedas).fill(null).map(() => ({ estado: 'girando' as const })),
+    danioTotal: 0,
+    terminado: false,
+    progreso: 0,
+    esSoloEstado: esSoloEstado
+  };
+  this.cdr.detectChanges();
+
+  let carasAsignadas = 0;
+  for (let i = 0; i < config.cantidadMonedas; i++) {
+    // Progreso visual de la barra
+    this.coinFlipAtaque!.progreso = ((i + 1) / config.cantidadMonedas) * 100;
+
+    await this.delay(600 + Math.random() * 200);
+
+    let esCara = false;
+    const carasRestantes = carasForzadas - carasAsignadas;
+    const monedasRestantes = config.cantidadMonedas - i;
+
+    // Lógica de "Truco": Sincronizamos con lo que el backend ya decidió
+    if (carasRestantes >= monedasRestantes) {
+      esCara = true; 
+    } else if (carasRestantes > 0) {
+      esCara = Math.random() < (carasRestantes / monedasRestantes); 
+    }
+
+    if (esCara) carasAsignadas++;
+
+    // Seteamos el estado visual de la moneda actual
+    this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
+    
+    // 🚩 Actualizamos el flag que usa el HTML para el cartel "LOGRADO/FALLÓ"
+    if (config.cantidadMonedas === 1) {
+        (this as any).resultadoMoneda = esCara ? 'CARA' : 'CRUZ';
+    }
+    
+    this.cdr.detectChanges();
+    await this.delay(400);
+  }
+
+  // Si son varias monedas, definimos el resultado global
+  if (config.cantidadMonedas > 1) {
+      (this as any).resultadoMoneda = carasAsignadas > 0 ? 'CARA' : 'CRUZ';
+  }
+
+  // 🚩 CÁLCULO FINAL: Aseguramos que el daño extra mostrado sea el correcto
+  this.coinFlipAtaque!.danioTotal = carasAsignadas * config.danioExtraPorCara;
+  this.coinFlipAtaque!.terminado = true;
+  this.cdr.detectChanges();
+
+  // Pausa para que el usuario festeje (o llore) el resultado
+  await this.delay(2000);
+  
+  // Limpieza
+  this.coinFlipAtaque = null;
+  // (this as any).resultadoMoneda = ''; // Opcional: limpiar para el próximo ataque
+  this.cdr.detectChanges();
+}
 
   intentarAbrirHabilidades(event?: MouseEvent): void {
     if (event) { event.stopPropagation(); event.preventDefault(); }
@@ -1081,4 +1522,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   volverAlLobby(): void { this.router.navigate(['/lobby']); }
 
   private delay(ms: number): Promise<void> { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+
+
 }
