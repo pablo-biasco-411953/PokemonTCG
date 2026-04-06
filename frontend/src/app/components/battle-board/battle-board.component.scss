@@ -1472,3 +1472,899 @@ bot-sprite-wrap {
   0%  { transform: translateY(-8px) scale(1.04); }
   100%{ transform: translateY(0) scale(1); }
 }
+
+/* Contenedor base sobre la cabeza del Pokémon */
+.pokemon-status-overlay {
+  position: absolute;
+  top: -40px; /* Ajustar según el tamaño de tus sprites */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 50px;
+  z-index: 10;
+  pointer-events: all; /* Para que el tooltip nativo funcione al pasar el mouse */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- ESTRELLAS DE CONFUSIÓN --- */
+.fx-confusion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.fx-confusion .star {
+  position: absolute;
+  font-size: 1.2rem;
+  animation: orbit-star 2s linear infinite;
+}
+.star.s1 { animation-delay: 0s; }
+.star.s2 { animation-delay: 0.6s; }
+.star.s3 { animation-delay: 1.2s; }
+
+@keyframes orbit-star {
+  from { transform: rotate(0deg) translateX(30px) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(30px) rotate(-360deg); }
+}
+
+/* --- ZZZ DE SUEÑO --- */
+.fx-sleep .z {
+  position: absolute;
+  font-weight: bold;
+  color: #a3d9ff;
+  font-family: 'Arial', sans-serif;
+  opacity: 0;
+  animation: sleep-float 3s infinite;
+}
+.z1 { animation-delay: 0s; left: 40%; }
+.z2 { animation-delay: 1s; left: 50%; font-size: 1.4rem; }
+.z3 { animation-delay: 2s; left: 60%; }
+
+@keyframes sleep-float {
+  0% { transform: translate(0, 0); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translate(20px, -40px); opacity: 0; }
+}
+
+/* --- RAYOS DE PARÁLISIS --- */
+.fx-paralysis .bolt {
+  font-size: 1.5rem;
+  color: #fffb00;
+  text-shadow: 0 0 10px #ffe600;
+  animation: flicker 0.2s infinite;
+}
+@keyframes flicker {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2) rotate(10deg); }
+}
+
+/* --- VENENO --- */
+.fx-poison .bubble {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #a040ff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #7d00ff;
+  animation: poison-pop 1.5s infinite ease-out;
+}
+@keyframes poison-pop {
+  0% { transform: scale(0) translateY(0); opacity: 1; }
+  100% { transform: scale(1.5) translateY(-30px); opacity: 0; }
+}
+
+
+/* ⚡ EFECTO DE RAYOS DE PARÁLISIS CURADA ⚡ */
+.cure-paralysis-fx {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 20px #fffb00, 0 0 15px #fffb00;
+  animation: zap-cure 0.2s infinite alternate;
+  z-index: 15;
+  mix-blend-mode: hard-light; /* Hace que se fusione genial con el sprite */
+  pointer-events: none;
+}
+
+@keyframes zap-cure {
+  0% { transform: scale(0.9); opacity: 0.8; box-shadow: inset 0 0 10px #fffb00, 0 0 10px #ffffff; }
+  100% { transform: scale(1.1); opacity: 1; box-shadow: inset 0 0 40px #fffb00, 0 0 30px #fffb00; }
+}
+
+/* 💤 EFECTO DE DESPERTAR 💤 */
+.cure-sleep-fx {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 #a3d9ff;
+  animation: wake-up-pulse 1s forwards;
+  z-index: 15;
+  pointer-events: none;
+}
+
+@keyframes wake-up-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(163, 217, 255, 0.8); }
+  100% { box-shadow: 0 0 0 50px rgba(163, 217, 255, 0); }
+}
+
+/* 💬 TEXTO FLOTANTE INFERIOR ("El efecto terminó") 💬 */
+.status-healed-text {
+  position: absolute;
+  bottom: -35px; /* Lo ubica justo debajo del sprite */
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.7);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  font-weight: bold;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 25;
+  pointer-events: none;
+  animation: float-up-dissolve 2s ease-in-out forwards;
+}
+
+@keyframes float-up-dissolve {
+  0%   { opacity: 0; transform: translate(-50%, 10px); }
+  15%  { opacity: 1; transform: translate(-50%, 0); }
+  85%  { opacity: 1; transform: translate(-50%, -5px); }
+  100% { opacity: 0; transform: translate(-50%, -15px); }
+}
+.status-fx-wrap {
+  position: relative; /* CRUCIAL para que los rayos no se vayan fuera de la carta */
+  display: inline-block;
+}
+
+/* 🌟 BRILLO EN LA MANO */
+.can-evolve-glow {
+  box-shadow: 0 0 15px 5px #4ecdc4, 0 0 30px #4ecdc4 !important;
+  border-radius: 8px; /* Ajustá si tus cartas tienen borde redondo */
+  animation: pulse-evolve 1.5s infinite alternate;
+  cursor: pointer;
+}
+
+@keyframes pulse-evolve {
+  0% { box-shadow: 0 0 10px #4ecdc4; transform: translateY(-5px); }
+  100% { box-shadow: 0 0 25px 10px #00ffcc; transform: translateY(-10px); }
+}
+
+/* 🏷️ CARTELITO ARRIBA DE LA CARTA */
+.evolve-badge {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(45deg, #ffea00, #ff8800);
+  color: black;
+  font-weight: 900;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  z-index: 20;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  pointer-events: none;
+  animation: bounce-badge 1s infinite;
+  white-space: nowrap;
+}
+
+@keyframes bounce-badge {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(-3px); }
+}
+
+/* ✨ DESTELLO DE TRANSFORMACIÓN (Sobre el Sprite) */
+.evolution-flash-fx {
+  position: absolute;
+  top: -50%; left: -50%; right: -50%; bottom: -50%;
+  background: white;
+  border-radius: 50%;
+  z-index: 100;
+  pointer-events: none;
+  animation: evolve-whiteout 1.2s forwards ease-in-out;
+}
+
+@keyframes evolve-whiteout {
+  0% { opacity: 0; transform: scale(0.2); filter: blur(0px); }
+  40% { opacity: 1; transform: scale(1.2); filter: blur(15px); background: #ffffff; }
+  60% { opacity: 1; transform: scale(1.2); filter: blur(15px); background: #a3ffec; }
+  100% { opacity: 0; transform: scale(0.5); filter: blur(0px); }
+}
+
+/* 🔮 CONTENEDOR PRINCIPAL: Ahora más grande y centrado a la derecha */
+.card-detail-panel {
+  position: fixed;
+  top: 45%; /* Sube el panel casi al medio de la pantalla */
+  right: 140px; /* A la izquierda de tu mazo/botones */
+  transform: translateY(-50%) scale(0.95);
+  width: 600px; /* MUCHO MÁS ANCHO */
+  display: flex;
+  flex-direction: row; /* Lado a lado */
+  gap: 25px;
+  padding: 25px;
+  background: rgba(15, 20, 35, 0.95); /* Fondo oscuro elegante */
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 15px;
+  box-shadow: -15px 20px 50px rgba(0,0,0,0.8);
+  color: white;
+  pointer-events: none;
+  z-index: 1000;
+  
+  /* Fade In animado */
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card-detail-panel.show {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* 🖼️ LADO IZQUIERDO: CARTA GIGANTE */
+.cd-left-col {
+  flex: 0 0 220px; /* Le damos 220px fijos a la carta */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cd-big-img {
+  width: 100%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  animation: float-card 4s ease-in-out infinite;
+}
+
+@keyframes float-card {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* 📝 LADO DERECHO: TEXTOS */
+.cd-right-col {
+  flex: 1; /* Ocupa todo el resto del panel */
+  display: flex;
+  flex-direction: column;
+}
+
+.cd-header { display: flex; justify-content: space-between; align-items: baseline; }
+.cd-title { margin: 0; font-size: 24px; font-weight: 900; color: #ffcc00; text-transform: uppercase; letter-spacing: 1px; }
+.cd-hp { font-size: 18px; font-weight: bold; color: #ff5555; }
+.cd-type { margin: 5px 0 0 0; font-size: 14px; color: #b0bec5; font-style: italic; }
+
+.cd-divider { border: 0; border-bottom: 1px solid rgba(255,255,255,0.15); margin: 15px 0; width: 100%; }
+
+/* Lista de Ataques */
+.cd-attacks-list { flex-grow: 1; padding-right: 10px; }
+.cd-attack { margin-bottom: 15px; }
+.cda-top { display: flex; justify-content: space-between; font-weight: bold; font-size: 16px; border-bottom: 1px dashed rgba(255,255,255,0.1); padding-bottom: 5px; margin-bottom: 8px;}
+.cda-cost {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.cost-dot-small {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.5), 0 0 5px rgba(255,255,255,0.2);
+  display: inline-block;
+}.cda-name { color: #ffffff; flex-grow: 1; margin-left: 10px; letter-spacing: 0.5px;}
+.cda-dmg { color: #ffea00; font-size: 18px; }
+.cda-text { font-size: 14px; color: #d1d5db; margin: 0; line-height: 1.5; }
+
+/* 📘 GLOSARIO */
+.cdg-title { font-size: 15px; font-weight: bold; color: #a3d9ff; margin: 0 0 12px 0; letter-spacing: 1px; text-transform: uppercase; }
+.cdg-item { 
+  font-size: 13px; 
+  margin-bottom: 8px; 
+  line-height: 1.5; 
+  background: rgba(0,0,0,0.4); 
+  padding: 10px 12px; 
+  border-radius: 8px; 
+  border-left: 4px solid #4ecdc4; /* Barrita lateral de adorno */
+}
+.cdg-desc { color: #e5e7eb; font-style: italic; margin-left: 4px; }
+
+.cd-footer { text-align: right; font-size: 12px; color: #6b7280; margin-top: auto; padding-top: 15px; font-weight: bold;}
+
+/* 🌟 COLORES MÁGICOS DE PALABRAS CLAVE */
+::ng-deep .kw-paralyze { color: #fffb00; font-weight: bold; text-shadow: 0 0 8px rgba(255,251,0,0.8); }
+::ng-deep .kw-poison { color: #d000ff; font-weight: bold; text-shadow: 0 0 8px rgba(208,0,255,0.8); }
+::ng-deep .kw-sleep { color: #a3d9ff; font-weight: bold; text-shadow: 0 0 8px rgba(163,217,255,0.8); }
+::ng-deep .kw-confuse { color: #ff007b; font-weight: bold; text-shadow: 0 0 8px rgba(255,0,123,0.8); }
+::ng-deep .kw-burn { color: #ff4400; font-weight: bold; text-shadow: 0 0 8px rgba(255,68,0,0.8); }
+::ng-deep .kw-neutral { color: #9ca3af; font-style: italic; }
+
+.cd-mouse-hint {
+  font-size: 11px;
+  color: #a3d9ff;
+  background: rgba(163, 217, 255, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 5px;
+  border: 1px solid rgba(163, 217, 255, 0.3);
+}
+
+.hand-card-hitbox.simulated-hover {
+  z-index: 9999 !important;
+  opacity: 1 !important; /* Forzamos que el contenedor sea sólido */
+  filter: none !important; /* Limpiamos cualquier filtro oscuro heredado */
+}
+
+.hand-card-hitbox.simulated-hover .hand-card {
+  transform: translateY(-70px) scale(1.4) !important; 
+  box-shadow: 0 25px 50px rgba(0,0,0,0.9);
+  
+  /* 🚩 Cero transparencia y apenas un toquecito de brillo para que resalte más */
+  opacity: 1 !important; 
+  filter: brightness(1.15) drop-shadow(0px 10px 15px rgba(0,0,0,0.8)) !important; 
+  
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) !important; 
+}
+
+/* ↔️ 2. EMPUJAR A LAS VECINAS PARA HACERLE LUGAR */
+/* La de la izquierda se corre a la izquierda */
+.hand-card-hitbox:has(+ .simulated-hover) .hand-card {
+  transform: translateX(-30px) translateY(5px) rotate(-8deg) scale(0.95) !important;
+}
+/* La de la derecha se corre a la derecha */
+.hand-card-hitbox.simulated-hover + .hand-card-hitbox .hand-card {
+  transform: translateX(30px) translateY(5px) rotate(8deg) scale(0.95) !important;
+}
+
+/* 🌑 3. APAGAR Y ACHICAR EL RESTO DE LA MANO */
+/* Si hay una carta seleccionada, a TODAS las que NO son la seleccionada les pasa esto: */
+.hand-cards:has(.simulated-hover) .hand-card-hitbox:not(.simulated-hover) {
+  opacity: 0.5 !important; /* Transparencia a los vecinos */
+  filter: brightness(0.5) !important; /* Oscurecemos a los vecinos */
+  transition: all 0.3s ease !important;
+}
+
+.hand-cards:has(.simulated-hover) .hand-card-hitbox:not(.simulated-hover) .hand-card {
+  transform: translateY(15px) scale(0.85) !important; 
+}
+
+/* 🛠️ PANEL DE DEBUG ESTILO CONSOLA (FLOTANTE) */
+.developer-debug-panel {
+  position: absolute; /* Cambiado a absolute para que cdkDrag lo mueva bien */
+  top: 15px;
+  left: 15px;
+  background: rgba(10, 15, 25, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid #4ecdc4;
+  border-radius: 8px;
+  padding: 15px;
+  width: 360px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  color: #4ecdc4;
+  z-index: 999999;
+  pointer-events: auto; /* IMPORTANTE: Para que funcione el Drag */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+
+.ddp-header {
+  font-weight: bold;
+  font-size: 14px;
+  color: #ffea00;
+  border-bottom: 1px solid rgba(78, 205, 196, 0.4);
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  cursor: grab; /* Muestra la manito de agarre */
+}
+.ddp-header:active { cursor: grabbing; }
+.drag-icon { color: #666; }
+
+.ddp-section {
+  margin-bottom: 10px;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+  padding-bottom: 8px;
+}
+.ddp-section:last-child { border: none; margin: 0; padding: 0; }
+
+.developer-debug-panel p { margin: 5px 0; }
+.developer-debug-panel span { color: #a3d9ff; font-weight: bold; }
+.developer-debug-panel b.red { color: #ff5555; }
+
+/* 🚀 CAJAS DE RENDIMIENTO */
+.ddp-perf {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(0,0,0,0.6);
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.perf-box { display: flex; flex-direction: column; align-items: center; }
+.perf-label { font-size: 9px; color: #888; margin-bottom: 3px; }
+.perf-val { font-size: 14px; font-weight: bold; color: #fff; }
+
+.fps-good { color: #00ffcc !important; }
+.fps-bad { color: #ff4444 !important; }
+.ping-dot { 
+  display: inline-block; width: 8px; height: 8px; 
+  background: #00ffcc; border-radius: 50%; 
+  box-shadow: 0 0 5px #00ffcc; margin-right: 4px;
+}
+
+/* ⏳ LA LÍNEA CENTRAL AHORA ES UNA MECHA */
+.rope-track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 140px; /* Hace tope justo antes de llegar a la columna de tus botones */
+  height: 3px;
+  background: rgba(255, 255, 255, 0.05); /* La línea apagada de fondo */
+  transform: translateY(-50%);
+  z-index: 10;
+}
+
+.rope-burn {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  right: 0; /* 🚩 CLAVE: Alineado a la derecha para que se consuma hacia el botón */
+  background: linear-gradient(90deg, transparent, #ffcc00, #ff8800);
+  box-shadow: 0 0 10px #ff8800;
+  transition: width 1s linear; /* Movimiento fluido cada 1 segundo */
+}
+
+/* ✨ LA CHISPA DEL FUEGO */
+.rope-spark {
+  position: absolute;
+  left: 0; /* Está siempre en la punta de la mecha */
+  top: -4px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 15px 5px #ff5500, 0 0 30px #ffea00;
+  animation: spark-flicker 0.1s infinite alternate;
+}
+
+/* 🚨 PÁNICO: ÚLTIMOS 15 SEGUNDOS */
+.rope-burn.critical {
+  background: linear-gradient(90deg, transparent, #ff4444, #ff0000);
+  box-shadow: 0 0 15px #ff0000;
+}
+
+.rope-burn.critical .rope-spark {
+  box-shadow: 0 0 25px 10px #ff0000, 0 0 50px #ffaa00;
+  transform: scale(1.5);
+  animation: spark-flicker-critical 0.05s infinite alternate;
+}
+
+.critical-text {
+  color: #ff4444 !important;
+  animation: pulse-red 0.5s infinite alternate;
+}
+
+@keyframes spark-flicker {
+  0% { opacity: 0.8; transform: scale(0.9) translateY(-1px); }
+  100% { opacity: 1; transform: scale(1.1) translateY(1px); }
+}
+
+@keyframes spark-flicker-critical {
+  0% { opacity: 0.9; transform: scale(1.4) translateY(-2px); }
+  100% { opacity: 1; transform: scale(1.6) translateY(2px); }
+}
+
+@keyframes pulse-red {
+  0% { text-shadow: 0 0 5px rgba(255,0,0,0.5); }
+  100% { text-shadow: 0 0 20px #ff0000; color: #ffffff; }
+}
+
+/* 🧠 OVERLAY DEL BOT PENSANDO */
+.bot-thinking-overlay {
+  position: absolute;
+  top: 120px; /* Bien arriba, cerca de la banca del bot */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 20, 35, 0.95);
+  border: 1px solid #ffcc00;
+  border-radius: 30px;
+  padding: 10px 25px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  z-index: 1000;
+  color: #ffcc00;
+  font-weight: bold;
+  font-size: 14px;
+  pointer-events: none;
+  animation: slide-down 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bto-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 204, 0, 0.2);
+  border-top-color: #ffcc00;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes slide-down {
+  from { top: 90px; opacity: 0; }
+  to { top: 120px; opacity: 1; }
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
+.discard-pile-wrapper {
+  cursor: pointer;
+  text-align: center;
+  margin-bottom: 15px;
+  transition: filter 0.2s;
+}
+
+.discard-pile-wrapper:hover {
+  filter: brightness(1.3);
+}
+
+.discard-label {
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
+
+.discard-slot {
+  width: 70px; /* Ajustalo a tu diseño */
+  height: 95px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.discard-empty span {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.discard-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.discard-bg-card {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  transform: rotate(-4deg) translate(-2px, -2px);
+}
+
+.top-discard-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+  box-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+  transform: rotate(2deg);
+  position: relative;
+  z-index: 2;
+}
+
+.discard-count {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  background: #ff4444;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+  z-index: 10;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+}
+
+.discard-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000000; /* Bien arriba de todo */
+}
+
+.discard-modal-content {
+  background: #1a1f2e;
+  border: 1px solid #4ecdc4;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 30px rgba(0,0,0,1);
+}
+
+.dmc-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dmc-header h3 { color: #ffcc00; margin: 0; font-size: 18px; }
+
+.dmc-grid {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  overflow-y: auto;
+}
+
+.dmc-card-item {
+  text-align: center;
+}
+
+.dmc-card-item img {
+  width: 100%;
+  border-radius: 5px;
+  transition: transform 0.2s;
+}
+
+.dmc-card-item img:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #4ecdc4;
+}
+
+.dmc-card-item p {
+  font-size: 10px;
+  color: #aaa;
+  margin-top: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Badge del Bot en un color más frío o neutro */
+.bot-count {
+  background: #2c3e50 !important; /* Azul grisáceo */
+  left: -5px; /* Lo movemos al otro lado */
+  right: auto !important;
+}
+
+/* El label del descarte del bot un poco más discreto */
+.bot-discard .discard-empty small {
+  display: block;
+  font-size: 10px;
+  opacity: 0.6;
+  margin-top: -5px;
+}
+
+/* Espaciado general de la columna */
+.side-col.right {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 20px 0;
+}
+
+
+.ddp-godmode {
+  border-top: 1px dashed #4ecdc4;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.godmode-title {
+  color: #ffcc00 !important;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.gm-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.gm-input, .gm-select {
+  flex: 1;
+  background: #0f131a;
+  border: 1px solid #334466;
+  color: #4ecdc4;
+  font-size: 10px;
+  padding: 4px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.gm-btn {
+  background: #2c3e50;
+  border: 1px solid #4ecdc4;
+  color: white;
+  font-size: 9px;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 6px;
+  transition: all 0.2s;
+}
+
+.gm-btn:hover {
+  background: #4ecdc4;
+  color: #000;
+}
+
+.gm-btn.danger {
+  border-color: #ff4444;
+}
+
+.gm-btn.danger:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.gm-card-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0a0e14;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #334466;
+  margin-bottom: 10px;
+}
+
+.selector-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.preview-card {
+  height: 90px; /* Tamaño ideal para que no ocupe toda la pantalla */
+  display: flex;
+  align-items: center;
+}
+
+.preview-card img {
+  height: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.gm-btn.arrow {
+  font-size: 16px;
+  padding: 8px 12px;
+  background: #1a2233;
+  border-radius: 50%;
+}
+
+.gm-card-id {
+  color: #4ecdc4;
+  font-size: 11px;
+  margin: 6px 0;
+  font-family: monospace;
+}
+
+.draw-btn {
+  width: 100%;
+  padding: 8px;
+  font-weight: bold;
+  background: #ffcc00;
+  color: #000;
+  border: none;
+  text-transform: uppercase;
+}
+
+.draw-btn:hover {
+  background: #fff;
+}
+
+.gm-filters {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.gm-search {
+  flex: 2; /* Para que la barra de texto sea más ancha que el selector */
+}
+
+.gm-card-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.gm-card-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.gm-badge {
+  background: #ff4444;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.gm-results-count {
+  color: #667799;
+  font-size: 10px;
+  margin: 4px 0 8px 0;
+}
+
+.no-results {
+  height: 90px;
+  width: 65px;
+  border: 1px dashed #ff4444;
+  color: #ff4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+}
+
+.pokemon-sprite-container {
+  /* Le damos un tamaño físico grande en el tablero */
+  height: 150px; /* Probá con este valor, si lo querés más grande, subilo a 180px */
+  width: 150px;
+  
+  /* Centramos el contenido por las dudas */
+  display: flex;
+  align-items: flex-end; /* Lo apoya en el "suelo" */
+  justify-content: center;
+  
+  /* Debug opcional: sacale el comentario para ver el recuadro */
+  /* border: 1px solid red; */
+}
+
+/* Esta es la regla para la imagen GIF en sí */
+.pokemon-sprite-container img {
+  /* 🚩 LA MAGIA ESTÁ ACÁ: */
+  /* Obligamos a la imagen a ocupar todo el alto del contenedor */
+  height: 100%; 
+  width: auto; /* Mantiene la proporción para que no se vea gordo ni flaco */
+  
+  /* Importante para que no se corte si el GIF es muy ancho */
+  object-fit: contain; 
+  
+  /* Opcional: Si se ve un poco borroso al agrandarlo, 
+     esto ayuda a mantener los bordes pixelados nítidos */
+  image-rendering: pixelated; 
+}
