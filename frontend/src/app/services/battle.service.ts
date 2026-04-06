@@ -61,4 +61,23 @@ export class BattleService {
 evolucionar(matchId: string, cartaManoId: string, cartaTableroId: string) {
     return this.http.post(`${this.base}/${matchId}/evolve`, { cartaManoId, cartaTableroId });
   }
+
+  debugDrawCard(matchId: string, cardId: string): Observable<any> {
+    // Mandamos el ID de la carta en el body
+    return this.http.post(`${this.base}/${matchId}/debug/draw`, { cardId });
+  }
+
+  debugForzarEstado(matchId: string, objetivo: string, estado: string): Observable<any> {
+    return this.http.post(`${this.base}/${matchId}/debug/status`, { objetivo, estado });
+  }
+
+  debugSetHp(matchId: string, objetivo: string, hp: number): Observable<any> {
+    return this.http.post(`${this.base}/${matchId}/debug/hp`, { objetivo, hp });
+  }
+
+  getCardCatalogDebug(): Observable<string[]> {
+    // Apunta al endpoint que acabamos de crear en el controlador
+    return this.http.get<string[]>(`${this.base}/debug/catalog`);
+  }
+
 }
