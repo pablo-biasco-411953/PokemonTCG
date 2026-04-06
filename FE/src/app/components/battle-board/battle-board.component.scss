@@ -2172,3 +2172,199 @@ bot-sprite-wrap {
   height: 100%;
   padding: 20px 0;
 }
+
+
+.ddp-godmode {
+  border-top: 1px dashed #4ecdc4;
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.godmode-title {
+  color: #ffcc00 !important;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.gm-row {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 6px;
+}
+
+.gm-input, .gm-select {
+  flex: 1;
+  background: #0f131a;
+  border: 1px solid #334466;
+  color: #4ecdc4;
+  font-size: 10px;
+  padding: 4px;
+  border-radius: 3px;
+  outline: none;
+}
+
+.gm-btn {
+  background: #2c3e50;
+  border: 1px solid #4ecdc4;
+  color: white;
+  font-size: 9px;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 6px;
+  transition: all 0.2s;
+}
+
+.gm-btn:hover {
+  background: #4ecdc4;
+  color: #000;
+}
+
+.gm-btn.danger {
+  border-color: #ff4444;
+}
+
+.gm-btn.danger:hover {
+  background: #ff4444;
+  color: white;
+}
+
+.gm-card-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #0a0e14;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #334466;
+  margin-bottom: 10px;
+}
+
+.selector-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
+}
+
+.preview-card {
+  height: 90px; /* Tamaño ideal para que no ocupe toda la pantalla */
+  display: flex;
+  align-items: center;
+}
+
+.preview-card img {
+  height: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.8);
+}
+
+.gm-btn.arrow {
+  font-size: 16px;
+  padding: 8px 12px;
+  background: #1a2233;
+  border-radius: 50%;
+}
+
+.gm-card-id {
+  color: #4ecdc4;
+  font-size: 11px;
+  margin: 6px 0;
+  font-family: monospace;
+}
+
+.draw-btn {
+  width: 100%;
+  padding: 8px;
+  font-weight: bold;
+  background: #ffcc00;
+  color: #000;
+  border: none;
+  text-transform: uppercase;
+}
+
+.draw-btn:hover {
+  background: #fff;
+}
+
+.gm-filters {
+  display: flex;
+  gap: 5px;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.gm-search {
+  flex: 2; /* Para que la barra de texto sea más ancha que el selector */
+}
+
+.gm-card-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.gm-card-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.gm-badge {
+  background: #ff4444;
+  color: white;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 9px;
+  font-weight: bold;
+}
+
+.gm-results-count {
+  color: #667799;
+  font-size: 10px;
+  margin: 4px 0 8px 0;
+}
+
+.no-results {
+  height: 90px;
+  width: 65px;
+  border: 1px dashed #ff4444;
+  color: #ff4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  text-align: center;
+}
+
+.pokemon-sprite-container {
+  /* Le damos un tamaño físico grande en el tablero */
+  height: 150px; /* Probá con este valor, si lo querés más grande, subilo a 180px */
+  width: 150px;
+  
+  /* Centramos el contenido por las dudas */
+  display: flex;
+  align-items: flex-end; /* Lo apoya en el "suelo" */
+  justify-content: center;
+  
+  /* Debug opcional: sacale el comentario para ver el recuadro */
+  /* border: 1px solid red; */
+}
+
+/* Esta es la regla para la imagen GIF en sí */
+.pokemon-sprite-container img {
+  /* 🚩 LA MAGIA ESTÁ ACÁ: */
+  /* Obligamos a la imagen a ocupar todo el alto del contenedor */
+  height: 100%; 
+  width: auto; /* Mantiene la proporción para que no se vea gordo ni flaco */
+  
+  /* Importante para que no se corte si el GIF es muy ancho */
+  object-fit: contain; 
+  
+  /* Opcional: Si se ve un poco borroso al agrandarlo, 
+     esto ayuda a mantener los bordes pixelados nítidos */
+  image-rendering: pixelated; 
+}

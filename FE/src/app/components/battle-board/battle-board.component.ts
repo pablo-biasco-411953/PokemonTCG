@@ -328,7 +328,7 @@ puedeEvolucionar(cartaMano: any): boolean {
   ngOnInit(): void {
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
-
+    this.cargarCatalogoGodMode();
     this.showIntro = true;
     setTimeout(() => this.introFadingOut = true, 2000);
     setTimeout(() => this.showIntro = false, 3000);
@@ -915,6 +915,80 @@ detectarCoinFlipAtaque(ataque: any): {
     }
   }
  
+
+debugFullCatalog: any[] = [];
+  debugFilteredCatalog: any[] = [];
+  debugSelectedIndex: number = 0;
+
+  // Criterios de búsqueda
+  debugSearchText: string = '';
+  debugSearchSupertype: string = '';
+
+  // 🚩 ACORDATE DE LLAMAR A ESTE MÉTODO EN TU ngOnInit()
+cargarCatalogoGodMode() {
+    this.battleService.getCardCatalogDebug().subscribe({
+      next: (cartas) => {
+        this.debugFullCatalog = cartas;
+        
+        // 🚩 AGREGÁ ESTA LÍNEA PARA ESPIAR EL DATO:
+        console.log("🕵️‍♂️ Primera carta que llegó:", cartas[0]);
+
+        this.aplicarFiltrosDebug();
+        console.log(`🔌 God Mode: Catálogo cargado con ${cartas.length} cartas.`);
+      },
+      error: (err) => console.error("❌ Error cargando catálogo de God Mode:", err)
+    });
+  }
+
+  actualizarFiltroTexto(event: any) {
+    this.debugSearchText = event.target.value.toLowerCase();
+    this.aplicarFiltrosDebug();
+  }
+
+  actualizarFiltroTipo(event: any) {
+    this.debugSearchSupertype = event.target.value;
+    this.aplicarFiltrosDebug();
+  }
+
+  aplicarFiltrosDebug() {
+    this.debugFilteredCatalog = this.debugFullCatalog.filter(c => {
+      // 1. Filtro por Tipo (Pokémon, Trainer, Energy)
+      const matchTipo = !this.debugSearchSupertype || c.supertype === this.debugSearchSupertype;
+      
+      // 2. Filtro por Texto (Busca en el nombre y en el texto de los ataques/efectos)
+      let matchTexto = true;
+      if (this.debugSearchText) {
+        const nombreMatch = c.nombre?.toLowerCase().includes(this.debugSearchText);
+        
+        // Buscamos dentro de los ataques por palabras clave (ej: "asleep", "draw")
+        const ataquesMatch = c.ataques?.some((atk: any) => 
+          atk.nombre?.toLowerCase().includes(this.debugSearchText) ||
+          atk.texto?.toLowerCase().includes(this.debugSearchText)
+        );
+        
+        matchTexto = nombreMatch || ataquesMatch;
+      }
+
+      return matchTipo && matchTexto;
+    });
+    
+    this.debugSelectedIndex = 0; // Reseteamos el carrusel al primer resultado
+  }
+
+  get debugSelectedCard(): any {
+    if (!this.debugFilteredCatalog || this.debugFilteredCatalog.length === 0) return null;
+    return this.debugFilteredCatalog[this.debugSelectedIndex];
+  }
+
+  nextDebugCard() {
+    if (this.debugFilteredCatalog.length === 0) return;
+    this.debugSelectedIndex = (this.debugSelectedIndex + 1) % this.debugFilteredCatalog.length;
+  }
+
+  prevDebugCard() {
+    if (this.debugFilteredCatalog.length === 0) return;
+    this.debugSelectedIndex = (this.debugSelectedIndex - 1 + this.debugFilteredCatalog.length) % this.debugFilteredCatalog.length;
+  }
 private traducirEfectoCoinFlip(
     textoOriginal: string,
     monedas: number,
@@ -1266,6 +1340,53 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
     (this as any).resultadoMoneda = ''; 
   }
 
+async refrescarTableroDebug() {
+    try {
+      const nuevoEstado: any = await firstValueFrom(this.battleService.getState(this.matchId!));
+      this.partida = JSON.parse(JSON.stringify(nuevoEstado));
+      this.cdr.detectChanges();
+      console.log("🔄 Tablero recargado mágicamente.");
+    } catch (error) {
+      console.error("❌ Error recargando tablero en modo debug", error);
+    }
+  }
+
+  // Herramienta 1: Robar Carta Mágica
+  async debugRobarCarta(cardId: string) {
+    if (!cardId) return;
+    try {
+      console.log(`🛠️ GOD MODE: Inyectando carta ${cardId} a la mano...`);
+      await firstValueFrom(this.battleService.debugDrawCard(this.matchId!, cardId));
+      await this.refrescarTableroDebug();
+    } catch (err) {
+      console.error("❌ Error en God Mode (Robar Carta):", err);
+      alert("Falla en el God Mode. ¿Ya creaste el endpoint en Java?");
+    }
+  }
+
+  // Herramienta 2: Forzar Estado (Dormir, Paralizar, etc.)
+  async debugForzarEstado(objetivo: 'JUGADOR' | 'BOT', estado: string) {
+    try {
+      console.log(`🛠️ GOD MODE: Forzando estado ${estado} a ${objetivo}...`);
+      await firstValueFrom(this.battleService.debugForzarEstado(this.matchId!, objetivo, estado));
+      await this.refrescarTableroDebug();
+    } catch (err) {
+      console.error("❌ Error en God Mode (Forzar Estado):", err);
+    }
+  }
+
+  // 🚩 ESTA ES LA QUE TE FALTABA (Herramienta 3: Setear HP)
+  async debugSetHp(objetivo: 'JUGADOR' | 'BOT', hp: number) {
+    try {
+      console.log(`🛠️ GOD MODE: Seteando HP de ${objetivo} a ${hp}...`);
+      await firstValueFrom(this.battleService.debugSetHp(this.matchId!, objetivo, hp));
+      await this.refrescarTableroDebug();
+    } catch (err) {
+      console.error("❌ Error en God Mode (Set HP):", err);
+    }
+  }
+
+
 abrirModalDescarte(quien: 'JUGADOR' | 'BOT') {
   console.log("Capa de descarte cliqueada:", quien); // <-- Agregá esto
   const pila = quien === 'JUGADOR' ? this.partida?.jugador?.pilaDescarte : this.partida?.bot?.pilaDescarte;
@@ -1364,6 +1485,8 @@ async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) 
       }
     });
   }
+
+  
 
   // ═══════════════════════════════════════════════
   // ACCIONES DE JUEGO
@@ -2045,16 +2168,18 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     return 0;
   }
 
-  getSpriteBack(nombreCarta: string): string {
+ getSpriteBack(nombreCarta: string): string {
     const num = this.getPokemonNum(nombreCarta);
     if (!num) return '';
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/${num}.png`;
+    // Ruta a los GIFs de espalda
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${num}.gif`;
   }
 
   getSpriteFront(nombreCarta: string): string {
     const num = this.getPokemonNum(nombreCarta);
     if (!num) return '';
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${num}.png`;
+    // Ruta a los GIFs de frente
+    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num}.gif`;
   }
 
   onSpriteError(event: Event): void { (event.target as HTMLImageElement).style.display = 'none'; }

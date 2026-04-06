@@ -37,6 +37,61 @@
     <p><span>[PLAYER]</span> HP: {{ partida.jugador?.activo?.hpActual || 'KO' }} | Mano: {{ partida.jugador?.mano?.length }} | P. Descarte: {{ partida.jugador?.pilaDescarte?.length }}</p>
     <p><span>[BOT]</span> HP: {{ partida.bot?.activo?.hpActual || 'KO' }} | Mano: {{ partida.bot?.mano?.length }} | P. Descarte: {{ partida.bot?.pilaDescarte?.length }}</p>
   </div>
+
+  <div class="ddp-section ddp-godmode" *ngIf="partida">
+    <p class="godmode-title">⚡ GOD MODE</p>
+    
+   <div class="gm-card-selector">
+      
+      <div class="gm-filters">
+        <input type="text" class="gm-input gm-search" placeholder="🔍 Buscar nombre, ataque o efecto..." 
+               (input)="actualizarFiltroTexto($event)">
+        
+        <select class="gm-select" (change)="actualizarFiltroTipo($event)">
+          <option value="">Tipos...</option>
+          <option value="Pokémon">Pokémon</option>
+          <option value="Trainer">Trainer</option>
+          <option value="Energy">Energy</option>
+        </select>
+      </div>
+
+      <div class="selector-controls">
+        <button class="gm-btn arrow" (click)="prevDebugCard()">◀</button>
+        
+        <div class="preview-card">
+          <img *ngIf="debugSelectedCard" [src]="getImagenCarta(debugSelectedCard.id)" [alt]="debugSelectedCard.nombre">
+          <div *ngIf="!debugSelectedCard" class="no-results">❌ No hay cartas</div>
+        </div>
+        
+        <button class="gm-btn arrow" (click)="nextDebugCard()">▶</button>
+      </div>
+      
+      <div class="gm-card-info" *ngIf="debugSelectedCard">
+        <span class="gm-card-name">{{ debugSelectedCard.nombre }}</span>
+        <span class="gm-badge" *ngIf="debugSelectedCard.hp">{{ debugSelectedCard.hp }} HP</span>
+      </div>
+      <p class="gm-results-count">{{ debugSelectedIndex + 1 }} / {{ debugFilteredCatalog.length }} resultados</p>
+
+      <button class="gm-btn draw-btn" [disabled]="!debugSelectedCard" 
+              (click)="debugRobarCarta(debugSelectedCard?.id)">ROBAR ESTA CARTA</button>
+    </div>
+    <div class="gm-row">
+      <select #statusSelect class="gm-select">
+        <option value="ASLEEP">Dormir</option>
+        <option value="PARALYZED">Paralizar</option>
+        <option value="POISONED">Envenenar</option>
+        <option value="CONFUSED">Confundir</option>
+      </select>
+      <button class="gm-btn" (click)="debugForzarEstado('BOT', statusSelect.value)">A Rival</button>
+      <button class="gm-btn" (click)="debugForzarEstado('JUGADOR', statusSelect.value)">A Mí</button>
+    </div>
+    
+    <div class="gm-row">
+      <button class="gm-btn danger" (click)="debugSetHp('BOT', 10)">Rival a 10 HP</button>
+      <button class="gm-btn danger" (click)="debugSetHp('JUGADOR', 10)">Yo a 10 HP</button>
+    </div>
+  </div>
+
 </div>
 
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
@@ -718,5 +773,4 @@
   </div>
 
 </div>
-
 </div>
