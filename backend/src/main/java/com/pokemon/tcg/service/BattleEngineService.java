@@ -613,48 +613,64 @@ public class BattleEngineService {
     }
 
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
-        TableroJugador tableroVictima  = encontrarTableroPorCarta(partida, defensor);
-        TableroJugador tableroGanador  = encontrarTableroPorCarta(partida, atacante);
+        TableroVictimaYAtacante res = identificarTableros(partida, defensor, atacante);
+        if (res == null) return;
 
-        if (tableroVictima == null || tableroGanador == null) return;
+        TableroJugador tableroVictima = res.victima;
+        TableroJugador tableroGanador = res.ganador;
 
-        tableroVictima.getPilaDescarte().add(defensor.getCard());
-        if (defensor.equals(tableroVictima.getActivo())) {
+        System.out.println("💀 [SISTEMA] Procesando K.O. de: " + defensor.getCard().getNombre());
+
+        // Guardamos el ID para limpiar
+        String idADescartar = defensor.getCard().getId();
+
+        // A. Limpiar Activo
+        if (tableroVictima.getActivo() != null &&
+                tableroVictima.getActivo().getCard().getId().equals(idADescartar)) {
             tableroVictima.setActivo(null);
-        } else {
-            tableroVictima.getBanca().remove(defensor);
         }
 
+        // B. Limpiar Banca (Usa removeIf con null-check para evitar el error que tuviste)
+        tableroVictima.getBanca().removeIf(c -> c == null || c.getCard() == null || c.getCard().getId().equals(idADescartar));
+
+        // C. Mover a Descarte
+        tableroVictima.getPilaDescarte().add(defensor.getCard());
+
+        // D. Premios
         if (!tableroGanador.getPremios().isEmpty()) {
             tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
         }
 
-        System.out.println("💀 K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
-
-        boolean ganadorSinPremios = tableroGanador.getPremios().isEmpty();
-        boolean victimasinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
-
-        if (ganadorSinPremios || victimasinPokemon) {
+        // E. Verificar Fin o Reemplazo
+        if (tableroGanador.getPremios().isEmpty() || (tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty())) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println("🏆 ¡Partida terminada!");
-        } else if (tableroVictima.getActivo() == null && !tableroVictima.getBanca().isEmpty()) {
-            if (tableroVictima == partida.getBot()) {
-                CartaEnJuego rivalActivo = partida.getJugador().getActivo();
-
-                CartaEnJuego mejorReemplazo = tableroVictima.getBanca().stream()
-                        .max((c1, c2) -> {
-                            int score1 = calcularPuntajeEstrategico(c1, rivalActivo);
-                            int score2 = calcularPuntajeEstrategico(c2, rivalActivo);
-                            return Integer.compare(score1, score2);
-                        })
-                        .get();
-
-                tableroVictima.getBanca().remove(mejorReemplazo);
-                tableroVictima.setActivo(mejorReemplazo);
-
-                System.out.println("🤖 [BOT] Analizó tipos y subió a " + mejorReemplazo.getCard().getNombre() + " como la mejor respuesta táctica.");
+        } else if (tableroVictima == partida.getBot() && tableroVictima.getActivo() == null) {
+            // El bot elige reemplazo
+            CartaEnJuego mejor = elegirMejorReemplazoBot(tableroVictima, partida.getJugador().getActivo());
+            if (mejor != null) {
+                tableroVictima.getBanca().remove(mejor);
+                tableroVictima.setActivo(mejor);
             }
         }
+    }
+
+    // 3. Auxiliar para evitar código repetido y errores de casteo
+    private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}
+
+    private TableroVictimaYAtacante identificarTableros(Partida p, CartaEnJuego def, CartaEnJuego atk) {
+        TableroJugador v = encontrarTableroPorCarta(p, def);
+        TableroJugador g = encontrarTableroPorCarta(p, atk);
+        if (v == null || g == null) return null;
+        return new TableroVictimaYAtacante(v, g);
+    }
+
+    // Método auxiliar para limpiar el código del Bot
+    private CartaEnJuego elegirMejorReemplazoBot(TableroJugador tableroBot, CartaEnJuego activoRival) {
+        return tableroBot.getBanca().stream()
+                .max((c1, c2) -> Integer.compare(
+                        calcularPuntajeEstrategico(c1, activoRival),
+                        calcularPuntajeEstrategico(c2, activoRival)))
+                .orElse(tableroBot.getBanca().get(0));
     }
 
     private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
@@ -713,11 +729,19 @@ public class BattleEngineService {
     }
 
     private CartaEnJuego encontrarCartaEnTablero(TableroJugador tablero, String id) {
-        if (tablero.getActivo() != null && tablero.getActivo().getCard().getId().equals(id))
-            return tablero.getActivo();
+        // Chequeamos el activo (con doble validación de nulos)
+        if (tablero.getActivo() != null && tablero.getActivo().getCard() != null) {
+            if (tablero.getActivo().getCard().getId().equals(id)) {
+                return tablero.getActivo();
+            }
+        }
+
+        // Filtramos la banca ignorando cualquier elemento que sea null
         return tablero.getBanca().stream()
+                .filter(c -> c != null && c.getCard() != null)
                 .filter(c -> c.getCard().getId().equals(id))
-                .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
     }
 
     private TableroJugador encontrarTableroPorCarta(Partida p, CartaEnJuego c) {
@@ -803,5 +827,60 @@ public class BattleEngineService {
         tablero.getMano().remove(cartaEvolucion);
 
         System.out.println("✅ Evolución completada con éxito. HP actual: " + objetivo.getHpActual() + "/" + nuevoHpMaximo);
+    }
+    public Partida debugRobarCarta(String matchId, String cardId) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        // Usamos tu cardRepo inyectado para buscar la carta por ID
+        Card cartaMagica = cardRepo.findById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Carta no encontrada en DB: " + cardId));
+
+        // Magia: Aparece en tu mano de la nada
+        partida.getJugador().getMano().add(cartaMagica);
+        System.out.println("🛠️ [GOD MODE] Carta inyectada a la mano: " + cartaMagica.getNombre());
+
+        return partida;
+    }
+
+    public Partida debugForzarEstado(String matchId, String objetivo, String estado) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        // ¿A quién le disparamos el rayo?
+        CartaEnJuego activo = objetivo.equals("BOT") ?
+                partida.getBot().getActivo() :
+                partida.getJugador().getActivo();
+
+        if (activo != null) {
+            // Usamos tus propios métodos para que quede limpio
+            activo.limpiarCondiciones();
+            activo.agregarCondicion(estado); // Ej: "ASLEEP"
+            System.out.println("🛠️ [GOD MODE] Estado " + estado + " aplicado a " + activo.getCard().getNombre());
+        }
+
+        return partida;
+    }
+
+    public Partida debugSetHp(String matchId, String objetivo, int hp) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        CartaEnJuego activoVictima = objetivo.equals("BOT") ? partida.getBot().getActivo() : partida.getJugador().getActivo();
+        CartaEnJuego rivalAtacante = objetivo.equals("BOT") ? partida.getJugador().getActivo() : partida.getBot().getActivo();
+
+        if (activoVictima != null) {
+            activoVictima.setHpActual(Math.max(0, hp));
+            System.out.println("🛠️ [GOD MODE] HP de " + activoVictima.getCard().getNombre() + " seteado a " + hp);
+
+            // Si el botón del God Mode lo dejó en 0 de vida, aplicamos tu lógica oficial de muerte
+            if (activoVictima.getHpActual() <= 0 && rivalAtacante != null) {
+                System.out.println("🛠️ [GOD MODE] Ejecutando Muerte Súbita...");
+                resolverKO(partida, rivalAtacante, activoVictima);
+            }
+        }
+
+        return partida;
+    }
+
+    public java.util.List<com.pokemon.tcg.model.Card> obtenerCatalogoCartasDebug() {
+        return cardRepo.findAll();
     }
 }

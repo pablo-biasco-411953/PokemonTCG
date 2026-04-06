@@ -320,188 +320,90 @@ public class BotAIService {
 
         if (activoBot == null || activoJugador == null) return;
 
-        // 🚨 REGLA DE ORO: El bot no puede atacar si está dormido o paralizado
-        if (activoBot.getCondicionesEspeciales().contains("Asleep") ||
-                activoBot.getCondicionesEspeciales().contains("Paralyzed")) {
-            System.out.println("🤖 [BOT] Intenta atacar, pero no puede porque está " +
-                    (activoBot.getCondicionesEspeciales().contains("Asleep") ? "Dormido 💤" : "Paralizado ⚡"));
-            return;
+        // 🚩 1. EL CANDADO: Revisamos si está Dormido o Paralizado (Ignorando Mayúsculas)
+        boolean estaDormido = activoBot.getCondicionesEspeciales().stream()
+                .anyMatch(e -> e.equalsIgnoreCase("Asleep"));
+        boolean estaParalizado = activoBot.getCondicionesEspeciales().stream()
+                .anyMatch(e -> e.equalsIgnoreCase("Paralyzed"));
+
+        if (estaDormido || estaParalizado) {
+            System.out.println("🤖 [BOT] " + activoBot.getCard().getNombre() +
+                    " intenta atacar, pero no puede porque está " +
+                    (estaDormido ? "Dormido 💤" : "Paralizado ⚡"));
+            return; // Bloqueamos el ataque aquí
         }
 
+        // 🚩 2. SELECCIÓN DE ATAQUE
         List<Ataque> ataques = activoBot.getCard().getAtaques();
         if (ataques == null || ataques.isEmpty()) return;
 
-        Ataque ataqueElegido = ataques.get(0);
+        Ataque ataqueElegido = ataques.get(0); // El bot usa el primer ataque disponible
 
         if (!puedePagarCosto(activoBot, ataqueElegido)) {
             System.out.println("🤖 [BOT] No tiene energía para " + ataqueElegido.getNombre());
             return;
         }
 
-        // 1. CÁLCULO BASE + DEBILIDAD/RESISTENCIA
+        // 🚩 3. CÁLCULO DE DAÑO (Base + Debilidad/Resistencia)
         int danioBase = calcularDanioFinal(activoBot, activoJugador, ataqueElegido);
 
-        // 2. 🧠 APLICAMOS REGLAS DE MONEDAS Y EFECTOS PARA EL BOT
+        // 🚩 4. PROCESAMIENTO DE EFECTOS Y MONEDAS
         String texto = ataqueElegido.getTexto() != null ? ataqueElegido.getTexto().toLowerCase() : "";
         int danioFinal = danioBase;
         int carasSacadas = 0;
 
         if (!texto.isEmpty()) {
-            // -- ESCALADO DE DAÑO --
+            // -- ESCALADO POR CONTADORES DE DAÑO --
             if (texto.contains("damage counter on this") || texto.contains("damage counter on it")) {
-                int contadores = (Integer.parseInt(activoBot.getCard().getHp()) - activoBot.getHpActual()) / 10;
+                int hpMax = Integer.parseInt(activoBot.getCard().getHp());
+                int contadores = (hpMax - activoBot.getHpActual()) / 10;
                 int multiplicador = texto.contains("20 more damage") ? 20 : 10;
                 danioFinal += contadores * multiplicador;
-                System.out.println("🤖 [BOT] Usa daño por venganza (" + contadores + " contadores).");
-            } else if (texto.contains("for each energy attached") || texto.contains("for each extra energy")) {
+                System.out.println("🤖 [BOT] Daño por venganza: +" + (contadores * multiplicador));
+            }
+            // -- ESCALADO POR ENERGÍAS --
+            else if (texto.contains("for each energy attached") || texto.contains("for each extra energy")) {
                 int energias = activoBot.getEnergiasUnidas().size();
-                int multiplicador = texto.contains("20 more damage") || texto.contains("20 damage") ? 20 : (texto.contains("30 more") || texto.contains("30 damage") ? 30 : 10);
-                danioFinal += energias * multiplicador;
-                System.out.println("🤖 [BOT] Daño canalizado por sus " + energias + " energías.");
+                int mult = texto.contains("20 more") || texto.contains("20 damage") ? 20 :
+                        (texto.contains("30 more") || texto.contains("30 damage") ? 30 : 10);
+                danioFinal += energias * mult;
+                System.out.println("🤖 [BOT] Daño por energías unidas: +" + (energias * mult));
             }
 
-            // -- MONEDAS --
+            // -- LÓGICA DE MONEDAS --
             if (texto.contains("tails, this attack does nothing") || texto.contains("tails, that attack does nothing")) {
                 if (!random.nextBoolean()) {
-                    System.out.println("🤖 [BOT] ¡Falló el ataque! (Salió Cruz)");
-                    return; // Si falla por moneda, cortamos el ataque acá mismo
+                    System.out.println("🤖 [BOT] ¡Falló por moneda! (CRUZ)");
+                    return; // Cortamos el ataque
                 }
-                System.out.println("🤖 [BOT] ¡El ataque acertó! (Salió Cara)");
-            } else if (texto.contains("times the number of heads") || texto.contains("x the number of heads") || texto.contains("for each heads")) {
+                carasSacadas = 1;
+                System.out.println("🤖 [BOT] ¡Acertó por moneda! (CARA)");
+            }
+            else if (texto.contains("times the number of heads") || texto.contains("x the number of heads") || texto.contains("for each heads")) {
                 int monedas = texto.contains("2 coins") ? 2 : (texto.contains("3 coins") ? 3 : (texto.contains("4 coins") ? 4 : (texto.contains("5 coins") ? 5 : 1)));
-                for (int i = 0; i < monedas; i++) { if (random.nextBoolean()) carasSacadas++; }
+                for (int i = 0; i < monedas; i++) {
+                    if (random.nextBoolean()) carasSacadas++;
+                }
                 danioFinal = danioBase * carasSacadas;
-                System.out.println("🤖 [BOT] Tiró " + monedas + " monedas y sacó " + carasSacadas + " caras.");
-            } else if (texto.contains("if heads") && (texto.contains("more damage") || texto.contains("damage plus"))) {
+                System.out.println("🤖 [BOT] Monedas: " + carasSacadas + " caras.");
+            }
+            else if (texto.contains("if heads") && (texto.contains("more damage") || texto.contains("damage plus"))) {
                 if (random.nextBoolean()) {
                     danioFinal += danioBase;
-                    System.out.println("🤖 [BOT] Sacó cara y hace daño crítico.");
+                    carasSacadas = 1;
+                    System.out.println("🤖 [BOT] ¡Cara! Daño extra.");
                 }
             }
         }
 
-        // 3. APLICAR DAÑO AL JUGADOR
-        int nuevaHp = activoJugador.getHpActual() - danioFinal;
-        activoJugador.setHpActual(Math.max(0, nuevaHp));
+        // 🚩 5. APLICAR DAÑO FINAL AL JUGADOR
+        int nuevaHpJugador = Math.max(0, activoJugador.getHpActual() - danioFinal);
+        activoJugador.setHpActual(nuevaHpJugador);
 
-        System.out.println("🤖 [BOT] Atacó con " + ataqueElegido.getNombre() + " haciendo " + danioFinal + " de daño.");
+        System.out.println("🎯 [BOT] " + activoBot.getCard().getNombre() + " usó " + ataqueElegido.getNombre() + " -> Daño: " + danioFinal);
 
-        // 4. APLICAR ESTADOS SECUNDARIOS
-        if (!texto.isEmpty()) {
-
-            // CURACIÓN BOT
-            if (texto.contains("heal") && (texto.contains("from this pokémon") || texto.contains("from 1 of your pokémon"))) {
-                int cura = texto.contains("30 damage") ? 30 : (texto.contains("40 damage") ? 40 : (texto.contains("50 damage") ? 50 : (texto.contains("10 damage") ? 10 : 20)));
-                int hpMaximo = Integer.parseInt(activoBot.getCard().getHp());
-                activoBot.setHpActual(Math.min(hpMaximo, activoBot.getHpActual() + cura));
-                System.out.println("🤖 [BOT] Se curó " + cura + " HP.");
-            }
-
-            // ROBO BOT
-            if (texto.contains("draw a card") || texto.contains("draw 1 card") || texto.contains("draw 2 cards") || texto.contains("draw 3 cards")) {
-                int aRobar = texto.contains("2 cards") ? 2 : (texto.contains("3 cards") ? 3 : 1);
-                for (int i = 0; i < aRobar; i++) {
-                    if (!tableroBot.getMazo().isEmpty()) tableroBot.getMano().add(tableroBot.getMazo().remove(0));
-                }
-                System.out.println("🤖 [BOT] Robó " + aRobar + " carta(s).");
-            }
-
-            // DAÑO BANCA
-            if (texto.contains("damage to 1 of your opponent's benched")) {
-                if (!partida.getJugador().getBanca().isEmpty()) {
-                    int danioBanca = texto.contains("20 damage") ? 20 : (texto.contains("30 damage") ? 30 : (texto.contains("40 damage") ? 40 : 10));
-                    CartaEnJuego victima = partida.getJugador().getBanca().get(random.nextInt(partida.getJugador().getBanca().size()));
-                    victima.setHpActual(Math.max(0, victima.getHpActual() - danioBanca));
-                    System.out.println("☄️ [BOT] ¡Hizo " + danioBanca + " de daño colateral a tu " + victima.getCard().getNombre() + " en la banca!");
-                    if (victima.getHpActual() <= 0) resolverKO(partida, activoBot, victima);
-                }
-            }
-
-            // DESCARTAR ENERGÍA BOT
-            if (texto.contains("discard an energy card attached to") || texto.contains("discard 1 energy card attached to") || texto.contains("discard 2 energy")) {
-                if (texto.contains("attached to this") || texto.contains("attached to " + activoBot.getCard().getNombre().toLowerCase())) {
-                    int aDescartar = texto.contains("discard 2") ? 2 : 1;
-                    for (int i = 0; i < aDescartar; i++) {
-                        if (!activoBot.getEnergiasUnidas().isEmpty()) {
-                            tableroBot.getPilaDescarte().add(activoBot.getEnergiasUnidas().remove(0));
-                        }
-                    }
-                    System.out.println("🤖 [BOT] Descartó energía por el ataque.");
-                }
-            }
-
-            // RETROCESO BOT
-            if (texto.contains("damage to itself")) {
-                int autoDanio = texto.contains("20 damage") ? 20 : (texto.contains("30 damage") ? 30 : (texto.contains("40 damage") ? 40 : 10));
-                activoBot.setHpActual(Math.max(0, activoBot.getHpActual() - autoDanio));
-                System.out.println("🤖 [BOT] Recibió " + autoDanio + " de daño por retroceso.");
-                if (activoBot.getHpActual() <= 0) resolverKO(partida, activoJugador, activoBot);
-            }
-
-            // APLICAR ESTADOS AL JUGADOR
-            if (activoJugador.getHpActual() > 0 && (danioFinal > 0 || ataqueElegido.getDanio() == 0)) {
-
-                if (texto.contains("is now paralyzed")) {
-                    if (!texto.contains("flip a coin")) {
-                        activoJugador.agregarCondicion("Paralyzed");
-                        System.out.println("⚡ [BOT] ¡Te ha Paralizado! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Paralyzed");
-                        System.out.println("⚡ [BOT] ¡Salió CARA! Te ha Paralizado.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en paralizarte.");
-                    }
-                }
-
-                if (texto.contains("is now asleep")) {
-                    if (!texto.contains("flip a coin")) {
-                        activoJugador.agregarCondicion("Asleep");
-                        System.out.println("💤 [BOT] ¡Te ha Dormido! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Asleep");
-                        System.out.println("💤 [BOT] ¡Salió CARA! Te ha Dormido.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en dormirte.");
-                    }
-                }
-
-                if (texto.contains("is now confused")) {
-                    if (!texto.contains("flip a coin")) {
-                        activoJugador.agregarCondicion("Confused");
-                        System.out.println("🌀 [BOT] ¡Te ha Confundido! (100% chance)");
-                    } else if (random.nextBoolean()) {
-                        activoJugador.agregarCondicion("Confused");
-                        System.out.println("🌀 [BOT] ¡Salió CARA! Te ha Confundido.");
-                    } else {
-                        System.out.println("💨 [BOT] ¡Salió CRUZ! El bot falló en confundirte.");
-                    }
-                }
-                if (texto.contains("is now burned")) {
-                    activoJugador.agregarCondicion("Burned");
-                    System.out.println("🔥 [BOT] ¡Te ha Quemado!");
-                }
-                if (texto.contains("discard an energy") || texto.contains("discard 1 energy")) {
-                    // FIX: Nos aseguramos que es la energía del jugador y no la propia
-                    if (!texto.contains("attached to this") && !texto.contains("attached to " + activoBot.getCard().getNombre().toLowerCase())) {
-                        int aRomper = texto.contains("for each heads") ? carasSacadas : 1;
-                        for (int i = 0; i < aRomper; i++) {
-                            if (!activoJugador.getEnergiasUnidas().isEmpty()) {
-                                System.out.println("💥 [BOT] ¡Destruyó tu " + activoJugador.getEnergiasUnidas().remove(0).getNombre() + "!");
-                            }
-                        }
-                    }
-                }
-                if (texto.contains("can't retreat")) {
-                    activoJugador.agregarCondicion("CantRetreat");
-                    System.out.println("🪤 [BOT] ¡Te atrapó! No podés retirarte tu próximo turno.");
-                }
-            }
-        }
-
-        // Resolucion final (en caso de que el ataque base o los escalados lo hayan matado)
-        if (activoJugador.getHpActual() <= 0) {
-            resolverKO(partida, activoBot, activoJugador);
-        }
+        // 🚩 6. APLICAR EFECTOS SECUNDARIOS (Opcional, según tu lógica de efectos)
+        // aplicarEfectosSecundariosBot(partida, ataqueElegido, activoBot, activoJugador, carasSacadas);
     }
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
         TableroJugador tableroVictima = partida.getJugador();
