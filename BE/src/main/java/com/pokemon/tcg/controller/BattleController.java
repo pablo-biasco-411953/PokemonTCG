@@ -48,6 +48,8 @@ public class BattleController {
         }
     }
 
+
+
     @PostMapping("/{matchId}/jugar-bot")
     public ResponseEntity<?> jugarBot(@PathVariable String matchId) {
         try {
@@ -145,5 +147,46 @@ public class BattleController {
             // Si no tiene energías suficientes, acá va a saltar el error
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+    @PostMapping("/{matchId}/debug/draw")
+    public ResponseEntity<?> debugDrawCard(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+        try {
+            String cardId = payload.get("cardId");
+            Partida partidaActualizada = battleEngine.debugRobarCarta(matchId, cardId);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (Robar): " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/debug/status")
+    public ResponseEntity<?> debugForzarEstado(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+        try {
+            String objetivo = payload.get("objetivo"); // "JUGADOR" o "BOT"
+            String estado = payload.get("estado");     // "ASLEEP", "PARALYZED", etc.
+
+            Partida partidaActualizada = battleEngine.debugForzarEstado(matchId, objetivo, estado);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (Estado): " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/debug/hp")
+    public ResponseEntity<?> debugSetHp(@PathVariable String matchId, @RequestBody java.util.Map<String, Object> payload) {
+        try {
+            String objetivo = (String) payload.get("objetivo");
+            // Usamos toString() y parseInt para evitar problemas si Angular manda un número o un string
+            int hp = Integer.parseInt(payload.get("hp").toString());
+
+            Partida partidaActualizada = battleEngine.debugSetHp(matchId, objetivo, hp);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (HP): " + e.getMessage());
+        }
+    }
+    @GetMapping("/debug/catalog")
+    public ResponseEntity<?> getCatalogoDebug() {
+        return ResponseEntity.ok(battleEngine.obtenerCatalogoCartasDebug());
     }
 }
