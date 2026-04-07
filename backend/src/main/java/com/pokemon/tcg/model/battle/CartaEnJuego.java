@@ -17,6 +17,9 @@ public class CartaEnJuego {
     private boolean puedeAtacar = true;
     private int reduccionDanioRecibido = 0;
     private int aumentoDanioCausado = 0;
+    private boolean invulnerable = false;
+    public void setInvulnerable(boolean value) { this.invulnerable = value; }
+    public boolean isInvulnerable() { return invulnerable; }
     public CartaEnJuego(Card card) {
         this.card = card;
         try {

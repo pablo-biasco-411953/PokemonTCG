@@ -361,6 +361,13 @@ public class BotAIService {
                 danioFinal += contadores * multiplicador;
                 System.out.println("🤖 [BOT] Daño por venganza: +" + (contadores * multiplicador));
             }
+            System.out.println("🛡️ Es invulnerable el jugador?" + activoJugador.isInvulnerable());
+
+            if (activoJugador.isInvulnerable()) {
+                System.out.println("🛡️ [BOT] Rebotó contra el escudo invulnerable del rival.");
+                partida.setUltimasMonedasLanzadas(new ArrayList<>());
+                return;
+            }
             // -- ESCALADO POR ENERGÍAS --
             else if (texto.contains("for each energy attached") || texto.contains("for each extra energy")) {
                 int energias = activoBot.getEnergiasUnidas().size();
