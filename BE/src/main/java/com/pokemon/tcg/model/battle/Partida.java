@@ -1,6 +1,8 @@
 package com.pokemon.tcg.model.battle;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Representa una partida en curso.
@@ -12,6 +14,10 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+
+    // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
+    private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
+
     public enum Turno { JUGADOR, BOT }
     public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, FIN_PARTIDA }
 
@@ -26,14 +32,8 @@ public class Partida {
 
     // --- GETTERS Y SETTERS ---
 
-    // Este es el mÃ©todo que te pedÃ­a el compilador:
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getId() {
-        return id;
-    }
+    public void setId(String id) { this.id = id; }
+    public String getId() { return id; }
 
     public TableroJugador getJugador() { return jugador; }
     public void setJugador(TableroJugador jugador) { this.jugador = jugador; }
@@ -46,8 +46,18 @@ public class Partida {
 
     public Fase getFaseActual() { return faseActual; }
     public void setFaseActual(Fase faseActual) { this.faseActual = faseActual; }
+
     public boolean isYaSeRetiroEsteTurno() { return yaSeRetiroEsteTurno; }
     public void setYaSeRetiroEsteTurno(boolean yaSeRetiroEsteTurno) {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
+    }
+
+    // 🚩 GETTER Y SETTER DE LAS MONEDAS PARA QUE VIAJEN A ANGULAR
+    public List<Boolean> getUltimasMonedasLanzadas() {
+        return ultimasMonedasLanzadas;
+    }
+
+    public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
+        this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
     }
 }
