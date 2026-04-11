@@ -314,8 +314,14 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
   }
 
   private procesarSwipeOReveal() {
-    const carta = this.mazoCartas[0];
+    // En vez de agarrar siempre la [0], agarramos la primera que NO esté descartada
+    const carta = this.mazoCartas.find(c => (c as any).userData.estado !== 'shopeada');
     if (!carta) return;
+
+    // Nuestro semáforo anti-spam
+    if ((carta as any).userData.estado === 'revelando') {
+      return; 
+    }
 
     const deltaX = this.mouse.x - this.puntoClickInicial.x;
     const tiempo = (Date.now() - this.tiempoClickInicial) / 1000;
@@ -330,7 +336,8 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
         (carta as any).userData.tReveal = Date.now();
       }
     }
-  }
+  
+}
 
   private animate() {
     this.animationId = requestAnimationFrame(() => this.animate());
@@ -378,6 +385,9 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
         }
       }
 
+      // --- LÓGICA DE CARTAS PARA SABER CUAL ESTA ACTIVA---
+      const idxActiva = this.mazoCartas.findIndex(c => (c as any).userData.estado !== 'shopeada');
+      
       this.mazoCartas.forEach((card, i) => {
         const ud = (card as any).userData;
         const ct = (Date.now() - (this.tiempoCorte + 700 + i * 120)) / 1000;
@@ -396,7 +406,8 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
         }
 
         // --- GESTIÓN DE CARTA ACTIVA ---
-        if (i === 0 && ud.estado !== 'shopeada' && ud.estado !== 'saltando') {
+        // cambie el i== 0 por i == idxActiva para que la carta activa sea la primera que no esté shopeada, no necesariamente la [0]  
+        if (i === idxActiva && ud.estado !== 'shopeada' && ud.estado !== 'saltando') {
           card.renderOrder = 999;
           // LA CARTA ACTIVA SALTA ADELANTE (Z=4.5)
           const inspeccionZ = 4.5;

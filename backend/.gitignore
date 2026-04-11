@@ -1,0 +1,15 @@
+# IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Maven / Build
+target/
+out/
+
+# Logs del sistema
+log.txt
+*.log
+
+# Otros
+.DS_Store
