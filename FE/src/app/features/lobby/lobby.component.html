@@ -1,38 +1,132 @@
-<!-- Vista principal del lobby con sobres, mazos y acceso a batalla. -->
-<div class="lobby-master-container" [class.subiendo]="mostrarAnimacionSobre">
-  <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
-    <div class="ddp-header">
-      <span>MODO DIOS LOBBY (F3)</span>
+<div
+  class="lobby-3d-shell"
+  [class.pack-opening]="mostrarAnimacionSobre"
+  [style.--interaction-x.%]="currentInteraction?.screenX ?? 50"
+  [style.--interaction-y.%]="currentInteraction?.screenY ?? 50"
+>
+  <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
+
+  <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" [aria-label]="'battle.closeWarning' | t">×</button>
+    <div class="phone-tilt-icon"></div>
+    <strong>{{ 'lobby.rotatePhone' | t }}</strong>
+    <span>{{ 'lobby.rotateHint' | t }}</span>
+  </div>
+
+  <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
+  <div 
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
+    class="player-nametag" 
+    [attr.data-player-tag]="other.username"
+  >
+    <div class="nametag-bubble" (click)="openPlayerMenu($event, other)">
+      <span class="nametag-dot"></span>
+      <span class="nametag-text">{{ other.username }}</span>
+      <small *ngIf="other.pikachuEnabled" class="nametag-pikachu">⚡ PK</small>
+    </div>
+  </div>
+
+  <!-- SPEECH BUBBLES FOR MULTIPLAYER -->
+  <!-- Speech bubbles for other players -->
+  <div
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername"
+    class="player-speech-bubble"
+    [attr.data-player-bubble]="other.username"
+  >
+    <div class="speech-content">
+      {{ other.chatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- Speech bubble for local player -->
+  <div
+    class="player-speech-bubble local-speech"
+    [style.left.%]="localBubbleScreenX"
+    [style.top.%]="localBubbleScreenY"
+    [class.visible]="localBubbleScreenX !== undefined && localBubbleScreenY !== undefined && localChatBubble"
+  >
+    <div class="speech-content">
+      {{ localChatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- CHAT WINDOW (BOTTOM LEFT) -->
+  <button class="mobile-chat-toggle" type="button" (click)="toggleChat()">
+    CHAT
+  </button>
+
+  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
+    <div class="chat-messages">
+      <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
+        <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
+        <span class="chat-text">{{ msg.text }}</span>
+      </div>
+      <div *ngIf="chatLog.length === 0" class="chat-empty">
+        {{ 'lobby.chatHint' | t }}
+      </div>
+    </div>
+    <div class="chat-input-wrapper" [class.active]="chatActive">
+      <input
+        #chatInput
+        type="text"
+        [(ngModel)]="chatText"
+        (keydown.escape)="closeChat()"
+        [placeholder]="'lobby.chatPlaceholder' | t"
+        maxlength="100"
+      />
+    </div>
+  </div>
+
+  <div
+    class="developer-debug-panel lobby-debug-panel"
+    *ngIf="showDebugPanel"
+    [style.left.px]="debugPanelX"
+    [style.top.px]="debugPanelY"
+  >
+    <div class="ddp-header" (pointerdown)="startDebugPanelDrag($event)">
+      <span>{{ 'lobby.debugTitle' | t }}</span>
+      <small>{{ 'lobby.drag' | t }}</small>
     </div>
 
     <div class="ddp-section">
-      <p><span>Jugador:</span> {{ jugador?.username || 'Ninguno' }}</p>
-      <p><span>Sobres actuales:</span> {{ sobresDisponibles }}</p>
-      <p><span>Mazos:</span> {{ mazos.length }}</p>
+      <p class="godmode-title">{{ 'lobby.statistics' | t }}</p>
+      <div class="debug-stats-grid">
+        <div><strong>{{ debugFps }}</strong><span>FPS</span></div>
+        <div><strong>{{ debugFrameMs }}</strong><span>MS</span></div>
+        <div><strong>{{ debugDrawCalls }}</strong><span>CALLS</span></div>
+        <div><strong>{{ debugTriangles }}</strong><span>TRIS</span></div>
+        <div><strong>{{ debugPixelRatio }}</strong><span>DPR</span></div>
+        <div><strong>{{ debugAdaptiveScale }}%</strong><span>SCALE</span></div>
+      </div>
+      <p><span>{{ 'lobby.geometries' | t }}</span> {{ debugGeometries }} · <span>{{ 'lobby.textures' | t }}</span> {{ debugTextures }}</p>
+      <p><span>{{ 'lobby.online' | t }}</span> {{ otherPlayersList.length + 1 }} · <span>{{ 'lobby.remotes' | t }}</span> {{ otherPlayersList.length }}</p>
+      <p><span>{{ 'lobby.quality' | t }}</span> {{ graphicsQualityLabel }} · <span>{{ 'lobby.cycle' | t }}</span> {{ dayPhaseLabel | t }}</p>
+    </div>
+
+    <div class="ddp-section">
+      <p><span>{{ 'lobby.playerLabel' | t }}</span> {{ jugador?.username || ('lobby.noneLabel' | t) }}</p>
+      <p><span>{{ 'lobby.currentPacks' | t }}</span> {{ sobresDisponibles }}</p>
+      <p><span>{{ 'lobby.decksLabel' | t }}</span> {{ mazos.length }}</p>
     </div>
 
     <div class="ddp-section">
       <p class="godmode-title">SOBRES</p>
       <div class="gm-row">
-        <input
-          type="number"
-          min="0"
-          class="gm-input"
-          [(ngModel)]="debugSobresCantidad">
-        <button class="gm-btn" (click)="debugSetSobres()" [disabled]="debugAccionEnCurso">
-          Aplicar
-        </button>
+        <input type="number" min="0" class="gm-input" [(ngModel)]="debugSobresCantidad">
+        <button class="gm-btn" (click)="debugSetSobres()" [disabled]="debugAccionEnCurso">{{ 'lobby.apply' | t }}</button>
       </div>
     </div>
 
     <div class="ddp-section">
-      <p class="godmode-title">INYECTAR CARTA A MAZO</p>
+      <p class="godmode-title">{{ 'lobby.injectCard' | t }}</p>
 
       <div class="gm-filters">
         <input
           type="text"
           class="gm-input gm-search"
-          placeholder="Buscar carta o ataque..."
+          [placeholder]="'lobby.searchPlaceholder' | t"
           (input)="actualizarFiltroTexto($event)">
       </div>
 
@@ -42,7 +136,7 @@
 
           <div class="preview-card">
             <img *ngIf="debugSelectedCard" [src]="getImagenDebugCarta(debugSelectedCard.id)" [alt]="debugSelectedCard.nombre">
-            <div *ngIf="!debugSelectedCard" class="no-results">No hay cartas</div>
+            <div *ngIf="!debugSelectedCard" class="no-results">{{ 'lobby.noCards' | t }}</div>
           </div>
 
           <button class="gm-btn arrow" (click)="nextDebugCard()">▶</button>
@@ -54,20 +148,20 @@
         </div>
 
         <p class="gm-results-count">
-          {{ debugCatalogoFiltrado.length ? (debugSelectedIndex + 1) : 0 }} / {{ debugCatalogoFiltrado.length }} resultados
+          {{ 'lobby.resultsCount' | t:{current: (debugCatalogoFiltrado.length ? (debugSelectedIndex + 1) : 0), total: debugCatalogoFiltrado.length} }}
         </p>
       </div>
 
       <div class="gm-row">
         <select class="gm-select" [value]="debugTargetMazoId || ''" (change)="onDebugMazoChange($event)">
-          <option value="">Elegir mazo...</option>
+          <option value="">{{ 'lobby.chooseDeck' | t }}</option>
           <option *ngFor="let mazo of mazos" [value]="mazo.id">{{ mazo.nombre }}</option>
         </select>
       </div>
 
       <div class="gm-row" *ngIf="debugMazoSeleccionado">
         <select class="gm-select" [value]="debugReplaceCardId || ''" (change)="onDebugReplaceChange($event)">
-          <option value="">Carta a reemplazar...</option>
+          <option value="">{{ 'lobby.cardToReplace' | t }}</option>
           <option *ngFor="let carta of debugMazoSeleccionado.cartas; let i = index" [value]="carta.id">
             {{ i + 1 }}. {{ carta.nombre }}
           </option>
@@ -78,147 +172,862 @@
         class="gm-btn draw-btn"
         [disabled]="!debugSelectedCard || !debugMazoSeleccionado || debugAccionEnCurso"
         (click)="debugInyectarCartaEnMazo()">
-        Inyectar en mazo
+        {{ 'lobby.injectBtn' | t }}
       </button>
     </div>
   </div>
-  
-  <div class="environment-layer">
-    <video #bgVideo autoplay loop muted playsinline class="video-bg">
-      <source src="/images/fondolobby.webm" type="video/webm">
-    </video>
-    <div class="crt-scanlines"></div>
-    <div class="vignette-overlay"></div>
-  </div>
 
-  <div class="ui-layer lobby-content-wrapper">
-    
-    <nav class="top-nav-bar">
-      <div class="user-card-glass">
-        <div class="avatar-box">👤</div>
-        <div class="user-data">
-          <span class="u-name">{{ jugador?.username | uppercase }}</span>
+  <header class="hub-top-hud">
+    <div class="hud-left">
+      <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
+        <span class="avatar-dot"></span>
+        <div>
+          <small>{{ 'lobby.trainer' | t | uppercase }}</small>
+          <strong>{{ jugador?.username || 'PLAYER' }}</strong>
+          <em>{{ selectedCharacterLabel }}</em>
         </div>
-      </div>
-
-      <button class="btn-open-packs-premium" (click)="abrirSobres()" [disabled]="sobresDisponibles <= 0">
-        <div class="bg-glow"></div>
-        <div class="pack-icon">📦</div>
-        <div class="pack-content">
-          <span class="p-title">ABRIR SOBRE</span>
-          <span class="p-count dot-matrix">{{ sobresDisponibles }}</span>
-        </div>
-        <div class="shine"></div>
       </button>
-      
-      <div class="wallet-group">
-        <div class="pill dot-matrix">💎 1.250</div>
+
+      <div class="resource-chip santocoins-chip">
+        <small>SANTOCOINS</small>
+        <strong>{{ santoCoins }}</strong>
       </div>
-    </nav>
 
-    <main class="responsive-battle-grid">
-      <section class="mazos-section">
-        <div class="section-title">
-          <h2 class="dot-matrix">ESTACIÓN DE COMBATE</h2>
-        </div>
-
-        <div class="mazos-scroll-area">
-          @for (mazo of mazos; track mazo.id) {
-            <div class="mazo-card-wide">
-              <div class="m-info">
-                <strong class="deck-name">{{ mazo.nombre | uppercase }}</strong>
-                <p class="dot-matrix status-text">60/60 LOADED</p>
-                <button class="btn-search-match-xl" (click)="buscarPartida(mazo.id)">
-                  <div class="scan-effect"></div>
-                  <span class="btn-label">BUSCAR PARTIDA</span>
-                </button>
-              </div>
-
-              <div class="deck-mosaic-grid" (mousemove)="actualizarPosicion($event)">
-                @for (carta of mazo.cartas; track $index) {
-                  <div class="mosaic-slot" (mouseenter)="mostrarZoom(carta, $event)" (mouseleave)="ocultarZoom()">
-                    <img [src]="carta.imagen" (error)="imgRef.src = 'https://images.pokemontcg.io/' + ('' + carta.id).replace('-', '/') + '.png'" #imgRef class="card-thumb">
-                  </div>
-                }
-              </div>
-            </div>
-          }
-
-          @for (slot of slotsVacios; track $index) {
-            <div class="mazo-card-wide ghost-slot" (click)="irAlDeckBuilder()">
-              <div class="m-info">
-                <strong class="dot-matrix">SLOT VACÍO</strong>
-                <p>Esperando deck...</p>
-              </div>
-              <div class="deck-mosaic-grid ghost-grid">
-                <div class="empty-slot-add">
-                  <span class="plus-icon">+</span>
-                  <small class="dot-matrix">CREAR MAZO</small>
-                </div>
-              </div>
-            </div>
-          }
-        </div>
-      </section>
-
-      <aside class="menu-side-section">
-        <div class="menu-item-glass" (click)="irAlDeckBuilder()">
-          <div class="icon-orb">📕</div>
-          <div class="label-wrap">
-            <span class="title">COLECCIÓN ÚNICA</span>
-            <div class="progress-container">
-              <div class="progress-bar" [style.width.%]="(cantidadCartasUnicas / 151) * 100">
-                <div class="bar-glow"></div>
-              </div>
-              <div class="stats-row">
-                <small class="dot-matrix">{{ cantidadCartasUnicas }} / 151</small>
-                <span class="percentage-label dot-matrix">
-                  {{ ((cantidadCartasUnicas / 151) * 100) | number:'1.0-0' }}%
-                </span>
-              </div>
-            </div>
-          </div>
-          <div class="corner-accent"></div>
-        </div>
-
-        <div class="menu-item-glass locked">
-          <div class="icon-orb">🏆</div>
-          <div class="label-wrap">
-            <span class="title">TORNEOS</span>
-            <small class="dot-matrix status-text">OFFLINE</small>
-          </div>
-        </div>
-      </aside>
-    </main>
-  </div>
-
-  @if (pkmZoom) {
-    <div class="card-zoom-overlay" [style.left.px]="zoomX" [style.top.px]="zoomY">
-      <div class="scanner-frame detailed-retrotech">
-        <div class="scan-line"></div>
-        <img [src]="pkmZoom.imagen" (error)="imgZ.src = 'https://images.pokemontcg.io/' + pkmZoom.id.replace('-', '/') + '_hires.png'" #imgZ>
-        <div class="pkm-pixel-panel">
-          <div class="data-box header-box">
-            <span class="p-id">#{{ pkmZoom.id }}</span>
-            <span class="p-name">{{ pkmZoom.nombre | uppercase }}</span>
-          </div>
-          <div class="data-box stats-box">
-            <div class="stat-hp">HP {{ pkmZoom.hp }} <span class="hp-heart">♥</span></div>
-            <div class="stat-type">{{ pkmZoom.tipo | uppercase }}</div>
-          </div>
-          <p class="p-sync">SYNCHRONIZED_100%</p>
-        </div>
+      <div class="resource-chip packs-available-chip">
+        <small>{{ 'lobby.openPack' | t }}</small>
+        <strong>{{ sobresDisponibles }}</strong>
       </div>
     </div>
-  }
+
+    <div class="hud-center">
+      <div class="hub-title">
+        <span>POKÉFETCH HUB</span>
+        <strong>Third Person Arena</strong>
+      </div>
+
+      <div class="resource-chip cycle-chip">
+        <small>{{ 'lobby.cycle' | t | uppercase }}</small>
+        <strong>{{ dayPhaseLabel | t | uppercase }}</strong>
+      </div>
+
+      <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
+        <small>PIKACHU</small>
+        <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+
+      <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
+        <small>{{ 'lobby.graphics' | t | uppercase }}</small>
+        <strong>{{ graphicsQualityLabel }}</strong>
+      </button>
+    </div>
+
+    <div class="hud-right">
+      <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
+        <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
+          <small>{{ 'lobby.audio' | t | uppercase }}</small>
+          <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+        </button>
+        <div class="audio-mini-controls">
+          <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" [title]="'lobby.music' | t">MUS</button>
+          <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" [title]="'lobby.sfx' | t">SFX</button>
+          <button type="button" (click)="cycleLobbyVolume()" [title]="'lobby.volume' | t">{{ audioVolumeLabel }}</button>
+        </div>
+      </div>
+
+      <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
+        <small>{{ 'lobby.actions' | t | uppercase }}</small>
+        <strong>{{ 'lobby.emotes' | t | uppercase }}</strong>
+      </button>
+    </div>
+  </header>
+
+  <aside class="hub-help-panel">
+    <div class="help-key"><kbd>W</kbd><kbd>S</kbd><span>{{ 'lobby.move' | t }}</span></div>
+    <div class="help-key"><kbd>A</kbd><kbd>D</kbd><span>{{ 'lobby.rotation3dLabel' | t }}</span></div>
+    <div class="help-key"><kbd>Shift</kbd><span>{{ 'lobby.run' | t }}</span></div>
+    <div class="help-key"><kbd>E</kbd><span>{{ 'lobby.interactKey' | t }}</span></div>
+  </aside>
+
+  <div
+    class="mobile-analog-pad"
+    aria-label="Movimiento analogico"
+    (pointerdown)="startMobileJoystick($event)"
+    (pointermove)="moveMobileJoystick($event)"
+    (pointerup)="endMobileJoystick($event)"
+    (pointercancel)="endMobileJoystick($event)"
+  >
+    <div class="analog-ring"></div>
+    <div
+      class="analog-stick"
+      [class.active]="mobileJoystickActive"
+      [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
+    ></div>
+    <span>{{ 'lobby.move' | t | uppercase }}</span>
+  </div>
+
+  <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <div class="mobile-camera-zoom" aria-label="Zoom de camara">
+      <button type="button" (click)="mobileCameraZoomStep(-1)">+</button>
+      <button type="button" (click)="mobileCameraZoomStep(1)">-</button>
+    </div>
+    <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
+    <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
+  </div>
+
+  <div class="hub-radar">
+    <button
+      *ngFor="let spot of hubSpots"
+      type="button"
+      class="radar-node"
+      [class.active]="currentInteraction?.id === spot.id"
+      (click)="warpToSpot(spot.id)"
+    >
+      <span></span>{{ spot.short }}
+    </button>
+  </div>
+
+  <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen && !santoroDialogOpen && !kiosqueraDialogOpen">
+    <span class="prompt-key">E</span>
+    <div>
+      <small>{{ currentInteraction.kicker }}</small>
+      <strong>{{ currentInteraction.label }}</strong>
+      <p>{{ currentInteraction.description }}</p>
+    </div>
+  </div>
+
+  <div class="quest-tracker" *ngIf="!santoroGiftClaimed || santoroQuestTracking">
+    <small>{{ 'lobby.mainQuest' | t | uppercase }}</small>
+    <strong>{{ santoroQuestTitle }}</strong>
+    <p>{{ santoroQuestCopy }}</p>
+    <div class="quest-actions">
+      <button type="button" *ngIf="!santoroQuestTracking && !santoroGiftClaimed" (click)="toggleSantoroTracking()">{{ 'lobby.follow' | t }}</button>
+      <button type="button" *ngIf="santoroQuestTracking" (click)="stopSantoroTracking()">{{ 'lobby.unfollow' | t }}</button>
+    </div>
+  </div>
+
+  <div class="battle-select-panel" *ngIf="battlePanelOpen">
+    <div class="panel-glow"></div>
+    <button class="close-panel" type="button" (click)="battlePanelOpen = false">×</button>
+    <small>{{ 'lobby.battleGate' | t | uppercase }}</small>
+    <h2>{{ 'lobby.findMatch' | t }}</h2>
+
+    <ng-container *ngIf="mazos.length; else noDecks">
+      <label for="hubDeckSelect">{{ 'lobby.syncedDeck' | t }}</label>
+      <select id="hubDeckSelect" [(ngModel)]="selectedBattleDeckId">
+        <option *ngFor="let mazo of mazos" [ngValue]="mazo.id">
+          {{ mazo.nombre }} - {{ mazo.cartas.length }}/60
+        </option>
+      </select>
+
+      <button class="primary-action" type="button" (click)="startSelectedBattle()">
+        {{ 'lobby.findMatch' | t }}
+      </button>
+    </ng-container>
+
+    <ng-template #noDecks>
+      <p class="empty-copy">{{ 'lobby.waitingDeck' | t }}</p>
+      <button class="primary-action" type="button" (click)="irAlDeckBuilder()">
+        {{ 'lobby.createDeck' | t }}
+      </button>
+    </ng-template>
+  </div>
+
+  <div class="kiosk-shop-panel" *ngIf="kioskShopOpen">
+    <div class="kiosk-panel-glow"></div>
+    <button class="close-panel" type="button" (click)="closeKioskShop()">×</button>
+    <small>{{ 'lobby.utnKiosk' | t | uppercase }}</small>
+    <h2>{{ 'lobby.packsTitle' | t }}</h2>
+    <p>{{ 'lobby.kioskDesc' | t }}</p>
+
+    <div class="pack-bundles">
+      <button type="button" [disabled]="!canBuyPackBundle(1)" (click)="buyPackBundle(1)">
+        <span>{{ 'lobby.pack' | t }}</span>
+        <strong>{{ getPackBundlePrice(1) }} SC</strong>
+      </button>
+      <button type="button" [disabled]="!canBuyPackBundle(3)" (click)="buyPackBundle(3)">
+        <span>{{ 'lobby.packs3' | t }}</span>
+        <strong>{{ getPackBundlePrice(3) }} SC</strong>
+      </button>
+      <button type="button" [disabled]="!canBuyPackBundle(5)" (click)="buyPackBundle(5)">
+        <span>{{ 'lobby.packs5' | t }}</span>
+        <strong>{{ getPackBundlePrice(5) }} SC</strong>
+      </button>
+    </div>
+
+    <button class="primary-action" type="button" [disabled]="sobresDisponibles <= 0" (click)="abrirSobres()">
+      {{ 'lobby.openAvailablePack' | t:{count: sobresDisponibles.toString()} }}
+    </button>
+  </div>
+
+  <!-- Diálogo con la Kiosquera de la Cantina -->
+  <div class="santoro-dialog-overlay-blocker" *ngIf="kiosqueraDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="kiosqueraDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">{{ 'lobby.dialogKiosqueraTitle' | t }}</small>
+      <h3>{{ 'lobby.dialogKiosqueraText' | t }}</h3>
+      <div class="challenge-actions">
+        <button class="btn-accept" type="button" (click)="kiosqueraVerProductos()">{{ 'lobby.seeProducts' | t }}</button>
+        <button class="btn-reject" type="button" (click)="closeKiosqueraDialog()">{{ 'lobby.noThanks' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="santoro-dialog-overlay-blocker" *ngIf="santoroDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="santoroDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">{{ 'lobby.profeSantoro' | t }}</small>
+      <ng-container [ngSwitch]="santoroDialogState">
+        <ng-container *ngSwitchCase="'intro'">
+          <h3>{{ 'lobby.santoroIntroText' | t:{nickname: santoroNickname} }}</h3>
+          <p>{{ 'lobby.santoroGiftText' | t }}</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="chooseSantoroAnswer('thanks')">{{ 'lobby.thanksProfe' | t }}</button>
+            <button class="btn-reject" type="button" (click)="chooseSantoroAnswer('reject')">{{ 'lobby.rejectGift' | t }}</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'thanks'">
+          <p>{{ 'lobby.santoroThanksAnswer' | t }}</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">{{ 'lobby.acceptGift' | t }}</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'forced'">
+          <p>{{ 'lobby.santoroForcedText' | t }}</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">{{ 'lobby.acceptGift' | t }}</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'afterGift'">
+          <p>{{ 'lobby.santoroAfterGiftText' | t:{nickname: (santoroNickname | lowercase)} }}</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">{{ 'lobby.manageDeck' | t }}</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">{{ 'lobby.later' | t }}</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <p>{{ 'lobby.santoroDefaultText' | t:{nickname: (santoroNickname | lowercase)} }}</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">{{ 'lobby.manageDeck' | t }}</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">{{ 'lobby.close' | t }}</button>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="lobby-dialog-overlay santoro-gift-overlay" *ngIf="santoroGiftModalOpen">
+    <div class="lobby-dialog-card challenge-card santoro-gift-card">
+      <div class="gift-pack-3d">
+        <img src="/images/cards/sobre.png" alt="Sobre Pokemon TCG">
+      </div>
+      <small class="challenge-kicker">{{ 'lobby.rewardReceived' | t }}</small>
+      <h3>{{ 'lobby.packsReceived' | t }}</h3>
+      <p>{{ 'lobby.giftInventoryUpdated' | t }}</p>
+      <button class="btn-accept full-dialog-action" type="button" (click)="continueSantoroAfterGift()">{{ 'lobby.continue' | t }}</button>
+    </div>
+  </div>
+
+  <div class="deck-preview-strip" *ngIf="mazos.length">
+    <button
+      *ngFor="let mazo of mazos"
+      type="button"
+      class="deck-preview"
+      (click)="selectedBattleDeckId = mazo.id; battlePanelOpen = true"
+    >
+      <span>{{ mazo.nombre | uppercase }}</span>
+      <small>{{ mazo.cartas.length }}/60 LOADED</small>
+    </button>
+  </div>
 
   <div class="transicion-cielo" [class.activo]="mostrarAnimacionSobre">
     <div class="speed-lines"></div>
     @if (mostrarAnimacionSobre) {
-      <div class="sobre-apertura-wrapper"> 
-        <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
+      <div class="sobre-apertura-wrapper">
+        <app-apertura-sobre 
+          [cartas]="cartasNuevas" 
+          [sobresRestantes]="sobresDisponibles"
+          (finalizado)="finalizarApertura()"
+          (abrirOtro)="abrirOtroSobre()">
+        </app-apertura-sobre>
       </div>
     }
   </div>
 
+  <!-- ================= FIRST-TIME SETUP (ONBOARDING) / STANDARD CUSTOMIZATION MODAL ================= -->
+  <div class="customizer-overlay" *ngIf="showFirstTimeSetup || customizationModalOpen" [class.onboarding]="showFirstTimeSetup">
+    <div class="customizer-card two-columns">
+      
+      <!-- COLUMNA 1: PREVISUALIZADOR 3D EN VIVO -->
+      <div class="customizer-preview-pane">
+        <div class="canvas-wrapper">
+          <canvas 
+            #previewCanvas 
+            class="customizer-preview-canvas"
+            (pointerdown)="onPreviewPointerDown($event)"
+            (pointermove)="onPreviewPointerMove($event)"
+            (pointerup)="onPreviewPointerUp($event)"
+            (pointercancel)="onPreviewPointerUp($event)"></canvas>
+          <div class="preview-lights-indicator"></div>
+        </div>
+
+        <!-- Girar Vista (Rotación 3D del Modelo en el Preview) -->
+        <div class="trait-row slider-row rotation-slider-row">
+          <div class="trait-header">
+            <span>Girar Vista (Rotación 3D)</span>
+            <strong>{{ previewRotationDegrees }}°</strong>
+          </div>
+          <input
+            type="range" 
+            min="0" 
+            max="6.283" 
+            step="0.05" 
+            class="customizer-slider" 
+            [(ngModel)]="customizerRotationY"
+            (input)="onRotationSliderChange()">
+        </div>
+      </div>
+
+      <!-- COLUMNA 2: FORMULARIO DE PERSONALIZACIÓN -->
+      <div class="customizer-form-pane">
+        
+        <!-- HEADER -->
+        <div class="customizer-header">
+          <span class="customizer-kicker">{{ showFirstTimeSetup ? ('lobby.welcomeTrainer' | t) : ('lobby.styleLab' | t) }}</span>
+          <h2>{{ showFirstTimeSetup ? ('lobby.createAvatar' | t) : ('lobby.customizeTrainer' | t) }}</h2>
+          <p class="customizer-subtitle">
+            {{ showFirstTimeSetup ? ('lobby.onboardingSubtitle' | t) : ('lobby.customizeSubtitle' | t) }}
+          </p>
+        </div>
+
+        <!-- ONBOARDING GENDER SELECTION -->
+        <div class="customizer-section">
+          <label class="section-label">{{ 'lobby.genderLabel' | t }}</label>
+          <div class="gender-toggle-container">
+            <button 
+              type="button" 
+              class="gender-btn piba" 
+              [class.active]="customizerGender === 'piba'" 
+              (click)="changeCustomizerGender('piba')">
+              <span class="gender-symbol">♀</span> {{ 'lobby.genderPiba' | t }}
+            </button>
+            <button 
+              type="button" 
+              class="gender-btn pibe" 
+              [class.active]="customizerGender === 'pibe'" 
+              (click)="changeCustomizerGender('pibe')">
+              <span class="gender-symbol">♂</span> {{ 'lobby.genderPibe' | t }}
+            </button>
+          </div>
+        </div>
+
+        <!-- CHARACTER MODEL SELECTOR -->
+        <div class="customizer-section">
+          <label class="section-label">{{ 'lobby.chooseBaseModel' | t }}</label>
+          <div class="character-grid">
+            <button 
+              *ngFor="let option of filteredCharacterOptions" 
+              type="button" 
+              class="char-card" 
+              [class.active]="customizerSelectedId === option.id"
+              (click)="onCustomizerModelSelect(option.id)">
+              <div class="char-avatar-placeholder">
+                <span class="avatar-dot small-dot"></span>
+              </div>
+              <strong>{{ option.label }}</strong>
+              <small>{{ 'lobby.available' | t }}</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- TRAITS CUSTOMIZATION -->
+        <div class="customizer-section">
+          <label class="section-label">{{ 'lobby.basicTraits' | t }}</label>
+          
+          <!-- Altura (Scale slider) -->
+          <div class="trait-row slider-row">
+            <div class="trait-header">
+              <span>{{ 'lobby.heightLabel' | t }}</span>
+              <strong>x{{ customizerHeight.toFixed(2) }}</strong>
+            </div>
+            <input 
+              type="range" 
+              min="0.82" 
+              max="1.18" 
+              step="0.02" 
+              class="customizer-slider" 
+              [(ngModel)]="customizerHeight"
+              (input)="applyLivePreviewCustomizations()">
+          </div>
+
+          <!-- Color de Piel -->
+          <div class="trait-row">
+            <span>{{ 'lobby.skinTone' | t }}</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of skinColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerSkinColor === color.value"
+                [title]="color.name"
+                (click)="customizerSkinColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+
+          <!-- Color de Ojos -->
+          <div class="trait-row">
+            <span>{{ 'lobby.eyeColor' | t }}</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of eyeColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerEyeColor === color.value"
+                [title]="color.name"
+                (click)="customizerEyeColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+
+          <!-- Color de Pelo -->
+          <div class="trait-row">
+            <span>{{ 'lobby.hairColor' | t }}</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of hairColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerHairColor === color.value"
+                [title]="color.name"
+                (click)="customizerHairColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPANION SELECTION -->
+        <div class="customizer-section companion-section">
+          <div class="companion-toggle-header">
+            <div>
+              <label class="section-label">{{ 'lobby.companionLabel' | t }}</label>
+              <p class="section-desc">{{ 'lobby.companionDesc' | t }}</p>
+            </div>
+            <button 
+              type="button" 
+              class="comp-toggle-btn" 
+              [class.enabled]="customizerPikachu"
+              (click)="customizerPikachu = !customizerPikachu; applyLivePreviewCustomizations()">
+              <strong>{{ customizerPikachu ? ('lobby.equipped' | t) : ('lobby.disabled' | t) }}</strong>
+            </button>
+          </div>
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div class="customizer-actions">
+          <button 
+            *ngIf="!showFirstTimeSetup" 
+            type="button" 
+            class="cancel-btn" 
+            (click)="cancelCustomizations()">
+            {{ 'lobby.cancel' | t }}
+          </button>
+          <button 
+            type="button" 
+            class="save-btn" 
+            (click)="saveCustomizations()">
+            {{ showFirstTimeSetup ? ('lobby.startAdventure' | t) : ('lobby.saveTraits' | t) }}
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= ULTRA-PREMIUM HUB LOADING OVERLAY ================= -->
+  <div class="hub-loading-overlay" *ngIf="showHubLoadingOverlay" [class.fade-out]="hubLoadingProgress === 100">
+    <div class="loading-content">
+      <!-- Pikachu running GIF, offset in % sync'd to loaded progress -->
+      <div class="pikachu-runner-container" [style.left.%]="hubLoadingProgress">
+        <img src="/images/pikarunning.gif" alt="Pikachu running" class="pikachu-gif">
+        <span class="lightning-spark">⚡</span>
+      </div>
+
+      <!-- Sleek UTN progress bar track -->
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" [style.width.%]="hubLoadingProgress"></div>
+        <div class="loading-bar-glow" [style.width.%]="hubLoadingProgress"></div>
+      </div>
+
+      <!-- Loading statistics and status message -->
+      <div class="loading-stats">
+        <span class="loading-status-text">{{ 'lobby.loadingCampus' | t }}</span>
+        <span class="loading-percentage">{{ hubLoadingProgress }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PLAYER CONTEXT MENU -->
+  <div
+    class="player-context-menu"
+    *ngIf="selectedPlayerForMenu"
+    [style.left.px]="playerMenuX"
+    [style.top.px]="playerMenuY"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="menu-header">
+      <strong>{{ selectedPlayerForMenu.username }}</strong>
+    </div>
+    <button type="button" class="menu-item" (click)="agregarAmigo(selectedPlayerForMenu.username)">
+      {{ 'lobby.addFriend' | t }}
+    </button>
+    <button type="button" class="menu-item highlight" (click)="retarADuelo(selectedPlayerForMenu.username)">
+      {{ 'lobby.challengeDuel' | t }}
+    </button>
+    <button type="button" class="menu-item highlight" (click)="invitarIntercambio(selectedPlayerForMenu.username)">
+      {{ 'lobby.inviteTrade' | t }}
+    </button>
+  </div>
+
+  <!-- CHALLENGE MODAL (DUEL) -->
+  <div class="lobby-dialog-overlay" *ngIf="incomingChallenge">
+    <div class="lobby-dialog-card challenge-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">{{ 'lobby.incomingChallenge' | t }}</span>
+        <h3>{{ 'lobby.challengeText' | t:{username: incomingChallenge.username} }}</h3>
+        <p>{{ 'lobby.acceptChallengeText' | t }}</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderDuelo(false)">{{ 'lobby.reject' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderDuelo(true)">{{ 'lobby.accept' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING CHALLENGE MODAL (DUEL) -->
+  <div class="lobby-dialog-overlay" *ngIf="waitingForChallengeResponse">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">{{ 'lobby.waitingOpponent' | t }}</span>
+        <h3>{{ 'lobby.challengingText' | t:{username: challengedUsername} }}</h3>
+        <p>{{ 'lobby.waitingChallengeResponse' | t }}</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject full-width" (click)="cancelarRetoDuelo()">{{ 'lobby.cancelBtn' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCOMING TRADE MODAL -->
+  <div class="lobby-dialog-overlay" *ngIf="incomingTradeInvite">
+    <div class="lobby-dialog-card challenge-card trade-invite-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">{{ 'lobby.tradeProposal' | t }}</span>
+        <h3>{{ 'lobby.tradeInviteText' | t:{username: incomingTradeInvite.username} }}</h3>
+        <p>{{ 'lobby.openTradeRoomText' | t }}</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderTrade(false)">{{ 'lobby.reject' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderTrade(true)">{{ 'lobby.accept' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING TRADE MODAL -->
+  <div class="lobby-dialog-overlay" *ngIf="waitingForTradeResponse">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">{{ 'lobby.tradingRoom' | t }}</span>
+        <h3>{{ 'lobby.invitingTradeText' | t:{username: tradeInvitedUsername} }}</h3>
+        <p>{{ 'lobby.waitingTradeResponse' | t }}</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject full-width" (click)="cancelarTradeInvite()">{{ 'lobby.cancelBtn' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TRADING MODAL ================= -->
+  <div class="trade-modal-overlay" *ngIf="activeTradeSession" (click)="$event.stopPropagation()">
+    <div class="trade-modal-card">
+      <header class="trade-header">
+        <span class="trade-kicker">{{ 'lobby.tradeUtnCenter' | t }}</span>
+        <h2>{{ 'lobby.tradeCardsTitle' | t }}</h2>
+        <button class="close-trade-btn" (click)="cerrarTradeSala()">×</button>
+      </header>
+
+      <div class="trade-main-area">
+        <!-- PLAYER 1 (ME) OFFER ZONE -->
+        <div class="trade-offer-pane my-offer">
+          <div class="pane-header">
+            <strong>{{ 'lobby.yourOffer' | t }}</strong>
+            <span class="ready-badge" [class.ready]="tradeLeftReady">
+              {{ tradeLeftReady ? ('lobby.readyLabel' | t) : ('lobby.preparingLabel' | t) }}
+            </span>
+          </div>
+
+          <div class="trade-slots">
+            <div class="trade-slot-card" *ngFor="let card of tradeLeftCards" (click)="removeCardFromTrade(card)">
+              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+              <span class="remove-hint">{{ 'lobby.quitar' | t }}</span>
+            </div>
+            <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeLeftCards.length)">
+              <span>{{ 'lobby.vacas' | t }}</span>
+            </div>
+          </div>
+
+          <div class="ready-controls">
+            <button
+              type="button"
+              class="btn-trade-ready"
+              [class.ready-confirmed]="tradeLeftReady"
+              [class.empty-error]="tradeLeftCards.length === 0"
+              [disabled]="tradeLeftCards.length === 0"
+              (click)="toggleTradeReady()"
+            >
+              {{ tradeLeftReady ? ('lobby.confirmed' | t) : ('lobby.confirmOffer' | t) }}
+            </button>
+          </div>
+        </div>
+
+        <!-- TRADE FLOW INDICATOR ARROWS -->
+        <div class="trade-arrows-pane">
+          <!-- Left to Right Arrow (My offer to opponent) -->
+          <div class="trade-arrow-container">
+            <div class="trade-arrow left-to-right" [class.fair]="isMyOfferFair()" [class.unfair]="!isMyOfferFair()">
+              <span class="arrow-icon">➔</span>
+            </div>
+            <small [class.fair-text]="isMyOfferFair()" [class.unfair-text]="!isMyOfferFair()">
+              {{ getMyOfferFairnessText() }}
+            </small>
+          </div>
+
+          <!-- Right to Left Arrow (Opponent's offer to me) -->
+          <div class="trade-arrow-container">
+            <div class="trade-arrow right-to-left" [class.fair]="isOpponentOfferFair()" [class.unfair]="!isOpponentOfferFair()">
+              <span class="arrow-icon">➔</span>
+            </div>
+            <small [class.fair-text]="isOpponentOfferFair()" [class.unfair-text]="!isOpponentOfferFair()">
+              {{ getOpponentOfferFairnessText() }}
+            </small>
+          </div>
+        </div>
+
+        <!-- PLAYER 2 (OPPONENT) OFFER ZONE -->
+        <div class="trade-offer-pane opponent-offer">
+          <div class="pane-header">
+            <strong>{{ 'lobby.opponentOffer' | t:{username: tradeOpponentUsername} }}</strong>
+            <span class="ready-badge" [class.ready]="tradeRightReady">
+              {{ tradeRightReady ? ('lobby.readyLabel' | t) : ('lobby.preparingLabel' | t) }}
+            </span>
+          </div>
+
+          <div class="trade-slots">
+            <div class="trade-slot-card" *ngFor="let card of tradeRightCards">
+              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            </div>
+            <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeRightCards.length)">
+              <span>{{ 'lobby.vacas' | t }}</span>
+            </div>
+          </div>
+
+          <div class="ready-controls">
+            <div class="opponent-ready-status" [class.ready]="tradeRightReady">
+              <strong>{{ tradeRightReady ? ('lobby.opponentConfirmed' | t) : ('lobby.opponentPreparing' | t) }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY COLLECTION TO CHOOSE CARDS FROM -->
+      <div class="trade-collection-area">
+        <div class="collection-filter-bar">
+          <h3>{{ 'lobby.yourCollection' | t }}</h3>
+          <div class="collection-title-block">
+            <h3>{{ 'lobby.yourCollection' | t }}</h3>
+            <small>{{ 'lobby.cardsCountLobby' | t:{current: tradeCollectionFiltrada.length, total: userTradeCollection.length} }}</small>
+          </div>
+          <input
+            type="text"
+            [placeholder]="'lobby.filterSearchPlaceholder' | t"
+            [(ngModel)]="tradeCollectionSearchText"
+            (input)="filtrarColeccionTrade()"
+          >
+          <select [(ngModel)]="tradeCollectionFilterRarity" (change)="filtrarColeccionTrade()">
+            <option value="">{{ 'lobby.allRarities' | t }}</option>
+            <option *ngFor="let rarity of tradeCollectionRarities" [value]="rarity">{{ rarity }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterType" (change)="filtrarColeccionTrade()">
+            <option value="">{{ 'lobby.allTypes' | t }}</option>
+            <option *ngFor="let type of tradeCollectionTypes" [value]="type">{{ type }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSupertype" (change)="filtrarColeccionTrade()">
+            <option value="">{{ 'lobby.allClasses' | t }}</option>
+            <option *ngFor="let supertype of tradeCollectionSupertypes" [value]="supertype">{{ supertype }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSubtype" (change)="filtrarColeccionTrade()">
+            <option value="">{{ 'lobby.allSubtypes' | t }}</option>
+            <option *ngFor="let subtype of tradeCollectionSubtypes" [value]="subtype">{{ subtype }}</option>
+          </select>
+          <button type="button" class="btn-clear-trade-filters" (click)="limpiarFiltrosTrade()">{{ 'lobby.clearFilters' | t }}</button>
+        </div>
+
+        <div class="trade-collection-state" *ngIf="tradeCollectionLoading">
+          <span class="trade-loader"></span>
+          {{ 'lobby.syncingCollection' | t }}
+        </div>
+        <div class="trade-collection-state error" *ngIf="!tradeCollectionLoading && tradeCollectionError">
+          {{ tradeCollectionError }}
+          <button type="button" (click)="precargarColeccionTrade(true)">{{ 'lobby.retry' | t }}</button>
+        </div>
+
+        <div class="trade-collection-grid" *ngIf="!tradeCollectionLoading && !tradeCollectionError">
+          <div
+            class="trade-collection-item"
+            *ngFor="let card of tradeCollectionFiltrada; trackBy: trackCardById"
+            (click)="addCardToTrade(card)"
+            [class.already-in-trade]="isCardInTrade(card)"
+          >
+            <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            <div class="card-overlay-info">
+              <strong>{{ card.nombre }}</strong>
+              <small>{{ card.rarity || 'Common' }}</small>
+              <small>{{ card.tipo || card.supertype || 'Card' }}</small>
+            </div>
+          </div>
+          <div class="collection-empty" *ngIf="tradeCollectionFiltrada.length === 0">
+            {{ 'lobby.noCardsInCollection' | t }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUE WARNING POPUP -->
+  <div class="lobby-dialog-overlay warning-dialog" *ngIf="tradeShowValueWarning">
+    <div class="lobby-dialog-card warning-card">
+      <span class="warning-icon">⚠</span>
+      <h3>{{ 'lobby.sureAboutTrade' | t }}</h3>
+      <p>{{ 'lobby.valueWarningText' | t }}</p>
+      <div class="warning-actions">
+        <button type="button" class="btn-reject" (click)="confirmarAdvertenciaValor(false)">{{ 'lobby.noCancel' | t }}</button>
+        <button type="button" class="btn-accept" (click)="confirmarAdvertenciaValor(true)">{{ 'lobby.yesSure' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE ENDED CONTINUATION PROMPT -->
+  <div class="lobby-dialog-overlay" *ngIf="tradeShowContinuationPrompt">
+    <div class="lobby-dialog-card challenge-card continuation-card">
+      <div class="continuation-icon">🤝</div>
+      <h3>{{ 'lobby.tradeCompletedSuccess' | t }}</h3>
+      <p>{{ 'lobby.transferCompletedText' | t }}</p>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderSeguirTrading(false)">{{ 'lobby.exit' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderSeguirTrading(true)">{{ 'lobby.keepTrading' | t }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE WAITING FOR OPPONENT CONTINUATION RESPONSE -->
+  <div class="lobby-dialog-overlay" *ngIf="tradeWaitingForContinuation">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="continuation-icon waiting-icon">⏳</div>
+      <h3>{{ 'lobby.waitingTradeContinuation' | t }}</h3>
+      <p>{{ 'lobby.waitingOpponentContinuationText' | t:{username: tradeOpponentUsername} }}</p>
+    </div>
+  </div>
+
+  <!-- EMOTE MENU OVERLAY -->
+  <div class="emote-menu-overlay" *ngIf="showEmoteMenu" (click)="closeEmoteMenu()">
+    <div class="emote-menu-card" (click)="$event.stopPropagation()">
+      <button class="close-emote-menu" (click)="closeEmoteMenu()">×</button>
+      <div class="emote-header">
+        <span class="emote-kicker">{{ 'lobby.gesturesAndAnims' | t }}</span>
+        <h3>{{ 'lobby.selectEmote' | t }}</h3>
+        <p class="emote-desc">{{ 'lobby.emoteDesc' | t }}</p>
+      </div>
+      <div class="emote-grid" *ngIf="getAvailableEmotes().length > 0; else noEmotes">
+        <button
+          *ngFor="let emote of getAvailableEmotes()"
+          type="button"
+          class="emote-btn"
+          (click)="triggerEmote(emote)"
+        >
+          <span class="emote-icon">✨</span>
+          <strong>{{ emote | uppercase }}</strong>
+        </button>
+      </div>
+      <ng-template #noEmotes>
+        <div class="no-emotes-wrapper">
+          <span class="no-emotes-icon">⚠️</span>
+          <p class="no-emotes-copy">{{ 'lobby.noEmotesText' | t }}</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">
+    <button type="button" class="deck-builder-close" (click)="cerrarDeckBuilder()">×</button>
+    <app-deck-builder [embedded]="true" (closed)="cerrarDeckBuilder($event)"></app-deck-builder>
+  </div>
 </div>
