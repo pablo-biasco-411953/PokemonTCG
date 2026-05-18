@@ -147,7 +147,7 @@ private crearSobrePro() {
     });
 
     // CUERPO
-    loader.load('images/cards/sobre.png', (tex) => {
+    loader.load('/images/cards/sobre.png', (tex) => {
       const aspect = tex.image.width / tex.image.height;
       const ancho = 3.5;
       const alto = ancho / aspect;
@@ -160,7 +160,7 @@ private crearSobrePro() {
     });
 
     // TAPA CON PIVOTE MANUAL
-    loader.load('images/cards/parte-corte.png', (tex) => {
+    loader.load('/images/cards/parte-corte.png', (tex) => {
       const aspect = tex.image.width / tex.image.height;
       const ancho = 3.5;
       const alto = ancho / aspect;
@@ -279,12 +279,12 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
 
   private crearCartasAntiBug() {
     const loader = new THREE.TextureLoader();
-    const backTex = loader.load('images/cards/back.png');
+    const backTex = loader.load('/images/cards/back.png');
 
     this.cartas.forEach((c, i) => {
       const group = new THREE.Group();
       const matFront = new THREE.MeshPhysicalMaterial({ 
-        map: loader.load(`images/cards/${c.id}.png`), 
+        map: loader.load(`/images/cards/${c.id}.png`), 
         metalness: 0.5, roughness: 0.3, iridescence: 0.4, iridescenceIOR: 1.3,
         side: THREE.FrontSide 
       });

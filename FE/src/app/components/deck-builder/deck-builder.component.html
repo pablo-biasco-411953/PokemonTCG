@@ -46,7 +46,7 @@
           </div>
 
           <div class="img-container">
-            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" onerror="this.src='images/card-back.png'">
+            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" onerror="this.src='/images/card-back.png'">
           </div>
 
           <p class="pokemon-name dot-matrix">{{ carta.nombre | uppercase }}</p>
