@@ -1,12 +1,30 @@
 ### Windows
-# Windows thumbnail cache files
 Thumbs.db
-
-# Folder config file
 [Dd]esktop.ini
-
-# Recycle Bin used on file shares
 $RECYCLE.BIN/
-
-# Windows shortcuts
 *.lnk
+
+### Backend
+backend/target/
+*.log
+
+### Frontend
+frontend/node_modules/
+frontend/.angular/cache/
+frontend/dist/
+frontend/coverage/
+
+### IDEs
+.idea/
+backend/.idea/
+frontend/.vscode/*
+!frontend/.vscode/settings.json
+!frontend/.vscode/tasks.json
+!frontend/.vscode/launch.json
+!frontend/.vscode/extensions.json
+!frontend/.vscode/mcp.json
+
+### OS / Temp
+.DS_Store
+*.tmp
+*.swp

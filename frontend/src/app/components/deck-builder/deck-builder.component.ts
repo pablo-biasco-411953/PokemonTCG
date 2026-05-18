@@ -105,7 +105,7 @@ actualizarCantidadesPoseidas() {
 getImagenReal(id: string): string {
     const archivo = this.mapaFotos[id] || id;
     // LA RUTA CORRECTA SEGÚN TU ÁRBOL (Carpeta public):
-    return `images/cards/${archivo}.png`;
+    return `/images/cards/${archivo}.png`;
 }
   startHover(card: Card) {
     this.hoverTimer = setTimeout(() => {

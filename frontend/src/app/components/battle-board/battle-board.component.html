@@ -130,8 +130,8 @@
                [class.animar-vuelo]="lanzada"
                [class.girando]="lanzada && girando"
                [style.transform]="(!girando && lanzada) ? ('rotateY(' + anguloFinal + 'deg)') : null">
-            <div class="cara front"><img src="coin-heads.png" draggable="false"></div>
-            <div class="cruz back"><img src="coin-tails.png" draggable="false"></div>
+            <div class="cara front"><img src="/coin-heads.png" draggable="false"></div>
+            <div class="cruz back"><img src="/coin-tails.png" draggable="false"></div>
           </div>
         </div>
         <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">Lanzando moneda...</p>

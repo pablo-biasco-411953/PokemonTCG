@@ -1,10 +1,11 @@
-﻿import { Component, OnInit, OnDestroy, ChangeDetectorRef,HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef,HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BattleService } from '../../services/battle.service';
+import { BattleBoardUiService } from '../../services/battle-board-ui.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-battle-board',
@@ -26,7 +27,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 hoveredCard: any = null;
   hoveredCardStatuses: any[] = [];
   hoveredCardList: any[] = []; // La lista de cartas actual (ej: tu mano)
-  hoveredCardIndex: number = -1; // En qué posición de la lista estás
+  hoveredCardIndex: number = -1; // En quï¿½ posiciï¿½n de la lista estï¿½s
   // Tracking de cartas nuevas (jugador)
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
@@ -93,10 +94,10 @@ mostrarModalDescarte: boolean = false;
 puedeEvolucionar(cartaMano: any): boolean {
     if (!cartaMano.evolvesFrom || !this.partida) return false;
     
-    // ¿Está en el activo?
+    // ï¿½Estï¿½ en el activo?
     if (this.partida.jugador?.activo?.card?.nombre === cartaMano.evolvesFrom) return true;
     
-    // ¿Está en la banca?
+    // ï¿½Estï¿½ en la banca?
     return this.partida.jugador?.banca?.some((b: any) => b.card.nombre === cartaMano.evolvesFrom);
   }
 
@@ -106,17 +107,17 @@ puedeEvolucionar(cartaMano: any): boolean {
   resultadoMoneda: 'CARA' | 'CRUZ' = 'CARA';
   public girando: boolean = false;
 
-  // ── Estado de efectos ──
+  // -- Estado de efectos --
   mostrarAuraCuracionBot    = false;
   mostrarAuraCuracionPlayer = false;
   mostrarKO                 = false;
  
-  // ── Números de daño flotantes ──
+  // -- Nï¿½meros de daï¿½o flotantes --
   damageNumberBot:    { valor: number; esCuracion: boolean } | null = null;
   damageNumberPlayer: { valor: number; esCuracion: boolean } | null = null;
 
 
-  // Partículas
+  // Partï¿½culas
   mostrarEfectoBot     = false;
   mostrarEfectoJugador = false;
   particulasBot:     any[] = [];
@@ -124,206 +125,17 @@ puedeEvolucionar(cartaMano: any): boolean {
   animandoBotDanio     = false;
   animandoJugadorDanio = false;
 
-  private readonly pokedexNum: Record<string, number> = {
-    'bulbasaur':1,'ivysaur':2,'venusaur':3,
-    'charmander':4,'charmeleon':5,'charizard':6,
-    'squirtle':7,'wartortle':8,'blastoise':9,
-    'caterpie':10,'metapod':11,'butterfree':12,
-    'weedle':13,'kakuna':14,'beedrill':15,
-    'pidgey':16,'pidgeotto':17,'pidgeot':18,
-    'rattata':19,'raticate':20,
-    'spearow':21,'fearow':22,
-    'ekans':23,'arbok':24,
-    'pikachu':25,'raichu':26,
-    'sandshrew':27,'sandslash':28,
-    'nidoran♀':29,'nidorina':30,'nidoqueen':31,
-    'nidoran♂':32,'nidorino':33,'nidoking':34,
-    'clefairy':35,'clefable':36,
-    'vulpix':37,'ninetales':38,
-    'jigglypuff':39,'wigglytuff':40,
-    'zubat':41,'golbat':42,
-    'oddish':43,'gloom':44,'vileplume':45,
-    'paras':46,'parasect':47,
-    'venonat':48,'venomoth':49,
-    'diglett':50,'dugtrio':51,
-    'meowth':52,'persian':53,
-    'psyduck':54,'golduck':55,
-    'mankey':56,'primeape':57,
-    'growlithe':58,'arcanine':59,
-    'poliwag':60,'poliwhirl':61,'poliwrath':62,
-    'abra':63,'kadabra':64,'alakazam':65,
-    'machop':66,'machoke':67,'machamp':68,
-    'bellsprout':69,'weepinbell':70,'victreebel':71,
-    'tentacool':72,'tentacruel':73,
-    'geodude':74,'graveler':75,'golem':76,
-    'ponyta':77,'rapidash':78,
-    'slowpoke':79,'slowbro':80,
-    'magnemite':81,'magneton':82,
-    'farfetchd':83,"farfetch'd":83,
-    'doduo':84,'dodrio':85,
-    'seel':86,'dewgong':87,
-    'grimer':88,'muk':89,
-    'shellder':90,'cloyster':91,
-    'gastly':92,'haunter':93,'gengar':94,
-    'onix':95,'drowzee':96,'hypno':97,
-    'krabby':98,'kingler':99,
-    'voltorb':100,'electrode':101,
-    'exeggcute':102,'exeggutor':103,
-    'cubone':104,'marowak':105,
-    'hitmonlee':106,'hitmonchan':107,
-    'lickitung':108,'koffing':109,'weezing':110,
-    'rhyhorn':111,'rhydon':112,
-    'chansey':113,'tangela':114,'kangaskhan':115,
-    'tangrowth':465,
-    'horsea':116,'seadra':117,
-    'goldeen':118,'seaking':119,
-    'staryu':120,'starmie':121,
-    'mr. mime':122,'mr mime':122,
-    'scyther':123,'jynx':124,
-    'electabuzz':125,'magmar':126,'pinsir':127,'tauros':128,
-    'magikarp':129,'gyarados':130,'lapras':131,'ditto':132,
-    'eevee':133,'vaporeon':134,'jolteon':135,'flareon':136,
-    'porygon':137,'omanyte':138,'omastar':139,
-    'kabuto':140,'kabutops':141,'aerodactyl':142,'snorlax':143,
-    'articuno':144,'zapdos':145,'moltres':146,
-    'dratini':147,'dragonair':148,'dragonite':149,
-    'mewtwo':150,'mew':151,
-    'crawdaunt':342,'crobat':169,'espeon':196,'umbreon':197,
-    'blaziken':257,'swampert':260,'sceptile':254,
-    'torchic':255,'mudkip':258,'treecko':252,
-    'ralts':280,'kirlia':281,'gardevoir':282,
-    'chikorita':152,'bayleef':153,'meganium':154,
-    'cyndaquil':155,'quilava':156,'typhlosion':157,
-    'totodile':158,'croconaw':159,'feraligatr':160,
-    'sentret':161,'furret':162,'hoothoot':163,'noctowl':164,
-    'ledyba':165,'ledian':166,'spinarak':167,'ariados':168,
-    'chinchou':170,'lanturn':171,'pichu':172,'cleffa':173,
-    'igglybuff':174,'togepi':175,'togetic':176,'natu':177,'xatu':178,
-    'mareep':179,'flaaffy':180,'ampharos':181,
-    'bellossom':182,'marill':183,'azumarill':184,'sudowoodo':185,
-    'politoed':186,'hoppip':187,'skiploom':188,'jumpluff':189,
-    'aipom':190,'sunkern':191,'sunflora':192,'yanma':193,
-    'wooper':194,'quagsire':195,'murkrow':198,'slowking':199,
-    'misdreavus':200,'unown':201,'wobbuffet':202,'girafarig':203,
-    'pineco':204,'forretress':205,'dunsparce':206,'gligar':207,
-    'steelix':208,'snubbull':209,'granbull':210,
-    'qwilfish':211,'scizor':212,'shuckle':213,'heracross':214,
-    'sneasel':215,'teddiursa':216,'ursaring':217,
-    'slugma':218,'magcargo':219,'swinub':220,'piloswine':221,
-    'corsola':222,'remoraid':223,'octillery':224,'delibird':225,
-    'mantine':226,'skarmory':227,'houndour':228,'houndoom':229,
-    'kingdra':230,'phanpy':231,'donphan':232,'porygon2':233,
-    'stantler':234,'smeargle':235,'tyrogue':236,'hitmontop':237,
-    'smoochum':238,'elekid':239,'magby':240,'miltank':241,
-    'blissey':242,'raikou':243,'entei':244,'suicune':245,
-    'larvitar':246,'pupitar':247,'tyranitar':248,
-    'lugia':249,'ho-oh':250,'celebi':251,
-    'poochyena':261,'mightyena':262,'zigzagoon':263,'linoone':264,
-    'wurmple':265,'silcoon':266,'beautifly':267,'cascoon':268,'dustox':269,
-    'lotad':270,'lombre':271,'ludicolo':272,'seedot':273,'nuzleaf':274,'shiftry':275,
-    'taillow':276,'swellow':277,'wingull':278,'pelipper':279,
-    'slakoth':287,'vigoroth':288,'slaking':289,
-    'nincada':290,'ninjask':291,'shedinja':292,
-    'whismur':293,'loudred':294,'exploud':295,
-    'makuhita':296,'hariyama':297,'azurill':298,'nosepass':299,
-    'skitty':300,'delcatty':301,'sableye':302,'mawile':303,
-    'aron':304,'lairon':305,'aggron':306,'meditite':307,'medicham':308,
-    'electrike':309,'manectric':310,'plusle':311,'minun':312,
-    'volbeat':313,'illumise':314,'roselia':315,'gulpin':316,'swalot':317,
-    'carvanha':318,'sharpedo':319,'wailmer':320,'wailord':321,
-    'numel':322,'camerupt':323,'torkoal':324,'spoink':325,'grumpig':326,
-    'spinda':327,'trapinch':328,'vibrava':329,'flygon':330,
-    'cacnea':331,'cacturne':332,'swablu':333,'altaria':334,'zangoose':335,'seviper':336,
-    'lunatone':337,'solrock':338,'barboach':339,'whiscash':340,'corphish':341,
-    'lileep':345,'cradily':346,'anorith':347,'armaldo':348,
-    'feebas':349,'milotic':350,'castform':351,'kecleon':352,
-    'shuppet':353,'banette':354,'duskull':355,'dusclops':356,
-    'tropius':357,'chimecho':358,'absol':359,'wynaut':360,
-    'snorunt':361,'glalie':362,'spheal':363,'sealeo':364,'walrein':365,
-    'clamperl':366,'huntail':367,'gorebyss':368,'relicanth':369,'luvdisc':370,
-    'bagon':371,'shelgon':372,'salamence':373,'beldum':374,'metang':375,'metagross':376,
-    'regirock':377,'regice':378,'registeel':379,'latias':380,'latios':381,
-    'kyogre':382,'groudon':383,'rayquaza':384,'jirachi':385,'deoxys':386,
-    'turtwig':387,'grotle':388,'torterra':389,
-    'chimchar':390,'monferno':391,'infernape':392,
-    'piplup':393,'prinplup':394,'empoleon':395,
-    'starly':396,'staravia':397,'staraptor':398,
-    'bidoof':399,'bibarel':400,'kricketot':401,'kricketune':402,
-    'shinx':403,'luxio':404,'luxray':405,'cranidos':408,'rampardos':409,
-    'shieldon':410,'bastiodon':411,'combee':415,'vespiquen':416,
-    'pachirisu':417,'buizel':418,'floatzel':419,'cherubi':420,'cherrim':421,
-    'drifloon':425,'drifblim':426,'buneary':427,'lopunny':428,
-    'honchkrow':430,'glameow':431,'purugly':432,'stunky':434,'skuntank':435,
-    'bronzor':436,'bronzong':437,'gible':443,'gabite':444,'garchomp':445,
-    'lucario':448,'riolu':447,'croagunk':453,'toxicroak':454,
-    'weavile':461,'magnezone':462,'electivire':466,'magmortar':467,
-    'leafeon':470,'glaceon':471,'gliscor':472,'mamoswine':473,
-    'porygon-z':474,'gallade':475,'probopass':476,'dusknoir':477,'froslass':478,
-    'rotom':479,'uxie':480,'mesprit':481,'azelf':482,
-    'dialga':483,'palkia':484,'heatran':485,'regigigas':486,'giratina':487,
-    'cresselia':488,'phione':489,'manaphy':490,'darkrai':491,'shaymin':492,'arceus':493,
-    'victini':494,'snivy':495,'servine':496,'serperior':497,
-    'tepig':498,'pignite':499,'emboar':500,
-    'oshawott':501,'dewott':502,'samurott':503,
-    'purrloin':509,'liepard':510,'munna':517,'musharna':518,
-    'pidove':519,'tranquill':520,'unfezant':521,'blitzle':522,'zebstrika':523,
-    'drilbur':529,'excadrill':530,'audino':531,'timburr':532,'gurdurr':533,'conkeldurr':534,
-    'tympole':535,'palpitoad':536,'seismitoad':537,'throh':538,'sawk':539,
-    'venipede':543,'whirlipede':544,'scolipede':545,'cottonee':546,'whimsicott':547,
-    'petilil':548,'lilligant':549,'basculin':550,'sandile':551,'krokorok':552,'krookodile':553,
-    'darumaka':554,'darmanitan':555,'maractus':556,'dwebble':557,'crustle':558,'scraggy':559,'scrafty':560,
-    'sigilyph':561,'yamask':562,'cofagrigus':563,'tirtouga':564,'carracosta':565,'archen':566,'archeops':567,
-    'trubbish':568,'garbodor':569,'zorua':570,'zoroark':571,'minccino':572,'cinccino':573,
-    'gothita':574,'gothorita':575,'gothitelle':576,'solosis':577,'duosion':578,'reuniclus':579,
-    'ducklett':580,'swanna':581,'vanillite':582,'vanillish':583,'vanilluxe':584,
-    'deerling':585,'sawsbuck':586,'emolga':587,'karrablast':588,'escavalier':589,'foongus':590,'amoonguss':591,
-    'frillish':592,'jellicent':593,'alomomola':594,'joltik':595,'galvantula':596,
-    'ferroseed':597,'ferrothorn':598,'klink':599,'klang':600,'klinklang':601,
-    'tynamo':602,'eelektrik':603,'eelektross':604,'elgyem':605,'beheeyem':606,
-    'litwick':607,'lampent':608,'chandelure':609,'axew':610,'fraxure':611,'haxorus':612,
-    'cubchoo':613,'beartic':614,'cryogonal':615,'shelmet':616,'accelgor':617,'stunfisk':618,
-    'mienshao':620,'druddigon':621,'golett':622,'golurk':623,'pawniard':624,'bisharp':625,'bouffalant':626,
-    'rufflet':627,'braviary':628,'vullaby':629,'mandibuzz':630,'heatmor':631,'durant':632,
-    'deino':633,'zweilous':634,'hydreigon':635,'larvesta':636,'volcarona':637,
-    'cobalion':638,'terrakion':639,'virizion':640,'tornadus':641,'thundurus':642,'reshiram':643,'zekrom':644,
-    'landorus':645,'kyurem':646,'keldeo':647,'meloetta':648,'genesect':649,
-    'chespin':650,'quilladin':651,'chesnaught':652,
-    'fennekin':653,'braixen':654,'delphox':655,
-    'froakie':656,'frogadier':657,'greninja':658,
-    'fletchling':661,'fletchinder':662,'talonflame':663,
-    'scatterbug':664,'spewpa':665,'vivillon':666,'litleo':667,'pyroar':668,
-    'flabebe':669,'floette':670,'florges':671,'skiddo':672,'gogoat':673,
-    'pancham':674,'pangoro':675,'furfrou':676,'espurr':677,'meowstic':678,
-    'honedge':679,'doublade':680,'aegislash':681,'spritzee':682,'aromatisse':683,
-    'swirlix':684,'slurpuff':685,'inkay':686,'malamar':687,'binacle':688,'barbaracle':689,
-    'skrelp':690,'dragalge':691,'clauncher':692,'clawitzer':693,'helioptile':694,'heliolisk':695,
-    'tyrunt':696,'tyrantrum':697,'amaura':698,'aurorus':699,'sylveon':700,
-    'hawlucha':701,'dedenne':702,'carbink':703,'goomy':704,'sliggoo':705,'goodra':706,
-    'klefki':707,'phantump':708,'trevenant':709,'pumpkaboo':710,'gourgeist':711,
-    'bergmite':712,'avalugg':713,'noibat':714,'noivern':715,
-    'xerneas':716,'yveltal':717,'zygarde':718,'diancie':719,'hoopa':720,'volcanion':721,
-    'rowlet':722,'dartrix':723,'decidueye':724,
-    'litten':725,'torracat':726,'incineroar':727,
-    'popplio':728,'brionne':729,'primarina':730,
-    'rockruff':744,'lycanroc':745,'mimikyu':778,'tapu koko':785,'tapu lele':786,'solgaleo':791,'lunala':792,
-    'zeraora':807,'meltan':808,'melmetal':809,
-    'grookey':810,'thackey':811,'rillaboom':812,
-    'scorbunny':813,'raboot':814,'cinderace':815,
-    'sobble':816,'drizzile':817,'inteleon':818,
-    'zacian':888,'zamazenta':889,'eternatus':890,
-  };
-
   constructor(
     private battleService: BattleService,
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private sanitizer: DomSanitizer 
+    private battleBoardUi: BattleBoardUiService
   ) {}
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // LIFECYCLE
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
   ngOnInit(): void {
     this.matchId = this.route.snapshot.paramMap.get('id');
@@ -355,9 +167,9 @@ puedeEvolucionar(cartaMano: any): boolean {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
   }
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // COIN FLIP
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
   iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
     this.eleccionJugador = eleccion;
@@ -389,7 +201,7 @@ puedeEvolucionar(cartaMano: any): boolean {
       this.tiempoRestante--;
       this.porcentajeTimer = (this.tiempoRestante / this.tiempoTurnoMaximo) * 100;
 
-      // 🚩 CLAVE: Forzamos a Angular a actualizar la barra y el texto
+      // ?? CLAVE: Forzamos a Angular a actualizar la barra y el texto
       this.cdr.detectChanges();
 
       if (this.tiempoRestante <= 0) {
@@ -407,7 +219,7 @@ puedeEvolucionar(cartaMano: any): boolean {
 
 async ejecutarTimeOut() {
     this.detenerRelojTurno();
-    console.log("🔥 ¡TIEMPO AGOTADO! Pasando turno automáticamente...");
+    console.log("?? ï¿½TIEMPO AGOTADO! Pasando turno automï¿½ticamente...");
     await this.pasarTurno(); 
   }
 
@@ -433,7 +245,7 @@ async ejecutarTimeOut() {
     duracion: number;
   } | null = null;
  
-  // ── Coin flip de ataque ──
+  // -- Coin flip de ataque --
   coinFlipAtaque: {
     nombreAtaque: string;
     descripcion: string;
@@ -444,7 +256,7 @@ async ejecutarTimeOut() {
     danioTotal: number;
     terminado: boolean;
     progreso: number;
-    esSoloEstado: boolean; // <-- ACÁ SOLO EL TIPO, SIN " = config..."
+    esSoloEstado: boolean; // <-- ACï¿½ SOLO EL TIPO, SIN " = config..."
   } | null = null;
 
   async mostrarInterTurn(
@@ -465,7 +277,7 @@ async ejecutarTimeOut() {
     this.interTurnOverlay = null;
     this.cdr.detectChanges();
  
-    // Pequeña pausa de limpieza
+    // Pequeï¿½a pausa de limpieza
     await this.delay(200);
   }
 
@@ -562,7 +374,7 @@ clearHoveredCard() {
     this.hoveredCardIndex = -1;
   }
 
-// 3. 🖱️ LA MAGIA DE LA RUEDITA (Solo para la mano)
+// 3. ??? LA MAGIA DE LA RUEDITA (Solo para la mano)
   @HostListener('window:wheel', ['$event'])
   onScrollCard(event: WheelEvent) {
     if (this.hoveredCard && this.hoveredCardList === this.partida?.jugador?.mano && this.hoveredCardList.length > 1) {
@@ -570,18 +382,18 @@ clearHoveredCard() {
 
       const now = Date.now();
 
-      // 🚩 A. Bloqueamos el mouse físico temporalmente
+      // ?? A. Bloqueamos el mouse fï¿½sico temporalmente
       this.isScrollingMode = true;
       clearTimeout(this.scrollTimeout);
       this.scrollTimeout = setTimeout(() => {
-        this.isScrollingMode = false; // Se desbloquea 200ms después de dejar de girar
+        this.isScrollingMode = false; // Se desbloquea 200ms despuï¿½s de dejar de girar
       }, 200);
 
-      // 🚩 B. Freno de velocidad: Solo permite 1 salto de carta cada 120 milisegundos
+      // ?? B. Freno de velocidad: Solo permite 1 salto de carta cada 120 milisegundos
       if (now - this.lastScrollTime < 120) return;
       this.lastScrollTime = now;
 
-      // C. Lógica de cambio de índice (Igual que antes)
+      // C. Lï¿½gica de cambio de ï¿½ndice (Igual que antes)
       if (event.deltaY > 0) {
         this.hoveredCardIndex = (this.hoveredCardIndex + 1) % this.hoveredCardList.length;
       } else if (event.deltaY < 0) {
@@ -597,15 +409,15 @@ clearHoveredCard() {
     }
   }
 
-  // 4. 🎯 CLICK CENTRAL (Ruedita) PARA JUGAR LA CARTA
+  // 4. ?? CLICK CENTRAL (Ruedita) PARA JUGAR LA CARTA
   @HostListener('window:mousedown', ['$event'])
   onMiddleClick(event: MouseEvent) {
-    // event.button === 1 significa que tocaste la ruedita (el botón del medio)
+    // event.button === 1 significa que tocaste la ruedita (el botï¿½n del medio)
     if (event.button === 1 && this.hoveredCard && this.hoveredCardList === this.partida?.jugador?.mano) {
       event.preventDefault(); // Evita que salga la crucecita molesta de Windows
       
-      console.log("🖱️ ¡Click central! Jugando carta:", this.hoveredCard.nombre);
-      this.jugarCarta(this.hoveredCard); // Juega la carta que estás viendo en el panel grande
+      console.log("??? ï¿½Click central! Jugando carta:", this.hoveredCard.nombre);
+      this.jugarCarta(this.hoveredCard); // Juega la carta que estï¿½s viendo en el panel grande
     }
   }
 
@@ -618,14 +430,14 @@ showDebugPanel: boolean = false;
   private lastTime = performance.now();
   private animFrameId: number | null = null;
 
-  // 🛠️ DETECTOR DE TECLA F3
+  // ??? DETECTOR DE TECLA F3
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'F3') {
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
       
-      // Prendemos o apagamos el medidor para no gastar recursos si está cerrado
+      // Prendemos o apagamos el medidor para no gastar recursos si estï¿½ cerrado
       if (this.showDebugPanel) {
         this.iniciarMedidorRendimiento();
       } else {
@@ -634,19 +446,19 @@ showDebugPanel: boolean = false;
     }
   }
 
-  // 🚀 LÓGICA DE RENDIMIENTO (FPS Y MEMORIA)
+  // ?? Lï¿½GICA DE RENDIMIENTO (FPS Y MEMORIA)
   iniciarMedidorRendimiento() {
     const loop = () => {
       const now = performance.now();
       this.frameCount++;
       
-      // Actualizamos las métricas cada 1 segundo (1000ms)
+      // Actualizamos las mï¿½tricas cada 1 segundo (1000ms)
       if (now >= this.lastTime + 1000) {
         this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
         this.frameCount = 0;
         this.lastTime = now;
 
-        // Intentar leer memoria (API específica de navegadores basados en Chromium)
+        // Intentar leer memoria (API especï¿½fica de navegadores basados en Chromium)
         const mem = (performance as any).memory;
         if (mem) {
           this.memoryUsage = (mem.usedJSHeapSize / 1048576).toFixed(2) + ' MB';
@@ -672,13 +484,13 @@ async procesarCheckupEstados(estadoFinal: any) {
   const activoJugadorAntiguo = estadoAntiguo?.jugador?.activo;
   const activoJugadorNuevo = estadoFinal?.jugador?.activo;
 
-  // 😴 CASO: Estaba Dormido y el server lanzó moneda
+  // ?? CASO: Estaba Dormido y el server lanzï¿½ moneda
   if (activoJugadorAntiguo?.condicionesEspeciales?.includes('Asleep')) {
     
     const sigueDormido = activoJugadorNuevo?.condicionesEspeciales?.includes('Asleep');
-    const resultadoCara = !sigueDormido; // Si ya no está dormido, es porque salió CARA
+    const resultadoCara = !sigueDormido; // Si ya no estï¿½ dormido, es porque saliï¿½ CARA
     
-    console.log("🎲 Lanzando moneda de despertar...");
+    console.log("?? Lanzando moneda de despertar...");
     
     // Usamos tu sistema de monedas existente
     // Creamos un "ataque ficticio" para el texto del overlay
@@ -689,59 +501,27 @@ async procesarCheckupEstados(estadoFinal: any) {
         danioExtraPorCara: 0 
     };
 
-    await this.animarMonedasSincronizadas("¿Se despierta?", configFicticia, resultadoCara ? 1 : 0, true);
+    await this.animarMonedasSincronizadas("ï¿½Se despierta?", configFicticia, resultadoCara ? 1 : 0, true);
     
     if (resultadoCara) {
-      console.log("✨ ¡Se despertó!");
-      // Podés disparar un sonido de "Ding!" o una animación de chispitas
+      console.log("? ï¿½Se despertï¿½!");
+      // Podï¿½s disparar un sonido de "Ding!" o una animaciï¿½n de chispitas
     } else {
-      console.log("💤 Sigue roncando...");
+      console.log("?? Sigue roncando...");
     }
   }
 }
 
 extraerGlosario(carta: any): any[] {
-    const statuses = [];
-    // Juntamos todo el texto de la carta para analizarlo
-    const fullText = (carta.ataques || []).map((a: any) => a.texto || '').join(' ').toLowerCase();
-
-    if (fullText.includes('paralyz') || fullText.includes('paraliz')) {
-      statuses.push({ nombre: 'Paralizado', css: 'kw-paralyze', desc: 'El Pokémon no puede atacar ni retirarse este turno.' });
-    }
-    if (fullText.includes('poison') || fullText.includes('envene')) {
-      statuses.push({ nombre: 'Envenenado', css: 'kw-poison', desc: 'Recibe 10 de daño entre turnos.' });
-    }
-    if (fullText.includes('asleep') || fullText.includes('dormi') || fullText.includes('duerm')) {
-      statuses.push({ nombre: 'Dormido', css: 'kw-sleep', desc: 'No puede atacar ni retirar. Lanza moneda al final del turno para despertar.' });
-    }
-    if (fullText.includes('confus') || fullText.includes('confund')) {
-      statuses.push({ nombre: 'Confundido', css: 'kw-confuse', desc: 'Lanza moneda al atacar. Si es cruz, falla y recibe 30 de daño.' });
-    }
-    if (fullText.includes('burn') || fullText.includes('quem')) {
-      statuses.push({ nombre: 'Quemado', css: 'kw-burn', desc: 'Recibe 20 de daño entre turnos. Lanza moneda para curarse.' });
-    }
-    
-    return statuses;
+    return this.battleBoardUi.extraerGlosario(carta);
   }
 
 formatTextoAtaque(texto: string): SafeHtml {
-    if (!texto) return '';
-    let f = texto;
-    
-    // Reemplaza las palabras por un <span> con la clase del color correspondiente
-    f = f.replace(/(paralyzed|paralyzes|paraliza|paralizado)/gi, '<span class="kw-paralyze">$&</span>');
-    f = f.replace(/(poisoned|poisons|envenena|envenenado)/gi, '<span class="kw-poison">$&</span>');
-    f = f.replace(/(asleep|sleeps|duerme|dormido)/gi, '<span class="kw-sleep">$&</span>');
-    f = f.replace(/(confused|confuses|confunde|confundido)/gi, '<span class="kw-confuse">$&</span>');
-    f = f.replace(/(burned|burns|quema|quemado)/gi, '<span class="kw-burn">$&</span>');
-    f = f.replace(/(does nothing|no hace nada)/gi, '<span class="kw-neutral">$&</span>');
-
-    // Le decimos a Angular que este HTML es seguro de renderizar
-    return this.sanitizer.bypassSecurityTrustHtml(f);
+    return this.battleBoardUi.formatTextoAtaque(texto);
   }
 
 setHoveredCard(item: any, list: any[] = [], index: number = -1) {
-    // 🚩 FIX: Si estamos girando la ruedita, ignoramos los choques físicos del mouse
+    // ?? FIX: Si estamos girando la ruedita, ignoramos los choques fï¿½sicos del mouse
     if (this.isScrollingMode) return; 
 
     if (!item) {
@@ -761,7 +541,7 @@ async ejecutarCoinFlipAtaque(
     cantidadMonedas: number,
     danioBase: number,
     danioExtraPorCara: number,
-    esSoloEstado: boolean // 🚩 1. Agregamos el parámetro acá
+    esSoloEstado: boolean // ?? 1. Agregamos el parï¿½metro acï¿½
   ): Promise<number> {
     // Inicializamos el estado del coin flip
     this.coinFlipAtaque = {
@@ -774,11 +554,11 @@ async ejecutarCoinFlipAtaque(
       danioTotal: 0,
       terminado: false,
       progreso: 0,
-      esSoloEstado: esSoloEstado // 🚩 2. Usamos el parámetro que entra, NO 'config'
+      esSoloEstado: esSoloEstado // ?? 2. Usamos el parï¿½metro que entra, NO 'config'
     };
 
     this.cdr.detectChanges();
-    // Pequeña pausa para que el overlay aparezca
+    // Pequeï¿½a pausa para que el overlay aparezca
     await this.delay(600);
  
     let caras = 0;
@@ -803,7 +583,7 @@ async ejecutarCoinFlipAtaque(
       await this.delay(300);
     }
  
-    // Calculamos el daño total
+    // Calculamos el daï¿½o total
     const danioTotal = danioBase + (caras * danioExtraPorCara);
     this.coinFlipAtaque!.danioTotal = danioTotal;
     this.coinFlipAtaque!.terminado  = true;
@@ -825,13 +605,13 @@ detectarCoinFlipAtaque(ataque: any): {
     danioBase: number;
     danioExtraPorCara: number;
     descripcion: string;
-    esSoloEstado: boolean; // 🚩 Nueva bandera
+    esSoloEstado: boolean; // ?? Nueva bandera
   } | null {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
     const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
 
-    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
+    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aï¿½]\s+(\d+|una?)\s+moneda/i);
     if (!flipMatch) return null;
 
     const numStr = (flipMatch[1] || flipMatch[2] || 'a').toLowerCase();
@@ -844,9 +624,9 @@ detectarCoinFlipAtaque(ataque: any): {
     let esFalloCruz = false;
     let esSoloEstado = false;
 
-    // 🕵️‍♂️ Lógica de detección mejorada
+    // ?????? Lï¿½gica de detecciï¿½n mejorada
     if (texto.includes('paralyzed') || texto.includes('asleep') || texto.includes('confused') || texto.includes('poisoned')) {
-        // Si el daño no depende de la moneda (como Dratini), es solo efecto de estado
+        // Si el daï¿½o no depende de la moneda (como Dratini), es solo efecto de estado
         if (!texto.includes('more damage') && !texto.includes('damage times')) {
             esSoloEstado = true;
         }
@@ -872,42 +652,42 @@ detectarCoinFlipAtaque(ataque: any): {
   }
 
  async procesarEventosPostEstado(estadoAnterior: any, estadoNuevo: any): Promise<void> {
-    // ── KO del Pokémon del bot ──
+    // -- KO del Pokï¿½mon del bot --
     const botActivoAntes  = estadoAnterior?.bot?.activo;
     const botActivoAhora  = estadoNuevo?.bot?.activo;
     if (botActivoAntes && !botActivoAhora) {
       await this.mostrarKOAnim();
     }
 
-    // ── KO del Pokémon del jugador ──
+    // -- KO del Pokï¿½mon del jugador --
     const playerActivoAntes = estadoAnterior?.jugador?.activo;
     const playerActivoAhora = estadoNuevo?.jugador?.activo;
     if (playerActivoAntes && !playerActivoAhora) {
       await this.mostrarKOAnim();
     }
 
-    // ── Daño al bot ──
+    // -- Daï¿½o al bot --
     const hpBotAntes  = botActivoAntes?.hpActual  ?? 0;
     const hpBotAhora  = botActivoAhora?.hpActual  ?? 0;
     if (botActivoAntes && botActivoAhora && hpBotAhora < hpBotAntes) {
       this.mostrarDamageNumber('bot', hpBotAntes - hpBotAhora);
     }
 
-    // ── Curación del bot ──
+    // -- Curaciï¿½n del bot --
     if (botActivoAntes && botActivoAhora && hpBotAhora > hpBotAntes) {
       const curado = hpBotAhora - hpBotAntes;
       this.mostrarDamageNumber('bot', curado, true);
       this.mostrarCuracion('bot');
     }
 
-    // ── Daño al jugador ──
+    // -- Daï¿½o al jugador --
     const hpPlayerAntes = playerActivoAntes?.hpActual ?? 0;
     const hpPlayerAhora = playerActivoAhora?.hpActual ?? 0;
     if (playerActivoAntes && playerActivoAhora && hpPlayerAhora < hpPlayerAntes) {
       this.mostrarDamageNumber('jugador', hpPlayerAntes - hpPlayerAhora);
     }
 
-    // ── Curación del jugador ──
+    // -- Curaciï¿½n del jugador --
     if (playerActivoAntes && playerActivoAhora && hpPlayerAhora > hpPlayerAntes) {
       const curado = hpPlayerAhora - hpPlayerAntes;
       this.mostrarDamageNumber('jugador', curado, true);
@@ -920,23 +700,23 @@ debugFullCatalog: any[] = [];
   debugFilteredCatalog: any[] = [];
   debugSelectedIndex: number = 0;
 
-  // Criterios de búsqueda
+  // Criterios de bï¿½squeda
   debugSearchText: string = '';
   debugSearchSupertype: string = '';
 
-  // 🚩 ACORDATE DE LLAMAR A ESTE MÉTODO EN TU ngOnInit()
+  // ?? ACORDATE DE LLAMAR A ESTE Mï¿½TODO EN TU ngOnInit()
 cargarCatalogoGodMode() {
     this.battleService.getCardCatalogDebug().subscribe({
       next: (cartas) => {
         this.debugFullCatalog = cartas;
         
-        // 🚩 AGREGÁ ESTA LÍNEA PARA ESPIAR EL DATO:
-        console.log("🕵️‍♂️ Primera carta que llegó:", cartas[0]);
+        // ?? AGREGï¿½ ESTA Lï¿½NEA PARA ESPIAR EL DATO:
+        console.log("?????? Primera carta que llegï¿½:", cartas[0]);
 
         this.aplicarFiltrosDebug();
-        console.log(`🔌 God Mode: Catálogo cargado con ${cartas.length} cartas.`);
+        console.log(`?? God Mode: Catï¿½logo cargado con ${cartas.length} cartas.`);
       },
-      error: (err) => console.error("❌ Error cargando catálogo de God Mode:", err)
+      error: (err) => console.error("? Error cargando catï¿½logo de God Mode:", err)
     });
   }
 
@@ -952,7 +732,7 @@ cargarCatalogoGodMode() {
 
   aplicarFiltrosDebug() {
     this.debugFilteredCatalog = this.debugFullCatalog.filter(c => {
-      // 1. Filtro por Tipo (Pokémon, Trainer, Energy)
+      // 1. Filtro por Tipo (Pokï¿½mon, Trainer, Energy)
       const matchTipo = !this.debugSearchSupertype || c.supertype === this.debugSearchSupertype;
       
       // 2. Filtro por Texto (Busca en el nombre y en el texto de los ataques/efectos)
@@ -1000,26 +780,26 @@ private traducirEfectoCoinFlip(
     const numStr = monedas === 1 ? 'una moneda' : `${monedas} monedas`;
     
     if (esSoloEstado) {
-        if (textoOriginal.includes('paralyzed')) return `Lanzá ${numStr}. Si sale CARA, el rival queda Paralizado.`;
-        if (textoOriginal.includes('asleep')) return `Lanzá ${numStr}. Si sale CARA, el rival queda Dormido.`;
-        return `Lanzá ${numStr} para aplicar un efecto especial.`;
+        if (textoOriginal.includes('paralyzed')) return `Lanzï¿½ ${numStr}. Si sale CARA, el rival queda Paralizado.`;
+        if (textoOriginal.includes('asleep')) return `Lanzï¿½ ${numStr}. Si sale CARA, el rival queda Dormido.`;
+        return `Lanzï¿½ ${numStr} para aplicar un efecto especial.`;
     }
     
-    if (esFalloCruz) return `Lanzá ${numStr}. Si sale CRUZ, el ataque falla.`;
-    if (esMultiplicador) return `Lanzá ${numStr}. Hace ${danio} de daño por cada CARA.`;
+    if (esFalloCruz) return `Lanzï¿½ ${numStr}. Si sale CRUZ, el ataque falla.`;
+    if (esMultiplicador) return `Lanzï¿½ ${numStr}. Hace ${danio} de daï¿½o por cada CARA.`;
     
-    return `Lanzá ${numStr}. Hace ${danio} de daño extra por cada CARA.`;
+    return `Lanzï¿½ ${numStr}. Hace ${danio} de daï¿½o extra por cada CARA.`;
   }
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // CARGA DE ESTADO
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
  cargarEstado(): void {
 if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando || this.botPensando) return;
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => {
         if (this.bloqueadoPorAnimacion || this.botEstaAtacando) {
-          console.log('🛡️ Polling interceptado.');
+          console.log('??? Polling interceptado.');
           return;
         }
         if (!data) return;
@@ -1032,7 +812,7 @@ if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando || this.
           return;
         }
 
-        // ═══ DETECCIÓN DE CARTAS NUEVAS ═══
+        // --- DETECCIï¿½N DE CARTAS NUEVAS ---
         if (data.jugador?.mano) {
           this.detectarCartasNuevas(data.jugador.mano);
         }
@@ -1042,25 +822,25 @@ if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando || this.
 
         this.cdr.detectChanges(); // tick intermedio
 
-        // 🚩 1. GUARDAMOS DE QUIÉN ERA EL TURNO ANTES DE ACTUALIZAR
+        // ?? 1. GUARDAMOS DE QUIï¿½N ERA EL TURNO ANTES DE ACTUALIZAR
         const turnoAnterior = this.partida?.turnoActual; 
 
-        // ═══ ACTUALIZACIÓN DEL ESTADO ═══
+        // --- ACTUALIZACIï¿½N DEL ESTADO ---
         this.partida = data;
 
 if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
             this.esperandoMiNuevoTurno = false;
-            this.iniciarRelojTurno(); // ¡Prende la mecha de 60 segundos!
+            this.iniciarRelojTurno(); // ï¿½Prende la mecha de 60 segundos!
         } 
         else if (this.partida.turnoActual === 'BOT') {
             this.detenerRelojTurno();
         }
 
-        // 🚩 2. CHEQUEAMOS SI ARRANCÓ TU TURNO PARA PRENDER LA MECHA
+        // ?? 2. CHEQUEAMOS SI ARRANCï¿½ TU TURNO PARA PRENDER LA MECHA
         if (turnoAnterior !== 'JUGADOR' && this.partida.turnoActual === 'JUGADOR') {
             this.iniciarRelojTurno();
         } 
-        // 🚩 3. SI EL TURNO ES DEL BOT, APAGAMOS TU RELOJ
+        // ?? 3. SI EL TURNO ES DEL BOT, APAGAMOS TU RELOJ
         else if (this.partida.turnoActual === 'BOT') {
             this.detenerRelojTurno();
         }
@@ -1074,9 +854,9 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
     });
   }
 
-  // ═══════════════════════════════════════════════
-  // DETECCIÓN DE CARTAS NUEVAS
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
+  // DETECCIï¿½N DE CARTAS NUEVAS
+  // -----------------------------------------------
 
   private detectarCartasNuevas(nuevaMano: any[]): void {
     nuevaMano.forEach((carta: any) => {
@@ -1104,9 +884,9 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
     this.manoAnteriorIdsBot = new Set(nuevaMano.map((c: any) => c.id));
   }
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // FAN DE CARTAS (posicionamiento sin bugs)
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
   getCardFanTransform(index: number, total: number): string {
     const maxAngle   = Math.min(4 * total, 35);
@@ -1120,9 +900,9 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
     return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
   }
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // POLLING
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
   iniciarPolling(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
@@ -1133,9 +913,9 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
     }, 2000);
   }
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // TURNOS Y OVERLAYS
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
   private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
     this.turnoOverlayTipo = turno;
@@ -1186,9 +966,9 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
     }
   }
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // IA ENEMIGA
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
 ejecutarIAEnemiga() {
     if (this.datosPendientesBot) {
@@ -1199,27 +979,27 @@ ejecutarIAEnemiga() {
   }
 
 async ejecutarIAEnemigaConData(estadoFinal: any) {
-    // 🚩 1. GUARDAMOS LA FOTO ANTES DE QUE EL BOT ACTÚE
+    // ?? 1. GUARDAMOS LA FOTO ANTES DE QUE EL BOT ACTï¿½E
     const estadoAntiguo = JSON.parse(JSON.stringify(this.partida));
     
-    // Simplificamos la detección de estados (Case Insensitive para evitar fallos de Java)
+    // Simplificamos la detecciï¿½n de estados (Case Insensitive para evitar fallos de Java)
     const condAntiguas = estadoAntiguo?.bot?.activo?.condicionesEspeciales || [];
     const botEstabaDormido = condAntiguas.some((e: string) => e.toUpperCase() === 'ASLEEP');
     const botEstabaParalizado = condAntiguas.some((e: string) => e.toUpperCase() === 'PARALYZED');
 
-    // 🚩 2. FASE DE MANTENIMIENTO DEL BOT (MONEDA DE DESPERTAR)
+    // ?? 2. FASE DE MANTENIMIENTO DEL BOT (MONEDA DE DESPERTAR)
     // Lo hacemos ANTES de procesar el ataque
     if (botEstabaDormido) {
         const condNuevas = estadoFinal?.bot?.activo?.condicionesEspeciales || [];
         const sigueDormido = condNuevas.some((e: string) => e.toUpperCase() === 'ASLEEP');
         const seDesperto = !sigueDormido;
 
-        console.log("🎲 El Bot está en Checkup. ¿Se despierta?: " + seDesperto);
+        console.log("?? El Bot estï¿½ en Checkup. ï¿½Se despierta?: " + seDesperto);
 
         // Reutilizamos tu overlay de monedas de ataque
         this.coinFlipAtaque = {
             nombreAtaque: 'FASE DE MANTENIMIENTO',
-            descripcion: '¿Se despierta el rival?',
+            descripcion: 'ï¿½Se despierta el rival?',
             cantidadMonedas: 1,
             danioBase: 0,
             danioExtraPorCara: 0,
@@ -1245,7 +1025,7 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
         this.cdr.detectChanges();
     }
 
-    // 🚩 3. LÓGICA DE DECISIÓN (¿El bot ataca realmente?)
+    // ?? 3. Lï¿½GICA DE DECISIï¿½N (ï¿½El bot ataca realmente?)
     const hpJugadorAntes = this.hpRenderJugador;
     const hpJugadorDespues = estadoFinal?.jugador?.activo?.hpActual || 0;
     const danioHecho = hpJugadorAntes - hpJugadorDespues;
@@ -1253,7 +1033,7 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
     let botAtaco = false;
     const activoBotDespues = estadoFinal?.bot?.activo;
 
-    // Si no está paralizado y (si estaba dormido, ahora está despierto)
+    // Si no estï¿½ paralizado y (si estaba dormido, ahora estï¿½ despierto)
     const puedeActuar = !botEstabaParalizado && (!botEstabaDormido || (botEstabaDormido && !activoBotDespues?.condicionesEspeciales?.includes('Asleep')));
 
     if (puedeActuar) {
@@ -1267,15 +1047,15 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
         }
     }
 
-    // 🚩 4. ESCANEAMOS CURACIONES/DAÑOS PASIVOS
+    // ?? 4. ESCANEAMOS CURACIONES/DAï¿½OS PASIVOS
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
-    // ⏩ 5. SALIDA SIN ATAQUE (Si falló la moneda o estaba paralizado)
+    // ? 5. SALIDA SIN ATAQUE (Si fallï¿½ la moneda o estaba paralizado)
     if (!botAtaco) {
         this.partida = JSON.parse(JSON.stringify(estadoFinal));
         this.hpRenderJugador = hpJugadorDespues;
         
-        this.limpiarBanderasBot(); // Método auxiliar para no repetir código
+        this.limpiarBanderasBot(); // Mï¿½todo auxiliar para no repetir cï¿½digo
 
         if (this.partida.turnoActual === 'JUGADOR') {
             this.iniciarRelojTurno();
@@ -1284,7 +1064,7 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
         return;
     }
 
-    // 💥 6. SI ATACÓ REALMENTE
+    // ?? 6. SI ATACï¿½ REALMENTE
     this.botEstaAtacando = true;
     this.animandoBotAtaque = true;
     this.cdr.detectChanges();
@@ -1299,8 +1079,8 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
                 const estaParalizado = estadoFinal.jugador?.activo?.condicionesEspeciales?.includes('Paralyzed');
                 carasReales = estaParalizado ? 1 : 0;
             } else {
-                // ... (tu lógica de cálculo de caras reales se mantiene igual) ...
-                carasReales = danioHecho > 0 ? 1 : 0; // Simplificación para el ejemplo
+                // ... (tu lï¿½gica de cï¿½lculo de caras reales se mantiene igual) ...
+                carasReales = danioHecho > 0 ? 1 : 0; // Simplificaciï¿½n para el ejemplo
             }
             (this as any).resultadoMoneda = carasReales > 0 ? 'CARA' : 'CRUZ';
             await this.animarMonedasSincronizadas(habilidadBot.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
@@ -1317,18 +1097,18 @@ async ejecutarIAEnemigaConData(estadoFinal: any) {
     this.showImpactFlash = false;
     this.cdr.detectChanges();
 
-    // 🚩 8. FINAL DE LA SECUENCIA
+    // ?? 8. FINAL DE LA SECUENCIA
     await this.delay(600);
     this.limpiarBanderasBot();
 
     if (this.partida.turnoActual === 'JUGADOR') {
-        console.log("⏰ Turno del bot finalizado. Iniciando reloj de jugador.");
+        console.log("? Turno del bot finalizado. Iniciando reloj de jugador.");
         this.iniciarRelojTurno();
     }
     this.cdr.detectChanges();
   }
 
-  // Método auxiliar para limpiar estados
+  // Mï¿½todo auxiliar para limpiar estados
   private limpiarBanderasBot() {
     this.animandoBotAtaque     = false;
     this.botEstaAtacando       = false;
@@ -1345,55 +1125,55 @@ async refrescarTableroDebug() {
       const nuevoEstado: any = await firstValueFrom(this.battleService.getState(this.matchId!));
       this.partida = JSON.parse(JSON.stringify(nuevoEstado));
       this.cdr.detectChanges();
-      console.log("🔄 Tablero recargado mágicamente.");
+      console.log("?? Tablero recargado mï¿½gicamente.");
     } catch (error) {
-      console.error("❌ Error recargando tablero en modo debug", error);
+      console.error("? Error recargando tablero en modo debug", error);
     }
   }
 
-  // Herramienta 1: Robar Carta Mágica
+  // Herramienta 1: Robar Carta Mï¿½gica
   async debugRobarCarta(cardId: string) {
     if (!cardId) return;
     try {
-      console.log(`🛠️ GOD MODE: Inyectando carta ${cardId} a la mano...`);
+      console.log(`??? GOD MODE: Inyectando carta ${cardId} a la mano...`);
       await firstValueFrom(this.battleService.debugDrawCard(this.matchId!, cardId));
       await this.refrescarTableroDebug();
     } catch (err) {
-      console.error("❌ Error en God Mode (Robar Carta):", err);
-      alert("Falla en el God Mode. ¿Ya creaste el endpoint en Java?");
+      console.error("? Error en God Mode (Robar Carta):", err);
+      alert("Falla en el God Mode. ï¿½Ya creaste el endpoint en Java?");
     }
   }
 
   // Herramienta 2: Forzar Estado (Dormir, Paralizar, etc.)
   async debugForzarEstado(objetivo: 'JUGADOR' | 'BOT', estado: string) {
     try {
-      console.log(`🛠️ GOD MODE: Forzando estado ${estado} a ${objetivo}...`);
+      console.log(`??? GOD MODE: Forzando estado ${estado} a ${objetivo}...`);
       await firstValueFrom(this.battleService.debugForzarEstado(this.matchId!, objetivo, estado));
       await this.refrescarTableroDebug();
     } catch (err) {
-      console.error("❌ Error en God Mode (Forzar Estado):", err);
+      console.error("? Error en God Mode (Forzar Estado):", err);
     }
   }
 
-  // 🚩 ESTA ES LA QUE TE FALTABA (Herramienta 3: Setear HP)
+  // ?? ESTA ES LA QUE TE FALTABA (Herramienta 3: Setear HP)
   async debugSetHp(objetivo: 'JUGADOR' | 'BOT', hp: number) {
     try {
-      console.log(`🛠️ GOD MODE: Seteando HP de ${objetivo} a ${hp}...`);
+      console.log(`??? GOD MODE: Seteando HP de ${objetivo} a ${hp}...`);
       await firstValueFrom(this.battleService.debugSetHp(this.matchId!, objetivo, hp));
       await this.refrescarTableroDebug();
     } catch (err) {
-      console.error("❌ Error en God Mode (Set HP):", err);
+      console.error("? Error en God Mode (Set HP):", err);
     }
   }
 
 
 abrirModalDescarte(quien: 'JUGADOR' | 'BOT') {
-  console.log("Capa de descarte cliqueada:", quien); // <-- Agregá esto
+  console.log("Capa de descarte cliqueada:", quien); // <-- Agregï¿½ esto
   const pila = quien === 'JUGADOR' ? this.partida?.jugador?.pilaDescarte : this.partida?.bot?.pilaDescarte;
   
-  if (pila) { // Quitale el .length > 0 para que abra aunque esté vacío si querés testear
+  if (pila) { // Quitale el .length > 0 para que abra aunque estï¿½ vacï¿½o si querï¿½s testear
     this.tituloDescarteActual = quien === 'JUGADOR' ? 'TU DESCARTE' : 'DESCARTE RIVAL';
-    this.cartasParaVerEnDescarte = [...pila].reverse(); // El reverse es para que la última que cayó esté arriba
+    this.cartasParaVerEnDescarte = [...pila].reverse(); // El reverse es para que la ï¿½ltima que cayï¿½ estï¿½ arriba
     this.mostrarModalDescarte = true;
     this.cdr.detectChanges();
   }
@@ -1412,7 +1192,7 @@ async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) 
     
     this.cdr.detectChanges();
 
-    // Dejamos la animación por 2 segundos (exactamente lo que pediste)
+    // Dejamos la animaciï¿½n por 2 segundos (exactamente lo que pediste)
     await this.delay(2000);
 
     // Apagamos todo y se disuelve
@@ -1437,12 +1217,12 @@ async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) 
     const condNuevoJugador = estadoNuevo.jugador?.activo?.condicionesEspeciales || [];
 
     if (condViejoJugador.includes('Paralyzed') && !condNuevoJugador.includes('Paralyzed')) {
-      console.log("⚡ ¡Jugador curado de parálisis!");
-      await this.animarCuraEstado('jugador', 'Paralyzed', '¡Parálisis curada!');
+      console.log("? ï¿½Jugador curado de parï¿½lisis!");
+      await this.animarCuraEstado('jugador', 'Paralyzed', 'ï¿½Parï¿½lisis curada!');
     }
     if (condViejoJugador.includes('Asleep') && !condNuevoJugador.includes('Asleep')) {
-      console.log("💤 ¡Jugador despertó!");
-      await this.animarCuraEstado('jugador', 'Asleep', '¡Se despertó!');
+      console.log("?? ï¿½Jugador despertï¿½!");
+      await this.animarCuraEstado('jugador', 'Asleep', 'ï¿½Se despertï¿½!');
     }
 
     // --- REVISAMOS AL BOT ---
@@ -1450,12 +1230,12 @@ async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) 
     const condNuevoBot = estadoNuevo.bot?.activo?.condicionesEspeciales || [];
 
     if (condViejoBot.includes('Paralyzed') && !condNuevoBot.includes('Paralyzed')) {
-      console.log("⚡ ¡Bot curado de parálisis!");
-      await this.animarCuraEstado('bot', 'Paralyzed', '¡Parálisis curada!');
+      console.log("? ï¿½Bot curado de parï¿½lisis!");
+      await this.animarCuraEstado('bot', 'Paralyzed', 'ï¿½Parï¿½lisis curada!');
     }
     if (condViejoBot.includes('Asleep') && !condNuevoBot.includes('Asleep')) {
-      console.log("💤 ¡Bot despertó!");
-      await this.animarCuraEstado('bot', 'Asleep', '¡Se despertó!');
+      console.log("?? ï¿½Bot despertï¿½!");
+      await this.animarCuraEstado('bot', 'Asleep', 'ï¿½Se despertï¿½!');
     }
   }
 
@@ -1488,9 +1268,9 @@ async animarCuraEstado(quien: 'jugador' | 'bot', estado: string, texto: string) 
 
   
 
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // ACCIONES DE JUEGO
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
 async ejecutarAtaqueSecuencia(nombreAtaque: string) {
     if (this.cargandoAccion || !nombreAtaque) return;
@@ -1503,37 +1283,37 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
     const tipoEnergia = habilidad?.costo[0] || 'Colorless';
 
     try {
-      // 🚩 1. CHECK DE CONFUSIÓN (Antes de atacar de verdad)
+      // ?? 1. CHECK DE CONFUSIï¿½N (Antes de atacar de verdad)
       if (this.partida.jugador.activo.condicionesEspeciales.includes('Confused')) {
         const configConfusion = {
-          descripcion: "Tu Pokémon está confundido. Lanzá una moneda. Si sale cruz, te hacés 30 de daño y el ataque falla.",
+          descripcion: "Tu Pokï¿½mon estï¿½ confundido. Lanzï¿½ una moneda. Si sale cruz, te hacï¿½s 30 de daï¿½o y el ataque falla.",
           cantidadMonedas: 1,
           danioBase: 0,
           danioExtraPorCara: 0,
           esSoloEstado: true
         };
 
-        // Acá usamos una moneda "pura" (random en frontend) porque el backend
+        // Acï¿½ usamos una moneda "pura" (random en frontend) porque el backend
         // asume que si llega el request de ataque, ya pasaste el check.
-        // Ojo: Si tu backend ya maneja la confusión y rechaza el ataque, ajustá esto.
+        // Ojo: Si tu backend ya maneja la confusiï¿½n y rechaza el ataque, ajustï¿½ esto.
         const exitoConfusion = Math.random() >= 0.5 ? 1 : 0; 
         
         await this.animarMonedasSincronizadas(
-            "Check de Confusión", 
+            "Check de Confusiï¿½n", 
             configConfusion, 
             exitoConfusion, 
             true
         );
 
     if (this.resultadoMoneda === 'CRUZ') {
-          // El ataque falló por confusión. Avisamos al backend para que pase turno.
-          console.log("¡Confusión! Te pegaste a vos mismo.");
+          // El ataque fallï¿½ por confusiï¿½n. Avisamos al backend para que pase turno.
+          console.log("ï¿½Confusiï¿½n! Te pegaste a vos mismo.");
           
-          // 🚩 EL FIX: Primero pasamos turno, DESPUÉS pedimos el estado
+          // ?? EL FIX: Primero pasamos turno, DESPUï¿½S pedimos el estado
           await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
           const estadoFallo: any = await firstValueFrom(this.battleService.getState(this.matchId!));
           
-          // Animación de auto-golpe
+          // Animaciï¿½n de auto-golpe
           this.animandoJugadorDanio = true;
           this.partida = JSON.parse(JSON.stringify(estadoFallo));
           this.hpRenderJugador = estadoFallo.jugador?.activo?.hpActual || 0;
@@ -1547,7 +1327,7 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
         }
       }
 
-      // 2. Mandamos la orden de ataque al backend (Si no había confusión, o si salió CARA)
+      // 2. Mandamos la orden de ataque al backend (Si no habï¿½a confusiï¿½n, o si saliï¿½ CARA)
       await firstValueFrom(this.battleService.atacar(this.matchId!, nombreAtaque));
 
       // 3. Pedimos la foto actualizada
@@ -1562,7 +1342,7 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
 
         let carasReales = 0;
 
-        // 🚩 SOLUCIÓN AL "SIEMPRE CRUZ":
+        // ?? SOLUCIï¿½N AL "SIEMPRE CRUZ":
         if (coinConfig.esSoloEstado) {
             const condicionesBot = estadoFinal.bot?.activo?.condicionesEspeciales || [];
             const tieneEstado = ['Paralyzed', 'Asleep', 'Confused', 'Poisoned'].some(c => condicionesBot.includes(c));
@@ -1585,7 +1365,7 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
         await this.animarMonedasSincronizadas(habilidad.nombre, coinConfig, carasReales, coinConfig.esSoloEstado);
       }
 
-      // 5. Animación de impacto
+      // 5. Animaciï¿½n de impacto
       this.animandoAtaque = true;
       this.cdr.detectChanges();
 
@@ -1593,7 +1373,7 @@ async ejecutarAtaqueSecuencia(nombreAtaque: string) {
       this.dispararParticulas('bot', tipoEnergia);
       this.showImpactFlash = true;
       
-      // 🚩 ACTUALIZACIÓN FÍSICA: Clonamos para que Angular refresque bien los estados (iconos)
+      // ?? ACTUALIZACIï¿½N Fï¿½SICA: Clonamos para que Angular refresque bien los estados (iconos)
       this.partida = JSON.parse(JSON.stringify(estadoFinal));
       this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
       this.cdr.detectChanges();
@@ -1644,19 +1424,19 @@ async iniciarTurnoBot(estadoFinal: any) {
       }
   }
 async pasarTurno(): Promise<void> {
-    console.log("👉 Botón 'Pasar Turno' presionado.");
+    console.log("?? Botï¿½n 'Pasar Turno' presionado.");
 
-    // 🛡️ 1. VALIDACIONES DE SEGURIDAD
+    // ??? 1. VALIDACIONES DE SEGURIDAD
     if (this.partida?.turnoActual !== 'JUGADOR') {
-      console.warn("⛔ Bloqueado: No es tu turno.");
+      console.warn("? Bloqueado: No es tu turno.");
       return;
     }
     if (this.cargandoAccion) {
-      console.warn("⛔ Bloqueado: Hay una acción en curso.");
+      console.warn("? Bloqueado: Hay una acciï¿½n en curso.");
       return;
     }
 
-    // ⚡ 2. BLOQUEO INMEDIATO Y RESET DE RELOJ
+    // ? 2. BLOQUEO INMEDIATO Y RESET DE RELOJ
     this.cargandoAccion = true;
     this.bloqueadoPorAnimacion = true;
     this.detenerRelojTurno();
@@ -1671,15 +1451,15 @@ async pasarTurno(): Promise<void> {
     const estadoAntiguo = JSON.parse(JSON.stringify(this.partida));
 
     try {
-      console.log("⏳ Enviando fin de turno al servidor (Java)...");
+      console.log("? Enviando fin de turno al servidor (Java)...");
       // Avisamos al backend que termine nuestro turno
       await firstValueFrom(this.battleService.pasarTurno(this.matchId!));
 
-      // Pedimos el nuevo estado (donde el server ya procesó estados y moneda de Checkup)
+      // Pedimos el nuevo estado (donde el server ya procesï¿½ estados y moneda de Checkup)
       const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
-      console.log("📸 Datos de Checkup recibidos del server.");
+      console.log("?? Datos de Checkup recibidos del server.");
 
-      // --- 🪙 3. FASE DE CHECKUP: MONEDA DE DESPERTAR (TS-SAFE) ---
+      // --- ?? 3. FASE DE CHECKUP: MONEDA DE DESPERTAR (TS-SAFE) ---
    const estadosAntiguos = estadoAntiguo?.jugador?.activo?.condicionesEspeciales || [];
 const estabaDormido = estadosAntiguos.some((e: string) => e.toUpperCase() === 'ASLEEP');
 
@@ -1687,13 +1467,13 @@ const estadosNuevos = estadoFinal?.jugador?.activo?.condicionesEspeciales || [];
 const sigueDormido = estadosNuevos.some((e: string) => e.toUpperCase() === 'ASLEEP');
 
 if (estabaDormido) {
-    console.log("¡Te detecté durmiendo! Activando moneda...");
+    console.log("ï¿½Te detectï¿½ durmiendo! Activando moneda...");
         const seDesperto = !sigueDormido;
 
         // Seteamos el objeto para el attack-coinflip-overlay con todos los campos requeridos
         this.coinFlipAtaque = {
           nombreAtaque: 'FASE DE MANTENIMIENTO',
-          descripcion: '¿Se despierta tu Pokémon?',
+          descripcion: 'ï¿½Se despierta tu Pokï¿½mon?',
           cantidadMonedas: 1,
           danioBase: 0,
           danioExtraPorCara: 0,
@@ -1708,7 +1488,7 @@ if (estabaDormido) {
         // Tiempo de suspenso mientras gira la moneda
         await this.delay(1500);
 
-        // Actualizamos el resultado (Validación para evitar error de objeto posiblemente nulo)
+        // Actualizamos el resultado (Validaciï¿½n para evitar error de objeto posiblemente nulo)
         if (this.coinFlipAtaque && this.coinFlipAtaque.monedas[0]) {
           this.coinFlipAtaque.monedas[0].estado = seDesperto ? 'cara' : 'cruz';
           this.coinFlipAtaque.terminado = true;
@@ -1725,22 +1505,22 @@ if (estabaDormido) {
         this.cdr.detectChanges();
 
         if (seDesperto) {
-          console.log("✨ ¡Suerte! El Pokémon se despertó.");
+          console.log("? ï¿½Suerte! El Pokï¿½mon se despertï¿½.");
         } else {
-          console.log("💤 Sigue dormido.");
+          console.log("?? Sigue dormido.");
         }
       }
 
-      // --- ✨ 4. ESCANEO DE CURACIONES / DAÑOS PASIVOS ---
-      // Compara vida y estados entre el antes y el después para animar rayitos o impactos
+      // --- ? 4. ESCANEO DE CURACIONES / DAï¿½OS PASIVOS ---
+      // Compara vida y estados entre el antes y el despuï¿½s para animar rayitos o impactos
       await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
-      // --- 🔄 5. ACTUALIZACIÓN VISUAL DEL TABLERO ---
-      // Ahora sí, actualizamos la partida con los datos reales del server
+      // --- ?? 5. ACTUALIZACIï¿½N VISUAL DEL TABLERO ---
+      // Ahora sï¿½, actualizamos la partida con los datos reales del server
       this.partida = JSON.parse(JSON.stringify(estadoFinal));
       this.cdr.detectChanges();
 
-      // --- 🤖 6. LÓGICA DEL TURNO DEL RIVAL (BOT) ---
+      // --- ?? 6. Lï¿½GICA DEL TURNO DEL RIVAL (BOT) ---
       if (estadoFinal.turnoActual === 'BOT') {
         // Mostramos el cartel de "TURNO RIVAL"
         this.turnoOverlayTipo = 'bot';
@@ -1761,19 +1541,19 @@ if (estabaDormido) {
           const tiempoPensamiento = Math.floor(Math.random() * 1500) + 1000;
           await this.delay(tiempoPensamiento);
 
-          console.log("🤖 Disparando IA en el backend...");
+          console.log("?? Disparando IA en el backend...");
           const estadoPostBot: any = await firstValueFrom(this.battleService.jugarBot(this.matchId!));
 
-          // El bot ya decidió, apagamos el cartelito de "pensando"
+          // El bot ya decidiï¿½, apagamos el cartelito de "pensando"
           this.botPensando = false;
           this.cdr.detectChanges();
 
-          console.log("✅ IA finalizada. Animando ataques del bot...");
-          // Esta función debe procesar el estado final y activar el reloj de tu turno al terminar
+          console.log("? IA finalizada. Animando ataques del bot...");
+          // Esta funciï¿½n debe procesar el estado final y activar el reloj de tu turno al terminar
           this.ejecutarIAEnemigaConData(estadoPostBot);
 
         } catch (err: any) {
-          console.error("❌ Error crítico en la IA del Bot:", err);
+          console.error("? Error crï¿½tico en la IA del Bot:", err);
           this.botPensando = false;
           this.bloqueadoPorAnimacion = false;
           this.cargandoAccion = false;
@@ -1781,8 +1561,8 @@ if (estabaDormido) {
         }
 
       } else {
-        // Caso borde: el turno volvió a vos (ej: el bot no pudo jugar)
-        console.log("⚠️ Turno devuelto al jugador inmediatamente.");
+        // Caso borde: el turno volviï¿½ a vos (ej: el bot no pudo jugar)
+        console.log("?? Turno devuelto al jugador inmediatamente.");
         this.cargandoAccion = false;
         this.bloqueadoPorAnimacion = false;
         this.iniciarRelojTurno();
@@ -1793,17 +1573,17 @@ if (estabaDormido) {
       // En caso de error, liberamos la UI para que no quede trabada
       this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
-      console.error("❌ Error del servidor al pasar turno:", error);
-      alert('Error de conexión: ' + (error?.error ?? 'El servidor no responde'));
+      console.error("? Error del servidor al pasar turno:", error);
+      alert('Error de conexiï¿½n: ' + (error?.error ?? 'El servidor no responde'));
     }
   }
 realizarAccion(habilidad: any): void {
     this.showHabilidadesPanel = false;
     if (!this.validarEnergiaAtaque(habilidad)) {
-      alert('¡No tenés suficiente energía para usar ' + habilidad.nombre + '!');
+      alert('ï¿½No tenï¿½s suficiente energï¿½a para usar ' + habilidad.nombre + '!');
       return;
     }
-    // IMPORTANTE: Ahora pasamos por acá siempre
+    // IMPORTANTE: Ahora pasamos por acï¿½ siempre
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
   }
 async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzadas: number, esSoloEstado: boolean): Promise<void> {   
@@ -1835,7 +1615,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     const carasRestantes = carasForzadas - carasAsignadas;
     const monedasRestantes = config.cantidadMonedas - i;
 
-    // Lógica de "Truco": Sincronizamos con lo que el backend ya decidió
+    // Lï¿½gica de "Truco": Sincronizamos con lo que el backend ya decidiï¿½
     if (carasRestantes >= monedasRestantes) {
       esCara = true; 
     } else if (carasRestantes > 0) {
@@ -1847,7 +1627,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     // Seteamos el estado visual de la moneda actual
     this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
     
-    // 🚩 Actualizamos el flag que usa el HTML para el cartel "LOGRADO/FALLÓ"
+    // ?? Actualizamos el flag que usa el HTML para el cartel "LOGRADO/FALLï¿½"
     if (config.cantidadMonedas === 1) {
         (this as any).resultadoMoneda = esCara ? 'CARA' : 'CRUZ';
     }
@@ -1861,7 +1641,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
       (this as any).resultadoMoneda = carasAsignadas > 0 ? 'CARA' : 'CRUZ';
   }
 
-  // 🚩 CÁLCULO FINAL: Aseguramos que el daño extra mostrado sea el correcto
+  // ?? Cï¿½LCULO FINAL: Aseguramos que el daï¿½o extra mostrado sea el correcto
   this.coinFlipAtaque!.danioTotal = carasAsignadas * config.danioExtraPorCara;
   this.coinFlipAtaque!.terminado = true;
   this.cdr.detectChanges();
@@ -1871,7 +1651,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
   
   // Limpieza
   this.coinFlipAtaque = null;
-  // (this as any).resultadoMoneda = ''; // Opcional: limpiar para el próximo ataque
+  // (this as any).resultadoMoneda = ''; // Opcional: limpiar para el prï¿½ximo ataque
   this.cdr.detectChanges();
 }
 
@@ -1881,7 +1661,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
       this.botEstaAtacando       = false;
       this.bloqueadoPorAnimacion = false;
     }
-    if (this.cargandoAccion) { console.warn('⚠️ Bloqueado por cargandoAccion'); return; }
+    if (this.cargandoAccion) { console.warn('?? Bloqueado por cargandoAccion'); return; }
     this.showHabilidadesPanel = !this.showHabilidadesPanel;
     this.cdr.detectChanges();
   }
@@ -1889,19 +1669,19 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
  async jugarCarta(carta: any): Promise<void> {
     if (this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
     
-    // 1. Manejo de Energías
+    // 1. Manejo de Energï¿½as
     if (this.esEnergia(carta)) { 
       this.gestionarUnionEnergia(carta); 
       return; 
     }
     
-    // 2. Manejo de Pokémon
+    // 2. Manejo de Pokï¿½mon
     if (this.esPokemon(carta)) {
       
-      // 🚩 A. CHEQUEO DE EVOLUCIÓN (Se revisa antes que la bajada normal)
+      // ?? A. CHEQUEO DE EVOLUCIï¿½N (Se revisa antes que la bajada normal)
       if (carta.evolvesFrom && this.puedeEvolucionar(carta)) {
         
-        // Buscamos a quién evolucionar (Prioriza al Activo, sino busca en la Banca)
+        // Buscamos a quiï¿½n evolucionar (Prioriza al Activo, sino busca en la Banca)
         let target = null;
         if (this.partida.jugador.activo?.card?.nombre === carta.evolvesFrom) {
             target = this.partida.jugador.activo;
@@ -1912,16 +1692,16 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
         if (target) {
             await this.ejecutarEvolucionVisual(carta, target);
         }
-        return; // 🛑 Cortamos la ejecución acá para que no intente bajarlo a la banca como Básico
+        return; // ?? Cortamos la ejecuciï¿½n acï¿½ para que no intente bajarlo a la banca como Bï¿½sico
       }
 
-      // B. VALIDACIÓN DE ACTIVO VACÍO
+      // B. VALIDACIï¿½N DE ACTIVO VACï¿½O
       if (!this.partida.jugador.activo && this.partida.jugador.banca.length > 0) {
-        alert('¡Primero tenés que subir un Pokémon de tu banca al puesto activo!');
+        alert('ï¿½Primero tenï¿½s que subir un Pokï¿½mon de tu banca al puesto activo!');
         return;
       }
       
-      // C. BAJADA DE POKÉMON BÁSICO A LA BANCA O ACTIVO
+      // C. BAJADA DE POKï¿½MON Bï¿½SICO A LA BANCA O ACTIVO
       this.gestionarBajadaPokemon(carta);
     }
   }
@@ -1934,14 +1714,14 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
       // 1. Avisamos al backend
       await firstValueFrom(this.battleService.evolucionar(this.matchId!, cartaEvolucion.id, target.card.id));
 
-      // 2. Disparamos la luz blanca sobre el Pokémon objetivo
+      // 2. Disparamos la luz blanca sobre el Pokï¿½mon objetivo
       this.animandoEvolucionId = target.card.id;
       this.cdr.detectChanges();
 
       // Dejamos que el brillo suba (600ms)
       await this.delay(600);
 
-      // 3. Justo en el pico de la luz, pedimos la foto nueva con el Pokémon ya evolucionado
+      // 3. Justo en el pico de la luz, pedimos la foto nueva con el Pokï¿½mon ya evolucionado
       const estadoFinal: any = await firstValueFrom(this.battleService.getState(this.matchId!));
       this.partida = JSON.parse(JSON.stringify(estadoFinal));
       this.hpRenderJugador = estadoFinal.jugador?.activo?.hpActual || 0;
@@ -1974,7 +1754,7 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
       this.cargandoAccion = true;
       this.battleService.subirAActivo(this.matchId!, p.card.id).subscribe({
         next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-        error: (err) => { this.cargandoAccion = false; console.error(err); alert('No se pudo subir el Pokémon al puesto activo.'); }
+        error: (err) => { this.cargandoAccion = false; console.error(err); alert('No se pudo subir el Pokï¿½mon al puesto activo.'); }
       });
     }
   }
@@ -1987,11 +1767,11 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
   retirarPokemon(suplente: any) {
     if (this.cargandoAccion || this.partida.turnoActual !== 'JUGADOR') return;
     const costo = this.partida.jugador.activo.card.costoRetirada;
-    if (confirm(`¿Querés retirar a ${this.partida.jugador.activo.card.nombre}? Costará ${costo} energía(s).`)) {
+    if (confirm(`ï¿½Querï¿½s retirar a ${this.partida.jugador.activo.card.nombre}? Costarï¿½ ${costo} energï¿½a(s).`)) {
       this.cargandoAccion = true;
       this.battleService.retirarPokemon(this.matchId!, suplente.card.id).subscribe({
         next: () => { this.cargarEstado(); this.cargandoAccion = false; },
-        error: (err) => { this.cargandoAccion = false; alert(err.error || 'No tenés suficiente energía para retirarte.'); }
+        error: (err) => { this.cargandoAccion = false; alert(err.error || 'No tenï¿½s suficiente energï¿½a para retirarte.'); }
       });
     }
   }
@@ -2011,16 +1791,16 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     this.cargandoAccion = true;
     this.battleService.jugarPokemon(this.matchId!, carta.id).subscribe({
       next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-      error: (err) => { this.cargandoAccion = false; console.error(err); alert(err.error || 'No se pudo bajar el Pokémon.'); }
+      error: (err) => { this.cargandoAccion = false; console.error(err); alert(err.error || 'No se pudo bajar el Pokï¿½mon.'); }
     });
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
-    if (!this.partida.jugador.activo) { alert('¡Necesitás un Pokémon activo!'); return; }
+    if (!this.partida.jugador.activo) { alert('ï¿½Necesitï¿½s un Pokï¿½mon activo!'); return; }
     this.cargandoAccion = true;
     this.battleService.unirEnergia(this.matchId!, this.partida.jugador.activo.card.id, cartaEnergia.id).subscribe({
       next: () => { this.cargandoAccion = false; this.cargarEstado(); },
-      error: (err: any) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energía.'); }
+      error: (err: any) => { this.cargandoAccion = false; console.error(err); alert('No se pudo unir la energï¿½a.'); }
     });
   }
 
@@ -2040,9 +1820,9 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     );
   }
 
-  // ═══════════════════════════════════════════════
-  // ENERGÍA DRAG
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
+  // ENERGï¿½A DRAG
+  // -----------------------------------------------
 
   onEnergyMouseMove = (event: MouseEvent) => { this.mousePos = { x: event.clientX, y: event.clientY }; };
 
@@ -2070,14 +1850,14 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     if (pokemonElement) {
       const targetId = pokemonElement.getAttribute('data-card-id');
       if (targetId && this.selectedEnergyId) {
-        console.log(`Uniendo energía ${this.selectedEnergyId} a Pokémon ${targetId}`);
+        console.log(`Uniendo energï¿½a ${this.selectedEnergyId} a Pokï¿½mon ${targetId}`);
       }
     }
   }
 
-  // ═══════════════════════════════════════════════
-  // VALIDACIÓN DE ENERGÍAS
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
+  // VALIDACIï¿½N DE ENERGï¿½AS
+  // -----------------------------------------------
 
   validarEnergiaAtaque(ataque: any): boolean {
     if (!ataque || !this.partida?.jugador?.activo) return false;
@@ -2087,12 +1867,12 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
       if (t.includes('grass')     || t.includes('planta'))              return 'Grass';
       if (t.includes('fire')      || t.includes('fuego'))               return 'Fire';
       if (t.includes('water')     || t.includes('agua'))                return 'Water';
-      if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
-      if (t.includes('psychic')   || t.includes('psíquica')  || t.includes('psiquica'))  return 'Psychic';
+      if (t.includes('lightning') || t.includes('elï¿½ctrica') || t.includes('electrica')) return 'Lightning';
+      if (t.includes('psychic')   || t.includes('psï¿½quica')  || t.includes('psiquica'))  return 'Psychic';
       if (t.includes('fighting')  || t.includes('lucha'))               return 'Fighting';
       if (t.includes('darkness')  || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
       if (t.includes('metal')     || t.includes('acero'))               return 'Metal';
-      if (t.includes('dragon')    || t.includes('dragón'))              return 'Dragon';
+      if (t.includes('dragon')    || t.includes('dragï¿½n'))              return 'Dragon';
       if (t.includes('fairy')     || t.includes('hada'))                return 'Fairy';
       return tipo;
     };
@@ -2148,119 +1928,80 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
     costoRestante.forEach(tipo => { faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1; });
     return Object.keys(faltantesMap).map(tipo => ({ tipo, cantidad: faltantesMap[tipo] }));
   }
-
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
   // SPRITES Y UTILIDADES
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
 
-  private normalizarNombre(nombre: string): string {
-    if (!nombre) return '';
-    return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-  }
-
-  private getPokemonNum(nombreCarta: string): number {
-    const norm    = this.normalizarNombre(nombreCarta);
-    if (this.pokedexNum[norm]) return this.pokedexNum[norm];
-    const palabras = norm.split(/[\s'']+/).reverse();
-    for (const p of palabras) { if (this.pokedexNum[p]) return this.pokedexNum[p]; }
-    const numMatch = norm.match(/\d+/);
-    if (numMatch) return parseInt(numMatch[0], 10);
-    return 0;
-  }
-
- getSpriteBack(nombreCarta: string): string {
-    const num = this.getPokemonNum(nombreCarta);
-    if (!num) return '';
-    // Ruta a los GIFs de espalda
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${num}.gif`;
-  }
-
-  getSpriteFront(nombreCarta: string): string {
-    const num = this.getPokemonNum(nombreCarta);
-    if (!num) return '';
-    // Ruta a los GIFs de frente
-    return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num}.gif`;
-  }
+  getSpriteBack(nombreCarta: string): string { return this.battleBoardUi.getSpriteBack(nombreCarta); }
+  getSpriteFront(nombreCarta: string): string { return this.battleBoardUi.getSpriteFront(nombreCarta); }
 
   onSpriteError(event: Event): void { (event.target as HTMLImageElement).style.display = 'none'; }
 
-  getHpPercent(pokemon: any): number {
-    if (!pokemon?.hpActual) return 0;
-    return Math.max(0, Math.min(100, (pokemon.hpActual / this.getHpMax(pokemon)) * 100));
-  }
+  getHpPercent(pokemon: any): number { return this.battleBoardUi.getHpPercent(pokemon); }
+  getHpMax(pokemon: any): number { return this.battleBoardUi.getHpMax(pokemon); }
+  getImagenCarta(id: string): string { return this.battleBoardUi.getImagenCarta(id); }
+  getEmptySlots(n: number): number[] { return this.battleBoardUi.getEmptySlots(n); }
 
-  getHpMax(pokemon: any): number {
-    return pokemon?.hpMax || parseInt(pokemon?.card?.hp, 10) || 100;
-  }
-
-  getImagenCarta(id: string): string { return `images/cards/${id}.png`; }
-  getEmptySlots(n: number): number[] { return Array(Math.max(0, 5 - n)).fill(0); }
-
-  esEnergia(carta: any): boolean  { return carta?.supertype === 'Energy'; }
-  esPokemon(carta: any): boolean  { return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon'; }
+  esEnergia(carta: any): boolean { return this.battleBoardUi.esEnergia(carta); }
+  esPokemon(carta: any): boolean { return this.battleBoardUi.esPokemon(carta); }
 
   get manoAgrupada(): any[][] {
-    const tamañoStack = 4;
-    const mano        = this.partida.jugador.mano;
-    const stacks      = [];
-    for (let i = 0; i < mano.length; i += tamañoStack) stacks.push(mano.slice(i, i + tamañoStack));
+    const tamanoStack = 4;
+    const mano = this.partida.jugador.mano;
+    const stacks = [];
+    for (let i = 0; i < mano.length; i += tamanoStack) stacks.push(mano.slice(i, i + tamanoStack));
     return stacks;
   }
 
-  getEnergyName(tipo: string): string {
-    const t: any = { grass:'Planta', fire:'Fuego', water:'Agua', lightning:'Eléctrico',
-                     psychic:'Psíquico', fighting:'Lucha', darkness:'Siniestro',
-                     metal:'Acero', colorless:'Incolora', fairy:'Hada', dragon:'Dragón' };
-    return t[(tipo || '').toLowerCase()] || 'Energía';
-  }
-
-  getEnergyColor(tipo: string): string {
-    const c: any = { grass:'#78C850', fire:'#F08030', water:'#6890F0', lightning:'#F8D030',
-                     psychic:'#F85888', fighting:'#C03028', darkness:'#705848',
-                     metal:'#B8B8D0', colorless:'#A8A878', fairy:'#EE99AC', dragon:'#7038F8' };
-    return c[(tipo || '').toLowerCase()] || '#A8A878';
-  }
-
-  // ═══════════════════════════════════════════════
-  // PARTÍCULAS
-  // ═══════════════════════════════════════════════
+  getEnergyName(tipo: string): string { return this.battleBoardUi.getEnergyName(tipo); }
+  getEnergyColor(tipo: string): string { return this.battleBoardUi.getEnergyColor(tipo); }
 
   dispararParticulas(objetivo: 'bot' | 'jugador', tipoEnergia: string) {
-    const color           = this.getEnergyColor(tipoEnergia) || '#ffffff';
+    const color = this.getEnergyColor(tipoEnergia) || '#ffffff';
     const nuevasParticulas = [];
+
     for (let i = 0; i < 20; i++) {
-      const angulo    = Math.random() * Math.PI * 2;
+      const angulo = Math.random() * Math.PI * 2;
       const distancia = 40 + Math.random() * 80;
       nuevasParticulas.push({
-        color, tx: Math.cos(angulo) * distancia, ty: Math.sin(angulo) * distancia,
-        size: 5 + Math.random() * 7, duracion: 0.4 + Math.random() * 0.5
+        color,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia,
+        size: 5 + Math.random() * 7,
+        duracion: 0.4 + Math.random() * 0.5
       });
     }
+
     if (objetivo === 'bot') {
-      this.particulasBot    = nuevasParticulas;
+      this.particulasBot = nuevasParticulas;
       this.mostrarEfectoBot = true;
       this.animandoBotDanio = true;
     } else {
-      this.particulasJugador    = nuevasParticulas;
+      this.particulasJugador = nuevasParticulas;
       this.mostrarEfectoJugador = true;
       this.animandoJugadorDanio = true;
     }
+
     this.cdr.detectChanges();
     setTimeout(() => {
-      if (objetivo === 'bot') { this.mostrarEfectoBot = false; this.animandoBotDanio = false; }
-      else { this.mostrarEfectoJugador = false; this.animandoJugadorDanio = false; }
+      if (objetivo === 'bot') {
+        this.mostrarEfectoBot = false;
+        this.animandoBotDanio = false;
+      } else {
+        this.mostrarEfectoJugador = false;
+        this.animandoJugadorDanio = false;
+      }
       this.cdr.detectChanges();
-    }, 800);
+    }, 900);
   }
 
-  // ═══════════════════════════════════════════════
-  // NAVEGACIÓN
-  // ═══════════════════════════════════════════════
+  // -----------------------------------------------
+  // NAVEGACION
+  // -----------------------------------------------
 
   volverAlLobby(): void { this.router.navigate(['/lobby']); }
 
   private delay(ms: number): Promise<void> { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-
-
 }
+
