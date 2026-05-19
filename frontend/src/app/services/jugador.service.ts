@@ -22,4 +22,9 @@ export class JugadorService {
   getColeccion(username: string): Observable<Card[]> {
     return this.http.get<Card[]>(this.apiUrl + '/' + username + '/coleccion');
   }
+
+  // Ajusta manualmente la cantidad de sobres disponibles para pruebas.
+  debugSetSobres(username: string, cantidad: number): Observable<JugadorDatosResponse> {
+    return this.http.post<JugadorDatosResponse>(`${this.apiUrl}/${username}/debug/sobres`, { cantidad });
+  }
 }

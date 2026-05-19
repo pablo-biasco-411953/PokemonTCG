@@ -10,6 +10,7 @@ com\pokemon\tcg\service\BattleTurnService.class
 com\pokemon\tcg\service\BattleAttackService.class
 com\pokemon\tcg\model\battle\CartaEnJuego.class
 com\pokemon\tcg\repository\JugadorRepository.class
+com\pokemon\tcg\dto\DebugSetSobresRequest.class
 com\pokemon\tcg\service\BattleAttackService$AttackResolution.class
 com\pokemon\tcg\controller\JugadorController.class
 com\pokemon\tcg\dto\JugadorDTO.class
@@ -23,6 +24,7 @@ com\pokemon\tcg\config\CorsConfig.class
 com\pokemon\tcg\dto\ActualizarMazoRequest.class
 com\pokemon\tcg\model\battle\TableroJugador.class
 com\pokemon\tcg\model\Mazo.class
+com\pokemon\tcg\dto\DebugInjectCardRequest.class
 com\pokemon\tcg\repository\MazoRepository.class
 com\pokemon\tcg\model\Card$1.class
 com\pokemon\tcg\dto\LoginRequest.class

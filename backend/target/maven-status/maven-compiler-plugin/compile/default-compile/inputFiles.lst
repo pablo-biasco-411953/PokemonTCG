@@ -22,10 +22,12 @@ C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\p
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleService.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ActualizarMazoRequest.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleTurnService.java
+C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugInjectCardRequest.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\AuthService.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\AtaqueController.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\GuardarMazoRequest.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\DataLoader.java
+C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugSetSobresRequest.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\CartaEnJuego.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\MazoController.java
 C:\Users\benja\Desktop\Programs\Protectos\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\StartBattleRequest.java
