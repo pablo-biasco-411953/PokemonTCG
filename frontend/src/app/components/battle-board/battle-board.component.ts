@@ -20,6 +20,10 @@ import { SafeHtml } from '@angular/platform-browser';
 export class BattleBoardComponent implements OnInit, OnDestroy {
   // Pantalla principal de batalla: mezcla estado remoto, animaciones y acciones del jugador.
   public Math = Math;
+  readonly handDropListId = 'player-hand-dropzone';
+  readonly activeDropListId = 'player-active-dropzone';
+  readonly benchDropListId = 'player-bench-dropzone';
+  readonly playableDropListIds = [this.handDropListId, this.activeDropListId, this.benchDropListId];
   matchId: string | null = null;
   partida: any = null;
   jugadorNombre = '';
@@ -1768,9 +1772,14 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
   }
 
   soltarCarta(event: CdkDragDrop<any[]>, zona: 'activo' | 'banca'): void {
+    if (event.previousContainer.id !== this.handDropListId) return;
     if (event.previousContainer === event.container) return;
     const cartaArrastrada = event.item.data;
     if (this.esEnergia(cartaArrastrada)) {
+      if (zona !== 'activo') {
+        alert('Las energias se unen al Pokemon activo.');
+        return;
+      }
       this.gestionarUnionEnergia(cartaArrastrada);
     } else if (this.esPokemon(cartaArrastrada)) {
       this.jugarCarta(cartaArrastrada);
@@ -1938,4 +1947,3 @@ async animarMonedasSincronizadas(nombreAtaque: string, config: any, carasForzada
   private delay(ms: number): Promise<void> { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 }
-

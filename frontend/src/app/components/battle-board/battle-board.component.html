@@ -431,7 +431,11 @@
       </div>
 
       <div class="arena-half arena-bottom">
-        <div class="combatant player-combatant" cdkDropList (cdkDropListDropped)="soltarCarta($event, 'activo')">
+        <div class="combatant player-combatant"
+             cdkDropList
+             [id]="activeDropListId"
+             [cdkDropListConnectedTo]="playableDropListIds"
+             (cdkDropListDropped)="soltarCarta($event, 'activo')">
 
           <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
             <div class="damage-number"
@@ -575,7 +579,11 @@
     </div>
 
     <div class="bench-row player-bench">
-      <div class="bench-cards" cdkDropList (cdkDropListDropped)="soltarCarta($event, 'banca')">
+      <div class="bench-cards"
+           cdkDropList
+           [id]="benchDropListId"
+           [cdkDropListConnectedTo]="playableDropListIds"
+           (cdkDropListDropped)="soltarCarta($event, 'banca')">
 <div *ngFor="let b of partida.jugador.banca" class="bench-slot occupied player-slot" 
        (click)="seleccionarBanca(b)"
        (mouseenter)="setHoveredCard(b)" 
@@ -594,7 +602,12 @@
     </div>
 
 <div class="hand-zone">
-      <div class="hand-cards">
+      <div class="hand-cards"
+           cdkDropList
+           [id]="handDropListId"
+           [cdkDropListData]="partida.jugador.mano"
+           [cdkDropListConnectedTo]="playableDropListIds"
+           [cdkDropListSortingDisabled]="true">
         <div *ngFor="let carta of partida.jugador.mano; let i = index"
              class="hand-card-hitbox"
              [class.nueva-carta]="cartasNuevas.has(carta.id)"

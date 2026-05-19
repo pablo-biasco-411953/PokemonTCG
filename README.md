@@ -34,6 +34,21 @@ Desde la raiz del proyecto:
 
 El backend arranca en `http://localhost:8080`.
 
+### Backend en macOS / Linux
+
+En macOS y Linux no se usa `mvnw.cmd`. El comando correcto es:
+
+```bash
+./mvnw -f backend/pom.xml spring-boot:run
+```
+
+Si `./mvnw` no tiene permisos de ejecucion:
+
+```bash
+chmod +x mvnw
+./mvnw -f backend/pom.xml spring-boot:run
+```
+
 ### Frontend
 
 Desde `frontend/`:
@@ -61,6 +76,55 @@ npm.cmd run build
 
 Nota:
 El build de frontend compila, pero hoy falla por budgets de produccion configurados en Angular. No es un problema del refactor estructural inicial.
+
+## Errores comunes al levantar el proyecto
+
+### Error: `Port 8080 was already in use`
+
+Si al levantar el backend aparece un error como:
+
+```text
+Web server failed to start. Port 8080 was already in use.
+```
+
+significa que ya hay otro proceso usando el puerto `8080`.
+
+#### Solucion en macOS / Linux
+
+Ver que proceso esta usando el puerto:
+
+```bash
+lsof -i :8080
+```
+
+Cerrar ese proceso usando su PID:
+
+```bash
+kill -9 <PID>
+```
+
+Tambien se puede hacer en un solo comando:
+
+```bash
+kill -9 $(lsof -ti :8080)
+```
+
+Luego volver a levantar el backend:
+
+```bash
+./mvnw -f backend/pom.xml spring-boot:run
+```
+
+#### Alternativa: usar otro puerto
+
+Si no queres cerrar el proceso actual, podes arrancar el backend en otro puerto:
+
+```bash
+./mvnw -f backend/pom.xml spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```
+
+Importante:
+Si el frontend o alguna configuracion apunta a `http://localhost:8080`, tambien habra que ajustar esa URL para usar `8081`.
 
 ## Flujos base que estamos protegiendo durante el refactor
 

@@ -28,7 +28,7 @@ public class Jugador {
     public Jugador() {}
     public Jugador(String username) {
         this.username = username;
-        this.sobresDisponibles = 7;
+        this.sobresDisponibles = 10;
     }
 
     public Long getId() { return id; }
