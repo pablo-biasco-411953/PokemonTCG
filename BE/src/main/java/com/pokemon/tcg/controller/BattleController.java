@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/battle")
 @CrossOrigin(origins = "http://localhost:4200")
+/**
+ * Expone las acciones de batalla que consume el frontend.
+ */
 public class BattleController {
 
     private final BattleEngineService battleEngine;
@@ -20,6 +23,7 @@ public class BattleController {
     @PostMapping("/start/{username}")
     public ResponseEntity<?> startBattle(@PathVariable String username,
                                          @RequestBody StartBattleRequest request) {
+        // Crea una partida nueva usando el mazo elegido.
         try {
             Partida partida = battleEngine.startBattle(username, request.getMazoId());
             return ResponseEntity.ok(partida);
@@ -32,6 +36,7 @@ public class BattleController {
 
     @GetMapping("/state/{matchId}")
     public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId) {
+        // Devuelve el estado completo para repintar el tablero.
         Partida partida = battleEngine.getEstadoPartida(matchId);
         if (partida == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(partida);
@@ -52,6 +57,7 @@ public class BattleController {
 
     @PostMapping("/{matchId}/jugar-bot")
     public ResponseEntity<?> jugarBot(@PathVariable String matchId) {
+        // Fuerza la ejecución del turno del bot desde el frontend.
         try {
             battleEngine.ejecutarTurnoBot(matchId);
             Partida partidaActualizada = battleEngine.getEstadoPartida(matchId);
@@ -109,6 +115,7 @@ public class BattleController {
 
     @PostMapping("/{matchId}/attack")
     public ResponseEntity<?> atacar(@PathVariable String matchId, @RequestParam String nombreAtaque) {
+        // Ejecuta un ataque por nombre sobre la partida activa.
         try {
             battleEngine.realizarAtaque(matchId, nombreAtaque);
             return ResponseEntity.ok().build();
@@ -129,6 +136,7 @@ public class BattleController {
 
     @PostMapping("/{matchId}/pass-turn")
     public ResponseEntity<?> pasarTurno(@PathVariable String matchId) {
+        // Cierra el turno actual del jugador.
         try {
             battleEngine.pasarTurno(matchId);
             return ResponseEntity.ok().build();
@@ -187,6 +195,7 @@ public class BattleController {
     }
     @GetMapping("/debug/catalog")
     public ResponseEntity<?> getCatalogoDebug() {
+        // Catálogo completo usado por el panel de debug del tablero.
         return ResponseEntity.ok(battleEngine.obtenerCatalogoCartasDebug());
     }
 }

@@ -17,6 +17,9 @@ import java.util.Collections;
 import java.util.List;
 
 @Component
+/**
+ * Carga cartas y datos mínimos de prueba cuando la base está vacía.
+ */
 public class DataLoader implements CommandLineRunner {
 
     private final CardRepository cardRepo;
@@ -36,6 +39,7 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // Solo si no hay cartas, hidrata la base desde cards.json.
         if (cardRepo.count() == 0) {
             try {
                 InputStream inputStream = getClass().getResourceAsStream("/cards.json");
@@ -59,6 +63,7 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void crearUsuarioTest(List<Card> todasLasCartas) {
+        // Deja un usuario inicial con colección y mazo para probar rápido.
         // 1. Crear el Jugador
         Jugador pablo = new Jugador("Pablo");
         pablo.setSobresDisponibles(10);

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representa el estado de un jugador en la partida.
+ * Agrupa todas las zonas visibles de un jugador dentro de una partida.
  */
 public class TableroJugador {
     // Mazo oculto

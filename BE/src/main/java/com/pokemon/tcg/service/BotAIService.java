@@ -9,11 +9,15 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+/**
+ * Ejecuta decisiones simples del bot para bajar cartas, unir energía y atacar.
+ */
 public class BotAIService {
 
     private final Random random = new Random();
 
     public void ejecutarTurno(Partida partida) {
+        // Orden general del bot: asegurar activo, preparar mesa, unir energía y atacar.
         TableroJugador tableroBot = partida.getBot();
 
         // 🚨 REGLA DE ORO: Si no hay activo, subir uno de la banca primero
@@ -40,6 +44,7 @@ public class BotAIService {
     }
 
     private void evaluarRetiradaEstrategica(TableroJugador bot, TableroJugador jugador, Partida partida) {
+        // Decide si conviene salir del activo antes de gastar la energía del turno.
         CartaEnJuego miActivo = bot.getActivo();
         CartaEnJuego suActivo = jugador.getActivo();
 
@@ -83,6 +88,7 @@ public class BotAIService {
     }
 
     private void ejecutarRetirada(TableroJugador bot, CartaEnJuego suplente, int costo, Partida partida) {
+        // Paga el retiro y mueve el activo anterior a la banca.
         CartaEnJuego activoHuyendo = bot.getActivo();
 
         System.out.println("🛡️ [BOT] ¡Retirada táctica! " + activoHuyendo.getCard().getNombre() + " estaba en peligro o estancado y huye a la banca.");
@@ -103,6 +109,7 @@ public class BotAIService {
     }
 
     private int calcularAmenazaMaxima(CartaEnJuego atacanteRival, CartaEnJuego miDefensor) {
+        // Estima el peor daño posible del rival para medir riesgo.
         if (atacanteRival.getCard().getAtaques() == null) return 0;
 
         // Modo Paranoico: El bot asume que el jugador TIENE la energía para su mejor ataque
@@ -113,6 +120,7 @@ public class BotAIService {
     }
 
     private void gestionarCartasEnMano(TableroJugador tablero, Partida partida) {
+        // Baja básicos desde la mano priorizando los que mejor encajan en el turno.
         List<Card> mano = new ArrayList<>(tablero.getMano());
 
         // Separar qué tenemos en la mano
@@ -145,6 +153,7 @@ public class BotAIService {
     }
 
     private int evaluarPotencialDeMano(Card pokemon, List<Card> energiasEnMano, CartaEnJuego activoRival) {
+        // Heurística chica para ordenar qué básico conviene jugar primero.
         int puntaje = 0;
 
         // 1. Sinergia de Energía: ¿Tengo en la mano lo que este bicho come?
@@ -191,6 +200,7 @@ public class BotAIService {
     }
 
     private boolean pokemonNecesitaEsteTipo(CartaEnJuego pokemon, Card energia) {
+        // Revisa si una energía ayuda a pagar al menos un ataque del Pokémon.
         if (pokemon.getCard().getAtaques() == null) return false;
 
         // 🚩 Usamos el normalizador acá también
@@ -247,6 +257,7 @@ public class BotAIService {
 
 
     private boolean puedePagarCosto(CartaEnJuego pokemon, Ataque ataque) {
+        // Valida costos específicos e incoloros con las energías ya unidas.
         if (pokemon.getEnergiasUnidas() == null || ataque.getCosto() == null) return false;
 
         List<Card> misEnergias = new ArrayList<>(pokemon.getEnergiasUnidas());
@@ -272,6 +283,7 @@ public class BotAIService {
 
     // 🚩 EL TRADUCTOR UNIVERSAL (Agregalo al BotAIService)
     private String normalizarTipo(String texto) {
+        // Unifica nombres en inglés y español para comparar tipos.
         if (texto == null) return "";
         String t = texto.toLowerCase();
         if (t.contains("grass") || t.contains("planta")) return "Grass";
@@ -287,6 +299,7 @@ public class BotAIService {
     }
 
     private void intentarAtacar(TableroJugador tableroBot, Partida partida) {
+        // El bot usa el primer ataque que pueda pagar.
         CartaEnJuego activoBot = tableroBot.getActivo();
         CartaEnJuego activoJugador = partida.getJugador().getActivo();
 
@@ -384,6 +397,8 @@ public class BotAIService {
         // 🚩 6. APLICAR EFECTOS SECUNDARIOS (Opcional, según tu lógica de efectos)
         // aplicarEfectosSecundariosBot(partida, ataqueElegido, activoBot, activoJugador, carasSacadas);
     }
+
+    // Aplica debilidad y resistencia sobre el daño base.
     private int calcularDanioFinal(CartaEnJuego atacante, CartaEnJuego defensor, Ataque ataque) {
         int resultado = ataque.getDanio(); // Daño base del JSON
         String tipoAtacante = atacante.getCard().getTipo();
@@ -411,6 +426,7 @@ public class BotAIService {
         return resultado;
     }
 
+    // Filtro defensivo para evitar bajar energías o evoluciones como básicos.
     private boolean esPokemonBasico(Card c) {
         if (c == null) return false;
 

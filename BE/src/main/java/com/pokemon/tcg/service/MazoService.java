@@ -11,6 +11,9 @@ import java.util.List;
 import java.util.ArrayList;
 
 @Service
+/**
+ * Gestiona guardado, edición y listado de mazos del jugador.
+ */
 public class MazoService {
     private final MazoRepository mazoRepo;
     private final JugadorRepository jugadorRepo;
