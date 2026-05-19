@@ -1,6 +1,32 @@
 <!-- Contenedor de la escena 3D usada para abrir sobres. -->
-<div class="renderer-container" #rendererContainer>
+<div class="renderer-container" #rendererContainer (click)="onOverlayClick($event)">
     <div class="instrucciones">
         {{ mensajeGuia }}
+    </div>
+
+    <button
+      *ngIf="puedePasar && !autoRevealEnCurso && !resumenVisible"
+      type="button"
+      class="skip-button"
+      (click)="pasarRevelado(); $event.stopPropagation()">
+      Pasar
+    </button>
+
+    <div *ngIf="autoRevealEnCurso" class="auto-reveal-banner">
+      Revelando todas las cartas...
+    </div>
+
+    <div *ngIf="resumenVisible" class="summary-panel" (click)="$event.stopPropagation()">
+      <div class="summary-header">
+        <h2>Cartas descubiertas</h2>
+        <p>{{ resumenCartas.length }} cartas obtenidas</p>
+      </div>
+
+      <div class="summary-grid">
+        <div *ngFor="let carta of resumenCartas" class="summary-card">
+          <img [src]="'/images/cards/' + carta.id + '.png'" [alt]="carta.nombre">
+          <span>{{ carta.nombre }}</span>
+        </div>
+      </div>
     </div>
 </div>

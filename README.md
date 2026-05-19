@@ -71,6 +71,14 @@ El build de frontend compila, pero hoy falla por budgets de produccion configura
 - Inicio de batalla
 - Jugar carta, unir energia, atacar, pasar turno y retirada
 
+## Modo de pruebas
+
+Dentro del tablero de batalla existe un panel de depuracion o "modo dios" para testear acciones manuales.
+
+- Se abre y se cierra con la tecla `F3`
+- Solo esta disponible dentro de una partida, en la pantalla de batalla
+- Permite inyectar cartas, forzar estados y ajustar HP para pruebas rapidas
+
 ## Estado del refactor
 
 La hoja de ruta activa esta en [REFACTOR_README.md](./REFACTOR_README.md).

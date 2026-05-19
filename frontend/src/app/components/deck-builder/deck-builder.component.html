@@ -38,6 +38,7 @@
              [attr.data-card-id]="carta.id"
              [style.animation-delay]="(i % 20) * 40 + 'ms'" 
              [class.no-stock]="getCantidadEnMazo(carta.id) >= (cantidadesPoseidas[carta.id] || 0)"
+             [class.stock-error]="cartaSinStockAnimandoId === carta.id"
              (mouseenter)="startHover(carta)" 
              (mouseleave)="stopHover()"
              (click)="agregarAlMazo(carta)">
