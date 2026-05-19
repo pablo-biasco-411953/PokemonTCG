@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { AperturaSobre } from './apertura-sobre';
+import { AperturaSobreComponent } from './apertura-sobre';
 
 describe('AperturaSobre', () => {
-  let component: AperturaSobre;
-  let fixture: ComponentFixture<AperturaSobre>;
+  let component: AperturaSobreComponent;
+  let fixture: ComponentFixture<AperturaSobreComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AperturaSobre],
+      imports: [AperturaSobreComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(AperturaSobre);
+    fixture = TestBed.createComponent(AperturaSobreComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

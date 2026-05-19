@@ -13,10 +13,14 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+/**
+ * Resuelve el daño y los efectos secundarios de un ataque.
+ */
 public class BattleAttackService {
 
     @FunctionalInterface
     public interface KoResolver {
+        // Permite delegar el KO sin acoplar este servicio al motor principal.
         void resolve(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor);
     }
 
@@ -31,6 +35,7 @@ public class BattleAttackService {
             CartaEnJuego defensor,
             KoResolver koResolver
     ) {
+        // Calcula el ataque completo y devuelve también el historial de monedas.
         List<Boolean> historialMonedas = new ArrayList<>();
         ResultadoAtaque resultado = calcularDanioPorEfectos(ataque, atacante, historialMonedas);
 
@@ -52,6 +57,7 @@ public class BattleAttackService {
     }
 
     private ResultadoAtaque calcularDanioPorEfectos(Ataque ataque, CartaEnJuego atacante, List<Boolean> historialMonedas) {
+        // Interpreta texto del ataque para modificar el daño base.
         int danioBase = ataque.getDanio();
         String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
 
@@ -153,6 +159,7 @@ public class BattleAttackService {
             List<Boolean> historialMonedas,
             KoResolver koResolver
     ) {
+        // Aplica estados, curación, descarte, robo y daño colateral.
         String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
         if (texto.isEmpty()) return;
 

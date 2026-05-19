@@ -6,19 +6,10 @@ import { JugadorService } from '../services/jugador.service';
 import { BattleService } from '../services/battle.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from '../components/apertura-sobre/apertura-sobre';
+import { Card } from '../model/card';
+import { Jugador, JugadorDatosResponse } from '../model/jugador';
 import { Mazo } from '../model/mazo'; 
-
-// --- INTERFACES ---
-export interface MazoUI extends Mazo {
-  pokemonIds: number[];
-}
-
-export interface Jugador {
-  username: string;
-  nivel?: number;
-  sobresDisponibles?: number;
-  cantidadCartas?: number;
-}
+import { Partida } from '../model/battle';
 
 export interface PokemonZoomUI {
   id: string;
@@ -44,12 +35,12 @@ export class LobbyComponent implements OnInit, AfterViewInit {
   @ViewChild('bgVideo') bgVideo!: ElementRef<HTMLVideoElement>;
   
   jugador: Jugador | null = null;
-  mazos: MazoUI[] = []; 
+  mazos: Mazo[] = []; 
   slotsVacios: number[] = []; 
   sobresDisponibles: number = 0;
   cantidadCartas: number = 0;
   mostrarAnimacionSobre: boolean = false;
-  cartasNuevas: any[] = []; 
+  cartasNuevas: Card[] = []; 
 
   // Scanner / Zoom
   pkmZoom: PokemonZoomUI | null = null;
@@ -91,14 +82,14 @@ cantidadCartasUnicas: number = 0;
   if (!this.jugador?.username) return;
 
   this.jugadorService.getJugador(this.jugador.username).subscribe({
-    next: (res: any) => {
+    next: (res: JugadorDatosResponse) => {
       // 1. Actualizamos datos básicos
       this.sobresDisponibles = res.sobresDisponibles ?? 0;
       
       // 2. Lógica de Cartas Únicas:
       // Si el backend te devuelve la lista de cartas obtenidas (res.cartasObtenidas):
       if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
-        const idsUnicos = new Set(res.cartasObtenidas.map((c: any) => c.pokemonId || c.id));
+        const idsUnicos = new Set(res.cartasObtenidas.map((c: Card) => c.pokemonId || c.id));
         this.cantidadCartasUnicas = idsUnicos.size;
       } else {
         // Si el backend ya hace el "COUNT DISTINCT", usamos el valor directo
@@ -118,7 +109,7 @@ cantidadCartasUnicas: number = 0;
     if (!this.jugador?.username) return;
     
     this.mazoService.getMazosByJugador(this.jugador.username).subscribe({
-      next: (res: any[]) => { 
+      next: (res: Mazo[]) => { 
         this.mazos = res; 
         const faltantes = 2 - this.mazos.length;
         this.slotsVacios = faltantes > 0 ? Array(faltantes).fill(0) : [];
@@ -127,7 +118,7 @@ cantidadCartasUnicas: number = 0;
     });
   }
 
-  mostrarZoom(carta: any, event: MouseEvent) {
+  mostrarZoom(carta: Card, event: MouseEvent) {
     const pkm: PokemonZoomUI = {
       id: carta.id,
       nombre: carta.nombre,
@@ -159,7 +150,7 @@ cantidadCartasUnicas: number = 0;
 
     // 1. Llamada al servicio para obtener las cartas del backend
     this.sobreService.abrirSobre(this.jugador.username).subscribe({
-      next: (res: any[]) => {
+      next: (res: Card[]) => {
         this.cartasNuevas = res;
         
         // 2. DISPARAMOS LA CEREMONIA
@@ -194,7 +185,7 @@ finalizarApertura() {
 buscarPartida(mazoId: number) { 
 // Agregamos el "!" después de this.jugador
 this.battleService.startBattle(this.jugador!.username, mazoId).subscribe({
-  next: (partida: any) => {
+  next: (partida: Partida) => {
     if (partida && partida.id) {
        this.router.navigate(['/battle', partida.id]);
     }
