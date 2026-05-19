@@ -18,6 +18,7 @@ import { SafeHtml } from '@angular/platform-browser';
   
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
+  // Pantalla principal de batalla: mezcla estado remoto, animaciones y acciones del jugador.
   public Math = Math;
   matchId: string | null = null;
   partida: any = null;
@@ -93,6 +94,7 @@ mostrarModalDescarte: boolean = false;
   tituloDescarteActual: string = '';
 
 
+// Verifica si una evolucion de la mano tiene un objetivo valido en mesa.
 puedeEvolucionar(cartaMano: any): boolean {
     if (!cartaMano.evolvesFrom || !this.partida) return false;
     
@@ -166,6 +168,7 @@ puedeEvolucionar(cartaMano: any): boolean {
     });
   }
 
+  // Limpia polling al salir de la partida.
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
   }
@@ -174,6 +177,7 @@ puedeEvolucionar(cartaMano: any): boolean {
   // COIN FLIP
   // -----------------------------------------------
 
+  // Guarda la eleccion del jugador y habilita el gesto de lanzamiento.
   iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
     this.eleccionJugador = eleccion;
     this.estadoCoinFlip  = 'ESPERANDO_TIRO';
@@ -181,6 +185,7 @@ puedeEvolucionar(cartaMano: any): boolean {
     this.cdr.detectChanges();
   }
 
+  // Confirma en backend quien toma el primer turno.
   async seleccionarTurno(yoVoyPrimero: boolean) {
     try {
       await firstValueFrom(this.battleService.elegirTurno(this.matchId!, yoVoyPrimero));
@@ -191,6 +196,7 @@ puedeEvolucionar(cartaMano: any): boolean {
     }
   }
 
+ // Inicia el temporizador visual del turno del jugador.
  iniciarRelojTurno() {
     this.detenerRelojTurno();
     this.tiempoRestante = this.tiempoTurnoMaximo;
@@ -213,6 +219,7 @@ puedeEvolucionar(cartaMano: any): boolean {
     }, 1000);
   }
 
+  // Detiene el temporizador cuando cambia el turno o termina una accion.
   detenerRelojTurno() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -220,6 +227,7 @@ puedeEvolucionar(cartaMano: any): boolean {
     }
   }
 
+// Pasa el turno automaticamente si el jugador se queda sin tiempo.
 async ejecutarTimeOut() {
     this.detenerRelojTurno();
     console.log("?? ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½TIEMPO AGOTADO! Pasando turno automÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½ticamente...");
@@ -227,6 +235,7 @@ async ejecutarTimeOut() {
   }
 
 
+  // Oculta la interfaz del sorteo y muestra el tablero principal.
   finalizarCoinFlip() {
     this.estadoCoinFlip = 'OCULTO';
     this.lanzada        = false;
@@ -236,6 +245,7 @@ async ejecutarTimeOut() {
     this.cdr.detectChanges();
   }
 
+  // Guarda el punto inicial del gesto de lanzamiento.
   onMouseDown(event: MouseEvent) {
     this.yStart = event.clientY;
   }
@@ -672,6 +682,7 @@ debugFullCatalog: any[] = [];
   debugSearchSupertype: string = '';
 
   // ?? ACORDATE DE LLAMAR A ESTE MÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½TODO EN TU ngOnInit()
+// Carga el catalogo debug usado por las herramientas de pruebas.
 cargarCatalogoGodMode() {
     this.battleService.getCardCatalogDebug().subscribe({
       next: (cartas) => {
@@ -687,16 +698,19 @@ cargarCatalogoGodMode() {
     });
   }
 
+  // Actualiza el filtro textual del panel debug.
   actualizarFiltroTexto(event: any) {
     this.debugSearchText = event.target.value.toLowerCase();
     this.aplicarFiltrosDebug();
   }
 
+  // Actualiza el filtro por supertipo del panel debug.
   actualizarFiltroTipo(event: any) {
     this.debugSearchSupertype = event.target.value;
     this.aplicarFiltrosDebug();
   }
 
+  // Aplica filtros y reinicia el carrusel del catalogo debug.
   aplicarFiltrosDebug() {
     this.debugFilteredCatalog = this.debugFullCatalog.filter(c => {
       // 1. Filtro por Tipo (PokÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¯ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¿ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â½mon, Trainer, Energy)
@@ -722,20 +736,24 @@ cargarCatalogoGodMode() {
     this.debugSelectedIndex = 0; // Reseteamos el carrusel al primer resultado
   }
 
+  // Devuelve la carta debug actualmente enfocada.
   get debugSelectedCard(): any {
     if (!this.debugFilteredCatalog || this.debugFilteredCatalog.length === 0) return null;
     return this.debugFilteredCatalog[this.debugSelectedIndex];
   }
 
+  // Avanza a la siguiente carta del carrusel debug.
   nextDebugCard() {
     if (this.debugFilteredCatalog.length === 0) return;
     this.debugSelectedIndex = (this.debugSelectedIndex + 1) % this.debugFilteredCatalog.length;
   }
 
+  // Retrocede a la carta anterior del carrusel debug.
   prevDebugCard() {
     if (this.debugFilteredCatalog.length === 0) return;
     this.debugSelectedIndex = (this.debugSelectedIndex - 1 + this.debugFilteredCatalog.length) % this.debugFilteredCatalog.length;
   }
+  // Traduce el texto tecnico del coin flip a una descripcion visible.
 private traducirEfectoCoinFlip(
     textoOriginal: string,
     monedas: number,
@@ -761,6 +779,7 @@ private traducirEfectoCoinFlip(
   // CARGA DE ESTADO
   // -----------------------------------------------
 
+ // Sincroniza el estado de batalla con el backend.
  cargarEstado(): void {
 if (!this.matchId || this.bloqueadoPorAnimacion || this.botEstaAtacando || this.botPensando) return;
     this.battleService.getState(this.matchId).subscribe({
@@ -826,6 +845,7 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
   // -----------------------------------------------
 
   private detectarCartasNuevas(nuevaMano: any[]): void {
+    // Marca visualmente cartas nuevas en la mano del jugador.
     nuevaMano.forEach((carta: any) => {
       if (!this.manoAnteriorIds.has(carta.id)) {
         this.cartasNuevas.add(carta.id);
@@ -839,6 +859,7 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
   }
 
   private detectarCartasNuevasBot(nuevaMano: any[]): void {
+    // Marca visualmente cartas nuevas en la mano del bot.
     nuevaMano.forEach((carta: any) => {
       if (!this.manoAnteriorIdsBot.has(carta.id)) {
         this.cartasNuevasBot.add(carta.id);
@@ -872,6 +893,7 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
   // -----------------------------------------------
 
   iniciarPolling(): void {
+    // Inicia el refresco periodico cuando el bot esta jugando.
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     this.pollingPartida = setInterval(() => {
       if (this.partida?.turnoActual === 'BOT' && !this.bloqueadoPorAnimacion) {
@@ -885,6 +907,7 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
   // -----------------------------------------------
 
   private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
+    // Muestra la transicion visual entre turnos.
     this.turnoOverlayTipo = turno;
     this.showTurnOverlay  = true;
     this.cdr.detectChanges();
@@ -898,6 +921,7 @@ if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
   }
 
   procesarCambioDeTurnoDramatico(dataServidor: any) {
+    // Orquesta la transicion dramatica hacia el turno del bot.
     this.bloqueadoPorAnimacion = true;
     this.partida = dataServidor;
     setTimeout(() => {

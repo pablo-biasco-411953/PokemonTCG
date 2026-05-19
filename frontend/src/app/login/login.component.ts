@@ -12,6 +12,7 @@ import { AuthService } from '../services/auth.service';
   imports: [CommonModule, FormsModule] // <-- Le damos las herramientas para el HTML
 })
 export class LoginComponent {
+  // Username escrito por el usuario.
   username: string = '';
 
   constructor(
@@ -19,6 +20,7 @@ export class LoginComponent {
     private router: Router
   ) {}
 
+  // Intenta crear la sesion local y redirige al lobby.
   onLogin() {
     if (this.username.trim()) {
       this.authService.login(this.username).subscribe({

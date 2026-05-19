@@ -1,8 +1,10 @@
+// Debilidad o resistencia expresada por tipo.
 export interface CardWeakness {
   tipo: string;
   valor?: string;
 }
 
+// Forma simplificada de un ataque consumida por el frontend.
 export interface Ataque {
   nombre: string;
   danio: number;
@@ -10,6 +12,7 @@ export interface Ataque {
   costo: string[];
 }
 
+// Modelo base de una carta recibido desde backend.
 export interface Card {
   id: string;
   nombre: string;

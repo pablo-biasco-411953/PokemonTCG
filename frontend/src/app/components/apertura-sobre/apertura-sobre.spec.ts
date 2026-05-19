@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { AperturaSobreComponent } from './apertura-sobre';
 
+// Verifica que el componente de apertura pueda montarse.
 describe('AperturaSobre', () => {
   let component: AperturaSobreComponent;
   let fixture: ComponentFixture<AperturaSobreComponent>;

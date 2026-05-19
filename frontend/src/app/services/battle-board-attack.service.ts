@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 
+// Configuracion visual de un ataque que depende de monedas.
 export interface CoinFlipConfig {
   cantidadMonedas: number;
   danioBase: number;
@@ -10,11 +11,12 @@ export interface CoinFlipConfig {
 
 @Injectable({ providedIn: 'root' })
 export class BattleBoardAttackService {
+  // Detecta si un ataque necesita una animacion de moneda y resume su efecto.
   detectarCoinFlipAtaque(ataque: any, traducirDescripcion: (texto: string, cantidadMonedas: number, danioExtraPorCara: number, esMultiplicador: boolean, esFalloCruz: boolean, esSoloEstado: boolean) => string): CoinFlipConfig | null {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
     const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
-    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
+    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aÃ¡]\s+(\d+|una?)\s+moneda/i);
     if (!flipMatch) return null;
 
     const numStr = (flipMatch[1] || flipMatch[2] || 'a').toLowerCase();
@@ -65,6 +67,7 @@ export class BattleBoardAttackService {
     return { cantidadMonedas, danioBase, danioExtraPorCara, descripcion, esSoloEstado };
   }
 
+  // Comprueba si el activo puede pagar el costo de un ataque.
   validarEnergiaAtaque(ataque: any, activo: any): boolean {
     if (!ataque || !activo) return false;
 
@@ -91,6 +94,7 @@ export class BattleBoardAttackService {
     return misEnergias.length >= costoRequerido.length;
   }
 
+  // Marca energia por energia cuales requisitos ya estan cubiertos.
   getCheckEnergiasAtaque(ataque: any, activo: any): any[] {
     if (!activo?.energiasUnidas) return [];
     const poseidas = [...activo.energiasUnidas];
@@ -109,6 +113,7 @@ export class BattleBoardAttackService {
     return resultado;
   }
 
+  // Resume las energias que todavia faltan para atacar.
   getFaltantesAtaque(ataque: any, activo: any): any[] {
     if (!activo?.energiasUnidas) return [];
 
@@ -141,17 +146,18 @@ export class BattleBoardAttackService {
     return Object.keys(faltantesMap).map(tipo => ({ tipo, cantidad: faltantesMap[tipo] }));
   }
 
+  // Lleva nombres mezclados a un tipo canonico del juego.
   private normalizarTipo(tipo: string): string {
     const t = (tipo || '').toLowerCase();
     if (t.includes('grass') || t.includes('planta')) return 'Grass';
     if (t.includes('fire') || t.includes('fuego')) return 'Fire';
     if (t.includes('water') || t.includes('agua')) return 'Water';
-    if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
-    if (t.includes('psychic') || t.includes('psíquica') || t.includes('psiquica')) return 'Psychic';
+    if (t.includes('lightning') || t.includes('elÃ©ctrica') || t.includes('electrica')) return 'Lightning';
+    if (t.includes('psychic') || t.includes('psÃ­quica') || t.includes('psiquica')) return 'Psychic';
     if (t.includes('fighting') || t.includes('lucha')) return 'Fighting';
     if (t.includes('darkness') || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
     if (t.includes('metal') || t.includes('acero')) return 'Metal';
-    if (t.includes('dragon') || t.includes('dragón') || t.includes('dragon')) return 'Dragon';
+    if (t.includes('dragon') || t.includes('dragÃ³n') || t.includes('dragon')) return 'Dragon';
     if (t.includes('fairy') || t.includes('hada')) return 'Fairy';
     if (t.includes('colorless') || t.includes('incolora')) return 'Colorless';
     return tipo;
