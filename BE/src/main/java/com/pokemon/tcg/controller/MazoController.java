@@ -41,4 +41,14 @@ public class MazoController {
             return ResponseEntity.badRequest().body("Error al actualizar el mazo: " + e.getMessage());
         }
     }
+
+    @PostMapping("/{id}/debug/inject-card")
+    public ResponseEntity<?> debugInyectarCarta(@PathVariable Long id, @RequestBody DebugInjectCardRequest request) {
+        try {
+            Mazo mazo = mazoService.debugInyectarCarta(id, request.getCartaId(), request.getCartaAReemplazarId());
+            return ResponseEntity.ok(mazo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al inyectar carta en el mazo: " + e.getMessage());
+        }
+    }
 }

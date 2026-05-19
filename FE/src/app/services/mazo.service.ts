@@ -33,4 +33,12 @@ export class MazoService {
     const body = { nombre, username, cartas };
     return this.http.post<Mazo>(`${this.apiUrl}/guardar`, body);
   }
+
+  // Inyecta una carta en un mazo de pruebas, reemplazando otra si hace falta.
+  debugInjectCard(idMazo: number, cartaId: string, cartaAReemplazarId?: string | null): Observable<Mazo> {
+    return this.http.post<Mazo>(`${this.apiUrl}/${idMazo}/debug/inject-card`, {
+      cartaId,
+      cartaAReemplazarId: cartaAReemplazarId ?? null
+    });
+  }
 }

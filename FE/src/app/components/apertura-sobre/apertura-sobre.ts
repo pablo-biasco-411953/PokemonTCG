@@ -68,7 +68,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   @HostListener('mousedown', ['$event'])
   // Marca el inicio del gesto de corte o reveal.
   onMouseDown(event: MouseEvent) {
-    if (this.autoRevealEnCurso || this.resumenVisible) return;
+    if (this.interaccionBloqueada()) return;
     this.estaHaciendoClic = true;
     this.puntoClickInicial.set(this.mouse.x, this.mouse.y);
     this.tiempoClickInicial = Date.now();
@@ -77,7 +77,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   @HostListener('mouseup')
   // Completa el gesto actual y revela la carta si corresponde.
   onMouseUp() {
-    if (this.autoRevealEnCurso || this.resumenVisible) return;
+    if (this.interaccionBloqueada()) return;
     this.estaHaciendoClic = false;
     if (this.estaCortado && this.mazoCartas.length > 0) {
       this.procesarSwipeOReveal();
@@ -93,6 +93,18 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
     if (this.estaHaciendoClic && !this.estaCortado) {
       this.procesarCorteCinematico();
     }
+  }
+
+  private interaccionBloqueada(): boolean {
+    if (this.autoRevealEnCurso || this.resumenVisible) {
+      return true;
+    }
+
+    if (this.estaCortado && !this.puedePasar) {
+      return true;
+    }
+
+    return false;
   }
 
   // Cierra el overlay si el usuario hace click fuera del resumen.
