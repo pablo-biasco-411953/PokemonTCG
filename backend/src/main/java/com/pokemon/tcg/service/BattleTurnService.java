@@ -8,14 +8,19 @@ import org.springframework.stereotype.Service;
 import java.util.Random;
 
 @Service
+/**
+ * Maneja limpieza de turno y estados que se resuelven entre turnos.
+ */
 public class BattleTurnService {
 
     @FunctionalInterface
     public interface KoResolver {
+        // Se usa cuando un estado altera el HP y provoca un KO.
         void resolve(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor);
     }
 
     public void limpiarActivoFinTurnoJugador(TableroJugador jugador) {
+        // Quita bloqueos temporales que duran solo hasta el cierre del turno.
         if (jugador.getActivo() == null) {
             return;
         }
@@ -26,6 +31,7 @@ public class BattleTurnService {
     }
 
     public void limpiarActivoFinTurnoBot(TableroJugador bot) {
+        // La misma limpieza, aplicada al activo del bot.
         if (bot.getActivo() == null) {
             return;
         }
