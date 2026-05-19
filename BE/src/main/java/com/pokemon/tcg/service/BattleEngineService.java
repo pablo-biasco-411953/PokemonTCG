@@ -21,6 +21,10 @@ import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+/**
+ * Orquesta el flujo principal de una batalla:
+ * crear partida, validar acciones del jugador y avanzar turnos.
+ */
 public class BattleEngineService {
 
     private final JugadorRepository jugadorRepo;
@@ -52,6 +56,7 @@ public class BattleEngineService {
     }
 
     public Partida startBattle(String username, Long mazoId) {
+        // Crea ambos tableros a partir del mazo elegido y deja la partida lista para el sorteo.
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
@@ -88,6 +93,7 @@ public class BattleEngineService {
     }
 
     private void prepararJuegoInicial(TableroJugador tablero) {
+        // Reparte mano inicial y separa los premios del tablero.
         for (int i = 0; i < 7; i++) {
             if (!tablero.getMazo().isEmpty()) {
                 tablero.getMano().add(tablero.getMazo().remove(0));
@@ -101,6 +107,7 @@ public class BattleEngineService {
     }
 
     public boolean lanzarMoneda(String matchId) {
+        // Resuelve el sorteo inicial y habilita el turno normal.
         Partida partida = getPartidaOThrow(matchId);
         boolean jugadorGana = random.nextBoolean();
         partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
@@ -108,6 +115,7 @@ public class BattleEngineService {
     }
 
     public void elegirTurno(String matchId, boolean vaPrimero) {
+        // Define quién arranca; si empieza el bot, su turno corre inmediatamente.
         Partida partida = getPartidaOThrow(matchId);
         if (vaPrimero) {
             partida.setTurnoActual(Partida.Turno.JUGADOR);
@@ -122,6 +130,7 @@ public class BattleEngineService {
     }
 
     public void jugarPokemon(String matchId, String cartaId) {
+        // Baja un básico desde la mano al activo o a la banca.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -153,6 +162,7 @@ public class BattleEngineService {
     }
 
     public void unirEnergia(String matchId, String cartaId, String energiaId) {
+        // Une una energía de la mano a un Pokémon del tablero.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -172,6 +182,7 @@ public class BattleEngineService {
     }
 
     public void realizarRetirada(String matchId, String nuevoActivoId) {
+        // Paga el costo de retirada y hace el swap con la banca.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
         TableroJugador tablero = partida.getJugador();
@@ -215,6 +226,7 @@ public class BattleEngineService {
     }
 
     public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca) {
+        // Se usa cuando el jugador quedó sin activo y debe promover uno de la banca.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -234,6 +246,7 @@ public class BattleEngineService {
     }
 
     public void realizarAtaque(String matchId, String nombreAtaqueElegido) {
+        // Valida el ataque y delega el cálculo fino al resolver de ataques.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -277,6 +290,7 @@ public class BattleEngineService {
     }
 
     private Ataque encontrarAtaque(CartaEnJuego atacante, String nombreAtaqueElegido) {
+        // Busca el ataque exacto dentro de la carta activa.
         List<Ataque> ataques = atacante.getCard().getAtaques();
         if (ataques != null) {
             for (Ataque ataque : ataques) {
@@ -289,6 +303,7 @@ public class BattleEngineService {
     }
 
     public void pasarTurno(String matchId) {
+        // Cierra el turno del jugador y aplica el mantenimiento entre turnos.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -313,6 +328,7 @@ public class BattleEngineService {
     }
 
     public void ejecutarTurnoBot(String matchId) {
+        // Simula el turno completo del bot y devuelve el control al jugador.
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) {
             return;
@@ -335,12 +351,14 @@ public class BattleEngineService {
     }
 
     private void robarCarta(TableroJugador tablero) {
+        // Roba solo si todavía quedan cartas en el mazo.
         if (!tablero.getMazo().isEmpty()) {
             tablero.getMano().add(tablero.getMazo().remove(0));
         }
     }
 
     private Partida getPartidaOThrow(String matchId) {
+        // Punto único para resolver una partida activa por id.
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) {
             throw new IllegalArgumentException("Partida no encontrada: " + matchId);
@@ -349,12 +367,14 @@ public class BattleEngineService {
     }
 
     private void validarTurnoJugador(Partida partida) {
+        // Evita acciones del usuario fuera de su turno.
         if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
             throw new IllegalStateException("No es tu turno.");
         }
     }
 
     private Card encontrarCartaEnMano(TableroJugador tablero, String id) {
+        // Helper simple para localizar cartas por id en la mano.
         return tablero.getMano().stream()
                 .filter(c -> c.getId().equals(id))
                 .findFirst()
@@ -362,6 +382,7 @@ public class BattleEngineService {
     }
 
     private CartaEnJuego encontrarCartaEnTablero(TableroJugador tablero, String id) {
+        // Busca primero en el activo y luego en la banca.
         if (tablero.getActivo() != null
                 && tablero.getActivo().getCard() != null
                 && tablero.getActivo().getCard().getId().equals(id)) {
@@ -376,6 +397,7 @@ public class BattleEngineService {
     }
 
     private boolean esPokemonBasico(Card carta) {
+        // El backend valida básicos sin depender del frontend.
         if (carta == null || carta.getSupertype() == null) {
             return false;
         }
@@ -395,12 +417,14 @@ public class BattleEngineService {
     }
 
     private boolean esEnergia(Card carta) {
+        // Usa supertype para distinguir energías del resto de cartas.
         return carta != null
                 && carta.getSupertype() != null
                 && carta.getSupertype().equalsIgnoreCase("Energy");
     }
 
     public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId) {
+        // Reemplaza la carta base, conserva el daño acumulado y limpia estados.
         Partida partida = getPartidaOThrow(matchId);
         validarTurnoJugador(partida);
 
@@ -437,6 +461,7 @@ public class BattleEngineService {
     }
 
     public Partida debugRobarCarta(String matchId, String cardId) {
+        // Endpoint de apoyo para probar estados desde el frontend.
         Partida partida = getPartidaOThrow(matchId);
 
         Card cartaMagica = cardRepo.findById(cardId)
@@ -448,6 +473,7 @@ public class BattleEngineService {
     }
 
     public Partida debugForzarEstado(String matchId, String objetivo, String estado) {
+        // Fuerza una condición especial sobre el activo elegido.
         Partida partida = getPartidaOThrow(matchId);
 
         CartaEnJuego activo = objetivo.equals("BOT")
@@ -464,6 +490,7 @@ public class BattleEngineService {
     }
 
     public Partida debugSetHp(String matchId, String objetivo, int hp) {
+        // Permite llevar un activo a un HP específico para pruebas manuales.
         Partida partida = getPartidaOThrow(matchId);
 
         CartaEnJuego activoVictima = objetivo.equals("BOT")

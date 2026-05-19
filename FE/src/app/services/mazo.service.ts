@@ -16,20 +16,18 @@ export class MazoService {
     return this.http.get<Mazo[]>(`${this.apiUrl}/listar/${username}`);
   }
 
+  actualizarMazo(idMazo: number, nombre: string, cartasIds: string[]): Observable<Mazo> {
+    const body = {
+      id: idMazo,
+      nombre,
+      cartasIds
+    };
 
-actualizarMazo(idMazo: number, nombre: string, cartasIds: string[]): Observable<any> {
-  const body = {
-    id: idMazo,
-    nombre: nombre,
-    cartasIds: cartasIds
-  };
-  
-  // Usamos PUT para actualizaciones completas del recurso
-  return this.http.put(`${this.apiUrl}/actualizar/${idMazo}`, body);
-}
+    return this.http.put<Mazo>(`${this.apiUrl}/actualizar/${idMazo}`, body);
+  }
 
-  guardarMazo(nombre: string, username: string, cartas: string[]): Observable<any> {
+  guardarMazo(nombre: string, username: string, cartas: string[]): Observable<Mazo> {
     const body = { nombre, username, cartas };
-    return this.http.post(`${this.apiUrl}/guardar`, body);
+    return this.http.post<Mazo>(`${this.apiUrl}/guardar`, body);
   }
 }

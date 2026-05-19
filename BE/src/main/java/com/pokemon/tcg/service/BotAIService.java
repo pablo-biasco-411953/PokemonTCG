@@ -190,34 +190,6 @@ public class BotAIService {
         return puntaje;
     }
 
-    private boolean puedePagarAtaque(CartaEnJuego pokemon, Ataque ataque) {
-        List<Card> energias = new ArrayList<>(pokemon.getEnergiasUnidas());
-        List<String> costo = new ArrayList<>(ataque.getCosto());
-
-        // 1. Validar energías específicas (Water, Fire, etc.)
-        for (int i = costo.size() - 1; i >= 0; i--) {
-            String tipoReq = costo.get(i);
-            if (!tipoReq.equalsIgnoreCase("Colorless")) {
-                // Buscamos si el bot tiene ese tipo
-                Card tieneTipo = energias.stream()
-                        .filter(e -> e.getNombre().toLowerCase().contains(tipoReq.toLowerCase()))
-                        .findFirst().orElse(null);
-
-                if (tieneTipo != null) {
-                    energias.remove(tieneTipo);
-                    costo.remove(i);
-                } else {
-                    return false; // ❌ Le falta una específica, no puede atacar
-                }
-            }
-        }
-
-        // 2. Validar Incoloras (Cualquiera que sobre)
-        return energias.size() >= costo.size();
-    }
-
-
-
     private boolean pokemonNecesitaEsteTipo(CartaEnJuego pokemon, Card energia) {
         if (pokemon.getCard().getAtaques() == null) return false;
 
@@ -412,33 +384,6 @@ public class BotAIService {
         // 🚩 6. APLICAR EFECTOS SECUNDARIOS (Opcional, según tu lógica de efectos)
         // aplicarEfectosSecundariosBot(partida, ataqueElegido, activoBot, activoJugador, carasSacadas);
     }
-    private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
-        TableroJugador tableroVictima = partida.getJugador();
-        TableroJugador tableroBot     = partida.getBot();
-
-        System.out.println("[BOT] K.O.! " + defensor.getCard().getNombre() + " derrotado.");
-
-        // Mover al descarte
-        tableroVictima.getPilaDescarte().add(defensor.getCard());
-        tableroVictima.setActivo(null);
-
-        // El bot toma un premio
-        if (!tableroBot.getPremios().isEmpty()) {
-            tableroBot.getMano().add(tableroBot.getPremios().remove(0));
-            System.out.println("[BOT] Tomó un premio. Premios restantes: " + tableroBot.getPremios().size());
-        }
-
-        // Fin de partida
-        boolean botSinPremios      = tableroBot.getPremios().isEmpty();
-        boolean jugadorSinPokemon  = tableroVictima.getActivo() == null
-                && tableroVictima.getBanca().isEmpty();
-
-        if (botSinPremios || jugadorSinPokemon) {
-            partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println(" [BOT] ¡Partida terminada! Gana el bot.");
-        }
-    }
-
     private int calcularDanioFinal(CartaEnJuego atacante, CartaEnJuego defensor, Ataque ataque) {
         int resultado = ataque.getDanio(); // Daño base del JSON
         String tipoAtacante = atacante.getCard().getTipo();

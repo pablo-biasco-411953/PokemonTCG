@@ -1,6 +1,8 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Card } from '../model/card';
+import { Partida } from '../model/battle';
 
 @Injectable({ providedIn: 'root' })
 export class BattleService {
@@ -8,12 +10,12 @@ export class BattleService {
 
   constructor(private http: HttpClient) {}
 
-  startBattle(username: string, mazoId: number): Observable<any> {
-    return this.http.post(`${this.base}/start/${username}`, { mazoId });
+  startBattle(username: string, mazoId: number): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/start/${username}`, { mazoId });
   }
 
-  getState(matchId: string): Observable<any> {
-    return this.http.get(`${this.base}/state/${matchId}`);
+  getState(matchId: string): Observable<Partida> {
+    return this.http.get<Partida>(`${this.base}/state/${matchId}`);
   }
 
   lanzarMoneda(matchId: string): Observable<boolean> {
@@ -24,15 +26,14 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/choose-turn`, { vaPrimero });
   }
 
-  // 🚩 FIX: Quitamos 'posicion' porque el Backend ya no lo usa
   jugarPokemon(matchId: string, cartaId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/play-pokemon`, { cartaId });
   }
 
   unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
-      cartaId: cartaId,
-      energiaId: energiaId
+      cartaId,
+      energiaId
     });
   }
 
@@ -41,43 +42,39 @@ export class BattleService {
     return this.http.post<void>(url, {});
   }
 
-  // 🚩 NUEVO: Para subir un Pokémon de la banca al puesto activo
   subirAActivo(matchId: string, cartaId: string): Observable<void> {
-    // Enviamos el cartaId como un string plano en el body
     return this.http.post<void>(`${this.base}/${matchId}/promote`, cartaId);
   }
 
-  jugarBot(matchId: string) {
-    return this.http.post(`${this.base}/${matchId}/jugar-bot`, {});
+  jugarBot(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/jugar-bot`, {});
   }
 
   pasarTurno(matchId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/pass-turn`, {});
   }
+
   retirarPokemon(matchId: string, nuevoActivoId: string): Observable<void> {
-  return this.http.post<void>(`${this.base}/${matchId}/retreat`, nuevoActivoId);
-}
-
-evolucionar(matchId: string, cartaManoId: string, cartaTableroId: string) {
-    return this.http.post(`${this.base}/${matchId}/evolve`, { cartaManoId, cartaTableroId });
+    return this.http.post<void>(`${this.base}/${matchId}/retreat`, nuevoActivoId);
   }
 
-  debugDrawCard(matchId: string, cardId: string): Observable<any> {
-    // Mandamos el ID de la carta en el body
-    return this.http.post(`${this.base}/${matchId}/debug/draw`, { cardId });
+  evolucionar(matchId: string, cartaManoId: string, cartaTableroId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/evolve`, { cartaManoId, cartaTableroId });
   }
 
-  debugForzarEstado(matchId: string, objetivo: string, estado: string): Observable<any> {
-    return this.http.post(`${this.base}/${matchId}/debug/status`, { objetivo, estado });
+  debugDrawCard(matchId: string, cardId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/debug/draw`, { cardId });
   }
 
-  debugSetHp(matchId: string, objetivo: string, hp: number): Observable<any> {
-    return this.http.post(`${this.base}/${matchId}/debug/hp`, { objetivo, hp });
+  debugForzarEstado(matchId: string, objetivo: string, estado: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/debug/status`, { objetivo, estado });
   }
 
-  getCardCatalogDebug(): Observable<string[]> {
-    // Apunta al endpoint que acabamos de crear en el controlador
-    return this.http.get<string[]>(`${this.base}/debug/catalog`);
+  debugSetHp(matchId: string, objetivo: string, hp: number): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/debug/hp`, { objetivo, hp });
   }
 
+  getCardCatalogDebug(): Observable<Card[]> {
+    return this.http.get<Card[]>(`${this.base}/debug/catalog`);
+  }
 }

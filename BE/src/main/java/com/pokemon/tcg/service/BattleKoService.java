@@ -6,9 +6,13 @@ import com.pokemon.tcg.model.battle.TableroJugador;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * Centraliza lo que pasa cuando un Pokémon queda fuera de combate.
+ */
 public class BattleKoService {
 
     public void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
+        // Descarta la carta, entrega premio y decide si la partida termina.
         TableroVictimaYAtacante tableros = identificarTableros(partida, defensor, atacante);
         if (tableros == null) {
             return;
@@ -52,6 +56,7 @@ public class BattleKoService {
     }
 
     private TableroVictimaYAtacante identificarTableros(Partida partida, CartaEnJuego defensor, CartaEnJuego atacante) {
+        // Resuelve quién perdió el Pokémon y quién recibe el premio.
         TableroJugador victima = encontrarTableroPorCarta(partida, defensor);
         TableroJugador ganador = encontrarTableroPorCarta(partida, atacante);
         if (victima == null || ganador == null) {
@@ -61,6 +66,7 @@ public class BattleKoService {
     }
 
     private TableroJugador encontrarTableroPorCarta(Partida partida, CartaEnJuego carta) {
+        // Ubica una carta comparando su id contra activo y banca.
         if (carta == null || carta.getCard() == null) {
             return null;
         }
@@ -87,6 +93,7 @@ public class BattleKoService {
     }
 
     private CartaEnJuego elegirMejorReemplazoBot(TableroJugador tableroBot, CartaEnJuego activoRival) {
+        // Cuando el bot pierde su activo, prioriza el mejor suplente disponible.
         return tableroBot.getBanca().stream()
                 .max((c1, c2) -> Integer.compare(
                         calcularPuntajeEstrategico(c1, activoRival),
@@ -95,6 +102,7 @@ public class BattleKoService {
     }
 
     private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
+        // Puntaje simple: energías, HP y matchup contra el rival.
         int puntaje = 0;
         puntaje += candidato.getEnergiasUnidas().size() * 50;
         puntaje += candidato.getHpActual();
