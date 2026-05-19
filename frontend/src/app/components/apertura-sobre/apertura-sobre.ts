@@ -10,6 +10,7 @@ import * as THREE from 'three';
   styleUrl: './apertura-sobre.scss'
 })
 export class AperturaSobreComponent implements OnInit, OnDestroy {
+  private interaccionBloqueada: boolean = false;
   @ViewChild('rendererContainer', { static: true }) rendererContainer!: ElementRef;
 
   @Input() cartas: any[] = [];
@@ -27,7 +28,7 @@ private estaCortando: boolean = false; // Nuevo estado para el imán de corte
   private sobreCuerpoMesh!: THREE.Mesh;
   private sobreTapaMesh!: THREE.Mesh;
   private lineaGlow!: THREE.Mesh;
-  private mazoCartas: THREE.Group[] = [];
+public  mazoCartas: THREE.Group[]= [];
 private estaCerrandoSobre: boolean = false; // Flag de seguridad
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
@@ -57,6 +58,7 @@ private estaCerrandoSobre: boolean = false; // Flag de seguridad
 
   @HostListener('mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
+    if (this.interaccionBloqueada) return;
     this.estaHaciendoClic = true;
     this.puntoClickInicial.set(this.mouse.x, this.mouse.y);
     this.tiempoClickInicial = Date.now();
@@ -64,6 +66,7 @@ private estaCerrandoSobre: boolean = false; // Flag de seguridad
 
   @HostListener('mouseup')
   onMouseUp() {
+    if (this.interaccionBloqueada) return;
     this.estaHaciendoClic = false;
     if (this.estaCortado && this.mazoCartas.length > 0) {
       this.procesarSwipeOReveal();
@@ -318,6 +321,10 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
     const carta = this.mazoCartas.find(c => (c as any).userData.estado !== 'shopeada');
     if (!carta) return;
 
+    // ---> AGREGÁ ESTE ESCUDO NUEVO ACÁ <---
+    if ((carta as any).userData.estado === 'saltando') {
+      return; // Ignora el clic si las cartas todavía están volando del sobre
+    }
     // Nuestro semáforo anti-spam
     if ((carta as any).userData.estado === 'revelando') {
       return; 
@@ -334,6 +341,7 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
       if (Math.abs(carta.rotation.y) >= Math.PI - 0.2) {
         (carta as any).userData.estado = 'revelando';
         (carta as any).userData.tReveal = Date.now();
+        this.interaccionBloqueada = true;
       }
     }
   
@@ -354,7 +362,7 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
       
       // Gravedad sutil para que caigan
       v.y -= 0.002;
-    }
+    }                       
     coords.needsUpdate = true;
     
     // Apagar luz y partículas
@@ -392,7 +400,9 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
         const ud = (card as any).userData;
         const ct = (Date.now() - (this.tiempoCorte + 700 + i * 120)) / 1000;
 
-        if (ct > 0 && ud.estado === 'saltando') {
+
+        // --- NUEVO BLOQUE CON REPOSO ---
+        if (ct > 0 && (ud.estado === 'saltando' || ud.estado === 'reposo')) {
           card.visible = true;
           if (ct < 1.4) {
             card.position.y = Math.sin(ct * Math.PI) * 3.5;
@@ -402,6 +412,9 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
             // Reposo del mazo (Lejos del área de inspección)
             card.position.lerp(new THREE.Vector3(0, 0, ud.targetZ), 0.1);
             card.rotation.z = THREE.MathUtils.lerp(card.rotation.z, 0, 0.1);
+            
+            // ---> AVISAMOS QUE ATERRIZÓ <---
+            ud.estado = 'reposo'; 
           }
         }
 
@@ -412,7 +425,8 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
           // LA CARTA ACTIVA SALTA ADELANTE (Z=4.5)
           const inspeccionZ = 4.5;
           card.position.z = THREE.MathUtils.lerp(card.position.z, inspeccionZ, 0.15);
-          
+          // Forzar la rotación Z a 0 para evitar que quede torcida
+          card.rotation.z = THREE.MathUtils.lerp(card.rotation.z, 0, 0.2);
           if (ud.estado !== 'revelando') {
              card.rotation.y = THREE.MathUtils.lerp(card.rotation.y, (ud.estado === 'esperando') ? this.mouse.x * 0.5 : Math.PI + this.mouse.x * 0.5, 0.1);
              card.rotation.x = THREE.MathUtils.lerp(card.rotation.x, -this.mouse.y * 0.4, 0.1);
@@ -426,21 +440,40 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
             card.position.z = 5.5; // Un poquito más adelante al girar
           } else {
             card.rotation.y = 0; ud.estado = 'esperando';
+            this.interaccionBloqueada = false;
           }
         }
 
-        if (ud.estado === 'shopeada') {
+  if (ud.estado === 'shopeada') {
           card.position.x += ud.velSwipe * 0.08;
           card.position.z -= 0.4;
           card.rotation.z -= ud.velSwipe * 0.03;
+
           if (Math.abs(card.position.x) > 35) {
-            this.scene.remove(card);
+            this.scene.remove(card); // La sacamos de la vista
             this.mazoCartas.shift();
-            if (this.mazoCartas.length === 0) this.onClose.emit();
+
+            if (this.mazoCartas.length === 0) {
+              // --- LIMPIEZA TOTAL ---
+              this.sobreGroup.visible = false; // Escondemos el sobre viejo
+              if (this.particulasExplosion) this.particulasExplosion.visible = false;
+              
+              // Emitimos el evento o mostramos el menú de fin
+              this.onClose.emit(); 
+            }
           }
-        }
-      });
+        }});
     }
+    
+
     this.renderer.render(this.scene, this.camera);
+  } 
+  public reiniciarApertura() {
+    // Por ahora, recargamos para probar que todo funcione
+    window.location.reload();
   }
-}
+
+  public volverAlMenu() {
+    // Esto emite el evento para que el componente padre te saque de acá
+    this.onClose.emit();
+  }  }
