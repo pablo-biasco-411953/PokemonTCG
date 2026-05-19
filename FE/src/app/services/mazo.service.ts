@@ -7,15 +7,17 @@ import { Mazo } from '../model/mazo';
   providedIn: 'root'
 })
 export class MazoService {
+  // Servicio para crear, listar y actualizar mazos.
   private apiUrl = 'http://localhost:8080/api/mazos';
 
   constructor(private http: HttpClient) { }
 
-  // Asegurate que este nombre sea EXACTO:
+  // Lista los mazos del jugador activo.
   getMazosByJugador(username: string): Observable<Mazo[]> {
     return this.http.get<Mazo[]>(`${this.apiUrl}/listar/${username}`);
   }
 
+  // Actualiza un mazo ya existente.
   actualizarMazo(idMazo: number, nombre: string, cartasIds: string[]): Observable<Mazo> {
     const body = {
       id: idMazo,
@@ -26,6 +28,7 @@ export class MazoService {
     return this.http.put<Mazo>(`${this.apiUrl}/actualizar/${idMazo}`, body);
   }
 
+  // Guarda un mazo nuevo.
   guardarMazo(nombre: string, username: string, cartas: string[]): Observable<Mazo> {
     const body = { nombre, username, cartas };
     return this.http.post<Mazo>(`${this.apiUrl}/guardar`, body);

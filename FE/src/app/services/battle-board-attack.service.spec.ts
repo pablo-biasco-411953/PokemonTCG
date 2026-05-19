@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { BattleBoardAttackService } from './battle-board-attack.service';
 
+// Pruebas puntuales para validaciones y coin flip de ataques.
 describe('BattleBoardAttackService', () => {
   const service = new BattleBoardAttackService();
 

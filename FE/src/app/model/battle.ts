@@ -1,5 +1,6 @@
 import { Ataque, Card } from './card';
 
+// Pokemon ya puesto en juego con su estado actual.
 export interface CartaEnJuego {
   card: Card;
   hpActual: number;
@@ -9,6 +10,7 @@ export interface CartaEnJuego {
   invulnerable?: boolean;
 }
 
+// Zonas visibles de un jugador durante la partida.
 export interface TableroJugador {
   mazo: Card[];
   mano: Card[];
@@ -18,6 +20,7 @@ export interface TableroJugador {
   pilaDescarte: Card[];
 }
 
+// Estado completo de una partida sincronizado con backend.
 export interface Partida {
   id: string;
   jugador: TableroJugador;
@@ -30,6 +33,7 @@ export interface Partida {
 
 export interface StartBattleResponse extends Partida {}
 
+// Vista simplificada de carta para acciones de batalla.
 export interface BattleActionCard {
   id: string;
   nombre: string;

@@ -3,6 +3,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Injectable({ providedIn: 'root' })
 export class BattleBoardUiService {
+  // Diccionario para resolver sprites animados por nombre.
   private readonly pokedexNum: Record<string, number> = {
     bulbasaur: 1, ivysaur: 2, venusaur: 3,
     charmander: 4, charmeleon: 5, charizard: 6,
@@ -15,8 +16,8 @@ export class BattleBoardUiService {
     ekans: 23, arbok: 24,
     pikachu: 25, raichu: 26,
     sandshrew: 27, sandslash: 28,
-    'nidoran♀': 29, nidorina: 30, nidoqueen: 31,
-    'nidoran♂': 32, nidorino: 33, nidoking: 34,
+    'nidoranâ™€': 29, nidorina: 30, nidoqueen: 31,
+    'nidoranâ™‚': 32, nidorino: 33, nidoking: 34,
     clefairy: 35, clefable: 36,
     vulpix: 37, ninetales: 38,
     jigglypuff: 39, wigglytuff: 40,
@@ -101,6 +102,7 @@ export class BattleBoardUiService {
 
   constructor(private sanitizer: DomSanitizer) {}
 
+  // Extrae estados especiales mencionados en los ataques para mostrarlos en UI.
   extraerGlosario(carta: any): any[] {
     const statuses = [];
     const fullText = (carta.ataques || []).map((a: any) => a.texto || '').join(' ').toLowerCase();
@@ -124,6 +126,7 @@ export class BattleBoardUiService {
     return statuses;
   }
 
+  // Resalta palabras clave dentro del texto de un ataque.
   formatTextoAtaque(texto: string): SafeHtml {
     if (!texto) return '';
 
@@ -138,41 +141,50 @@ export class BattleBoardUiService {
     return this.sanitizer.bypassSecurityTrustHtml(formatted);
   }
 
+  // Devuelve el sprite trasero animado del Pokemon.
   getSpriteBack(nombreCarta: string): string {
     const num = this.getPokemonNum(nombreCarta);
     return num ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${num}.gif` : '';
   }
 
+  // Devuelve el sprite frontal animado del Pokemon.
   getSpriteFront(nombreCarta: string): string {
     const num = this.getPokemonNum(nombreCarta);
     return num ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num}.gif` : '';
   }
 
+  // Convierte los HP actuales en porcentaje para la barra de vida.
   getHpPercent(pokemon: any): number {
     if (!pokemon?.hpActual) return 0;
     return Math.max(0, Math.min(100, (pokemon.hpActual / this.getHpMax(pokemon)) * 100));
   }
 
+  // Obtiene el HP maximo desde el estado o desde la carta base.
   getHpMax(pokemon: any): number {
     return pokemon?.hpMax || parseInt(pokemon?.card?.hp, 10) || 100;
   }
 
+  // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
     return `/images/cards/${id}.png`;
   }
 
+  // Genera placeholders para completar los slots de banca.
   getEmptySlots(n: number): number[] {
     return Array(Math.max(0, 5 - n)).fill(0);
   }
 
+  // Identifica si una carta es energia.
   esEnergia(carta: any): boolean {
     return carta?.supertype === 'Energy';
   }
 
+  // Identifica si una carta es Pokemon.
   esPokemon(carta: any): boolean {
-    return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon';
+    return carta?.supertype === 'PokÃ©mon' || carta?.supertype === 'Pokemon';
   }
 
+  // Traduce el tipo de energia a una etiqueta legible.
   getEnergyName(tipo: string): string {
     const names: any = {
       grass: 'Planta',
@@ -190,6 +202,7 @@ export class BattleBoardUiService {
     return names[(tipo || '').toLowerCase()] || 'Energia';
   }
 
+  // Devuelve el color de UI asociado a cada energia.
   getEnergyColor(tipo: string): string {
     const colors: any = {
       grass: '#78C850',
@@ -207,11 +220,13 @@ export class BattleBoardUiService {
     return colors[(tipo || '').toLowerCase()] || '#A8A878';
   }
 
+  // Normaliza nombres para comparaciones tolerantes a acentos.
   private normalizarNombre(nombre: string): string {
     if (!nombre) return '';
     return nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
   }
 
+  // Busca el numero de Pokedex a partir del nombre de la carta.
   private getPokemonNum(nombreCarta: string): number {
     const norm = this.normalizarNombre(nombreCarta);
     if (this.pokedexNum[norm]) return this.pokedexNum[norm];
