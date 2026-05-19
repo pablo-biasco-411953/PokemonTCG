@@ -89,4 +89,45 @@ public class MazoService {
         }
         return mazoRepo.findByJugador(jugador);
     }
+
+    /**
+     * Inyecta una carta en un mazo para pruebas manuales.
+     * Si el mazo ya tiene 60 cartas, requiere indicar cual reemplazar.
+     */
+    public Mazo debugInyectarCarta(Long mazoId, String cartaId, String cartaAReemplazarId) {
+        Mazo mazo = mazoRepo.findById(mazoId)
+                .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado con ID: " + mazoId));
+
+        Card cartaNueva = cardRepo.findById(cartaId)
+                .orElseThrow(() -> new IllegalArgumentException("Carta no encontrada en la BD: " + cartaId));
+
+        List<Card> cartasActuales = mazo.getCartas() != null
+                ? new ArrayList<>(mazo.getCartas())
+                : new ArrayList<>();
+
+        if (cartasActuales.size() >= 60) {
+            if (cartaAReemplazarId == null || cartaAReemplazarId.isBlank()) {
+                throw new IllegalArgumentException("Debes elegir una carta a reemplazar en un mazo de 60 cartas.");
+            }
+
+            boolean reemplazada = false;
+            for (int i = 0; i < cartasActuales.size(); i++) {
+                Card actual = cartasActuales.get(i);
+                if (actual != null && cartaAReemplazarId.equals(actual.getId())) {
+                    cartasActuales.set(i, cartaNueva);
+                    reemplazada = true;
+                    break;
+                }
+            }
+
+            if (!reemplazada) {
+                throw new IllegalArgumentException("La carta a reemplazar no existe dentro del mazo.");
+            }
+        } else {
+            cartasActuales.add(cartaNueva);
+        }
+
+        mazo.setCartas(cartasActuales);
+        return mazoRepo.save(mazo);
+    }
 }

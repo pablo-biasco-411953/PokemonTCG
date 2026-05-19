@@ -15,7 +15,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
 
   // Cartas a revelar y evento para cerrar la experiencia.
   @Input() cartas: any[] = [];
-  @Output() onClose = new EventEmitter<void>();
+  @Output('finalizado') finalizado = new EventEmitter<void>();
 
   private sobreGroup!: THREE.Group;
   private scene!: THREE.Scene;
@@ -34,9 +34,14 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   private estaCerrandoSobre: boolean = false;
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
+  private temporizadores: number[] = [];
 
   public mensajeGuia: string = '--- MANTEN Y DESLIZA PARA ABRIR ---';
   public estaCortado: boolean = false;
+  public puedePasar: boolean = false;
+  public autoRevealEnCurso: boolean = false;
+  public resumenVisible: boolean = false;
+  public resumenCartas: any[] = [];
   private estaHaciendoClic: boolean = false;
   private tiempoCorte: number = 0;
   private puntoClickInicial = new THREE.Vector2();
@@ -57,11 +62,13 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.animationId) cancelAnimationFrame(this.animationId);
     if (this.renderer) this.renderer.dispose();
+    this.temporizadores.forEach(id => window.clearTimeout(id));
   }
 
   @HostListener('mousedown', ['$event'])
   // Marca el inicio del gesto de corte o reveal.
   onMouseDown(event: MouseEvent) {
+    if (this.interaccionBloqueada()) return;
     this.estaHaciendoClic = true;
     this.puntoClickInicial.set(this.mouse.x, this.mouse.y);
     this.tiempoClickInicial = Date.now();
@@ -70,6 +77,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   @HostListener('mouseup')
   // Completa el gesto actual y revela la carta si corresponde.
   onMouseUp() {
+    if (this.interaccionBloqueada()) return;
     this.estaHaciendoClic = false;
     if (this.estaCortado && this.mazoCartas.length > 0) {
       this.procesarSwipeOReveal();
@@ -85,6 +93,30 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
     if (this.estaHaciendoClic && !this.estaCortado) {
       this.procesarCorteCinematico();
     }
+  }
+
+  private interaccionBloqueada(): boolean {
+    if (this.autoRevealEnCurso || this.resumenVisible) {
+      return true;
+    }
+
+    if (this.estaCortado && !this.puedePasar) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Cierra el overlay si el usuario hace click fuera del resumen.
+  onOverlayClick(event: MouseEvent) {
+    if (!this.resumenVisible) return;
+
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.summary-panel') || target?.closest('.skip-button')) {
+      return;
+    }
+
+    this.finalizado.emit();
   }
 
   // Crea la explosion de particulas al abrir el sobre.
@@ -251,6 +283,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
   private iniciarAperturaFinal() {
     this.estaCortado = true;
     this.estaHaciendoClic = false;
+    this.puedePasar = false;
     this.lineaGlow.visible = false;
     this.tiempoCorte = Date.now();
 
@@ -260,11 +293,19 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
     this.mensajeGuia = '--- EXPLOTANDO SOBRE ---';
     this.cdr.detectChanges();
 
-    setTimeout(() => {
+    this.programar(() => {
       this.crearCartasAntiBug();
-      this.mensajeGuia = '--- TOCA O DESLIZA ---';
+      this.mensajeGuia = '--- LAS CARTAS ESTAN SALIENDO ---';
       this.cdr.detectChanges();
     }, 700);
+
+    const duracionSalidaCartas = 700 + Math.max(0, this.cartas.length - 1) * 120 + 1400;
+    this.programar(() => {
+      if (this.autoRevealEnCurso || this.resumenVisible) return;
+      this.puedePasar = true;
+      this.mensajeGuia = '--- TOCA, DESLIZA O PRESIONA PASAR ---';
+      this.cdr.detectChanges();
+    }, duracionSalidaCartas);
   }
 
   // Crea las cartas 3D que se revelan despues del corte.
@@ -323,6 +364,54 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
       (carta as any).userData.estado = 'revelando';
       (carta as any).userData.tReveal = Date.now();
     }
+  }
+
+  // Revela automaticamente todas las cartas y bloquea la interaccion manual.
+  pasarRevelado() {
+    if (!this.estaCortado || this.autoRevealEnCurso || this.resumenVisible || this.mazoCartas.length === 0) {
+      return;
+    }
+
+    this.autoRevealEnCurso = true;
+    this.puedePasar = false;
+    this.estaHaciendoClic = false;
+    this.mensajeGuia = '--- REVELANDO TODAS LAS CARTAS ---';
+    this.cdr.detectChanges();
+
+    const duracionFlip = 550;
+    const esperaCarta = 260;
+    const total = this.mazoCartas.length * esperaCarta + duracionFlip + 500;
+
+    this.mazoCartas.forEach((card, index) => {
+      this.programar(() => {
+        const userData = (card as any).userData;
+        if (userData.estado !== 'shopeada') {
+          userData.estado = 'revelando';
+          userData.tReveal = Date.now();
+        }
+      }, index * esperaCarta);
+    });
+
+    this.programar(() => this.mostrarResumenFinal(), total);
+  }
+
+  private mostrarResumenFinal() {
+    this.autoRevealEnCurso = false;
+    this.resumenVisible = true;
+    this.resumenCartas = [...this.cartas];
+    this.mensajeGuia = '--- TOCA FUERA DE LAS CARTAS PARA VOLVER ---';
+    this.vaciarCartasDeLaEscena();
+    this.cdr.detectChanges();
+  }
+
+  private vaciarCartasDeLaEscena() {
+    this.mazoCartas.forEach(card => this.scene.remove(card));
+    this.mazoCartas = [];
+  }
+
+  private programar(callback: () => void, delayMs: number) {
+    const timerId = window.setTimeout(callback, delayMs);
+    this.temporizadores.push(timerId);
   }
 
   // Loop principal que anima sobre, luces, particulas y cartas.
@@ -412,7 +501,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
           if (Math.abs(card.position.x) > 35) {
             this.scene.remove(card);
             this.mazoCartas.shift();
-            if (this.mazoCartas.length === 0) this.onClose.emit();
+            if (this.mazoCartas.length === 0) this.mostrarResumenFinal();
           }
         }
       });

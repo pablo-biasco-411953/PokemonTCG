@@ -1,5 +1,87 @@
 <!-- Vista principal del lobby con sobres, mazos y acceso a batalla. -->
 <div class="lobby-master-container" [class.subiendo]="mostrarAnimacionSobre">
+  <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
+    <div class="ddp-header">
+      <span>MODO DIOS LOBBY (F3)</span>
+    </div>
+
+    <div class="ddp-section">
+      <p><span>Jugador:</span> {{ jugador?.username || 'Ninguno' }}</p>
+      <p><span>Sobres actuales:</span> {{ sobresDisponibles }}</p>
+      <p><span>Mazos:</span> {{ mazos.length }}</p>
+    </div>
+
+    <div class="ddp-section">
+      <p class="godmode-title">SOBRES</p>
+      <div class="gm-row">
+        <input
+          type="number"
+          min="0"
+          class="gm-input"
+          [(ngModel)]="debugSobresCantidad">
+        <button class="gm-btn" (click)="debugSetSobres()" [disabled]="debugAccionEnCurso">
+          Aplicar
+        </button>
+      </div>
+    </div>
+
+    <div class="ddp-section">
+      <p class="godmode-title">INYECTAR CARTA A MAZO</p>
+
+      <div class="gm-filters">
+        <input
+          type="text"
+          class="gm-input gm-search"
+          placeholder="Buscar carta o ataque..."
+          (input)="actualizarFiltroTexto($event)">
+      </div>
+
+      <div class="gm-card-selector">
+        <div class="selector-controls">
+          <button class="gm-btn arrow" (click)="prevDebugCard()">◀</button>
+
+          <div class="preview-card">
+            <img *ngIf="debugSelectedCard" [src]="getImagenDebugCarta(debugSelectedCard.id)" [alt]="debugSelectedCard.nombre">
+            <div *ngIf="!debugSelectedCard" class="no-results">No hay cartas</div>
+          </div>
+
+          <button class="gm-btn arrow" (click)="nextDebugCard()">▶</button>
+        </div>
+
+        <div class="gm-card-info" *ngIf="debugSelectedCard">
+          <span class="gm-card-name">{{ debugSelectedCard.nombre }}</span>
+          <span class="gm-badge" *ngIf="debugSelectedCard.hp">{{ debugSelectedCard.hp }} HP</span>
+        </div>
+
+        <p class="gm-results-count">
+          {{ debugCatalogoFiltrado.length ? (debugSelectedIndex + 1) : 0 }} / {{ debugCatalogoFiltrado.length }} resultados
+        </p>
+      </div>
+
+      <div class="gm-row">
+        <select class="gm-select" [value]="debugTargetMazoId || ''" (change)="onDebugMazoChange($event)">
+          <option value="">Elegir mazo...</option>
+          <option *ngFor="let mazo of mazos" [value]="mazo.id">{{ mazo.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="gm-row" *ngIf="debugMazoSeleccionado">
+        <select class="gm-select" [value]="debugReplaceCardId || ''" (change)="onDebugReplaceChange($event)">
+          <option value="">Carta a reemplazar...</option>
+          <option *ngFor="let carta of debugMazoSeleccionado.cartas; let i = index" [value]="carta.id">
+            {{ i + 1 }}. {{ carta.nombre }}
+          </option>
+        </select>
+      </div>
+
+      <button
+        class="gm-btn draw-btn"
+        [disabled]="!debugSelectedCard || !debugMazoSeleccionado || debugAccionEnCurso"
+        (click)="debugInyectarCartaEnMazo()">
+        Inyectar en mazo
+      </button>
+    </div>
+  </div>
   
   <div class="environment-layer">
     <video #bgVideo autoplay loop muted playsinline class="video-bg">
