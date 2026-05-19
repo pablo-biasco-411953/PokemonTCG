@@ -24,10 +24,11 @@ public class Jugador {
     )
     private List<Card> coleccion = new ArrayList<>();
 
+    // valores base de los juegadores
     public Jugador() {}
     public Jugador(String username) {
         this.username = username;
-        this.sobresDisponibles = 5;
+        this.sobresDisponibles = 7;
     }
 
     public Long getId() { return id; }
