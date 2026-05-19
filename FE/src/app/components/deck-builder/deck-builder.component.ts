@@ -31,6 +31,8 @@ export class DeckBuilderComponent implements OnInit {
   showInspeccion: boolean = false;
   cardFocus: Card | null = null;
   hoverTimer: any;
+  cartaSinStockAnimandoId: string | null = null;
+  private resetAnimacionSinStockTimer: number | null = null;
 
   // Mapeado temporal entre ids viejos y assets reales.
   mapaFotos: { [key: string]: string } = {
@@ -132,8 +134,29 @@ export class DeckBuilderComponent implements OnInit {
     if (copiasEnMazo < totalPoseidas && copiasEnMazo < 4 && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);
     } else if (copiasEnMazo >= totalPoseidas) {
-      alert(`Â¡No tenÃ©s mÃ¡s copias de ${carta.nombre}! AbrÃ­ mÃ¡s sobres.`);
+      this.activarFeedbackSinStock(carta.id);
     }
+  }
+
+  // Sacude la carta cuando ya no quedan copias disponibles.
+  private activarFeedbackSinStock(cardId: string) {
+    if (this.resetAnimacionSinStockTimer !== null) {
+      window.clearTimeout(this.resetAnimacionSinStockTimer);
+    }
+
+    this.cartaSinStockAnimandoId = null;
+    this.cdr.detectChanges();
+
+    window.setTimeout(() => {
+      this.cartaSinStockAnimandoId = cardId;
+      this.cdr.detectChanges();
+
+      this.resetAnimacionSinStockTimer = window.setTimeout(() => {
+        this.cartaSinStockAnimandoId = null;
+        this.resetAnimacionSinStockTimer = null;
+        this.cdr.detectChanges();
+      }, 420);
+    }, 0);
   }
 
   // Cuenta cuantas copias de una carta ya hay en el mazo.
@@ -152,12 +175,12 @@ export class DeckBuilderComponent implements OnInit {
 
     if (this.idMazoAEditar) {
       this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
-        alert('Â¡Mazo actualizado!');
+        alert('Mazo actualizado');
         this.router.navigate(['/lobby']);
       });
     } else {
       this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
-        alert('Â¡Mazo creado!');
+        alert('Mazo creado');
         this.router.navigate(['/lobby']);
       });
     }
