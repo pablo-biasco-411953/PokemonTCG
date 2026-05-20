@@ -160,9 +160,9 @@ export class LobbyComponent implements OnInit, AfterViewInit {
       hp: carta.hp || 70,
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
-      hpIcon: 'â™¥',
+      hpIcon: '♥',
       typeIcon: 'ðŸƒ',
-      attacksIcon: 'â€¢'
+      attacksIcon: '•'
     };
     this.pkmZoom = pkm;
     this.actualizarPosicion(event);

@@ -1,0 +1,54 @@
+<div class="card-detail-panel" [class.show]="hoveredCard">
+  <ng-container *ngIf="hoveredCard">
+    <div class="cd-left-col">
+      <img [src]="resolveImage(hoveredCard.id)" class="cd-big-img" />
+    </div>
+
+    <div class="cd-right-col">
+      <div class="cd-header">
+        <h3 class="cd-title">{{ hoveredCard.nombre }}</h3>
+        <span class="cd-hp">{{ hoveredCard.hp || hoveredCard.hpActual }} HP</span>
+      </div>
+
+      <div class="cd-mouse-hint" *ngIf="mostrarHintMano">
+        🖱️ Rueda: Navegar | Click Rueda: Jugar Carta
+      </div>
+
+      <p class="cd-type">Tipo: {{ hoveredCard.tipo || 'Desconocido' }}</p>
+      <hr class="cd-divider" />
+
+      <div class="cd-attacks-list">
+        <div class="cd-attack" *ngFor="let atk of asAttackList(hoveredCard.ataques)">
+          <div class="cda-top">
+            <div class="cda-cost" *ngIf="atk.costo?.length">
+              <span
+                *ngFor="let tipoEnergia of atk.costo"
+                class="cost-dot-small"
+                [style.backgroundColor]="resolveEnergyColor(tipoEnergia)"
+                [title]="tipoEnergia"
+              ></span>
+            </div>
+            <span class="cda-name">{{ atk.nombre }}</span>
+            <span class="cda-dmg">{{ atk.danio || atk.dano || '' }}</span>
+          </div>
+          <p class="cda-text" [innerHTML]="resolveAttackText(atk.texto)"></p>
+        </div>
+      </div>
+
+      <ng-container *ngIf="hoveredCardStatuses.length > 0">
+        <hr class="cd-divider" />
+        <div class="cd-glossary">
+          <p class="cdg-title">📘 GLOSARIO DE EFECTOS</p>
+          <div class="cdg-item" *ngFor="let st of hoveredCardStatuses">
+            <span [class]="st.css">{{ st.nombre }}:</span>
+            <span class="cdg-desc">{{ st.desc }}</span>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="cd-footer" *ngIf="hoveredCard.costoRetirada">
+        Costo de Retirada: {{ hoveredCard.costoRetirada }}
+      </div>
+    </div>
+  </ng-container>
+</div>
