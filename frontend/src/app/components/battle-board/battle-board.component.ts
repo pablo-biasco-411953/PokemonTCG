@@ -1705,6 +1705,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     (event.target as HTMLImageElement).style.display = 'none';
   }
 
+  tieneCondicionEspecial(quien: 'JUGADOR' | 'BOT', condicion: string): boolean {
+    const activo = quien === 'JUGADOR' ? this.partida?.jugador?.activo : this.partida?.bot?.activo;
+    return activo?.condicionesEspeciales.includes(condicion) ?? false;
+  }
+
+  getAtaquesActivoJugador(): BattleBoardAttack[] {
+    return (this.partida?.jugador?.activo?.card.ataques as BattleBoardAttack[] | undefined) ?? [];
+  }
+
+  getCostoRetiradaActivoJugador(): number {
+    return this.partida?.jugador?.activo?.card.costoRetirada ?? 0;
+  }
+
+  esHoverSobreManoJugador(): boolean {
+    return this.hoveredCardList === (this.partida?.jugador?.mano ?? []);
+  }
+
   getUltimaCartaDescarte(quien: 'JUGADOR' | 'BOT'): Card | null {
     const pila =
       quien === 'JUGADOR' ? this.partida?.jugador?.pilaDescarte : this.partida?.bot?.pilaDescarte;

@@ -53,4 +53,9 @@ export class BattleBoardDebugPanelComponent {
   resolveImage(cardId: string): string {
     return this.getImagenCarta ? this.getImagenCarta(cardId) : '';
   }
+
+  getHpActivo(quien: 'JUGADOR' | 'BOT'): number | 'KO' {
+    const activo = quien === 'JUGADOR' ? this.partida?.jugador.activo : this.partida?.bot.activo;
+    return activo?.hpActual ?? 'KO';
+  }
 }

@@ -41,12 +41,12 @@
 
   <div class="ddp-section" *ngIf="partida">
     <p>
-      <span>[PLAYER]</span> HP: {{ partida.jugador?.activo?.hpActual || 'KO' }} | Mano:
-      {{ partida.jugador?.mano?.length }} | P. Descarte: {{ partida.jugador?.pilaDescarte?.length }}
+      <span>[PLAYER]</span> HP: {{ getHpActivo('JUGADOR') }} | Mano:
+      {{ partida.jugador.mano.length }} | P. Descarte: {{ partida.jugador.pilaDescarte.length }}
     </p>
     <p>
-      <span>[BOT]</span> HP: {{ partida.bot?.activo?.hpActual || 'KO' }} | Mano:
-      {{ partida.bot?.mano?.length }} | P. Descarte: {{ partida.bot?.pilaDescarte?.length }}
+      <span>[BOT]</span> HP: {{ getHpActivo('BOT') }} | Mano: {{ partida.bot.mano.length }} | P.
+      Descarte: {{ partida.bot.pilaDescarte.length }}
     </p>
   </div>
 

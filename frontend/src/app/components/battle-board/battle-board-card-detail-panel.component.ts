@@ -35,4 +35,14 @@ export class BattleBoardCardDetailPanelComponent {
   resolveAttackText(texto: string): SafeHtml | string {
     return this.formatTextoAtaque ? this.formatTextoAtaque(texto) : texto;
   }
+
+  getDisplayedHp(card: Card | BattleActionCard): string {
+    return card.hp ?? '';
+  }
+
+  getCostoRetirada(card: Card | BattleActionCard): number | null {
+    return 'costoRetirada' in card && typeof card.costoRetirada === 'number'
+      ? card.costoRetirada
+      : null;
+  }
 }
