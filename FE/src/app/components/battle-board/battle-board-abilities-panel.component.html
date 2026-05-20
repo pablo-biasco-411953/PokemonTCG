@@ -3,7 +3,7 @@
   <p class="panel-title">ACCIONES DISPONIBLES</p>
 
   <div class="habilidades-list">
-    <ng-container *ngIf="ataques?.length; else sinAtaques">
+    <ng-container *ngIf="ataques.length; else sinAtaques">
       <button
         *ngFor="let h of ataques"
         class="habilidad-card"

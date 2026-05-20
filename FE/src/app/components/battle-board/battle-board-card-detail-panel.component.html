@@ -7,7 +7,7 @@
     <div class="cd-right-col">
       <div class="cd-header">
         <h3 class="cd-title">{{ hoveredCard.nombre }}</h3>
-        <span class="cd-hp">{{ hoveredCard.hp || hoveredCard.hpActual }} HP</span>
+        <span class="cd-hp">{{ getDisplayedHp(hoveredCard) }} HP</span>
       </div>
 
       <div class="cd-mouse-hint" *ngIf="mostrarHintMano">
@@ -20,7 +20,7 @@
       <div class="cd-attacks-list">
         <div class="cd-attack" *ngFor="let atk of asAttackList(hoveredCard.ataques)">
           <div class="cda-top">
-            <div class="cda-cost" *ngIf="atk.costo?.length">
+            <div class="cda-cost" *ngIf="atk.costo.length">
               <span
                 *ngFor="let tipoEnergia of atk.costo"
                 class="cost-dot-small"
@@ -46,8 +46,8 @@
         </div>
       </ng-container>
 
-      <div class="cd-footer" *ngIf="hoveredCard.costoRetirada">
-        Costo de Retirada: {{ hoveredCard.costoRetirada }}
+      <div class="cd-footer" *ngIf="getCostoRetirada(hoveredCard) !== null">
+        Costo de Retirada: {{ getCostoRetirada(hoveredCard) }}
       </div>
     </div>
   </ng-container>

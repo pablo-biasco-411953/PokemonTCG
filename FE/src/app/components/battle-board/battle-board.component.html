@@ -221,7 +221,7 @@
     <div class="neo-center-line rope-track">
       <div
         class="rope-burn"
-        *ngIf="partida?.turnoActual === 'JUGADOR'"
+        *ngIf="partida.turnoActual === 'JUGADOR'"
         [style.width.%]="porcentajeTimer"
         [class.critical]="tiempoRestante <= 15"
       >
@@ -348,22 +348,12 @@
             <div
               class="sprite-wrap bot-sprite-wrap"
               [class.sprite-attack]="animandoBotAtaque"
-              [class.status-confused]="
-                partida?.bot?.activo?.condicionesEspeciales?.includes('Confused')
-              "
+              [class.status-confused]="tieneCondicionEspecial('BOT', 'Confused')"
               [class.status-heal]="mostrarAuraCuracionBot"
-              [class.status-paralyzed]="
-                partida?.bot?.activo?.condicionesEspeciales?.includes('Paralyzed')
-              "
-              [class.status-burned]="
-                partida?.bot?.activo?.condicionesEspeciales?.includes('Burned')
-              "
-              [class.status-poisoned]="
-                partida?.bot?.activo?.condicionesEspeciales?.includes('Poisoned')
-              "
-              [class.status-asleep]="
-                partida?.bot?.activo?.condicionesEspeciales?.includes('Asleep')
-              "
+              [class.status-paralyzed]="tieneCondicionEspecial('BOT', 'Paralyzed')"
+              [class.status-burned]="tieneCondicionEspecial('BOT', 'Burned')"
+              [class.status-poisoned]="tieneCondicionEspecial('BOT', 'Poisoned')"
+              [class.status-asleep]="tieneCondicionEspecial('BOT', 'Asleep')"
             >
               <div class="status-fx-wrap">
                 <div
@@ -484,22 +474,12 @@
               class="sprite-wrap player-sprite-wrap"
               [class.pokemon-defeated]="estaPokemonDerrotado('JUGADOR')"
               [class.sprite-attack]="animandoAtaque"
-              [class.status-confused]="
-                partida?.jugador?.activo?.condicionesEspeciales?.includes('Confused')
-              "
+              [class.status-confused]="tieneCondicionEspecial('JUGADOR', 'Confused')"
               [class.status-heal]="mostrarAuraCuracionPlayer"
-              [class.status-paralyzed]="
-                partida?.jugador?.activo?.condicionesEspeciales?.includes('Paralyzed')
-              "
-              [class.status-burned]="
-                partida?.jugador?.activo?.condicionesEspeciales?.includes('Burned')
-              "
-              [class.status-poisoned]="
-                partida?.jugador?.activo?.condicionesEspeciales?.includes('Poisoned')
-              "
-              [class.status-asleep]="
-                partida?.jugador?.activo?.condicionesEspeciales?.includes('Asleep')
-              "
+              [class.status-paralyzed]="tieneCondicionEspecial('JUGADOR', 'Paralyzed')"
+              [class.status-burned]="tieneCondicionEspecial('JUGADOR', 'Burned')"
+              [class.status-poisoned]="tieneCondicionEspecial('JUGADOR', 'Poisoned')"
+              [class.status-asleep]="tieneCondicionEspecial('JUGADOR', 'Asleep')"
             >
               <div class="status-fx-wrap">
                 <div
@@ -594,8 +574,8 @@
           <div class="active-card-wrap player-card-wrap">
             <app-battle-board-abilities-panel
               [visible]="showHabilidadesPanel"
-              [ataques]="partida?.jugador?.activo?.card?.ataques || []"
-              [retiroCoste]="partida?.jugador?.activo?.card?.costoRetirada || 0"
+              [ataques]="getAtaquesActivoJugador()"
+              [retiroCoste]="getCostoRetiradaActivoJugador()"
               [retiroBloqueado]="partida.yaSeRetiroEsteTurno || !puedePagarRetiro()"
               [validarEnergiaAtaque]="validarEnergiaAtaque.bind(this)"
               [getCheckEnergiasAtaque]="getCheckEnergiasAtaque.bind(this)"
@@ -680,9 +660,7 @@
           *ngFor="let carta of partida.jugador.mano; let i = index"
           class="hand-card-hitbox"
           [class.nueva-carta]="cartasNuevas.has(carta.id)"
-          [class.simulated-hover]="
-            hoveredCardList === partida?.jugador?.mano && hoveredCardIndex === i
-          "
+          [class.simulated-hover]="esHoverSobreManoJugador() && hoveredCardIndex === i"
           [style.--bi]="i"
           [style.transform]="getCardFanTransform(i, partida.jugador.mano.length)"
         >
@@ -714,7 +692,7 @@
 
       <div class="discard-pile-wrapper bot-discard" (click)="abrirModalDescarte('BOT')">
         <div class="discard-slot">
-          <div class="discard-empty" *ngIf="!partida?.bot?.pilaDescarte?.length">
+          <div class="discard-empty" *ngIf="!partida.bot.pilaDescarte.length">
             <span>⊘</span>
             <small>DESCARTE</small>
           </div>
@@ -734,16 +712,16 @@
     <div class="turn-block">
       <div
         class="turn-status"
-        [class.active]="partida?.turnoActual === 'JUGADOR'"
-        [class.critical-text]="tiempoRestante <= 15 && partida?.turnoActual === 'JUGADOR'"
+        [class.active]="partida.turnoActual === 'JUGADOR'"
+        [class.critical-text]="tiempoRestante <= 15 && partida.turnoActual === 'JUGADOR'"
       >
         {{ getTextoEstadoTurno() }}
       </div>
 
       <button
         class="btn-turn"
-        [class.off]="partida?.turnoActual !== 'JUGADOR' || cargandoAccion"
-        [disabled]="partida?.turnoActual !== 'JUGADOR' || cargandoAccion || bloqueadoPorAnimacion"
+        [class.off]="partida.turnoActual !== 'JUGADOR' || cargandoAccion"
+        [disabled]="partida.turnoActual !== 'JUGADOR' || cargandoAccion || bloqueadoPorAnimacion"
         (click)="pasarTurno()"
       >
         <span class="bico">{{ getIconoBotonTurno() }}</span>
@@ -751,8 +729,8 @@
       </button>
 
       <div class="turn-dots">
-        <span [class.on]="partida?.turnoActual === 'JUGADOR'"></span>
-        <span [class.on]="partida?.turnoActual === 'BOT'"></span>
+        <span [class.on]="partida.turnoActual === 'JUGADOR'"></span>
+        <span [class.on]="partida.turnoActual === 'BOT'"></span>
       </div>
     </div>
 
@@ -761,7 +739,7 @@
         <div class="discard-label">DESCARTE</div>
 
         <div class="discard-slot">
-          <div class="discard-empty" *ngIf="!partida?.jugador?.pilaDescarte?.length">
+          <div class="discard-empty" *ngIf="!partida.jugador.pilaDescarte.length">
             <span>⊘</span>
           </div>
 
@@ -802,7 +780,7 @@
   <app-battle-board-card-detail-panel
     [hoveredCard]="hoveredCard"
     [hoveredCardStatuses]="hoveredCardStatuses"
-    [mostrarHintMano]="hoveredCardList === partida?.jugador?.mano"
+    [mostrarHintMano]="esHoverSobreManoJugador()"
     [getImagenCarta]="getImagenCarta.bind(this)"
     [getEnergyColor]="getEnergyColor.bind(this)"
     [formatTextoAtaque]="formatTextoAtaque.bind(this)"
