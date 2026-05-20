@@ -1,0 +1,46 @@
+<div class="attack-selection-panel habilidades-panel" *ngIf="visible">
+  <button class="close-panel-btn" (click)="cerrar($event)">✕</button>
+  <p class="panel-title">ACCIONES DISPONIBLES</p>
+
+  <div class="habilidades-list">
+    <ng-container *ngIf="ataques?.length; else sinAtaques">
+      <button
+        *ngFor="let h of ataques"
+        class="habilidad-card"
+        [class.habilidad-locked]="!puedeUsarAtaque(h)"
+        (click)="seleccionarAtaque(h, $event)"
+      >
+        <div class="hab-header">
+          <div class="hab-cost-container">
+            <span
+              *ngFor="let check of getChecks(h)"
+              class="cost-dot"
+              [style.backgroundColor]="resolveEnergyColor(check.tipo)"
+            ></span>
+          </div>
+          <span class="hab-type">DAÑO</span>
+          <span class="hab-dano">{{ h.danio || h.dano || 0 }}</span>
+        </div>
+        <div class="hab-body">
+          <p class="hab-name">{{ h.nombre }}</p>
+        </div>
+      </button>
+    </ng-container>
+
+    <ng-template #sinAtaques>
+      <p class="sin-ataques">Sin ataques.</p>
+    </ng-template>
+
+    <button
+      class="habilidad-card retirada-btn"
+      [class.habilidad-locked]="retiroBloqueado"
+      (click)="seleccionarRetirada($event)"
+    >
+      <div class="hab-header">
+        <span class="hab-type">COSTO</span>
+        <span class="hab-dano">{{ retiroCoste }}</span>
+      </div>
+      <div class="hab-body"><p class="hab-name">RETIRAR POKÉMON</p></div>
+    </button>
+  </div>
+</div>

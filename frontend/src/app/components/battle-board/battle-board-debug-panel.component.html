@@ -1,0 +1,118 @@
+<div class="developer-debug-panel" *ngIf="show" cdkDrag>
+  <div class="ddp-header" cdkDragHandle>
+    <span>⚙️ MOTOR DE BATALLA (F3) [DEVTOOLS]</span>
+    <span class="drag-icon">⠿</span>
+  </div>
+
+  <div class="ddp-section ddp-perf">
+    <div class="perf-box">
+      <span class="perf-label">FPS</span>
+      <span class="perf-val" [class.fps-good]="fps >= 50" [class.fps-bad]="fps < 30">{{
+        fps
+      }}</span>
+    </div>
+    <div class="perf-box">
+      <span class="perf-label">MEMORIA (JS)</span>
+      <span class="perf-val">{{ memoryUsage }}</span>
+    </div>
+    <div class="perf-box">
+      <span class="perf-label">LATENCIA</span>
+      <span class="perf-val"><span class="ping-dot"></span> Local</span>
+    </div>
+  </div>
+
+  <div class="ddp-section">
+    <p><span>Match ID:</span> {{ matchId || 'Ninguno' }}</p>
+    <p><span>Fase:</span> {{ partida?.faseActual || 'Cargando...' }}</p>
+    <p><span>Turno Real:</span> {{ partida?.turnoActual }}</p>
+    <p><span>Retirada usada:</span> {{ partida?.yaSeRetiroEsteTurno ? 'SÍ' : 'NO' }}</p>
+  </div>
+
+  <div class="ddp-section">
+    <p>
+      <span>UI Bloqueada:</span> <b [class.red]="cargandoAccion">{{ cargandoAccion }}</b>
+    </p>
+    <p>
+      <span>Animación Lock:</span>
+      <b [class.red]="bloqueadoPorAnimacion">{{ bloqueadoPorAnimacion }}</b>
+    </p>
+    <p><span>Fase Moneda:</span> {{ estadoCoinFlip }}</p>
+  </div>
+
+  <div class="ddp-section" *ngIf="partida">
+    <p>
+      <span>[PLAYER]</span> HP: {{ partida.jugador?.activo?.hpActual || 'KO' }} | Mano:
+      {{ partida.jugador?.mano?.length }} | P. Descarte: {{ partida.jugador?.pilaDescarte?.length }}
+    </p>
+    <p>
+      <span>[BOT]</span> HP: {{ partida.bot?.activo?.hpActual || 'KO' }} | Mano:
+      {{ partida.bot?.mano?.length }} | P. Descarte: {{ partida.bot?.pilaDescarte?.length }}
+    </p>
+  </div>
+
+  <div class="ddp-section ddp-godmode" *ngIf="partida">
+    <p class="godmode-title">⚡ GOD MODE</p>
+
+    <div class="gm-card-selector">
+      <div class="gm-filters">
+        <input
+          type="text"
+          class="gm-input gm-search"
+          placeholder="🔍 Buscar nombre, ataque o efecto..."
+          (input)="searchTextChange.emit($any($event.target).value)"
+        />
+
+        <select class="gm-select" (change)="searchSupertypeChange.emit($any($event.target).value)">
+          <option value="">Tipos...</option>
+          <option value="Pokémon">Pokémon</option>
+          <option value="Trainer">Trainer</option>
+          <option value="Energy">Energy</option>
+        </select>
+      </div>
+
+      <div class="selector-controls">
+        <button class="gm-btn arrow" (click)="prevCard.emit()">◀</button>
+
+        <div class="preview-card">
+          <img
+            *ngIf="debugSelectedCard"
+            [src]="resolveImage(debugSelectedCard.id)"
+            [alt]="debugSelectedCard.nombre"
+          />
+          <div *ngIf="!debugSelectedCard" class="no-results">❌ No hay cartas</div>
+        </div>
+
+        <button class="gm-btn arrow" (click)="nextCard.emit()">▶</button>
+      </div>
+
+      <div class="gm-card-info" *ngIf="debugSelectedCard">
+        <span class="gm-card-name">{{ debugSelectedCard.nombre }}</span>
+        <span class="gm-badge" *ngIf="debugSelectedCard.hp">{{ debugSelectedCard.hp }} HP</span>
+      </div>
+      <p class="gm-results-count">
+        {{ debugSelectedIndex + 1 }} / {{ debugFilteredCatalog.length }} resultados
+      </p>
+
+      <button class="gm-btn draw-btn" [disabled]="!debugSelectedCard" (click)="emitDrawCard()">
+        ROBAR ESTA CARTA
+      </button>
+    </div>
+
+    <div class="gm-row">
+      <select
+        class="gm-select"
+        [value]="selectedStatus"
+        (change)="selectedStatus = $any($event.target).value"
+      >
+        <option *ngFor="let estado of estadosEspeciales" [value]="estado">{{ estado }}</option>
+      </select>
+      <button class="gm-btn" (click)="emitForceState('BOT')">A Rival</button>
+      <button class="gm-btn" (click)="emitForceState('JUGADOR')">A Mí</button>
+    </div>
+
+    <div class="gm-row">
+      <button class="gm-btn danger" (click)="emitSetHp('BOT', 10)">Rival a 10 HP</button>
+      <button class="gm-btn danger" (click)="emitSetHp('JUGADOR', 10)">Yo a 10 HP</button>
+    </div>
+  </div>
+</div>

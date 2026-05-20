@@ -16,8 +16,8 @@ export class BattleBoardUiService {
     ekans: 23, arbok: 24,
     pikachu: 25, raichu: 26,
     sandshrew: 27, sandslash: 28,
-    'nidoranâ™€': 29, nidorina: 30, nidoqueen: 31,
-    'nidoranâ™‚': 32, nidorino: 33, nidoking: 34,
+    'nidoran♀': 29, nidorina: 30, nidoqueen: 31,
+    'nidoran♂': 32, nidorino: 33, nidoking: 34,
     clefairy: 35, clefable: 36,
     vulpix: 37, ninetales: 38,
     jigglypuff: 39, wigglytuff: 40,
@@ -181,7 +181,7 @@ export class BattleBoardUiService {
 
   // Identifica si una carta es Pokemon.
   esPokemon(carta: any): boolean {
-    return carta?.supertype === 'PokÃ©mon' || carta?.supertype === 'Pokemon';
+    return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon';
   }
 
   // Traduce el tipo de energia a una etiqueta legible.

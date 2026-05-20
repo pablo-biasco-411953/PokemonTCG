@@ -26,7 +26,6 @@ public class JugadorController {
 
             int cantidadCartas = (j.getColeccion() != null) ? j.getColeccion().size() : 0;
             
-            // Usamos el nuevo DTO en vez de un HashMap genÃ©rico
             JugadorDatosResponse response = new JugadorDatosResponse(
                 j.getUsername(), 
                 j.getSobresDisponibles(), 

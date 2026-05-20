@@ -69,9 +69,7 @@ public class MazoService {
         // Buscamos las cartas usando cardRepo
         List<Card> nuevasCartas = cardRepo.findAllById(cartasIds);
 
-        // Opcional: PodrÃƒÂ­as validar que nuevasCartas.size() == 60 acÃƒÂ¡ tambiÃƒÂ©n
         if (nuevasCartas.size() != 60) {
-            // PodrÃƒÂ­as lanzar error o simplemente dejar que guarde si confÃƒÂ­as en el front
         }
 
         mazo.setCartas(nuevasCartas);

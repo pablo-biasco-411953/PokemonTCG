@@ -16,7 +16,7 @@ export class BattleBoardAttackService {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
     const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
-    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aÃ¡]\s+(\d+|una?)\s+moneda/i);
+    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
     if (!flipMatch) return null;
 
     const numStr = (flipMatch[1] || flipMatch[2] || 'a').toLowerCase();
@@ -152,12 +152,12 @@ export class BattleBoardAttackService {
     if (t.includes('grass') || t.includes('planta')) return 'Grass';
     if (t.includes('fire') || t.includes('fuego')) return 'Fire';
     if (t.includes('water') || t.includes('agua')) return 'Water';
-    if (t.includes('lightning') || t.includes('elÃ©ctrica') || t.includes('electrica')) return 'Lightning';
-    if (t.includes('psychic') || t.includes('psÃ­quica') || t.includes('psiquica')) return 'Psychic';
+    if (t.includes('lightning') || t.includes('eléctrica') || t.includes('electrica')) return 'Lightning';
+    if (t.includes('psychic') || t.includes('psíquica') || t.includes('psiquica')) return 'Psychic';
     if (t.includes('fighting') || t.includes('lucha')) return 'Fighting';
     if (t.includes('darkness') || t.includes('siniestra') || t.includes('oscuridad')) return 'Darkness';
     if (t.includes('metal') || t.includes('acero')) return 'Metal';
-    if (t.includes('dragon') || t.includes('dragÃ³n') || t.includes('dragon')) return 'Dragon';
+    if (t.includes('dragon') || t.includes('dragón') || t.includes('dragon')) return 'Dragon';
     if (t.includes('fairy') || t.includes('hada')) return 'Fairy';
     if (t.includes('colorless') || t.includes('incolora')) return 'Colorless';
     return tipo;
