@@ -2,8 +2,8 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { BattleService } from './battle.service';
 import { BattleBoardStateService } from './battle-board-state.service';
-import { BattleActionCard, CartaEnJuego, Partida } from '../model/battle';
-import { Card } from '../model/card';
+import { BattleActionCard, CartaEnJuego, Partida } from '../../../shared/models/battle';
+import { Card } from '../../../shared/models/card';
 
 export type CardActionType =
   | 'unir-energia'

@@ -1,8 +1,8 @@
 import { Routes } from '@angular/router';
-import { LoginComponent } from './login/login.component';
-import { LobbyComponent } from './lobby/lobby.component';
-import { DeckBuilderComponent } from './components/deck-builder/deck-builder.component';
-import { BattleBoardComponent } from './components/battle-board/battle-board.component';
+import { LoginComponent } from './features/login/login.component';
+import { LobbyComponent } from './features/lobby/lobby.component';
+import { DeckBuilderComponent } from './features/deck-builder/deck-builder.component';
+import { BattleBoardComponent } from './features/battle/battle-board.component';
 
 // Mapa central de navegacion del frontend.
 export const routes: Routes = [

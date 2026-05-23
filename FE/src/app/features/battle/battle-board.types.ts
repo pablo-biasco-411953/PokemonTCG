@@ -1,5 +1,5 @@
-import { Ataque, Card } from '../../model/card';
-import { BattleActionCard, CartaEnJuego } from '../../model/battle';
+import { Ataque, Card } from '../../shared/models/card';
+import { BattleActionCard, CartaEnJuego } from '../../shared/models/battle';
 
 export type CoinSide = '' | 'CARA' | 'CRUZ';
 export type BattleBoardSide = 'jugador' | 'bot';

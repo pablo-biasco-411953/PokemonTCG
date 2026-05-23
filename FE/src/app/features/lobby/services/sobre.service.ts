@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Card } from '../model/card';
+import { Card } from '../../../shared/models/card';
 
 @Injectable({ providedIn: 'root' })
 export class SobreService {

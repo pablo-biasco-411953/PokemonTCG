@@ -2,9 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { JugadorService } from '../../services/jugador.service';
-import { MazoService } from '../../services/mazo.service';
-import { Card } from '../../model/card';
+import { JugadorService } from '../../core/services/jugador.service';
+import { MazoService } from './services/mazo.service';
+import { Card } from '../../shared/models/card';
 
 @Component({
   selector: 'app-deck-builder',

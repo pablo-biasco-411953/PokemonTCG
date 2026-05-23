@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { Partida } from '../model/battle';
+import { Partida } from '../../../shared/models/battle';
 import { CoinFlipConfig } from './battle-board-attack.service';
 import { BattleService } from './battle.service';
 

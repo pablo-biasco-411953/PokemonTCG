@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Ataque } from '../model/card';
-import { CartaEnJuego, Partida } from '../model/battle';
-import { AttackCoinFlipState, CoinSide } from '../components/battle-board/battle-board.types';
+import { Ataque } from '../../../shared/models/card';
+import { CartaEnJuego, Partida } from '../../../shared/models/battle';
+import { AttackCoinFlipState, CoinSide } from '../battle-board.types';
 import { CoinFlipConfig } from './battle-board-attack.service';
 
 export interface SleepCheckResult {
