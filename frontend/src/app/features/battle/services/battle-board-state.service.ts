@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Card } from '../model/card';
-import { BattleActionCard, CartaEnJuego, Partida } from '../model/battle';
+import { Card } from '../../../shared/models/card';
+import { BattleActionCard, CartaEnJuego, Partida } from '../../../shared/models/battle';
 
 @Injectable({ providedIn: 'root' })
 export class BattleBoardStateService {

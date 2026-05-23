@@ -4,22 +4,22 @@ import { BattleBoardAbilitiesPanelComponent } from './battle-board-abilities-pan
 import { BattleBoardCardDetailPanelComponent } from './battle-board-card-detail-panel.component';
 import { BattleBoardDebugPanelComponent } from './battle-board-debug-panel.component';
 import { BattleBoardDiscardModalComponent } from './battle-board-discard-modal.component';
-import { BattleService } from '../../services/battle.service';
-import { BattleBoardUiService } from '../../services/battle-board-ui.service';
+import { BattleService } from './services/battle.service';
+import { BattleBoardUiService } from './services/battle-board-ui.service';
 import {
   BattleBoardAttackService,
   CoinFlipConfig,
-} from '../../services/battle-board-attack.service';
+} from './services/battle-board-attack.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { firstValueFrom } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
-import { Card } from '../../model/card';
-import { BattleActionCard, CartaEnJuego, Partida } from '../../model/battle';
-import { BattleBoardActionService } from '../../services/battle-board-action.service';
-import { BattleBoardCombatService } from '../../services/battle-board-combat.service';
-import { BattleBoardStateService } from '../../services/battle-board-state.service';
-import { BattleBoardTurnService } from '../../services/battle-board-turn.service';
+import { Card } from '../../shared/models/card';
+import { BattleActionCard, CartaEnJuego, Partida } from '../../shared/models/battle';
+import { BattleBoardActionService } from './services/battle-board-action.service';
+import { BattleBoardCombatService } from './services/battle-board-combat.service';
+import { BattleBoardStateService } from './services/battle-board-state.service';
+import { BattleBoardTurnService } from './services/battle-board-turn.service';
 import {
   AttackCoinFlipState,
   BattleBoardAttack,

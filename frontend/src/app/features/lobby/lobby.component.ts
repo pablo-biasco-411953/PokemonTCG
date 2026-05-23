@@ -1,17 +1,17 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SobreService } from '../services/sobre.service';
-import { MazoService } from '../services/mazo.service';
-import { JugadorService } from '../services/jugador.service';
-import { BattleService } from '../services/battle.service';
-import { CardService } from '../services/card.service';
+import { SobreService } from './services/sobre.service';
+import { MazoService } from '../deck-builder/services/mazo.service';
+import { JugadorService } from '../../core/services/jugador.service';
+import { BattleService } from '../battle/services/battle.service';
+import { CardService } from '../../core/services/card.service';
 import { Router } from '@angular/router';
-import { AperturaSobreComponent } from '../components/apertura-sobre/apertura-sobre';
-import { Card } from '../model/card';
-import { Jugador, JugadorDatosResponse } from '../model/jugador';
-import { Mazo } from '../model/mazo';
-import { Partida } from '../model/battle';
+import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
+import { Card } from '../../shared/models/card';
+import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
+import { Mazo } from '../../shared/models/mazo';
+import { Partida } from '../../shared/models/battle';
 
 // Datos usados por el zoom flotante de una carta.
 export interface PokemonZoomUI {

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Mazo } from '../model/mazo';
+import { Mazo } from '../../../shared/models/mazo';
 
 @Injectable({
   providedIn: 'root'

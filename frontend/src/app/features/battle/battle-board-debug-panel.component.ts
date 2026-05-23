@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { CdkDrag, CdkDragHandle } from '@angular/cdk/drag-drop';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Card } from '../../model/card';
-import { Partida } from '../../model/battle';
+import { Card } from '../../shared/models/card';
+import { Partida } from '../../shared/models/battle';
 
 @Component({
   selector: 'app-battle-board-debug-panel',

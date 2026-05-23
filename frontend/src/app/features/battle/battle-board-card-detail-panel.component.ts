@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { SafeHtml } from '@angular/platform-browser';
-import { BattleActionCard } from '../../model/battle';
-import { Card } from '../../model/card';
+import { BattleActionCard } from '../../shared/models/battle';
+import { Card } from '../../shared/models/card';
 import { BattleBoardAttack, CardGlossaryEntry } from './battle-board.types';
 
 @Component({

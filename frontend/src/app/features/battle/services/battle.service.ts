@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Card } from '../model/card';
-import { Partida } from '../model/battle';
+import { Card } from '../../../shared/models/card';
+import { Partida } from '../../../shared/models/battle';
 
 @Injectable({ providedIn: 'root' })
 export class BattleService {

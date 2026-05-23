@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { Card } from '../../model/card';
+import { Card } from '../../shared/models/card';
 
 @Component({
   selector: 'app-battle-board-discard-modal',
