@@ -8,7 +8,7 @@
       <div class="led yellow"></div>
       <div class="led green"></div>
     </div>
-    <div class="pokedex-title dot-matrix">MI POKEDEX</div>
+    <div class="pokedex-title dot-matrix">{{ 'deck.myPokedex' | t }}</div>
     <div class="pokedex-hinge"></div>
   </div>
 
@@ -16,22 +16,26 @@
     <button class="btn-nav pokedex-btn-round" (click)="volver()">⬅</button>
     
     <div class="search-bar pokedex-screen-inset-mini">
-      <input [(ngModel)]="filtroNombre" placeholder="BUSCAR POKEMON...">
+      <input [(ngModel)]="filtroNombre" [placeholder]="'deck.searchPokemon' | t">
       <select [(ngModel)]="filtroTipo">
         <option *ngFor="let t of tipos" [value]="t">{{t | uppercase}}</option>
       </select>
     </div>
 
     <div class="deck-info">
-      <input [(ngModel)]="nombreMazo" class="deck-name-input pokedex-screen-inset-mini" placeholder="NOMBRE MAZO">
+      <input [(ngModel)]="nombreMazo" class="deck-name-input pokedex-screen-inset-mini" [placeholder]="'deck.deckName' | t">
       <button class="btn-save pokedex-btn-rect" (click)="guardar()" [disabled]="mazoEnProceso.length !== 60">
-        GUARDAR ({{mazoEnProceso.length}}/60)
+        {{ 'deck.save' | t }} ({{mazoEnProceso.length}}/60)
       </button>
     </div>
   </header>
 
   <div class="workspace">
     <section class="pokedex-section pokedex-screen-inset">
+      <div class="collection-summary dot-matrix">
+        <span>{{ coleccionFiltrada.length }} cartas</span>
+        <span>{{ mazoEnProceso.length }}/60 mazo</span>
+      </div>
       <div class="grid">
         <div *ngFor="let carta of coleccionFiltrada; let i = index" 
              class="card-item card-entry"
@@ -63,14 +67,14 @@
     </section>
 
     <section class="deck-sidebar pokedex-panel-right">
-       <h3 class="panel-title dot-matrix">MAZO ACTUAL</h3>
+       <h3 class="panel-title dot-matrix">{{ 'deck.currentDeck' | t }}</h3>
        <div class="deck-list pokedex-screen-inset-mini">
           <div *ngFor="let c of mazoEnProceso; let i = index" class="deck-row dot-matrix">
             <span>{{c.nombre | uppercase}}</span>
             <button (click)="quitarDelMazo(i)" class="btn-remove pokedex-btn-tiny">X</button>
           </div>
           <div *ngIf="mazoEnProceso.length === 0" class="empty-msg dot-matrix">
-            [ ESPERANDO CARTAS... ]
+            {{ 'deck.waitingCards' | t }}
           </div>
        </div>
 
@@ -87,10 +91,10 @@
       <img [src]="getImagenReal(cardFocus.id)" [alt]="cardFocus.nombre">
       <div class="info">
         <h2 class="dot-matrix">{{ cardFocus.nombre | uppercase }}</h2>
-        <p class="dot-matrix">HP: {{ cardFocus.hp }} | TIPO: {{ cardFocus.tipo | uppercase }}</p>
+        <p class="dot-matrix">HP: {{ cardFocus.hp }} | {{ 'deck.type' | t }}: {{ cardFocus.tipo | uppercase }}</p>
         <div class="details-box pokedex-text-box">
-          <h4 class="dot-matrix">DATOS TCG</h4>
-          <p class="dot-matrix">ATAQUE: {{ cardFocus.attacks }}</p>
+          <h4 class="dot-matrix">{{ 'deck.tcgData' | t }}</h4>
+          <p class="dot-matrix">{{ 'deck.attack' | t }}: {{ cardFocus.attacks }}</p>
         </div>
       </div>
     </div>
