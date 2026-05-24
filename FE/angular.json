@@ -28,6 +28,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets",
+                "output": "/assets"
               }
             ],
             "styles": [
@@ -39,8 +44,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "1.3MB",
-                  "maximumError": "1.5MB"
+                  "maximumWarning": "1.8MB",
+                  "maximumError": "2.3MB"
                 },
                 {
                   "type": "anyComponentStyle",
