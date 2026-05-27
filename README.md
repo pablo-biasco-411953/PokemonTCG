@@ -1,130 +1,148 @@
-<div align='center'>
-  <img src='https://img.icons8.com/color/48/000000/pokeball.png' alt='Pokeball'/>
-</div>
+# PokemonTCG
 
-# ⚡ Pokémon TCG - Sistema de Batalla
+Proyecto full-stack de Pokemon Trading Card Game con backend en Spring Boot y frontend en Angular.
 
-<div align="center">
-  <img src="https://img.icons8.com/color/96/000000/pokemon.png" alt="Pokemon Logo"/>
-  <h1>Pokémon Trading Card Game Simulator</h1>
-  <p><b>Full-stack Battle System</b> | Spring Boot 3 + Angular 17</p>
-  
-  ![Java](https://img.shields.io/badge/Java-21-orange?style=flat-square&logo=openjdk)
-  ![Spring](https://img.shields.io/badge/Spring_Boot-3.2.4-green?style=flat-square&logo=springboot)
-  ![Angular](https://img.shields.io/badge/Angular-17-red?style=flat-square&logo=angular)
-  ![H2](https://img.shields.io/badge/Database-H2_In_Memory-blue?style=flat-square)
-</div>
+## Estructura
 
----
+```text
+PokemonTCG/
+  backend/      API Spring Boot + H2
+  frontend/     Cliente Angular
+  .mvn/         Maven wrapper compartido
+  mvnw
+  mvnw.cmd
+```
 
-## 📋 Descripción General
+## Stack actual
 
-**PokemonTCG** es un simulador avanzado del juego de cartas coleccionables Pokémon. El sistema permite gestionar colecciones, armar mazos y enfrentarse en batallas dinámicas que implementan un motor de reglas complejo y una IA estratégica.
+- Java 21
+- Spring Boot 3.2.4
+- H2 en memoria
+- Angular 21
+- RxJS
+- Three.js
 
-Desarrollado como Proyecto Integrador para la cátedra de **Programación III** de la **Tecnicatura Universitaria en Programación (UTN FRC)**.
-
----
-
-## 🛠️ Stack Tecnológico
+## Arranque local
 
 ### Backend
-- **Core:** Java 21 LTS (Uso de `Records` y features modernas) + Spring Boot 3.2.4
-- **Persistencia:** Spring Data JPA + H2 Database (In-Memory)
-- **Seguridad:** Spring Security (Autenticación de usuarios)
-- **JSON Engine:** Jackson para el parseo dinámico de atributos de cartas reales.
+
+Desde la raiz del proyecto:
+
+```powershell
+.\mvnw.cmd -f backend\pom.xml spring-boot:run
+```
+
+El backend arranca en `http://localhost:8080`.
+
+### Backend en macOS / Linux
+
+En macOS y Linux no se usa `mvnw.cmd`. El comando correcto es:
+
+```bash
+./mvnw -f backend/pom.xml spring-boot:run
+```
+
+Si `./mvnw` no tiene permisos de ejecucion:
+
+```bash
+chmod +x mvnw
+./mvnw -f backend/pom.xml spring-boot:run
+```
 
 ### Frontend
-- **Framework:** Angular 17 (Standalone Components)
-- **Estilos:** Tailwind CSS / CSS3 para el tablero de juego inmersivo.
-- **Estado:** RxJS para la gestión de eventos de batalla en tiempo real.
 
----
+Desde `frontend/`:
 
-## 🧠 Core Features: Motor de Juego e IA
+```powershell
+npm start
+```
 
-El diferencial técnico de este proyecto reside en su robusto **Battle Engine**, diseñado para replicar fielmente las mecánicas oficiales del TCG:
+El frontend arranca en `http://localhost:4200`.
 
-### ⚙️ Motor de Reglas (BattleEngineService)
-- **Condiciones Especiales (Estados):** Soporte completo para Veneno ☠️, Quemadura 🔥, Sueño 💤, Parálisis ⚡ y Confusión 🌀.
-- **Fase de Mantenimiento (Pokémon Checkup):** Resolución automática de daño por estados y lanzamiento de monedas de curación entre turnos.
-- **RNG & Lanzamiento de Monedas:** Parseo dinámico de textos de ataques para calcular probabilidades de éxito, multiplicadores de daño y efectos colaterales (ej: destrucción de energía rival o bloqueo de retirada).
-- **Cura en la Banca:** Sistema de retirada que limpia automáticamente los estados alterados al volver a la banca.
+## Build y validacion
 
-### 🤖 Inteligencia Artificial Heurística (BotAIService)
-El bot no juega al azar; utiliza un sistema de **Puntaje Estratégico** en constante evolución:
-- **Detección de Peligro por Estados:** El bot analiza si morirá por Veneno/Quemadura entre turnos y fuerza una retirada estratégica para curarse.
-- **Respeto de Bloqueos:** Reconoce si está Dormido o Paralizado y omite ataques inválidos.
-- **Ventaja Elemental:** Prioriza bajar a la banca y subir al activo a Pokémon que exploten la `Weakness (x2)` del rival o posean `Resistance (-20)`.
-- **Gestión de Recursos:** Optimiza la unión de cartas de energía evaluando el costo específico (y el costo incoloro) de sus ataques disponibles.
+### Backend
 
----
+```powershell
+.\mvnw.cmd -f backend\pom.xml test
+```
 
-## 🏗️ Estructura del Proyecto
+### Frontend
 
-```plaintext
-PokemonTCG/
-├── backend/                # API REST (Java)
-│   └── src/main/java/com/pokemon/tcg/
-│       ├── controller/     # Endpoints de la API
-│       ├── model/          # Entidades (Card, Jugador, Partida, ResultadoAtaque)
-│       ├── service/        # Lógica de Batalla, Procesamiento de Textos e IA
-│       └── repository/     # Interfaces JPA
-├── frontend/               # Interfaz de Usuario (Angular)
-└── data/                   # Archivos JSON estructurados de cartas
-🔌 Documentación de la API (Endpoints Principales)
-🛡️ Autenticación y Jugadores
-POST /api/auth/login: Login/Registro automático.
+```powershell
+cd frontend
+npm.cmd run build
+```
 
-GET /api/jugadores/{username}/datos: Perfil, sobres y estadísticas.
+Nota:
+El build de frontend compila, pero hoy falla por budgets de produccion configurados en Angular. No es un problema del refactor estructural inicial.
 
-GET /api/jugadores/{username}/coleccion: Lista de cartas obtenidas.
+## Errores comunes al levantar el proyecto
 
-⚔️ Sistema de Batalla
-POST /api/battle/start/{username}: Inicia un match contra la IA.
+### Error: `Port 8080 was already in use`
 
-POST /api/battle/{id}/play-pokemon: Baja un Pokémon básico a la posición Activa o a la Banca.
+Si al levantar el backend aparece un error como:
 
-POST /api/battle/{id}/attach-energy: Une una carta de energía a un Pokémon específico.
+```text
+Web server failed to start. Port 8080 was already in use.
+```
 
-POST /api/battle/{id}/attack?nombreAtaque=X: Ejecuta un ataque, calculando RNG, debilidades y estados.
+significa que ya hay otro proceso usando el puerto `8080`.
 
-POST /api/battle/{id}/retreat: Retira al activo pagando el costo de energía (y validando bloqueos).
+#### Solucion en macOS / Linux
 
-POST /api/battle/{id}/pass-turn: Finaliza el turno actual y dispara la fase de Mantenimiento.
+Ver que proceso esta usando el puerto:
 
-🃏 Cartas y Mazos
-GET /api/cards: Catálogo completo de cartas.
+```bash
+lsof -i :8080
+```
 
-POST /api/sobres/abrir/{username}: Sistema Gacha para obtener nuevas cartas.
+Cerrar ese proceso usando su PID:
 
-POST /api/mazos/guardar: Persiste un mazo customizado de 60 cartas.
+```bash
+kill -9 <PID>
+```
 
-🗺️ Roadmap de Desarrollo
-🎯 Fase Actual: Lógica de Combate y Estados
-[x] Corregido error de posicionamiento en banca.
+Tambien se puede hacer en un solo comando:
 
-[x] Implementado robo de carta automático al iniciar turno.
+```bash
+kill -9 $(lsof -ti :8080)
+```
 
-[x] Sistema de Swap / Retirada táctica validando costos.
+Luego volver a levantar el backend:
 
-[x] Efectos Especiales: Implementación de lógica para habilidades pasivas, lanzamiento de monedas y estados alterados (Veneno, Parálisis, etc.).
+```bash
+./mvnw -f backend/pom.xml spring-boot:run
+```
 
-[x] Optimización de IA para reemplazo inteligente post-K.O. y supervivencia a estados.
+#### Alternativa: usar otro puerto
 
-🛠️ Próximos Desafíos Técnicos
-[ ] Evoluciones: Implementación de lógica para Stage 1 y Stage 2 validando el nombre del Pokémon base (evolvesFrom).
+Si no queres cerrar el proceso actual, podes arrancar el backend en otro puerto:
 
-[ ] WebSockets (Online Real-Time): Migración del sistema de turnos a Spring WebSocket (STOMP) para permitir batallas PvP reales entre usuarios.
+```bash
+./mvnw -f backend/pom.xml spring-boot:run -Dspring-boot.run.arguments=--server.port=8081
+```
 
-[ ] Animaciones en Frontend: Representación visual (UI) de los lanzamientos de monedas y los iconos de estado sobre las cartas.
+Importante:
+Si el frontend o alguna configuracion apunta a `http://localhost:8080`, tambien habra que ajustar esa URL para usar `8081`.
 
-🎓 Créditos
-Desarrollador: Pablo Alejandro Biasco
+## Flujos base que estamos protegiendo durante el refactor
 
-Institución: UTN - Facultad Regional Córdoba
+- Login
+- Lobby
+- Apertura de sobres
+- Constructor de mazos
+- Inicio de batalla
+- Jugar carta, unir energia, atacar, pasar turno y retirada
 
-Materia: Programación III
+## Modo de pruebas
 
-<div align="center">
-<img src="https://img.icons8.com/color/48/000000/pokeball.png" alt="Pokeball"/>
-</div>
+Dentro del tablero de batalla existe un panel de depuracion o "modo dios" para testear acciones manuales.
+
+- Se abre y se cierra con la tecla `F3`
+- Solo esta disponible dentro de una partida, en la pantalla de batalla
+- Permite inyectar cartas, forzar estados y ajustar HP para pruebas rapidas
+
+## Estado del refactor
+
+La hoja de ruta activa esta en [REFACTOR_README.md](./REFACTOR_README.md).

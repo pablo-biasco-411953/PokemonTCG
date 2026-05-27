@@ -21,7 +21,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             Jugador jugador = authService.login(request.getUsername());
-            if (jugador == null) return ResponseEntity.status(401).body("Usuario no vÃ¡lido");
+            if (jugador == null) return ResponseEntity.status(401).body("Usuario no válido");
             return ResponseEntity.ok(jugador);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error en login: " + e.getMessage());

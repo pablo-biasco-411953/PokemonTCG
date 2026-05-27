@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * Representa una partida en curso.
+ * Representa la partida completa que viaja entre backend y frontend.
  */
 public class Partida {
     private String id; // UUID
@@ -22,7 +22,7 @@ public class Partida {
     public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, FIN_PARTIDA }
 
     public Partida(TableroJugador jugador, TableroJugador bot) {
-        // Generamos un ID por defecto para que nunca empiece en null
+        // Cada partida vive en memoria y se identifica por UUID.
         this.id = UUID.randomUUID().toString();
         this.jugador = jugador;
         this.bot = bot;

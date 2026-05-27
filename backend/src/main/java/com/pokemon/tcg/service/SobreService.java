@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Random;
 
 @Service
+/**
+ * Genera sobres aleatorios y los agrega a la colección del jugador.
+ */
 public class SobreService {
     private final JugadorRepository jugadorRepo;
     private final CardRepository cardRepo;
@@ -23,6 +26,7 @@ public class SobreService {
     }
 
     public List<Card> abrirSobre(String username) {
+        // Mezcla energías y Pokémon, descuenta un sobre y actualiza la colección.
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
