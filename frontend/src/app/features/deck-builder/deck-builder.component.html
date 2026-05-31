@@ -96,3 +96,35 @@
     </div>
   </div>
 </div>
+
+<!-- Modal de Notificación Pokémon Retro -->
+<div class="pokemon-modal-overlay" *ngIf="modalInfo.show" (click)="cerrarModal()">
+  <div class="pokemon-modal-card" (click)="$event.stopPropagation()">
+    <!-- Cabecera estilo Pokedex -->
+    <div class="modal-header">
+      <div class="modal-leds">
+        <span class="led red-led pulsing"></span>
+        <span class="led yellow-led"></span>
+        <span class="led green-led"></span>
+      </div>
+      <div class="modal-title dot-matrix">{{ modalInfo.title | uppercase }}</div>
+    </div>
+    
+    <!-- Cuerpo con pantalla y texto -->
+    <div class="modal-body">
+      <p class="message-text">{{ modalInfo.message }}</p>
+      
+      <!-- Indicador de flecha parpadeante retro (A para continuar) -->
+      <div class="retro-arrow-container">
+        <span class="retro-arrow">▼</span>
+      </div>
+    </div>
+    
+    <!-- Botón de confirmar -->
+    <div class="modal-footer">
+      <button class="btn-confirm dot-matrix" (click)="cerrarModal()">
+        ACEPTAR (A)
+      </button>
+    </div>
+  </div>
+</div>

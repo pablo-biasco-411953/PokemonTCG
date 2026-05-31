@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -33,6 +33,14 @@ export class DeckBuilderComponent implements OnInit {
   hoverTimer: any;
   cartaSinStockAnimandoId: string | null = null;
   private resetAnimacionSinStockTimer: number | null = null;
+
+  // Estado del modal de notificacion personalizado.
+  modalInfo = {
+    show: false,
+    title: '',
+    message: '',
+    action: undefined as (() => void) | undefined
+  };
 
   // Mapeado temporal entre ids viejos y assets reales.
   mapaFotos: { [key: string]: string } = {
@@ -169,19 +177,49 @@ export class DeckBuilderComponent implements OnInit {
     this.mazoEnProceso.splice(index, 1);
   }
 
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    if (this.modalInfo.show) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'a' || event.key === 'A') {
+        event.preventDefault();
+        this.cerrarModal();
+      }
+    }
+  }
+
+  mostrarModal(titulo: string, mensaje: string, accion?: () => void) {
+    this.modalInfo = {
+      show: true,
+      title: titulo,
+      message: mensaje,
+      action: accion
+    };
+    this.cdr.detectChanges();
+  }
+
+  cerrarModal() {
+    this.modalInfo.show = false;
+    if (this.modalInfo.action) {
+      this.modalInfo.action();
+    }
+    this.cdr.detectChanges();
+  }
+
   // Guarda un mazo nuevo o actualiza uno existente.
   guardar() {
     const ids = this.mazoEnProceso.map(c => c.id);
 
     if (this.idMazoAEditar) {
       this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
-        alert('Mazo actualizado');
-        this.router.navigate(['/lobby']);
+        this.mostrarModal('¡Mazo Guardado!', 'El mazo se ha actualizado correctamente en tu cuenta.', () => {
+          this.router.navigate(['/lobby']);
+        });
       });
     } else {
       this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
-        alert('Mazo creado');
-        this.router.navigate(['/lobby']);
+        this.mostrarModal('¡Mazo Creado!', 'El mazo se ha creado y guardado con éxito.', () => {
+          this.router.navigate(['/lobby']);
+        });
       });
     }
   }
