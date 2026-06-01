@@ -1,25 +1,521 @@
-<!-- Pantalla de acceso del jugador. -->
-<div class="login-container">
-  <div class="login-card">
-    <h2>Bienvenido al Pokémon TCG</h2>
-    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
-      <div class="input-group">
-        <label for="username">Nombre de Usuario:</label>
-        <input
-          type="text"
-          id="username"
-          name="username" 
-          [(ngModel)]="username"
-          placeholder="Ingresa tu nombre"
-          required
-        >
-      </div>
-      <button
-        type="submit"
-        [disabled]="!loginForm.form.valid"
-        class="login-button">
-        Iniciar Sesión
-      </button>
-    </form>
+<main
+  class="login-shell min-h-screen overflow-hidden text-white"
+  [class.has-live-video]="!wallpaperVideoFailed"
+  [style.--mx]="mouseDriftX + 'px'"
+  [style.--my]="mouseDriftY + 'px'"
+>
+  <button
+    class="music-toggle-btn absolute top-6 left-6 z-50 flex items-center gap-2 rounded-full border border-yellow-400/30 bg-slate-900/60 px-4 py-2 text-sm font-bold text-yellow-400 backdrop-blur transition-all hover:bg-slate-800/80 hover:border-yellow-400/60"
+    (click)="sound.toggleMusic()"
+  >
+    <span class="icon">{{ sound.isMusicPlaying ? '🔊' : '🔈' }}</span>
+    <span>{{ sound.isMusicPlaying ? 'MUSIC ON' : 'MUSIC OFF' }}</span>
+  </button>
+  <div class="intro-burst" aria-hidden="true"></div>
+  <canvas #wallpaperCanvas class="login-wallpaper" [class.is-hidden]="!wallpaperVideoFailed" aria-hidden="true"></canvas>
+  <video
+    #wallpaperVideo
+    *ngIf="liveWallpaperUrl && !wallpaperVideoFailed"
+    class="login-live-video"
+    [src]="liveWallpaperUrl"
+    autoplay
+    muted
+    loop
+    playsinline
+    (loadeddata)="playWallpaperVideo($event)"
+    (canplay)="playWallpaperVideo($event)"
+    (error)="onWallpaperVideoError()"
+  ></video>
+  <div class="stadium-rim" aria-hidden="true"></div>
+  <div class="sky-bloom"></div>
+  <div class="living-aura" aria-hidden="true">
+    <span
+      *ngFor="let mote of auraMotes"
+      [style.left.%]="mote.x"
+      [style.top.%]="mote.y"
+      [style.width.px]="mote.s"
+      [style.height.px]="mote.s"
+      [style.animation-duration.s]="mote.d"
+      [style.animation-delay.s]="mote.delay"
+    ></span>
   </div>
-</div>
+  <div class="prism-shards" aria-hidden="true">
+    <span
+      *ngFor="let shard of prismShards"
+      [style.left.%]="shard.x"
+      [style.top.%]="shard.y"
+      [style.animation-duration.s]="shard.d"
+      [style.animation-delay.s]="shard.delay"
+      [style.--rot]="shard.rot + 'deg'"
+    ></span>
+  </div>
+  <div class="elemental-clash abstract-only" aria-hidden="true">
+    <div class="impact-core"><span>VS</span></div>
+    <span class="energy-slash slash-one"></span>
+    <span class="energy-slash slash-two"></span>
+  </div>
+  <div class="storm-vignette"></div>
+  <div class="speed-lines" aria-hidden="true">
+    <span
+      *ngFor="let line of speedLines"
+      [style.left.%]="line.x"
+      [style.top.%]="line.y"
+      [style.width.px]="line.w"
+      [style.animation-duration.s]="line.d"
+      [style.animation-delay.s]="line.delay"
+    ></span>
+  </div>
+  <div class="tcg-card-storm" aria-hidden="true">
+    <div
+      *ngFor="let card of stormCards"
+      class="tcg-card-parallax"
+      [style.left.%]="card.x"
+      [style.top.%]="card.y"
+      [style.width.px]="card.w"
+      [style.z-index]="card.z"
+      [style.transform]="'translate3d(' + (mouseDriftX * card.depth) + 'px, ' + (mouseDriftY * card.depth) + 'px, 0)'"
+    >
+      <img
+        class="tcg-falling-card"
+        [src]="'images/cards/' + card.id + '.png'"
+        [style.animation-delay.s]="card.delay"
+        [style.animation-duration.s]="card.duration"
+        [style.--rot]="card.rot + 'deg'"
+        [style.--fall]="card.fall + 'px'"
+        [alt]="card.id"
+      >
+    </div>
+  </div>
+
+  <section class="relative z-10 grid min-h-screen place-items-center px-5 py-8">
+    <div class="login-stage grid w-full max-w-6xl items-center gap-8 lg:grid-cols-[1.05fr_.95fr]" [class.auth-sequence]="authCinematic">
+      <div class="trainer-pass order-2 lg:order-1" [class.authenticating]="authCinematic" [class.access-granted]="authGranted">
+        <div class="pass-orbit"><span></span><span></span><span></span></div>
+        <div class="pass-card" [style.transform]="authCinematic ? null : passTransform">
+          <div class="pass-card-top">
+            <span>POKÉFETCH</span>
+            <strong>{{ 'login.playerAccess' | t }}</strong>
+          </div>
+          <div class="access-terminal" *ngIf="authCinematic">
+            <p *ngFor="let line of typedAccessLines; let i = index">{{ line }}<span class="terminal-cursor" *ngIf="activeAccessLine === i"></span></p>
+          </div>
+          <div class="pass-pokeball">
+            <div></div>
+          </div>
+          <div class="access-granted-badge" *ngIf="authGranted">
+            ACCESS GRANTED
+          </div>
+          <div class="pass-grid">
+            <span>{{ 'login.deck' | t }}</span><span>{{ 'login.ready' | t }}</span>
+            <span>{{ 'login.ruleset' | t }}</span><span>XY1</span>
+            <span>{{ 'login.mode' | t }}</span><span>{{ 'login.local' | t }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-container order-1 mx-auto w-full max-w-md lg:order-2" [class.panel-auth-fade]="authCinematic">
+        <!-- ═══ LOGIN PANEL ═══ -->
+        <form
+          *ngIf="!isRegisterMode && !isForgotMode"
+          class="login-panel p-6 sm:p-8 panel-animate-in"
+          (ngSubmit)="onLogin()"
+          #loginForm="ngForm"
+        >
+          <div class="brand-header">
+            <div class="pokefetch-logo" aria-label="PokéFetch">
+              <div class="logo-pokeball-icon">
+                <div class="pokeball-top"></div>
+                <div class="pokeball-line"></div>
+                <div class="pokeball-btn"><span></span></div>
+                <div class="pokeball-bottom"></div>
+                <div class="pokeball-shine"></div>
+              </div>
+              <h1 class="logo-text">
+                <span class="logo-poke">Poké</span><span class="logo-fetch">Fetch</span>
+              </h1>
+            </div>
+            <div class="tcg-edition-badge">
+              <span class="badge-border-glow"></span>
+              <span class="badge-text">TCG Edition</span>
+              <span class="badge-scan-line"></span>
+            </div>
+            <p class="brand-tagline">
+              ¡Deployalos ya!
+            </p>
+          </div>
+
+          <label class="login-label" for="username">{{ 'login.trainerName' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil">ID</span>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              [(ngModel)]="username"
+              [placeholder]="'login.usernamePlaceholder' | t"
+              autocomplete="username"
+              minlength="2"
+              required
+            >
+          </div>
+
+          <label class="login-label mt-4" for="password">{{ 'login.password' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil key">PW</span>
+            <input
+              [type]="showPassword ? 'text' : 'password'"
+              id="password"
+              name="password"
+              [(ngModel)]="password"
+              [placeholder]="'login.passwordPlaceholder' | t"
+              autocomplete="current-password"
+              minlength="4"
+              required
+            >
+            <button
+              class="password-toggle"
+              type="button"
+              (click)="showPassword = !showPassword"
+              [attr.aria-label]="showPassword ? ('login.hide' | t) : ('login.show' | t)"
+            >
+              {{ showPassword ? ('login.hide' | t) : ('login.show' | t) }}
+            </button>
+          </div>
+
+          <p class="mt-3 min-h-5 text-sm text-rose-200" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+          <button
+            type="submit"
+            [disabled]="!loginForm.form.valid || loading"
+            class="login-button mt-6 flex w-full items-center justify-between px-5 py-4"
+          >
+            <span>{{ loading ? ('login.syncing' | t) : ('login.enterArena' | t) }}</span>
+            <span class="button-light"></span>
+          </button>
+
+          <div class="mt-4 flex flex-col items-center gap-2">
+            <button type="button" class="switch-link text-sm opacity-80 hover:opacity-100" (click)="switchToForgot()">
+              {{ 'login.forgot' | t }}
+            </button>
+            <div class="flex items-center gap-2 mt-2">
+              <span class="switch-label">{{ 'login.noAccount' | t }}</span>
+              <button type="button" class="switch-link" (click)="switchToRegister()">
+                {{ 'login.createAccount' | t }}
+                <span class="switch-arrow">→</span>
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- FORGOT PASSWORD PANEL -->
+        <form
+          *ngIf="isForgotMode"
+          class="login-panel forgot-panel p-6 sm:p-8 panel-animate-in"
+          (ngSubmit)="resetStep ? onResetPassword() : onForgotPassword()"
+          #forgotForm="ngForm"
+        >
+          <div class="brand-header forgot-header">
+            <div class="tcg-edition-badge forgot-badge">
+              <span class="badge-border-glow"></span>
+              <span class="badge-text">{{ 'login.recoverAccess' | t }}</span>
+              <span class="badge-scan-line"></span>
+            </div>
+            <p class="brand-tagline">{{ 'login.recoverHint' | t }}</p>
+          </div>
+
+          <ng-container *ngIf="!resetStep">
+            <label class="login-label" for="forgotUsername">{{ 'login.trainer' | t }}</label>
+            <div class="login-input-wrap mt-2">
+              <span class="input-sigil">ID</span>
+              <input
+                type="text"
+                id="forgotUsername"
+                name="forgotUsername"
+                [(ngModel)]="forgotUsername"
+                [placeholder]="'login.usernamePlaceholder' | t"
+                autocomplete="username"
+              >
+            </div>
+
+            <label class="login-label mt-4" for="forgotEmail">{{ 'login.recoveryEmail' | t }}</label>
+            <div class="login-input-wrap mt-2">
+              <span class="input-sigil mail">@</span>
+              <input
+                type="email"
+                id="forgotEmail"
+                name="forgotEmail"
+                [(ngModel)]="forgotEmail"
+                placeholder="tuemail@gmail.com"
+                autocomplete="email"
+              >
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="resetStep">
+            <label class="login-label" for="forgotToken">{{ 'login.code' | t }}</label>
+            <div class="login-input-wrap mt-2">
+              <span class="input-sigil mail">TK</span>
+              <input
+                type="text"
+                id="forgotToken"
+                name="forgotToken"
+                [(ngModel)]="forgotToken"
+                [placeholder]="'login.codePlaceholder' | t"
+                required
+              >
+            </div>
+
+            <label class="login-label mt-4" for="forgotNewPassword">{{ 'login.newPassword' | t }}</label>
+            <div class="login-input-wrap mt-2">
+              <span class="input-sigil key">PW</span>
+              <input
+                type="password"
+                id="forgotNewPassword"
+                name="forgotNewPassword"
+                [(ngModel)]="forgotNewPassword"
+                [placeholder]="'login.passwordPlaceholder' | t"
+                minlength="4"
+                required
+              >
+            </div>
+
+            <label class="login-label mt-4" for="forgotConfirmPassword">{{ 'login.confirmPassword' | t }}</label>
+            <div class="login-input-wrap mt-2">
+              <span class="input-sigil key">OK</span>
+              <input
+                type="password"
+                id="forgotConfirmPassword"
+                name="forgotConfirmPassword"
+                [(ngModel)]="forgotConfirmPassword"
+                [placeholder]="'login.repeatPassword' | t"
+                minlength="4"
+                required
+              >
+            </div>
+          </ng-container>
+
+          <p class="mt-3 min-h-5 text-sm text-rose-200" *ngIf="forgotError">{{ forgotError }}</p>
+          <p class="mt-3 min-h-5 text-sm text-emerald-300" *ngIf="forgotMessage">{{ forgotMessage }}</p>
+
+          <button
+            type="submit"
+            [disabled]="forgotLoading"
+            class="login-button forgot-button mt-5 flex w-full items-center justify-between px-5 py-4"
+          >
+            <span>{{ forgotLoading ? ('login.sending' | t) : resetStep ? ('login.changePassword' | t) : ('login.sendCode' | t) }}</span>
+            <span class="button-light light-on"></span>
+          </button>
+
+          <div class="panel-switch-row mt-5">
+            <button type="button" class="switch-link" (click)="switchToLogin()">
+              {{ 'login.backToLogin' | t }}
+              <span class="switch-arrow">←</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- ═══ REGISTER PANEL ═══ -->
+        <form
+          *ngIf="isRegisterMode && !isForgotMode"
+          class="login-panel register-panel p-6 sm:p-8 panel-animate-in"
+          (ngSubmit)="onRegister()"
+          #registerForm="ngForm"
+        >
+          <!-- ══ PIKACHU MASCOT ══ -->
+          <div class="pika-wrapper"
+            [class.pika-look-left]="focusedField === 'name'"
+            [class.pika-look-center]="pikaPasswordMode"
+            [class.pika-covering]="pikaPasswordCovering"
+            [class.pika-happy]="isPasswordStrong"
+            [class.pika-typing]="pikaTyping"
+            [style.--pika-eye-x.px]="pikaEyeX"
+            [style.--pika-eye-y.px]="pikaEyeY"
+          >
+            <div class="pika-body">
+              <div class="pika-tail"></div>
+              <div class="pika-head">
+                <div class="pika-ear pika-ear-l"><div class="ear-tip"></div></div>
+                <div class="pika-ear pika-ear-r"><div class="ear-tip"></div></div>
+                <div class="pika-face">
+                  <div class="pika-eye pika-eye-l"><div class="pika-pupil"></div><div class="pika-shine"></div></div>
+                  <div class="pika-eye pika-eye-r"><div class="pika-pupil"></div><div class="pika-shine"></div></div>
+                  <div class="pika-cheek pika-cheek-l"></div>
+                  <div class="pika-cheek pika-cheek-r"></div>
+                  <div class="pika-nose"></div>
+                  <div class="pika-mouth"></div>
+                </div>
+                <div class="pika-arm pika-arm-l"></div>
+                <div class="pika-arm pika-arm-r"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="brand-header" style="margin-top: 0; margin-bottom: 16px;">
+            <div class="tcg-edition-badge register-badge">
+              <span class="badge-border-glow"></span>
+              <span class="badge-text">{{ 'login.newTrainer' | t }}</span>
+              <span class="badge-scan-line"></span>
+            </div>
+          </div>
+
+          <!-- Step indicator -->
+          <div class="register-steps">
+            <div class="step-dot active"></div>
+            <div class="step-connector"></div>
+            <div class="step-dot" [class.active]="isPasswordStrong"></div>
+            <div class="step-connector"></div>
+            <div class="step-dot" [class.active]="acceptedTerms"></div>
+          </div>
+
+          <label class="login-label" for="regScreenName">{{ 'login.trainerName' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil trainer">⚡</span>
+            <input
+              type="text"
+              id="regScreenName"
+              name="regScreenName"
+              [(ngModel)]="regScreenName"
+              (ngModelChange)="onRegisterTyping()"
+              (focus)="onFieldFocus('name')"
+              (blur)="onFieldBlur()"
+              [placeholder]="'login.battleNamePlaceholder' | t"
+              autocomplete="username"
+              minlength="2"
+              maxlength="20"
+              required
+            >
+          </div>
+
+          <label class="login-label mt-4" for="regEmail">{{ 'login.recoveryEmail' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil mail">@</span>
+            <input
+              type="email"
+              id="regEmail"
+              name="regEmail"
+              [(ngModel)]="regEmail"
+              (ngModelChange)="onRegisterTyping()"
+              placeholder="tuemail@gmail.com"
+              autocomplete="email"
+              required
+            >
+          </div>
+
+          <label class="login-label mt-4" for="regPassword">{{ 'login.password' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil key">🔒</span>
+            <input
+              [type]="showRegPassword ? 'text' : 'password'"
+              id="regPassword"
+              name="regPassword"
+              [(ngModel)]="regPassword"
+              (ngModelChange)="onRegisterTyping()"
+              (focus)="onFieldFocus('password')"
+              (blur)="onFieldBlur()"
+              [placeholder]="'login.minSix' | t"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            >
+            <button
+              class="password-toggle"
+              type="button"
+              (mousedown)="$event.preventDefault()"
+              (click)="toggleRegisterPasswordVisibility()"
+            >
+              {{ showRegPassword ? ('login.hide' | t) : ('login.show' | t) }}
+            </button>
+          </div>
+
+          <!-- Password strength meter -->
+          <div class="strength-meter mt-3" *ngIf="regPassword.length > 0">
+            <div class="strength-bars">
+              <div class="str-bar" [class.active]="passwordStrength >= 1" [class.weak]="passwordStrength === 1" [class.medium]="passwordStrength === 2" [class.good]="passwordStrength === 3" [class.strong]="passwordStrength === 4"></div>
+              <div class="str-bar" [class.active]="passwordStrength >= 2" [class.medium]="passwordStrength === 2" [class.good]="passwordStrength === 3" [class.strong]="passwordStrength === 4"></div>
+              <div class="str-bar" [class.active]="passwordStrength >= 3" [class.good]="passwordStrength === 3" [class.strong]="passwordStrength === 4"></div>
+              <div class="str-bar" [class.active]="passwordStrength >= 4" [class.strong]="passwordStrength === 4"></div>
+            </div>
+            <span class="strength-label"
+              [class.s-weak]="passwordStrength <= 1"
+              [class.s-medium]="passwordStrength === 2"
+              [class.s-good]="passwordStrength === 3"
+              [class.s-strong]="passwordStrength === 4"
+            >
+              {{ passwordStrength <= 1 ? ('login.weak' | t) : passwordStrength === 2 ? ('login.regular' | t) : passwordStrength === 3 ? ('login.good' | t) : ('login.powerful' | t) }}
+            </span>
+          </div>
+
+          <!-- Password requirements -->
+          <div class="pass-reqs mt-2" *ngIf="regPassword.length > 0">
+            <div class="req" [class.met]="passwordChecks.minLength"><span class="req-icon">{{ passwordChecks.minLength ? '✓' : '○' }}</span> {{ 'login.reqLength' | t }}</div>
+            <div class="req" [class.met]="passwordChecks.hasUpper"><span class="req-icon">{{ passwordChecks.hasUpper ? '✓' : '○' }}</span> {{ 'login.reqUpper' | t }}</div>
+            <div class="req" [class.met]="passwordChecks.hasNumber"><span class="req-icon">{{ passwordChecks.hasNumber ? '✓' : '○' }}</span> {{ 'login.reqNumber' | t }}</div>
+            <div class="req" [class.met]="passwordChecks.hasSpecial"><span class="req-icon">{{ passwordChecks.hasSpecial ? '✓' : '○' }}</span> {{ 'login.reqSpecial' | t }}</div>
+          </div>
+
+          <label class="login-label mt-4" for="regConfirmPassword">{{ 'login.confirmPassword' | t }}</label>
+          <div class="login-input-wrap mt-2">
+            <span class="input-sigil key">🔒</span>
+            <input
+              [type]="showRegPassword ? 'text' : 'password'"
+              id="regConfirmPassword"
+              name="regConfirmPassword"
+              [(ngModel)]="regConfirmPassword"
+              (ngModelChange)="onRegisterTyping()"
+              (focus)="onFieldFocus('confirm')"
+              (blur)="onFieldBlur()"
+              [placeholder]="'login.repeatPassword' | t"
+              autocomplete="new-password"
+              minlength="6"
+              required
+            >
+          </div>
+
+          <!-- Password match indicator -->
+          <div class="password-match-indicator mt-2" *ngIf="regConfirmPassword.length > 0">
+            <span class="match-dot" [class.match]="regPassword === regConfirmPassword" [class.no-match]="regPassword !== regConfirmPassword"></span>
+            <span class="match-text" [class.match]="regPassword === regConfirmPassword">
+              {{ regPassword === regConfirmPassword ? ('login.passwordsMatch' | t) : ('login.passwordsNoMatch' | t) }}
+            </span>
+          </div>
+
+          <!-- Terms -->
+          <label class="terms-row mt-4">
+            <input type="checkbox" [(ngModel)]="acceptedTerms" (ngModelChange)="checkButtonReady(); sound.checkbox()" name="acceptedTerms">
+            <span class="terms-check"></span>
+            <span class="terms-text">{{ 'login.terms' | t }}</span>
+          </label>
+
+          <p class="mt-3 min-h-5 text-sm text-rose-200" *ngIf="registerError">{{ registerError }}</p>
+          <p class="mt-3 min-h-5 text-sm text-emerald-300" *ngIf="registerSuccess">{{ registerSuccess }}</p>
+
+          <!-- ══ LIGHTNING BUTTON ══ -->
+          <div class="thunder-btn-wrap mt-5" [class.is-ready]="canRegister" [class.lightning-flash]="buttonLightning">
+            <div class="thunder-sparks" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <button
+              type="submit"
+              [disabled]="!canRegister"
+              class="login-button register-button flex w-full items-center justify-between px-5 py-4"
+            >
+              <span>{{ registerLoading ? ('login.registering' | t) : ('login.startAdventure' | t) }}</span>
+              <span class="button-light" [class.light-on]="canRegister"></span>
+            </button>
+          </div>
+
+          <!-- Screen flash overlay -->
+          <div class="screen-flash" *ngIf="buttonLightning"></div>
+
+          <div class="panel-switch-row mt-5">
+            <span class="switch-label">{{ 'login.haveAccount' | t }}</span>
+            <button type="button" class="switch-link" (click)="switchToLogin()">
+              {{ 'login.signIn' | t }}
+              <span class="switch-arrow">←</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
