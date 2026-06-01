@@ -14,6 +14,8 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private int mulligansJugador = 0;
+    private int mulligansBot = 0;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
@@ -51,6 +53,12 @@ public class Partida {
     public void setYaSeRetiroEsteTurno(boolean yaSeRetiroEsteTurno) {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
     }
+
+    public int getMulligansJugador() { return mulligansJugador; }
+    public void setMulligansJugador(int mulligansJugador) { this.mulligansJugador = mulligansJugador; }
+
+    public int getMulligansBot() { return mulligansBot; }
+    public void setMulligansBot(int mulligansBot) { this.mulligansBot = mulligansBot; }
 
     // 🚩 GETTER Y SETTER DE LAS MONEDAS PARA QUE VIAJEN A ANGULAR
     public List<Boolean> getUltimasMonedasLanzadas() {

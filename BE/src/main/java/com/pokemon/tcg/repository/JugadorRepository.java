@@ -11,4 +11,11 @@ public interface JugadorRepository extends JpaRepository<Jugador, Long> {
     
     @Query("SELECT j FROM Jugador j LEFT JOIN FETCH j.coleccion WHERE j.username = :username")
     Jugador findByUsername(@Param("username") String username);
+
+    @Query("SELECT j FROM Jugador j WHERE j.username = :username")
+    Jugador findAuthByUsername(@Param("username") String username);
+
+    Jugador findByEmail(String email);
+
+    Jugador findByPasswordResetTokenHash(String passwordResetTokenHash);
 }

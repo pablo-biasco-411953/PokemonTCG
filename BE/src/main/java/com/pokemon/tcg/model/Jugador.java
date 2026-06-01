@@ -1,5 +1,6 @@
 package com.pokemon.tcg.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +14,24 @@ public class Jugador {
 
     @Column(unique = true)
     private String username;
+
+    @JsonIgnore
+    @Column(length = 128)
+    private String passwordHash;
+
+    @Column(unique = true)
+    private String email;
+
+    @JsonIgnore
+    @Column(length = 128)
+    private String passwordResetTokenHash;
+
+    @JsonIgnore
+    private Long passwordResetTokenExpiresAt;
     
     private int sobresDisponibles;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "jugador_card",
         joinColumns = @JoinColumn(name = "jugador_id"),
@@ -35,6 +50,14 @@ public class Jugador {
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+    public String getPasswordHash() { return passwordHash; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getPasswordResetTokenHash() { return passwordResetTokenHash; }
+    public void setPasswordResetTokenHash(String passwordResetTokenHash) { this.passwordResetTokenHash = passwordResetTokenHash; }
+    public Long getPasswordResetTokenExpiresAt() { return passwordResetTokenExpiresAt; }
+    public void setPasswordResetTokenExpiresAt(Long passwordResetTokenExpiresAt) { this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt; }
     public int getSobresDisponibles() { return sobresDisponibles; }
     public void setSobresDisponibles(int sobresDisponibles) { this.sobresDisponibles = sobresDisponibles; }
     public List<Card> getColeccion() { return coleccion; }

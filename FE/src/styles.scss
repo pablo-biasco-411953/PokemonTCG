@@ -1,1 +1,9 @@
-/* Punto de entrada para estilos globales compartidos. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind preflight is disabled in tailwind.config.js to preserve the existing game styling. */
+html, body {
+  margin: 0;
+  padding: 0;
+}
