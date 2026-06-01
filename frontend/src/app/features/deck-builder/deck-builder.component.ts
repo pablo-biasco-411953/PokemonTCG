@@ -2,39 +2,36 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { JugadorService } from '../../core/services/jugador.service';
-import { MazoService } from './services/mazo.service';
-import { Card } from '../../shared/models/card';
+import { JugadorService } from '../../services/jugador.service';
+import { MazoService } from '../../services/mazo.service';
+import { Card } from '../../model/card';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-deck-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './deck-builder.component.html',
   styleUrls: ['./deck-builder.component.scss']
 })
 export class DeckBuilderComponent implements OnInit {
-  // Datos principales del mazo en construccion.
   coleccion: Card[] = [];
   mazoEnProceso: Card[] = [];
   cantidadesPoseidas: { [key: string]: number } = {};
   nombreMazo: string = 'Mi Nuevo Mazo';
   username: string = '';
-  idMazoAEditar: number | null = null;
-
-  // Filtros del catalogo.
+  
+  // FILTROS
   filtroNombre: string = '';
   filtroTipo: string = 'Todos';
   tipos: string[] = ['Todos', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless'];
 
-  // Estado del zoom de inspeccion.
+  // INSPECCIÓN (Zoom)
   showInspeccion: boolean = false;
   cardFocus: Card | null = null;
   hoverTimer: any;
-  cartaSinStockAnimandoId: string | null = null;
-  private resetAnimacionSinStockTimer: number | null = null;
 
-  // Mapeado temporal entre ids viejos y assets reales.
+  // MAPEADO DE IDS VIEJOS A FOTOS REALES
   mapaFotos: { [key: string]: string } = {
     'p1': 'base1-1', 'p2': 'base3-1', 'p3': 'base3-2', 'p4': 'base3-3',
     'p5': 'base4-1', 'p6': 'base6-1', 'p7': 'base6-2', 'p8': 'bw1-1',
@@ -47,35 +44,38 @@ export class DeckBuilderComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
-
-  // Carga la coleccion y, si aplica, un mazo para editar.
-  ngOnInit(): void {
-    const data = localStorage.getItem('jugador');
-    if (data) {
-      this.username = JSON.parse(data).username;
-      this.cargarColeccion();
-
-      const mazoParaEditar = history.state.mazo;
-      if (mazoParaEditar) {
-        this.idMazoAEditar = mazoParaEditar.id;
-        this.nombreMazo = mazoParaEditar.nombre;
-        this.mazoEnProceso = mazoParaEditar.cartas;
-      }
+idMazoAEditar: number | null = null; // Para saber si estamos editando
+ngOnInit(): void {
+  const data = localStorage.getItem('jugador');
+  if (data) {
+    this.username = JSON.parse(data).username;
+    this.cargarColeccion();
+    
+    // VERIFICAR SI HAY UN MAZO PARA EDITAR (podes pasarlo por estado de ruta o params)
+    const mazoParaEditar = history.state.mazo; 
+    if (mazoParaEditar) {
+      this.idMazoAEditar = mazoParaEditar.id;
+      this.nombreMazo = mazoParaEditar.nombre;
+      this.mazoEnProceso = mazoParaEditar.cartas; // Cargamos las cartas guardadas
     }
   }
+}
 
-  // Recupera la coleccion completa del jugador.
-  cargarColeccion() {
+  
+
+cargarColeccion() {
     this.jugadorService.getColeccion(this.username).subscribe((res: Card[]) => {
       this.coleccion = res;
-      this.actualizarCantidadesPoseidas();
+      this.actualizarCantidadesPoseidas(); // Contamos cuántas de cada una tiene
+      
+      // Eliminamos duplicados de la visualización para que la Pokédex sea limpia
+      // pero sabiendo cuántas copias tenemos de cada una.
       this.coleccion = this.obtenerCartasUnicas(res);
       this.cdr.detectChanges();
     });
   }
 
-  // Quita duplicados para mostrar una Pokedex mas limpia.
-  obtenerCartasUnicas(cartas: Card[]): Card[] {
+obtenerCartasUnicas(cartas: Card[]): Card[] {
     const unicas: Card[] = [];
     const idsVistos = new Set();
     cartas.forEach(c => {
@@ -87,15 +87,13 @@ export class DeckBuilderComponent implements OnInit {
     return unicas;
   }
 
-  // Cuenta cuantas copias reales posee el jugador de cada carta.
-  actualizarCantidadesPoseidas() {
+actualizarCantidadesPoseidas() {
     this.cantidadesPoseidas = {};
     this.coleccion.forEach(c => {
       this.cantidadesPoseidas[c.id] = (this.cantidadesPoseidas[c.id] || 0) + 1;
     });
   }
 
-  // Coleccion filtrada por nombre y tipo.
   get coleccionFiltrada() {
     return this.coleccion.filter(c => {
       const matchNombre = c.nombre.toLowerCase().includes(this.filtroNombre.toLowerCase());
@@ -104,13 +102,12 @@ export class DeckBuilderComponent implements OnInit {
     });
   }
 
-  // Resuelve la imagen publica asociada a una carta.
-  getImagenReal(id: string): string {
+  // ESTA FUNCIÓN ES LA QUE BUSCA EL HTML
+getImagenReal(id: string): string {
     const archivo = this.mapaFotos[id] || id;
-    return `/images/cards/${archivo}.png`;
-  }
-
-  // Activa la inspeccion con una breve espera.
+    // LA RUTA CORRECTA SEGÚN TU ÁRBOL (Carpeta public):
+    return `images/cards/${archivo}.png`;
+}
   startHover(card: Card) {
     this.hoverTimer = setTimeout(() => {
       this.cardFocus = card;
@@ -119,73 +116,49 @@ export class DeckBuilderComponent implements OnInit {
     }, 1500);
   }
 
-  // Cancela el zoom de inspeccion.
   stopHover() {
     clearTimeout(this.hoverTimer);
     this.showInspeccion = false;
     this.cardFocus = null;
   }
 
-  // Agrega una carta al mazo si cumple reglas de cantidad.
-  agregarAlMazo(carta: Card) {
+agregarAlMazo(carta: Card) {
     const copiasEnMazo = this.mazoEnProceso.filter(c => c.id === carta.id).length;
     const totalPoseidas = this.cantidadesPoseidas[carta.id] || 0;
 
+    // REGLA: No podés meter más de las que tenés, y máximo 4 (regla TCG)
     if (copiasEnMazo < totalPoseidas && copiasEnMazo < 4 && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);
     } else if (copiasEnMazo >= totalPoseidas) {
-      this.activarFeedbackSinStock(carta.id);
+      alert(`¡No tenés más copias de ${carta.nombre}! Abrí más sobres.`);
     }
   }
 
-  // Sacude la carta cuando ya no quedan copias disponibles.
-  private activarFeedbackSinStock(cardId: string) {
-    if (this.resetAnimacionSinStockTimer !== null) {
-      window.clearTimeout(this.resetAnimacionSinStockTimer);
-    }
-
-    this.cartaSinStockAnimandoId = null;
-    this.cdr.detectChanges();
-
-    window.setTimeout(() => {
-      this.cartaSinStockAnimandoId = cardId;
-      this.cdr.detectChanges();
-
-      this.resetAnimacionSinStockTimer = window.setTimeout(() => {
-        this.cartaSinStockAnimandoId = null;
-        this.resetAnimacionSinStockTimer = null;
-        this.cdr.detectChanges();
-      }, 420);
-    }, 0);
-  }
-
-  // Cuenta cuantas copias de una carta ya hay en el mazo.
-  getCantidadEnMazo(id: string): number {
+getCantidadEnMazo(id: string): number {
     return this.mazoEnProceso.filter(c => c.id === id).length;
   }
 
-  // Elimina una carta del mazo segun su posicion.
   quitarDelMazo(index: number) {
     this.mazoEnProceso.splice(index, 1);
   }
-
-  // Guarda un mazo nuevo o actualiza uno existente.
-  guardar() {
-    const ids = this.mazoEnProceso.map(c => c.id);
-
-    if (this.idMazoAEditar) {
-      this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
-        alert('Mazo actualizado');
-        this.router.navigate(['/lobby']);
-      });
-    } else {
-      this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
-        alert('Mazo creado');
-        this.router.navigate(['/lobby']);
-      });
-    }
+  
+guardar() {
+  const ids = this.mazoEnProceso.map(c => c.id);
+  
+  if (this.idMazoAEditar) {
+    // Lógica para actualizar (necesitás este método en tu mazoService)
+    this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
+      alert('¡Mazo actualizado!');
+      this.router.navigate(['/lobby']);
+    });
+  } else {
+    // Lógica original de guardado
+    this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
+      alert('¡Mazo creado!');
+      this.router.navigate(['/lobby']);
+    });
   }
+}
 
-  // Vuelve al lobby.
   volver() { this.router.navigate(['/lobby']); }
 }

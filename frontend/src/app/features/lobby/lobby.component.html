@@ -105,7 +105,7 @@
         <div class="bg-glow"></div>
         <div class="pack-icon">📦</div>
         <div class="pack-content">
-          <span class="p-title">ABRIR SOBRE</span>
+          <span class="p-title">{{ 'lobby.openPack' | t }}</span>
           <span class="p-count dot-matrix">{{ sobresDisponibles }}</span>
         </div>
         <div class="shine"></div>
@@ -119,7 +119,7 @@
     <main class="responsive-battle-grid">
       <section class="mazos-section">
         <div class="section-title">
-          <h2 class="dot-matrix">ESTACIÓN DE COMBATE</h2>
+          <h2 class="dot-matrix">{{ 'lobby.combatStation' | t }}</h2>
         </div>
 
         <div class="mazos-scroll-area">
@@ -130,7 +130,7 @@
                 <p class="dot-matrix status-text">60/60 LOADED</p>
                 <button class="btn-search-match-xl" (click)="buscarPartida(mazo.id)">
                   <div class="scan-effect"></div>
-                  <span class="btn-label">BUSCAR PARTIDA</span>
+                  <span class="btn-label">{{ 'lobby.findMatch' | t }}</span>
                 </button>
               </div>
 
@@ -147,13 +147,13 @@
           @for (slot of slotsVacios; track $index) {
             <div class="mazo-card-wide ghost-slot" (click)="irAlDeckBuilder()">
               <div class="m-info">
-                <strong class="dot-matrix">SLOT VACÍO</strong>
-                <p>Esperando deck...</p>
+                <strong class="dot-matrix">{{ 'lobby.emptySlot' | t }}</strong>
+                <p>{{ 'lobby.waitingDeck' | t }}</p>
               </div>
               <div class="deck-mosaic-grid ghost-grid">
                 <div class="empty-slot-add">
                   <span class="plus-icon">+</span>
-                  <small class="dot-matrix">CREAR MAZO</small>
+                  <small class="dot-matrix">{{ 'lobby.createDeck' | t }}</small>
                 </div>
               </div>
             </div>
@@ -165,7 +165,7 @@
         <div class="menu-item-glass" (click)="irAlDeckBuilder()">
           <div class="icon-orb">📕</div>
           <div class="label-wrap">
-            <span class="title">COLECCIÓN ÚNICA</span>
+            <span class="title">{{ 'lobby.uniqueCollection' | t }}</span>
             <div class="progress-container">
               <div class="progress-bar" [style.width.%]="(cantidadCartasUnicas / 151) * 100">
                 <div class="bar-glow"></div>
@@ -184,7 +184,7 @@
         <div class="menu-item-glass locked">
           <div class="icon-orb">🏆</div>
           <div class="label-wrap">
-            <span class="title">TORNEOS</span>
+            <span class="title">{{ 'lobby.tournaments' | t }}</span>
             <small class="dot-matrix status-text">OFFLINE</small>
           </div>
         </div>
@@ -206,7 +206,7 @@
             <div class="stat-hp">HP {{ pkmZoom.hp }} <span class="hp-heart">♥</span></div>
             <div class="stat-type">{{ pkmZoom.tipo | uppercase }}</div>
           </div>
-          <p class="p-sync">SYNCHRONIZED_100%</p>
+          <p class="p-sync">{{ 'lobby.synchronized' | t }}</p>
         </div>
       </div>
     </div>

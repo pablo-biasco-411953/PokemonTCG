@@ -1,15 +1,14 @@
 import { Component, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { LanguageSelectorComponent } from './components/language-selector/language-selector.component';
 
 @Component({
   selector: 'app-root',
-  // Componente raiz que solo renderiza las rutas principales.
-  standalone: true,
-  imports: [RouterOutlet],
+  standalone: true, // 🔥 ESTA ES LA CLAVE
+  imports: [RouterOutlet, LanguageSelectorComponent],
   templateUrl: './app.html',
   styleUrls: ['./app.scss']
 })
 export class App {
-  // Titulo interno heredado del scaffold.
   protected readonly title = signal('frontend');
 }
