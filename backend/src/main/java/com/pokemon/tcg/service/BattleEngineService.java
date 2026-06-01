@@ -1,6 +1,10 @@
 package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.TrainerCard;
+import com.pokemon.tcg.service.strategy.EfectoTrainerStrategy;
+import com.pokemon.tcg.service.strategy.ProfesorCipresStrategy;
+import com.pokemon.tcg.service.strategy.SuperpocionStrategy;
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.model.Mazo;
 import com.pokemon.tcg.model.battle.Ataque;
@@ -324,6 +328,8 @@ public class BattleEngineService {
         battleTurnService.aplicarMantenimientoEntreTurnos(partida, random, battleKoService::resolverKO);
 
         partida.setYaSeRetiroEsteTurno(false);
+        partida.setYaSeJugoPartidarioEsteTurno(false);
+        partida.setYaSeJugoEstadioEsteTurno(false);
         partida.setTurnoActual(Partida.Turno.BOT);
     }
 
@@ -347,6 +353,9 @@ public class BattleEngineService {
         battleTurnService.aplicarMantenimientoEntreTurnos(partida, random, battleKoService::resolverKO);
 
         partida.setTurnoActual(Partida.Turno.JUGADOR);
+        partida.setYaSeRetiroEsteTurno(false);
+        partida.setYaSeJugoPartidarioEsteTurno(false);
+        partida.setYaSeJugoEstadioEsteTurno(false);
         robarCarta(partida.getJugador());
     }
 
@@ -355,6 +364,78 @@ public class BattleEngineService {
         if (!tablero.getMazo().isEmpty()) {
             tablero.getMano().add(tablero.getMazo().remove(0));
         }
+    }
+
+    private EfectoTrainerStrategy getStrategyFor(TrainerCard card) {
+        String nombre = card.getNombre().toLowerCase();
+        if (nombre.contains("sycamore") || nombre.contains("ciprés") || nombre.contains("cipres")) {
+            return new ProfesorCipresStrategy();
+        } else if (nombre.contains("super potion") || nombre.contains("superpoción") || nombre.contains("superpocion")) {
+            return new SuperpocionStrategy();
+        }
+        return null;
+    }
+
+    public void jugarCartaEntrenador(String matchId, String cartaId, String objetivoId) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurnoJugador(partida);
+
+        TableroJugador tablero = partida.getJugador();
+        Card carta = encontrarCartaEnMano(tablero, cartaId);
+
+        if (carta == null) {
+            throw new IllegalArgumentException("La carta no está en tu mano.");
+        }
+        if (!(carta instanceof TrainerCard trainerCard)) {
+            throw new IllegalArgumentException("La carta elegida no es una carta de Entrenador.");
+        }
+
+        // Validaciones por tipo de Entrenador
+        if (trainerCard.getTrainerType() == TrainerCard.TrainerType.PARTIDARIO) {
+            if (partida.isYaSeJugoPartidarioEsteTurno()) {
+                throw new IllegalStateException("Solo podés jugar una carta de Partidario por turno.");
+            }
+        } else if (trainerCard.getTrainerType() == TrainerCard.TrainerType.ESTADIO) {
+            if (partida.isYaSeJugoEstadioEsteTurno()) {
+                throw new IllegalStateException("Solo podés jugar una carta de Estadio por turno.");
+            }
+        }
+
+        // Obtener la estrategia
+        EfectoTrainerStrategy strategy = getStrategyFor(trainerCard);
+        if (strategy == null) {
+            throw new UnsupportedOperationException("Efecto no implementado para: " + trainerCard.getNombre());
+        }
+
+        // Determinar objetivo si es necesario (ej. para Superpoción)
+        Object target = null;
+        if (objetivoId != null && !objetivoId.isEmpty()) {
+            target = encontrarCartaEnTablero(tablero, objetivoId);
+        }
+
+        // Remover la carta de la mano antes de aplicar el efecto para evitar autodescarte
+        tablero.getMano().remove(trainerCard);
+
+        try {
+            // Ejecutar la estrategia correspondiente
+            strategy.ejecutar(partida, tablero, target);
+        } catch (Exception e) {
+            // Devolver a la mano si falla
+            tablero.getMano().add(trainerCard);
+            throw e;
+        }
+
+        // Actualizar estados de turno
+        if (trainerCard.getTrainerType() == TrainerCard.TrainerType.PARTIDARIO) {
+            partida.setYaSeJugoPartidarioEsteTurno(true);
+        } else if (trainerCard.getTrainerType() == TrainerCard.TrainerType.ESTADIO) {
+            partida.setYaSeJugoEstadioEsteTurno(true);
+        }
+
+        // Descartar
+        tablero.getPilaDescarte().add(trainerCard);
+
+        System.out.println("🃏 [BATTLE] Jugó la carta de Entrenador: " + trainerCard.getNombre());
     }
 
     private Partida getPartidaOThrow(String matchId) {

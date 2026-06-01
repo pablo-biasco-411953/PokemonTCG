@@ -35,6 +35,10 @@ public class BattleAttackService {
             CartaEnJuego defensor,
             KoResolver koResolver
     ) {
+        if (!cumpleCostoEnergia(atacante.getEnergiasUnidas(), ataque.getCosto())) {
+            throw new IllegalStateException("El Pokémon activo no tiene suficiente energía del tipo requerido para realizar este ataque.");
+        }
+
         // Calcula el ataque completo y devuelve también el historial de monedas.
         List<Boolean> historialMonedas = new ArrayList<>();
         ResultadoAtaque resultado = calcularDanioPorEfectos(ataque, atacante, historialMonedas);
@@ -317,5 +321,121 @@ public class BattleAttackService {
                 System.out.println("🌀 " + defensor.getCard().getNombre() + " se Confundió.");
             }
         }
+    }
+
+    private boolean cumpleCostoEnergia(List<Card> energiasUnidas, List<String> costoRequerido) {
+        if (costoRequerido == null || costoRequerido.isEmpty()) {
+            return true;
+        }
+
+        // Obtener los símbolos de energía que proporciona cada carta
+        List<String> poolDisponible = new ArrayList<>();
+        for (Card c : energiasUnidas) {
+            poolDisponible.addAll(getEnergiasProvistas(c));
+        }
+
+        // Crear una lista mutable de los requerimientos en minúsculas
+        List<String> reqs = new ArrayList<>();
+        for (String req : costoRequerido) {
+            reqs.add(req.toLowerCase());
+        }
+
+        // Intentar resolver la correspondencia usando backtracking
+        boolean exito = matchEnergias(0, reqs, poolDisponible);
+
+        if (!exito) {
+            // Imprimir log detallado en la consola si falla la validación
+            System.out.println("❌ [BATTLE_ATTACK_VALIDATION_FAILED]");
+            System.out.println("  - Costo requerido por el ataque: " + costoRequerido);
+            System.out.println("  - Energías unidas al Pokémon:");
+            if (energiasUnidas.isEmpty()) {
+                System.out.println("    (ninguna)");
+            } else {
+                for (Card c : energiasUnidas) {
+                    System.out.println("    * [" + c.getId() + "] " + c.getNombre() + 
+                                       " (tipo: " + c.getTipo() + ", supertype: " + c.getSupertype() + ")");
+                }
+            }
+            System.out.println("  - Símbolos disponibles computados: " + poolDisponible);
+        }
+
+        return exito;
+    }
+
+    private List<String> getEnergiasProvistas(Card c) {
+        List<String> list = new ArrayList<>();
+        if (c == null) return list;
+
+        boolean isEnergy = "Energy".equalsIgnoreCase(c.getSupertype()) 
+                || (c.getSupertype() != null && c.getSupertype().toLowerCase().contains("energy"));
+        if (!isEnergy) return list;
+
+        String name = c.getNombre() != null ? c.getNombre().toLowerCase() : "";
+        String tipo = c.getTipo() != null ? c.getTipo().toLowerCase() : "";
+
+        if (name.contains("double colorless")) {
+            list.add("colorless");
+            list.add("colorless");
+        } else if (name.contains("rainbow")) {
+            list.add("rainbow");
+        } else if (name.contains("grass") || name.contains("planta") || tipo.equals("grass")) {
+            list.add("grass");
+        } else if (name.contains("fire") || name.contains("fuego") || tipo.equals("fire")) {
+            list.add("fire");
+        } else if (name.contains("water") || name.contains("agua") || tipo.equals("water")) {
+            list.add("water");
+        } else if (name.contains("lightning") || name.contains("eléctrica") || name.contains("electrica") || tipo.equals("lightning")) {
+            list.add("lightning");
+        } else if (name.contains("psychic") || name.contains("psíquica") || name.contains("psiquica") || tipo.equals("psychic")) {
+            list.add("psychic");
+        } else if (name.contains("fighting") || name.contains("lucha") || tipo.equals("fighting")) {
+            list.add("fighting");
+        } else if (name.contains("darkness") || name.contains("siniestra") || name.contains("oscura") || tipo.equals("darkness")) {
+            list.add("darkness");
+        } else if (name.contains("metal") || tipo.equals("metal")) {
+            list.add("metal");
+        } else if (name.contains("fairy") || name.contains("hada") || tipo.equals("fairy")) {
+            list.add("fairy");
+        } else {
+            if (!tipo.isEmpty() && !tipo.equals("energy")) {
+                list.add(tipo);
+            } else {
+                list.add("colorless");
+            }
+        }
+        return list;
+    }
+
+    private boolean matchEnergias(int reqIdx, List<String> reqs, List<String> availablePool) {
+        if (reqIdx == reqs.size()) {
+            return true;
+        }
+
+        String req = reqs.get(reqIdx);
+
+        for (int i = 0; i < availablePool.size(); i++) {
+            String avail = availablePool.get(i);
+
+            boolean matches = false;
+            if (req.equals("colorless")) {
+                matches = true; // Colorless matches any available symbol
+            } else if (avail.equals("rainbow")) {
+                matches = true; // Rainbow matches any requirement
+            } else if (avail.equals(req)) {
+                matches = true; // Exact match
+            }
+
+            if (matches) {
+                // Hacer una copia del pool y remover el símbolo usado
+                List<String> nextPool = new ArrayList<>(availablePool);
+                nextPool.remove(i);
+
+                if (matchEnergias(reqIdx + 1, reqs, nextPool)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

@@ -1,4 +1,4 @@
-﻿<app-battle-board-debug-panel
+<app-battle-board-debug-panel
   [show]="showDebugPanel"
   [fps]="fps"
   [memoryUsage]="memoryUsage"
@@ -793,4 +793,24 @@
     [getImagenCarta]="getImagenCarta.bind(this)"
     (close)="mostrarModalDescarte = false"
   ></app-battle-board-discard-modal>
+
+  <!-- Pantalla de Fin de Partida / GameOver Overlay -->
+  <div class="gameover-overlay" *ngIf="partida?.faseActual === 'FIN_PARTIDA'">
+    <div class="gameover-panel">
+      <div class="gameover-leds">
+        <span class="led-red blink"></span>
+        <span class="led-yellow"></span>
+        <span class="led-green"></span>
+      </div>
+      <h1 class="gameover-title">PARTIDA FINALIZADA</h1>
+      <div class="gameover-result-box">
+        <h2 *ngIf="partida?.ganador === 'JUGADOR'" class="winner-text">🏆 ¡VICTORIA! 🏆</h2>
+        <h2 *ngIf="partida?.ganador === 'BOT'" class="loser-text">💀 DERROTA 💀</h2>
+        <p class="gameover-desc">
+          {{ partida?.ganador === 'JUGADOR' ? 'Has vencido a tu oponente y obtenido el título de Campeón UTN.' : 'Tu Pokémon se ha debilitado. Sigue entrenando para la próxima batalla.' }}
+        </p>
+      </div>
+      <button class="btn-lobby" (click)="irAlLobby()">VOLVER AL LOBBY</button>
+    </div>
+  </div>
 </div>

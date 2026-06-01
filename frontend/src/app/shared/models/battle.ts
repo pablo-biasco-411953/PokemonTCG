@@ -29,6 +29,7 @@ export interface Partida {
   faseActual: 'INICIO' | 'LANZAMIENTO_MONEDA' | 'TURNO_NORMAL' | 'FIN_PARTIDA';
   yaSeRetiroEsteTurno: boolean;
   ultimasMonedasLanzadas: boolean[];
+  ganador?: 'JUGADOR' | 'BOT';
 }
 
 export interface StartBattleResponse extends Partida {}

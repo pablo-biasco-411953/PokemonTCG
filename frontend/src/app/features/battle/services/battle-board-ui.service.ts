@@ -166,7 +166,7 @@ export class BattleBoardUiService {
 
   // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
-    return `/images/cards/${id}.png`;
+    return `/images/cards/${id.toLowerCase()}.png`;
   }
 
   // Genera placeholders para completar los slots de banca.

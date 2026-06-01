@@ -137,7 +137,7 @@
               <div class="deck-mosaic-grid" (mousemove)="actualizarPosicion($event)">
                 @for (carta of mazo.cartas; track $index) {
                   <div class="mosaic-slot" (mouseenter)="mostrarZoom(carta, $event)" (mouseleave)="ocultarZoom()">
-                    <img [src]="carta.imagen" (error)="imgRef.src = 'https://images.pokemontcg.io/' + ('' + carta.id).replace('-', '/') + '.png'" #imgRef class="card-thumb">
+                    <img [src]="'/images/cards/' + (carta.id ? carta.id.toLowerCase() : '') + '.png'" (error)="imgRef.src = 'https://images.pokemontcg.io/' + ('' + carta.id).replace('-', '/') + '.png'" #imgRef class="card-thumb">
                   </div>
                 }
               </div>
@@ -196,7 +196,7 @@
     <div class="card-zoom-overlay" [style.left.px]="zoomX" [style.top.px]="zoomY">
       <div class="scanner-frame detailed-retrotech">
         <div class="scan-line"></div>
-        <img [src]="pkmZoom.imagen" (error)="imgZ.src = 'https://images.pokemontcg.io/' + pkmZoom.id.replace('-', '/') + '_hires.png'" #imgZ>
+        <img [src]="'/images/cards/' + (pkmZoom.id ? pkmZoom.id.toLowerCase() : '') + '.png'" (error)="imgZ.src = 'https://images.pokemontcg.io/' + pkmZoom.id.replace('-', '/') + '_hires.png'" #imgZ>
         <div class="pkm-pixel-panel">
           <div class="data-box header-box">
             <span class="p-id">#{{ pkmZoom.id }}</span>

@@ -4,8 +4,8 @@ const fsPromises = require('fs').promises;
 const path = require('path');
 
 // Configuración de rutas
-const API_URL = 'https://api.pokemontcg.io/v2/cards?pageSize=250';
-const IMG_DIR = path.join(__dirname, 'frontend', 'src', 'assets', 'images', 'cards');
+const API_URL = 'https://api.pokemontcg.io/v2/cards?q=set.id:xy1&pageSize=250';
+const IMG_DIR = path.join(__dirname, 'frontend', 'public', 'images', 'cards');
 const JSON_PATH = path.join(__dirname, 'backend', 'src', 'main', 'resources', 'cards.json');
 
 const ENERGIAS_BASICAS = [
@@ -52,8 +52,8 @@ async function main() {
    const cleanedCards = [];
 
     for (const card of cards) {
-      // 🚩 CAMBIO 1: Ahora dejamos pasar a los Pokémon Y a las cartas de Entrenador
-      if (card.supertype !== 'Pokémon' && card.supertype !== 'Trainer') continue;
+      // 🚩 CAMBIO 1: Ahora dejamos pasar Pokémon, Energías y Entrenadores
+      if (card.supertype !== 'Pokémon' && card.supertype !== 'Trainer' && card.supertype !== 'Energy') continue;
 
       const id = card.id;
       const nombre = card.name;

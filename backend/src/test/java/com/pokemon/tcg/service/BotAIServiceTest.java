@@ -1,6 +1,8 @@
 package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.PokemonCard;
+import com.pokemon.tcg.model.EnergyCard;
 import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
@@ -85,7 +87,7 @@ class BotAIServiceTest {
         CartaEnJuego activoEnPeligro = new CartaEnJuego(basicPokemon("bot-2", "Growlithe", "70", "Fire", attack("Bite", 10, List.of("Colorless"), "")));
         activoEnPeligro.setHpActual(40);
         activoEnPeligro.getEnergiasUnidas().add(energy("ret-1", "Fire Energy"));
-        activoEnPeligro.getCard().setCostoRetirada(1);
+        ((PokemonCard) activoEnPeligro.getCard()).setCostoRetirada(1);
         bot.setActivo(activoEnPeligro);
 
         CartaEnJuego suplente = new CartaEnJuego(basicPokemon("bench-3", "Ponyta", "80", "Fire", attack("Kick", 20, List.of("Fire"), "")));
@@ -105,7 +107,7 @@ class BotAIServiceTest {
     }
 
     private Card basicPokemon(String id, String nombre, String hp, String tipo, Ataque ataque) {
-        Card card = new Card();
+        PokemonCard card = new PokemonCard();
         card.setId(id);
         card.setNombre(nombre);
         card.setHp(hp);
@@ -124,10 +126,9 @@ class BotAIServiceTest {
     }
 
     private Card energy(String id, String nombre) {
-        Card card = new Card();
+        EnergyCard card = new EnergyCard();
         card.setId(id);
         card.setNombre(nombre);
-        card.setHp("0");
         card.setSupertype("Energy");
         card.setTipo("Energy");
         return card;

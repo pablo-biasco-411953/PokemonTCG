@@ -155,13 +155,13 @@ export class LobbyComponent implements OnInit, AfterViewInit {
     const pkm: PokemonZoomUI = {
       id: carta.id,
       nombre: carta.nombre,
-      imagen: carta.imagen,
+      imagen: carta.id ? `/images/cards/${carta.id.toLowerCase()}.png` : '',
       pokedexId: carta.pokemonId || 1,
       hp: carta.hp || 70,
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
       hpIcon: '♥',
-      typeIcon: 'ðŸƒ',
+      typeIcon: 'ðŸ ƒ',
       attacksIcon: '•'
     };
     this.pkmZoom = pkm;
@@ -181,7 +181,7 @@ export class LobbyComponent implements OnInit, AfterViewInit {
   }
 
   getImagenDebugCarta(id: string): string {
-    return `/images/cards/${id}.png`;
+    return `/images/cards/${id.toLowerCase()}.png`;
   }
 
   // Abre un sobre y dispara la animacion de revelado.

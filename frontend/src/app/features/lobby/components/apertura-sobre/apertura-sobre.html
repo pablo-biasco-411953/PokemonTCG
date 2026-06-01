@@ -24,7 +24,7 @@
 
       <div class="summary-grid">
         <div *ngFor="let carta of resumenCartas" class="summary-card">
-          <img [src]="'/images/cards/' + carta.id + '.png'" [alt]="carta.nombre">
+          <img [src]="'/images/cards/' + (carta.id ? carta.id.toLowerCase() : '') + '.png'" [alt]="carta.nombre">
           <span>{{ carta.nombre }}</span>
         </div>
       </div>

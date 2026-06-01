@@ -445,7 +445,7 @@ public class BotAIService {
         }
 
         // 3. FILTRO ANTI-STAGE: Revisamos la base de datos cruda por las dudas.
-        if (c.getSubtypesJson() != null && c.getSubtypesJson().contains("Stage")) {
+        if (c.getSubtypes() != null && c.getSubtypes().stream().anyMatch(s -> s.contains("Stage"))) {
             System.out.println("❌ Es Fase 1 o 2 (Lo dice su JSON).");
             return false;
         }

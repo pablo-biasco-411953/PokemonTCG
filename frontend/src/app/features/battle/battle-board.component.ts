@@ -64,6 +64,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   hoveredCardStatuses: CardGlossaryEntry[] = [];
   hoveredCardList: HoveredBattleCard[] = []; // Lista de cartas actual (por ejemplo, la mano).
   hoveredCardIndex = -1; // Índice de la carta resaltada dentro de la lista actual.
+  hoverTimeoutId: any = null;
   // Tracking de cartas nuevas (jugador)
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
@@ -206,6 +207,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // Limpia polling al salir de la partida.
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
+  }
+
+  // Redirige al lobby al finalizar la partida.
+  irAlLobby(): void {
+    this.router.navigate(['/lobby']);
   }
 
   // -----------------------------------------------
@@ -406,6 +412,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   clearHoveredCard() {
     if (this.isScrollingMode) return;
 
+    if (this.hoverTimeoutId) {
+      clearTimeout(this.hoverTimeoutId);
+      this.hoverTimeoutId = null;
+    }
+
     this.hoveredCard = null;
     this.hoveredCardStatuses = [];
     this.hoveredCardList = [];
@@ -571,15 +582,34 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     // ?? FIX: Si estamos girando la ruedita, ignoramos los choques físicos del mouse
     if (this.isScrollingMode) return;
 
+    if (this.hoverTimeoutId) {
+      clearTimeout(this.hoverTimeoutId);
+      this.hoverTimeoutId = null;
+    }
+
     if (!item) {
       this.clearHoveredCard();
       return;
     }
-    const cartaReal = item.card ? item.card : item;
-    this.hoveredCard = cartaReal;
-    this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
-    this.hoveredCardList = list;
-    this.hoveredCardIndex = index;
+
+    const isHandCard = list && this.partida?.jugador?.mano && list === this.partida.jugador.mano;
+
+    if (isHandCard) {
+      this.hoverTimeoutId = setTimeout(() => {
+        const cartaReal = item.card ? item.card : item;
+        this.hoveredCard = cartaReal;
+        this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
+        this.hoveredCardList = list;
+        this.hoveredCardIndex = index;
+        this.cdr.detectChanges();
+      }, 450);
+    } else {
+      const cartaReal = item.card ? item.card : item;
+      this.hoveredCard = cartaReal;
+      this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
+      this.hoveredCardList = list;
+      this.hoveredCardIndex = index;
+    }
   }
 
   async ejecutarCoinFlipAtaque(

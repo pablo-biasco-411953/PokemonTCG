@@ -14,6 +14,8 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private boolean yaSeJugoPartidarioEsteTurno = false;
+    private boolean yaSeJugoEstadioEsteTurno = false;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
@@ -52,6 +54,18 @@ public class Partida {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
     }
 
+    public boolean isYaSeJugoPartidarioEsteTurno() { return yaSeJugoPartidarioEsteTurno; }
+    public void setYaSeJugoPartidarioEsteTurno(boolean yaSeJugoPartidarioEsteTurno) {
+        this.yaSeJugoPartidarioEsteTurno = yaSeJugoPartidarioEsteTurno;
+    }
+
+    public boolean isYaSeJugoEstadioEsteTurno() { return yaSeJugoEstadioEsteTurno; }
+    public void setYaSeJugoEstadioEsteTurno(boolean yaSeJugoEstadioEsteTurno) {
+        this.yaSeJugoEstadioEsteTurno = yaSeJugoEstadioEsteTurno;
+    }
+
+    private String ganador;
+
     // 🚩 GETTER Y SETTER DE LAS MONEDAS PARA QUE VIAJEN A ANGULAR
     public List<Boolean> getUltimasMonedasLanzadas() {
         return ultimasMonedasLanzadas;
@@ -59,5 +73,13 @@ public class Partida {
 
     public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
         this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
+    }
+
+    public String getGanador() {
+        return ganador;
+    }
+
+    public void setGanador(String ganador) {
+        this.ganador = ganador;
     }
 }

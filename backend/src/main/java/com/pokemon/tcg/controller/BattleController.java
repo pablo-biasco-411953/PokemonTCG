@@ -102,6 +102,17 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/play-trainer")
+    public ResponseEntity<?> jugarCartaEntrenador(@PathVariable String matchId,
+                                                 @RequestBody JugarEntrenadorRequest request) {
+        try {
+            battleEngine.jugarCartaEntrenador(matchId, request.getCartaId(), request.getObjetivoId());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/attach-energy")
     public ResponseEntity<?> unirEnergia(@PathVariable String matchId,
                                          @RequestBody UnirEnergiaRequest request) {

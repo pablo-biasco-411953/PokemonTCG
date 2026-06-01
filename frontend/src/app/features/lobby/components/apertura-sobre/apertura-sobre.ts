@@ -316,7 +316,7 @@ export class AperturaSobreComponent implements OnInit, OnDestroy {
     this.cartas.forEach((c, i) => {
       const group = new THREE.Group();
       const matFront = new THREE.MeshPhysicalMaterial({
-        map: loader.load(`/images/cards/${c.id}.png`),
+        map: loader.load(`/images/cards/${(c.id ? c.id.toLowerCase() : '')}.png`),
         metalness: 0.5,
         roughness: 0.3,
         iridescence: 0.4,

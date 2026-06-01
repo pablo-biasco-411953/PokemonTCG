@@ -1,6 +1,7 @@
 package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.PokemonCard;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
@@ -69,7 +70,7 @@ class BattleKoServiceTest {
     }
 
     private Card card(String id, String nombre, String hp) {
-        Card card = new Card();
+        PokemonCard card = new PokemonCard();
         card.setId(id);
         card.setNombre(nombre);
         card.setHp(hp);

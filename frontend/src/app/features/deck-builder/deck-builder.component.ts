@@ -115,7 +115,7 @@ export class DeckBuilderComponent implements OnInit {
   // Resuelve la imagen publica asociada a una carta.
   getImagenReal(id: string): string {
     const archivo = this.mapaFotos[id] || id;
-    return `/images/cards/${archivo}.png`;
+    return `/images/cards/${archivo.toLowerCase()}.png`;
   }
 
   // Activa la inspeccion con una breve espera.
