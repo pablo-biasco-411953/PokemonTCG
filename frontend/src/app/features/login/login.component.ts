@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import * as THREE from 'three';
-import { AuthService } from '../services/auth.service';
-import { SoundService } from '../services/sound.service';
-import { TranslatePipe } from '../i18n/translate.pipe';
+import { AuthService } from '../../core/services/auth.service';
+import { SoundService } from '../../core/services/sound.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-login',
@@ -258,11 +258,11 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.typedAccessLines = [];
     this.activeAccessLine = -1;
     this.authService.login(this.username, this.password).subscribe({
-      next: (jugador) => {
+      next: (jugador: any) => {
         localStorage.setItem('jugador', JSON.stringify(jugador));
         this.playAccessSequence(jugador.username || this.username.trim());
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error en el login:', error);
         this.errorMessage = typeof error.error === 'string'
           ? error.error.replace('Error en login: ', '')
@@ -401,7 +401,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
           this.switchToLogin();
         }, 1800);
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error en registro:', error);
         this.registerError = typeof error.error === 'string'
           ? error.error.replace('Error en registro: ', '')
@@ -473,13 +473,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.forgotError = '';
     this.forgotMessage = '';
     this.authService.forgotPassword(this.forgotUsername, this.forgotEmail).subscribe({
-      next: (message) => {
+      next: (message: any) => {
         this.forgotMessage = message;
         this.resetStep = true;
         this.forgotLoading = false;
         this.sound.success();
       },
-      error: (error) => {
+      error: (error: any) => {
         this.forgotError = typeof error.error === 'string'
           ? error.error.replace('Error recuperando password: ', '')
           : 'No pude conectar con el backend.';
@@ -496,13 +496,13 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
     this.forgotLoading = true;
     this.forgotError = '';
     this.authService.resetPassword(this.forgotToken, this.forgotNewPassword, this.forgotConfirmPassword).subscribe({
-      next: (message) => {
+      next: (message: any) => {
         this.forgotMessage = message;
         this.forgotLoading = false;
         this.sound.success();
         setTimeout(() => this.switchToLogin(), 1200);
       },
-      error: (error) => {
+      error: (error: any) => {
         this.forgotError = typeof error.error === 'string'
           ? error.error.replace('Error cambiando password: ', '')
           : 'No pude conectar con el backend.';
