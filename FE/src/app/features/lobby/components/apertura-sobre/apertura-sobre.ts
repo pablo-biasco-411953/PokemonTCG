@@ -36,6 +36,11 @@ private estaCerrandoSobre: boolean = false; // Flag de seguridad
   public estaCortado: boolean = false;
   private estaHaciendoClic: boolean = false;
   private tiempoCorte: number = 0;
+
+  public puedePasar: boolean = false;
+  public autoRevealEnCurso: boolean = false;
+  public resumenVisible: boolean = false;
+  public resumenCartas: any[] = [];
   
   private puntoClickInicial = new THREE.Vector2();
   private tiempoClickInicial: number = 0;
@@ -259,25 +264,27 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
   }
   
 
- private iniciarAperturaFinal() {
-  this.estaCortado = true;
-  this.estaHaciendoClic = false;
-  this.lineaGlow.visible = false;
-  this.tiempoCorte = Date.now();
-  
-  // DISPARAR EXPLOSIÓN
-  this.crearExplosion();
-  this.explosiónDisparada = true;
+  private iniciarAperturaFinal() {
+    this.estaCortado = true;
+    this.estaHaciendoClic = false;
+    this.lineaGlow.visible = false;
+    this.tiempoCorte = Date.now();
+    
+    // DISPARAR EXPLOSIÓN
+    this.crearExplosion();
+    this.explosiónDisparada = true;
 
-  this.mensajeGuia = "--- EXPLOTANDO SOBRE ---";
-  this.cdr.detectChanges();
-
-  setTimeout(() => {
-    this.crearCartasAntiBug();
-    this.mensajeGuia = "--- TOCA O DESLIZA ---";
+    this.mensajeGuia = "--- EXPLOTANDO SOBRE ---";
     this.cdr.detectChanges();
-  }, 700);
-}
+
+    setTimeout(() => {
+      this.crearCartasAntiBug();
+      this.mensajeGuia = "--- TOCA O DESLIZA ---";
+      this.puedePasar = true;
+      this.resumenCartas = [...this.cartas];
+      this.cdr.detectChanges();
+    }, 700);
+  }
 
   private crearCartasAntiBug() {
     const loader = new THREE.TextureLoader();
@@ -433,5 +440,26 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
       });
     }
     this.renderer.render(this.scene, this.camera);
+  }
+
+  pasarRevelado() {
+    this.puedePasar = false;
+    this.autoRevealEnCurso = true;
+    this.cdr.detectChanges();
+
+    this.mazoCartas.forEach(card => this.scene.remove(card));
+    this.mazoCartas = [];
+
+    setTimeout(() => {
+      this.autoRevealEnCurso = false;
+      this.resumenVisible = true;
+      this.cdr.detectChanges();
+    }, 800);
+  }
+
+  onOverlayClick(event: MouseEvent) {
+    if (this.resumenVisible) {
+      this.onClose.emit();
+    }
   }
 }

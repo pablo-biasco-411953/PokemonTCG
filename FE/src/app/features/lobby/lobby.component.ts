@@ -8,6 +8,7 @@ import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 import { Card } from '../../shared/models/card';
 import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
 import { Mazo } from '../../shared/models/mazo';
@@ -32,7 +33,7 @@ export interface PokemonZoomUI {
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, AperturaSobreComponent]
+  imports: [CommonModule, FormsModule, AperturaSobreComponent, TranslatePipe]
 })
 export class LobbyComponent implements OnInit, AfterViewInit {
   @ViewChild('bgVideo') bgVideo!: ElementRef<HTMLVideoElement>;
