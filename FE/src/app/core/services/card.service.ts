@@ -5,7 +5,7 @@ import { Card } from '../../shared/models/card';
 
 @Injectable({ providedIn: 'root' })
 export class CardService {
-  private apiUrl = 'http://localhost:8080/api/cards';
+  private apiUrl = `http://${window.location.hostname}:8080/api/cards`;
 
   constructor(private http: HttpClient) {}
 

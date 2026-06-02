@@ -7,7 +7,7 @@ import { Partida } from '../../../shared/models/battle';
 @Injectable({ providedIn: 'root' })
 export class BattleService {
   // Punto de entrada para todas las acciones de combate.
-  private base = 'http://localhost:8080/api/battle';
+  private base = `http://${window.location.hostname}:8080/api/battle`;
 
   constructor(private http: HttpClient) {}
 
