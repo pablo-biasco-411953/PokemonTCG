@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SobreService } from './services/sobre.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
+import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
@@ -91,7 +92,7 @@ export interface OtherPlayerNPC {
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, AperturaSobreComponent, TranslatePipe]
+  imports: [CommonModule, FormsModule, AperturaSobreComponent, DeckBuilderComponent, TranslatePipe]
 })
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
@@ -147,6 +148,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   battlePanelOpen = false;
   kioskShopOpen = false;
   vendorCameraFocus = false;
+  deckBuilderOpen = false;
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
@@ -825,7 +827,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Navega al editor de mazos.
   irAlDeckBuilder() {
-    this.router.navigate(['/deck-builder']);
+    this.deckBuilderOpen = true;
+    this.keys.clear();
+    this.playerVelocity.set(0, 0, 0);
+    this.setPlayerAnimation('idle');
+    this.cdr.detectChanges();
+  }
+
+  cerrarDeckBuilder(refresh = false) {
+    this.deckBuilderOpen = false;
+    if (refresh) {
+      this.refrescarTodo();
+    }
+    this.cdr.detectChanges();
   }
 
   // Crea una partida usando el mazo elegido.
@@ -1720,10 +1734,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateDayNightCycle(elapsed: number) {
+  private updateDayNightCycle(_elapsed: number) {
     if (!this.scene || !this.sunLight || !this.moonLight || !this.ambientLight || !this.sunMesh || !this.moonMesh || !this.skyDome) return;
 
-    const t = (elapsed % this.cycleSeconds) / this.cycleSeconds;
+    const syncedElapsed = Date.now() / 1000;
+    const t = (syncedElapsed % this.cycleSeconds) / this.cycleSeconds;
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
     
@@ -3242,7 +3257,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updatePlayer(delta: number) {
-    if (this.kioskShopOpen) {
+    if (this.kioskShopOpen || this.deckBuilderOpen) {
       this.playerVelocity.set(0, 0, 0);
       this.setPlayerAnimation('idle');
       return;
@@ -3561,6 +3576,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.handleIncomingChallenge(msg);
       } else if (type === 'CHALLENGE_DUEL_RESPONSE') {
         this.handleChallengeResponse(msg);
+      } else if (type === 'BATTLE_START') {
+        this.handleBattleStart(msg);
       } else if (type === 'INVITE_TRADE') {
         this.handleIncomingTradeInvite(msg);
       } else if (type === 'INVITE_TRADE_RESPONSE') {
@@ -3569,8 +3586,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.handleTradeUpdate(msg);
       } else if (type === 'TRADE_CLOSE') {
         this.handleTradeClose(msg);
-      } else if (type === 'BATTLE_START') {
-        this.router.navigate(['/battle', msg.details]);
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
@@ -4440,6 +4455,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.incomingChallenge = null;
     this.stopChallengeTimer();
 
+    if (accepted && !this.selectedBattleDeckId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Elegí un mazo sincronizado antes de aceptar el duelo.', system: true });
+      accepted = false;
+    }
+
     this.socket?.send(JSON.stringify({
       type: 'CHALLENGE_DUEL_RESPONSE',
       username: this.jugador?.username,
@@ -4461,6 +4481,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       const p2MazoId = parseInt(msg.details || '0');
       if (!this.selectedBattleDeckId) {
         this.chatLog.push({ sender: 'SISTEMA', text: `Error: No tienes mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
+        return;
+      }
+      if (!p2MazoId) {
+        this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} no tiene mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
         return;
       }
 
@@ -4481,13 +4507,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al arrancar batalla online:', err);
-          alert('Error al iniciar combate online: ' + err.message);
+          const backendMessage = typeof err.error === 'string' ? err.error : err.message;
+          alert('Error al iniciar combate online: ' + backendMessage);
         }
       });
     } else {
       this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó el duelo o la invitación expiró.`, system: true });
       this.cdr.detectChanges();
     }
+  }
+
+  handleBattleStart(msg: any) {
+    const partidaId = msg.details;
+    if (!partidaId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Llegó inicio de batalla sin ID de partida.', system: true });
+      this.cdr.detectChanges();
+      return;
+    }
+    this.router.navigate(['/battle', partidaId]);
   }
 
   startChallengeTimer(onTimeout: () => void) {

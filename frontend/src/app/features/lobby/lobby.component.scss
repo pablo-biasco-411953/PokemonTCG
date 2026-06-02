@@ -2749,4 +2749,54 @@ kbd {
   to { text-shadow: 0 0 16px #ef4444; filter: drop-shadow(0 0 8px #ef4444); }
 }
 
+.deck-builder-overlay {
+  position: fixed;
+  inset: 18px;
+  z-index: 1150;
+  border-radius: 22px;
+  padding: 10px;
+  background:
+    radial-gradient(circle at 18% 4%, rgba(34, 211, 238, 0.2), transparent 34%),
+    linear-gradient(135deg, rgba(2, 6, 23, 0.78), rgba(15, 23, 42, 0.62));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.74),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+
+  app-deck-builder {
+    display: block;
+    height: 100%;
+  }
+
+  .builder-container.pokedex-chassis {
+    height: 100%;
+    border-radius: 16px;
+  }
+}
+
+.deck-builder-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(2, 6, 23, 0.72);
+  color: white;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+
+  &:hover {
+    transform: scale(1.06);
+    border-color: rgba(34, 211, 238, 0.65);
+  }
+}
+
 

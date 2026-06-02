@@ -11,9 +11,6 @@
     *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
     class="player-nametag" 
     [attr.data-player-tag]="other.username"
-    [style.left.%]="other.screenX" 
-    [style.top.%]="other.screenY"
-    [class.visible]="other.screenX !== undefined && other.screenY !== undefined"
   >
     <div class="nametag-bubble" (click)="openPlayerMenu($event, other)">
       <span class="nametag-dot"></span>
@@ -28,9 +25,6 @@
     *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername"
     class="player-speech-bubble"
     [attr.data-player-bubble]="other.username"
-    [style.left.%]="other.screenX"
-    [style.top.%]="other.screenY"
-    [class.visible]="other.screenX !== undefined && other.screenY !== undefined && other.chatBubble"
   >
     <div class="speech-content">
       {{ other.chatBubble }}
@@ -866,5 +860,10 @@
         </div>
       </ng-template>
     </div>
+  </div>
+
+  <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">
+    <button type="button" class="deck-builder-close" (click)="cerrarDeckBuilder()">×</button>
+    <app-deck-builder [embedded]="true" (closed)="cerrarDeckBuilder($event)"></app-deck-builder>
   </div>
 </div>

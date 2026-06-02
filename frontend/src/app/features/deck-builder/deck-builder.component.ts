@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,9 +12,13 @@ import { TranslatePipe } from '../../i18n/translate.pipe';
   standalone: true,
   imports: [CommonModule, FormsModule, TranslatePipe],
   templateUrl: './deck-builder.component.html',
-  styleUrls: ['./deck-builder.component.scss']
+  styleUrls: ['./deck-builder.component.scss'],
+  host: { '[class.embedded]': 'embedded' }
 })
 export class DeckBuilderComponent implements OnInit {
+  @Input() embedded = false;
+  @Output() closed = new EventEmitter<boolean>();
+
   coleccion: Card[] = [];
   mazoEnProceso: Card[] = [];
   cantidadesPoseidas: { [key: string]: number } = {};
@@ -150,16 +154,24 @@ guardar() {
     // Lógica para actualizar (necesitás este método en tu mazoService)
     this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
       alert('¡Mazo actualizado!');
-      this.router.navigate(['/lobby']);
+      this.cerrar(true);
     });
   } else {
     // Lógica original de guardado
     this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
       alert('¡Mazo creado!');
-      this.router.navigate(['/lobby']);
+      this.cerrar(true);
     });
   }
 }
 
-  volver() { this.router.navigate(['/lobby']); }
+  volver() { this.cerrar(false); }
+
+  private cerrar(refresh: boolean) {
+    if (this.embedded) {
+      this.closed.emit(refresh);
+      return;
+    }
+    this.router.navigate(['/lobby']);
+  }
 }
