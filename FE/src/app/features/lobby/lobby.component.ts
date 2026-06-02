@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SobreService } from './services/sobre.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
+import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
@@ -75,12 +76,15 @@ export interface OtherPlayerNPC {
   mixer?: THREE.AnimationMixer;
   actions: Map<string, THREE.AnimationAction>;
   active?: THREE.AnimationAction;
+  isPlayingEmote?: boolean;
   pikachu?: CampusNpc;
   targetPosition: THREE.Vector3;
   targetRotationY: number;
   currentAnimation: 'idle' | 'walking' | 'running';
   screenX?: number;
   screenY?: number;
+  chatBubble?: string;
+  chatBubbleTimeout?: any;
 }
 
 @Component({
@@ -88,7 +92,7 @@ export interface OtherPlayerNPC {
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, AperturaSobreComponent, TranslatePipe]
+  imports: [CommonModule, FormsModule, AperturaSobreComponent, DeckBuilderComponent, TranslatePipe]
 })
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
@@ -96,11 +100,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // WebSocket Multiplayer
   private socket?: WebSocket;
+  private reconnectTimeout?: ReturnType<typeof setTimeout>;
+  private lobbyDestroyed = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
   private lastSentRotY = 0;
   private lastSentAnimation: 'idle' | 'walking' | 'running' = 'idle';
+
+  // Estado de Chat
+  chatActive = false;
+  chatText = '';
+  chatLog: Array<{ sender: string; text: string; system?: boolean }> = [];
+  localChatBubble: string | null = null;
+  localBubbleScreenX?: number;
+  localBubbleScreenY?: number;
+  private localBubbleTimeout?: any;
+
+  // Estado de Emotes
+  showEmoteMenu = false;
+  isPlayingEmote = false;
+  emoteAnimationName?: string;
 
   get otherPlayersList(): OtherPlayerNPC[] {
     return Array.from(this.otherPlayers.values());
@@ -128,11 +148,60 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   battlePanelOpen = false;
   kioskShopOpen = false;
   vendorCameraFocus = false;
+  deckBuilderOpen = false;
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
   dayPhaseLabel = 'Mañana';
   currentInteraction: HubSpot | null = null;
+  graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+
+  // Interaction & Context Menu State
+  selectedPlayerForMenu: OtherPlayerNPC | null = null;
+  playerMenuX = 0;
+  playerMenuY = 0;
+
+  // Challenge / Duel State
+  incomingChallenge: any = null;
+  waitingForChallengeResponse = false;
+  challengedUsername = '';
+  challengeSecondsLeft = 10;
+  challengeTimerDashoffset = 0;
+  private challengeTimerInterval: any = null;
+
+  // Trade State
+  incomingTradeInvite: any = null;
+  waitingForTradeResponse = false;
+  tradeInvitedUsername = '';
+  activeTradeSession = false;
+  tradeOpponentUsername = '';
+  tradeLeftCards: Card[] = [];
+  tradeRightCards: Card[] = [];
+  tradeLeftReady = false;
+  tradeRightReady = false;
+  tradeCollectionSearchText = '';
+  tradeCollectionFilterRarity = '';
+  tradeCollectionFilterType = '';
+  tradeCollectionFilterSupertype = '';
+  tradeCollectionFilterSubtype = '';
+  tradeCollectionFiltrada: Card[] = [];
+  tradeCollectionLoading = false;
+  tradeCollectionError = '';
+  tradeCollectionRarities: string[] = [];
+  tradeCollectionTypes: string[] = [];
+  tradeCollectionSupertypes: string[] = [];
+  tradeCollectionSubtypes: string[] = [];
+  tradeShowValueWarning = false;
+  tradeShowContinuationPrompt = false;
+  tradeWaitingForContinuation = false;
+  userTradeCollection: Card[] = [];
+  private tradeCollectionLoaded = false;
+
+  get graphicsQualityLabel(): string {
+    if (this.graphicsQuality === 'low') return 'BAJO 🔴';
+    if (this.graphicsQuality === 'medium') return 'MEDIO 🟡';
+    return 'ALTO 🟢';
+  }
 
   // Propiedades para el modal de personalización y Onboarding
   customizationModalOpen = false;
@@ -377,13 +446,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Recupera al jugador guardado y carga su estado inicial.
   ngOnInit(): void {
+    const storedQuality = localStorage.getItem('ptcg_graphics_quality') as 'low' | 'medium' | 'high' | null;
+    if (storedQuality) {
+      this.graphicsQuality = storedQuality;
+    } else {
+      this.graphicsQuality = this.detectGraphicsQuality();
+      localStorage.setItem('ptcg_graphics_quality', this.graphicsQuality);
+    }
+
     try {
       const data = localStorage.getItem('jugador');
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
-        this.connectWebSocket();
-
         // Verificación de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
         if (!setupCompleted) {
@@ -405,10 +480,87 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private detectGraphicsQuality(): 'low' | 'medium' | 'high' {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as any;
+      if (!gl) return 'medium';
+      
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debugInfo) return 'medium';
+      
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+      console.log('Detected GL_RENDERER:', renderer);
+      const rendererLower = renderer.toLowerCase();
+      
+      if (
+        rendererLower.includes('intel') ||
+        rendererLower.includes('uhd') ||
+        rendererLower.includes('hd graphics') ||
+        rendererLower.includes('mobile') ||
+        rendererLower.includes('microsoft basic') ||
+        rendererLower.includes('swiftshader') ||
+        rendererLower.includes('software') ||
+        rendererLower.includes('llvmpipe')
+      ) {
+        return 'low';
+      }
+      if (
+        rendererLower.includes('nvidia') ||
+        rendererLower.includes('geforce') ||
+        rendererLower.includes('rtx') ||
+        rendererLower.includes('gtx') ||
+        rendererLower.includes('radeon') ||
+        rendererLower.includes('amd') ||
+        rendererLower.includes('apple gpu') ||
+        rendererLower.includes('m1') ||
+        rendererLower.includes('m2') ||
+        rendererLower.includes('m3')
+      ) {
+        return 'high';
+      }
+      return 'medium';
+    } catch (e) {
+      console.warn('Error detecting WebGL renderer:', e);
+      return 'medium';
+    }
+  }
+
+  setGraphicsQuality(quality: 'low' | 'medium' | 'high', updateRenderer: boolean = true) {
+    this.graphicsQuality = quality;
+    localStorage.setItem('ptcg_graphics_quality', quality);
+    if (updateRenderer) {
+      this.updateRendererPixelRatio();
+      // Force update shadow state immediately
+      if (this.scene && this.sunLight && this.moonLight) {
+        const elapsed = this.clock.elapsedTime;
+        this.updateDayNightCycle(elapsed);
+      }
+      this.cdr.detectChanges();
+    }
+  }
+
+  cycleGraphicsQuality() {
+    const qualities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+    const nextIndex = (qualities.indexOf(this.graphicsQuality) + 1) % qualities.length;
+    this.setGraphicsQuality(qualities[nextIndex]);
+  }
+
+  updateRendererPixelRatio() {
+    if (!this.renderer) return;
+    let maxDPR = 1.35;
+    if (this.graphicsQuality === 'low') maxDPR = 1.0;
+    else if (this.graphicsQuality === 'medium') maxDPR = 1.25;
+    else if (this.graphicsQuality === 'high') maxDPR = 1.6;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDPR));
+    this.resizeHub();
+  }
+
   // Intenta reproducir el video decorativo apenas exista en el DOM.
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
       this.initHubWorld();
+      this.connectWebSocket();
       this.animateHub();
       
       if (this.showFirstTimeSetup) {
@@ -418,6 +570,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.lobbyDestroyed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;
@@ -456,6 +613,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.toggleChat();
+      return;
+    }
+
     if (this.isTypingTarget(event.target)) return;
 
     const key = event.key.toLowerCase();
@@ -478,7 +641,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Refresca resumen, sobres y mazos del jugador.
   refrescarTodo() {
-    if (!this.jugador?.username) return;
+    if (!this.jugador?.username || this.lobbyDestroyed) return;
 
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
@@ -488,17 +651,94 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
           const idsUnicos = new Set(res.cartasObtenidas.map((c: Card) => c.pokemonId || c.id));
           this.cantidadCartasUnicas = idsUnicos.size;
+          this.setTradeCollection(res.cartasObtenidas);
+          this.tradeCollectionLoaded = true;
         } else {
           this.cantidadCartasUnicas = res.cantidadCartas ?? 0;
         }
 
         this.jugador = { ...this.jugador!, ...res };
+
+        if (res.characterId) {
+          localStorage.setItem('lobbyCharacter', res.characterId);
+          this.selectedCharacterId = res.characterId;
+        }
+        if (res.skinColor) {
+          localStorage.setItem('lobbySkinColor', res.skinColor);
+        }
+        if (res.hairColor) {
+          localStorage.setItem('lobbyHairColor', res.hairColor);
+        }
+        if (res.eyeColor) {
+          localStorage.setItem('lobbyEyeColor', res.eyeColor);
+        }
+        if (res.height) {
+          localStorage.setItem('lobbyHeight', res.height.toString());
+        }
+        if (res.pikachuCompanion !== undefined) {
+          localStorage.setItem('pikachuCompanion', res.pikachuCompanion ? 'true' : 'false');
+          this.pikachuEnabled = res.pikachuCompanion;
+        }
+
+        this.ngZone.runOutsideAngular(() => {
+          this.loadAnimatedPlayerAsset();
+          if (this.pikachuEnabled) {
+            this.createPikachuCompanion();
+          }
+        });
+
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error al obtener datos del jugador', err)
     });
 
     this.cargarMazosDeJugador();
+    this.precargarColeccionTrade();
+  }
+
+  precargarColeccionTrade(force = false) {
+    if (!this.jugador?.username) return;
+    if (!force && this.tradeCollectionLoaded && this.userTradeCollection.length > 0) return;
+
+    this.tradeCollectionLoading = true;
+    this.tradeCollectionError = '';
+
+    this.jugadorService.getColeccion(this.jugador.username).subscribe({
+      next: (cards) => {
+        this.setTradeCollection(cards);
+        this.tradeCollectionLoaded = true;
+        this.tradeCollectionLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al precargar coleccion para trade:', err);
+        this.tradeCollectionLoading = false;
+        this.tradeCollectionError = 'No se pudo cargar tu coleccion.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private setTradeCollection(cards: Card[]) {
+    this.userTradeCollection = Array.isArray(cards) ? cards : [];
+    this.tradeCollectionRarities = this.getUniqueCardValues(this.userTradeCollection, (card) => card.rarity || 'Common');
+    this.tradeCollectionTypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.tipo);
+    this.tradeCollectionSupertypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.supertype);
+    this.tradeCollectionSubtypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.subtypes || []);
+    this.filtrarColeccionTrade();
+  }
+
+  private getUniqueCardValues(cards: Card[], picker: (card: Card) => string | string[] | undefined | null): string[] {
+    const values = new Set<string>();
+    cards.forEach((card) => {
+      const raw = picker(card);
+      const list = Array.isArray(raw) ? raw : [raw];
+      list.forEach((value) => {
+        const clean = (value || '').toString().trim();
+        if (clean) values.add(clean);
+      });
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
   }
 
   // Carga los mazos visibles y rellena slots vacios.
@@ -587,7 +827,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Navega al editor de mazos.
   irAlDeckBuilder() {
-    this.router.navigate(['/deck-builder']);
+    this.deckBuilderOpen = true;
+    this.keys.clear();
+    this.playerVelocity.set(0, 0, 0);
+    this.setPlayerAnimation('idle');
+    this.cdr.detectChanges();
+  }
+
+  cerrarDeckBuilder(refresh = false) {
+    this.deckBuilderOpen = false;
+    if (refresh) {
+      this.refrescarTodo();
+    }
+    this.cdr.detectChanges();
   }
 
   // Crea una partida usando el mazo elegido.
@@ -702,7 +954,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           alpha: true,
           antialias: true
         });
-        this.previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
         this.previewRenderer.setSize(width, height, false);
         this.previewRenderer.shadowMap.enabled = true;
 
@@ -1075,6 +1327,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedCharacterId = this.customizerSelectedId;
     this.pikachuEnabled = this.customizerPikachu;
 
+    // Guardar en la base de datos
+    if (this.jugador?.username) {
+      this.jugadorService.guardarPersonalizacion(this.jugador.username, {
+        characterId: this.customizerSelectedId,
+        skinColor: this.customizerSkinColor,
+        hairColor: this.customizerHairColor,
+        eyeColor: this.customizerEyeColor,
+        height: this.customizerHeight,
+        pikachuCompanion: this.customizerPikachu
+      }).subscribe({
+        next: () => console.log('Personalización guardada en base de datos.'),
+        error: (err) => console.error('Error al guardar personalización en DB:', err)
+      });
+    }
+
     // Sincronizar Pikachu en el escenario principal del lobby
     if (this.pikachuEnabled) {
       if (!this.pikachu) {
@@ -1274,7 +1541,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHubWorld() {
     const canvas = this.hubCanvas.nativeElement;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+    this.updateRendererPixelRatio();
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(0x030712);
@@ -1343,17 +1610,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.sunLight = new THREE.DirectionalLight(0xfff4c0, 3.4);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.set(2048, 2048);
+    this.sunLight.shadow.mapSize.set(1024, 1024);
     this.sunLight.shadow.camera.near = 1;
     this.sunLight.shadow.camera.far = 95;
     this.sunLight.shadow.camera.left = -42;
     this.sunLight.shadow.camera.right = 42;
     this.sunLight.shadow.camera.top = 42;
     this.sunLight.shadow.camera.bottom = -42;
+    this.sunLight.shadow.bias = -0.0005;
     this.scene.add(this.sunLight);
 
     this.moonLight = new THREE.DirectionalLight(0xc7d2fe, 0.25);
     this.moonLight.castShadow = true;
+    this.moonLight.shadow.bias = -0.0005;
     this.moonLight.position.set(-20, 18, 18);
     this.scene.add(this.moonLight);
 
@@ -1465,13 +1734,26 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateDayNightCycle(elapsed: number) {
+  private updateDayNightCycle(_elapsed: number) {
     if (!this.scene || !this.sunLight || !this.moonLight || !this.ambientLight || !this.sunMesh || !this.moonMesh || !this.skyDome) return;
 
-    const t = (elapsed % this.cycleSeconds) / this.cycleSeconds;
+    const syncedElapsed = Date.now() / 1000;
+    const t = (syncedElapsed % this.cycleSeconds) / this.cycleSeconds;
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
     
+    // Optimización de sombras según la calidad gráfica activa
+    const sunVisible = sunHeight > 0.03;
+    if (this.graphicsQuality === 'low') {
+      this.sunLight.castShadow = false;
+      this.moonLight.castShadow = false;
+    } else if (this.graphicsQuality === 'medium') {
+      this.sunLight.castShadow = sunVisible;
+      this.moonLight.castShadow = !sunVisible;
+    } else {
+      this.sunLight.castShadow = true;
+      this.moonLight.castShadow = true;
+    }
     // 1. Posicionamiento original de luces direccionales para mantener dirección de sombras perfecta
     const sunX = Math.cos(orbit) * 58;
     const sunY = Math.max(-12, sunHeight * 42);
@@ -1836,7 +2118,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           // Alinear el bottom del modelo ya rotado para evitar errores flotantes o de clipping
           this.alignModelBottom(model, y + 0.08);
           this.scene!.add(model);
-        });
+        }, { castShadow: false, receiveShadow: false });
       }
 
       // 7 productos en la estantería derecha (recta, inclinada hacia abajo 0.08 rad)
@@ -1863,7 +2145,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           // Alinear el bottom del modelo ya rotado
           this.alignModelBottom(model, y + 0.08);
           this.scene!.add(model);
-        });
+        }, { castShadow: false, receiveShadow: false });
       }
     });
 
@@ -1880,7 +2162,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.rotation.y = 0; // facing front! (No Math.PI!)
         this.alignModelBottom(model, 0.4);
         this.scene!.add(model);
-      });
+      }, { castShadow: false });
     });
 
     // Luz focalizada sobre la máquina expendedora de Coca-Cola en el centro del fondo
@@ -1969,7 +2251,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.rotation.y = Math.random() * Math.PI * 2;
         
         this.scene!.add(model);
-      });
+      }, { castShadow: false });
     });
   }
 
@@ -2152,7 +2434,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       model.rotation.set(0.2, 0.65, 0); // Apuntando al cielo
       
       this.scene!.add(model);
-    });
+    }, { castShadow: false });
 
     for (let z = 16; z > -35; z -= 9) {
       this.addLampPost(-6.2, z);
@@ -2226,7 +2508,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(light);
       
       this.lampLights.push(light);
-    });
+    }, { castShadow: false });
   }
 
   private createAmbientPokemon() {
@@ -2242,7 +2524,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void) {
+  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void, options: { castShadow?: boolean; receiveShadow?: boolean } = { castShadow: true, receiveShadow: true }) {
     const loader = new GLTFLoader(this.hubLoadingManager);
     loader.load(
       path,
@@ -2266,8 +2548,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            mesh.castShadow = options.castShadow !== false;
+            mesh.receiveShadow = options.receiveShadow !== false;
           }
         });
         onLoad(model, gltf.animations);
@@ -2955,20 +3237,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
 
-    // update multiplayer
-    this.updateOtherPlayers(delta);
-    this.checkAndSendMove();
-
     this.updateDayNightCycle(elapsed);
     this.updateHubObjects(elapsed);
     this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch)); // Clampar Pitch
+    
+    // Update camera first
     this.updateCamera(delta);
+    
+    // Force camera matrix update to prevent projection lag
+    this.camera.updateMatrixWorld(true);
+
+    // Update other players and local bubble projection using the new camera matrices
+    this.updateOtherPlayers(delta);
+    this.updateLocalPlayerBubbleProjection();
     this.updateInteractionState();
+
+    this.checkAndSendMove();
     this.renderer.render(this.scene, this.camera);
   }
 
   private updatePlayer(delta: number) {
-    if (this.kioskShopOpen) {
+    if (this.kioskShopOpen || this.deckBuilderOpen) {
       this.playerVelocity.set(0, 0, 0);
       this.setPlayerAnimation('idle');
       return;
@@ -2981,6 +3270,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const backPressed = this.keys.has('s') || this.keys.has('arrowdown');
     const leftPressed = this.keys.has('a') || this.keys.has('arrowleft');
     const rightPressed = this.keys.has('d') || this.keys.has('arrowright');
+
+    const isMovingInput = forwardPressed || backPressed || leftPressed || rightPressed;
+    if (isMovingInput && this.isPlayingEmote) {
+      this.isPlayingEmote = false;
+      this.emoteAnimationName = undefined;
+      this.activePlayerAction?.fadeOut(0.15);
+      this.activePlayerAction = undefined;
+    }
 
     if (leftPressed) this.player.rotation.y += rotateSpeed * delta;
     if (rightPressed) this.player.rotation.y -= rotateSpeed * delta;
@@ -3037,7 +3334,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (move !== 0) {
       this.setPlayerAnimation(isRunning ? 'running' : 'walking');
-    } else {
+    } else if (!this.isPlayingEmote) {
       this.setPlayerAnimation('idle');
     }
 
@@ -3182,8 +3479,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       this.socket.onclose = () => {
+        if (this.lobbyDestroyed) return;
         console.warn('Conexión WebSocket cerrada. Reintentando en 5 segundos...');
-        setTimeout(() => this.connectWebSocket(), 5000);
+        this.reconnectTimeout = setTimeout(() => this.connectWebSocket(), 5000);
       };
 
       this.socket.onerror = (error) => {
@@ -3263,6 +3561,31 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.updateOtherPlayerState(msg);
       } else if (type === 'LEAVE') {
         this.removeOtherPlayer(username);
+      } else if (type === 'CHAT') {
+        this.addChatMessage(username, msg.text);
+        const p = this.otherPlayers.get(username);
+        if (p) {
+          this.showOtherPlayerSpeechBubble(p, msg.text);
+        }
+      } else if (type === 'EMOTE') {
+        const p = this.otherPlayers.get(username);
+        if (p) {
+          this.playOtherPlayerEmote(p, msg.emote);
+        }
+      } else if (type === 'CHALLENGE_DUEL') {
+        this.handleIncomingChallenge(msg);
+      } else if (type === 'CHALLENGE_DUEL_RESPONSE') {
+        this.handleChallengeResponse(msg);
+      } else if (type === 'BATTLE_START') {
+        this.handleBattleStart(msg);
+      } else if (type === 'INVITE_TRADE') {
+        this.handleIncomingTradeInvite(msg);
+      } else if (type === 'INVITE_TRADE_RESPONSE') {
+        this.handleTradeInviteResponse(msg);
+      } else if (type === 'TRADE_UPDATE') {
+        this.handleTradeUpdate(msg);
+      } else if (type === 'TRADE_CLOSE') {
+        this.handleTradeClose(msg);
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
@@ -3270,6 +3593,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerOtherPlayer(msg: any) {
+    if (!this.scene) {
+      setTimeout(() => this.registerOtherPlayer(msg), 100);
+      return;
+    }
+
     const username = msg.username;
     if (this.otherPlayers.has(username)) {
       this.updateOtherPlayerState(msg);
@@ -3553,6 +3881,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setOtherPlayerAnimation(p: OtherPlayerNPC, preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
+    if (p.isPlayingEmote) {
+      if (preferred === 'idle') {
+        return;
+      } else {
+        p.isPlayingEmote = false;
+      }
+    }
     if (p.actions.size === 0) return;
 
     const option = this.characterOptions.find((o) => o.id === p.characterId) || this.characterOptions[0];
@@ -3621,11 +3956,41 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (isBehindCamera) {
         p.screenX = undefined;
         p.screenY = undefined;
+        this.syncOtherPlayerOverlay(p, false);
       } else {
         p.screenX = (projected.x * 0.5 + 0.5) * 100;
         p.screenY = (-projected.y * 0.5 + 0.5) * 100;
+        this.syncOtherPlayerOverlay(p, true);
       }
     });
+  }
+
+  private syncOtherPlayerOverlay(player: OtherPlayerNPC, visible: boolean) {
+    const selectorName = this.escapeCssValue(player.username);
+    const tag = document.querySelector<HTMLElement>(`[data-player-tag="${selectorName}"]`);
+    const bubble = document.querySelector<HTMLElement>(`[data-player-bubble="${selectorName}"]`);
+
+    [tag, bubble].forEach((element) => {
+      if (!element) return;
+      const shouldShow = visible && player.screenX !== undefined && player.screenY !== undefined && (element === tag || !!player.chatBubble);
+      if (!shouldShow) {
+        element.classList.remove('visible');
+        element.style.display = 'none';
+        return;
+      }
+
+      element.style.display = 'block';
+      element.style.left = `${player.screenX}%`;
+      element.style.top = `${player.screenY}%`;
+      element.classList.add('visible');
+    });
+  }
+
+  private escapeCssValue(value: string): string {
+    if (typeof CSS !== 'undefined' && CSS.escape) {
+      return CSS.escape(value);
+    }
+    return value.replace(/["\\]/g, '\\$&');
   }
 
   private updateOtherPlayerPikachuAI(p: OtherPlayerNPC, delta: number) {
@@ -3775,5 +4140,731 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!yaExiste) {
       this.debugReplaceCardId = mazo.cartas[0].id;
     }
+  }
+
+  // ================= MÉTODOS DE CHAT DEL LOBBY =================
+
+  toggleChat() {
+    this.ngZone.run(() => {
+      if (!this.chatActive) {
+        this.chatActive = true;
+        this.keys.clear(); // Limpiar teclas activas para no moverse mientras se chatea
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          const inputEl = document.querySelector('.chat-input-wrapper input') as HTMLInputElement;
+          if (inputEl) {
+            inputEl.focus();
+          }
+        }, 50);
+      } else {
+        this.sendChatMessage();
+      }
+    });
+  }
+
+  closeChat() {
+    this.ngZone.run(() => {
+      this.chatActive = false;
+      this.chatText = '';
+      this.cdr.detectChanges();
+      const inputEl = document.querySelector('.chat-input-wrapper input') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.blur();
+      }
+    });
+  }
+
+  sendChatMessage() {
+    if (!this.chatText.trim()) {
+      this.closeChat();
+      return;
+    }
+
+    const textToSend = this.chatText.trim();
+
+    // Agregar localmente
+    this.addChatMessage(this.jugador?.username || 'PLAYER', textToSend);
+
+    // Mostrar burbuja arriba de nuestra cabeza
+    this.showLocalSpeechBubble(textToSend);
+
+    // Enviar por WebSocket
+    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.jugador?.username) {
+      this.socket.send(JSON.stringify({
+        type: 'CHAT',
+        username: this.jugador.username,
+        text: textToSend
+      }));
+    }
+
+    this.chatText = '';
+    this.closeChat();
+  }
+
+  showLocalSpeechBubble(text: string) {
+    if (this.localBubbleTimeout) {
+      clearTimeout(this.localBubbleTimeout);
+    }
+    this.localChatBubble = text;
+    this.localBubbleTimeout = setTimeout(() => {
+      this.localChatBubble = null;
+      this.cdr.detectChanges();
+    }, 5000);
+  }
+
+  addChatMessage(sender: string, text: string, system = false) {
+    this.chatLog.push({ sender, text, system });
+    if (this.chatLog.length > 50) {
+      this.chatLog.shift();
+    }
+    this.cdr.detectChanges();
+
+    // Scroll al final
+    setTimeout(() => {
+      const el = document.querySelector('.chat-messages');
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    }, 50);
+  }
+
+  showOtherPlayerSpeechBubble(p: OtherPlayerNPC, text: string) {
+    if (p.chatBubbleTimeout) {
+      clearTimeout(p.chatBubbleTimeout);
+    }
+    p.chatBubble = text;
+    p.chatBubbleTimeout = setTimeout(() => {
+      p.chatBubble = undefined;
+      p.chatBubbleTimeout = undefined;
+      this.cdr.detectChanges();
+    }, 5000);
+    this.cdr.detectChanges();
+  }
+
+  onChatInputBlur() {
+    setTimeout(() => {
+      if (this.chatActive) {
+        this.closeChat();
+      }
+    }, 100);
+  }
+
+  private updateLocalPlayerBubbleProjection() {
+    if (!this.camera) return;
+    if (this.localChatBubble) {
+      const scale = this.currentCharacterOption?.scale || 1.0;
+      const heightStr = localStorage.getItem('lobbyHeight') || '1.0';
+      const heightFactor = parseFloat(heightStr);
+      const headPos = this.player.position.clone().add(new THREE.Vector3(0, scale * heightFactor * 2.25, 0));
+      const projected = headPos.project(this.camera);
+      const isBehindCamera = projected.z > 1.0;
+      if (isBehindCamera) {
+        this.localBubbleScreenX = undefined;
+        this.localBubbleScreenY = undefined;
+      } else {
+        this.localBubbleScreenX = (projected.x * 0.5 + 0.5) * 100;
+        this.localBubbleScreenY = (-projected.y * 0.5 + 0.5) * 100;
+      }
+    } else {
+      this.localBubbleScreenX = undefined;
+      this.localBubbleScreenY = undefined;
+    }
+  }
+
+  // ================= MÉTODOS DE EMOTES =================
+
+  @HostListener('window:mousedown', ['$event'])
+  onMouseDown(event: MouseEvent) {
+    if (event.button === 1) { // Ruedita del mouse
+      event.preventDefault();
+      this.toggleEmoteMenu();
+    }
+  }
+
+  @HostListener('window:auxclick', ['$event'])
+  onAuxClick(event: MouseEvent) {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
+  }
+
+  getAvailableEmotes(): string[] {
+    const list = Array.from(this.playerActions.keys());
+    return list.filter(name => !/idle|walk|run|standing/i.test(name));
+  }
+
+  toggleEmoteMenu() {
+    this.ngZone.run(() => {
+      this.showEmoteMenu = !this.showEmoteMenu;
+      if (this.showEmoteMenu) {
+        this.keys.clear(); // Limpiar movimiento al abrir el menú de gestos
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  closeEmoteMenu() {
+    this.ngZone.run(() => {
+      this.showEmoteMenu = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  triggerEmote(emoteName: string) {
+    this.closeEmoteMenu();
+    this.playLocalEmote(emoteName);
+
+    // Enviar a otros
+    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.jugador?.username) {
+      this.socket.send(JSON.stringify({
+        type: 'EMOTE',
+        username: this.jugador.username,
+        emote: emoteName
+      }));
+    }
+  }
+
+  playLocalEmote(emoteName: string) {
+    const action = this.playerActions.get(emoteName);
+    if (!action) return;
+
+    this.isPlayingEmote = true;
+    this.emoteAnimationName = emoteName;
+
+    if (this.activePlayerAction) {
+      this.activePlayerAction.fadeOut(0.15);
+    }
+
+    action.reset();
+    const isLoopable = ['dance', 'dancing', 'pose', 'idle_hints', 'talking'].some(word => emoteName.includes(word));
+    if (!isLoopable) {
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+
+      const onFinished = (e: any) => {
+        if (e.action === action) {
+          this.playerMixer?.removeEventListener('finished', onFinished);
+          this.isPlayingEmote = false;
+          this.emoteAnimationName = undefined;
+          this.setPlayerAnimation('idle', 0.25);
+        }
+      };
+      this.playerMixer?.addEventListener('finished', onFinished);
+    } else {
+      action.setLoop(THREE.LoopRepeat, Number.POSITIVE_INFINITY);
+    }
+
+    action.fadeIn(0.15).play();
+    this.activePlayerAction = action;
+  }
+
+  playOtherPlayerEmote(p: OtherPlayerNPC, emoteName: string) {
+    const action = p.actions.get(emoteName);
+    if (!action) return;
+
+    if (p.active) {
+      p.active.fadeOut(0.15);
+    }
+
+    p.isPlayingEmote = true;
+    action.reset();
+    const isLoopable = ['dance', 'dancing', 'pose', 'idle_hints', 'talking'].some(word => emoteName.includes(word));
+    if (!isLoopable) {
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+
+      const onFinished = (e: any) => {
+        if (e.action === action) {
+          p.mixer?.removeEventListener('finished', onFinished);
+          p.isPlayingEmote = false;
+          this.setOtherPlayerAnimation(p, p.currentAnimation, 0.25);
+        }
+      };
+      p.mixer?.addEventListener('finished', onFinished);
+    } else {
+      action.setLoop(THREE.LoopRepeat, Number.POSITIVE_INFINITY);
+    }
+
+    action.fadeIn(0.15).play();
+    p.active = action;
+  }
+
+  // ================= INTERACTION MENU & CHAT STUBS =================
+  openPlayerMenu(event: MouseEvent, player: OtherPlayerNPC) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.selectedPlayerForMenu = player;
+    this.playerMenuX = event.clientX;
+    this.playerMenuY = event.clientY;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    this.selectedPlayerForMenu = null;
+  }
+
+  agregarAmigo(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Solicitud de amistad enviada a ${username} (función en base de datos pendiente).`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  // ================= DUEL CHALLENGE SYSTEM =================
+  retarADuelo(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.waitingForChallengeResponse = true;
+    this.challengedUsername = username;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Has retado a ${username} a un duelo.`, system: true });
+
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL',
+      username: this.jugador?.username,
+      targetUsername: username
+    }));
+
+    this.startChallengeTimer(() => {
+      this.cancelarRetoDuelo();
+      this.chatLog.push({ sender: 'SISTEMA', text: `El oponente ${username} no respondió el reto a duelo.`, system: true });
+    });
+    this.cdr.detectChanges();
+  }
+
+  cancelarRetoDuelo() {
+    this.waitingForChallengeResponse = false;
+    this.stopChallengeTimer();
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: this.challengedUsername,
+      accepted: false
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleIncomingChallenge(msg: any) {
+    this.incomingChallenge = msg;
+    this.startChallengeTimer(() => {
+      this.responderDuelo(false);
+    });
+    this.cdr.detectChanges();
+  }
+
+  responderDuelo(accepted: boolean) {
+    const challenger = this.incomingChallenge?.username;
+    this.incomingChallenge = null;
+    this.stopChallengeTimer();
+
+    if (accepted && !this.selectedBattleDeckId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Elegí un mazo sincronizado antes de aceptar el duelo.', system: true });
+      accepted = false;
+    }
+
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: challenger,
+      accepted: accepted,
+      details: this.selectedBattleDeckId ? this.selectedBattleDeckId.toString() : ''
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleChallengeResponse(msg: any) {
+    this.waitingForChallengeResponse = false;
+    this.stopChallengeTimer();
+
+    if (msg.accepted) {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} aceptó el combate. Iniciando...`, system: true });
+      this.cdr.detectChanges();
+
+      const p2MazoId = parseInt(msg.details || '0');
+      if (!this.selectedBattleDeckId) {
+        this.chatLog.push({ sender: 'SISTEMA', text: `Error: No tienes mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
+        return;
+      }
+      if (!p2MazoId) {
+        this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} no tiene mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.battleService.startBattleOnline(
+        this.jugador!.username,
+        this.selectedBattleDeckId,
+        msg.username,
+        p2MazoId
+      ).subscribe({
+        next: (partida) => {
+          this.socket?.send(JSON.stringify({
+            type: 'BATTLE_START',
+            username: this.jugador?.username,
+            targetUsername: msg.username,
+            details: partida.id
+          }));
+          this.router.navigate(['/battle', partida.id]);
+        },
+        error: (err) => {
+          console.error('Error al arrancar batalla online:', err);
+          const backendMessage = typeof err.error === 'string' ? err.error : err.message;
+          alert('Error al iniciar combate online: ' + backendMessage);
+        }
+      });
+    } else {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó el duelo o la invitación expiró.`, system: true });
+      this.cdr.detectChanges();
+    }
+  }
+
+  handleBattleStart(msg: any) {
+    const partidaId = msg.details;
+    if (!partidaId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Llegó inicio de batalla sin ID de partida.', system: true });
+      this.cdr.detectChanges();
+      return;
+    }
+    this.router.navigate(['/battle', partidaId]);
+  }
+
+  startChallengeTimer(onTimeout: () => void) {
+    this.stopChallengeTimer();
+    this.challengeSecondsLeft = 10;
+    this.challengeTimerDashoffset = 0;
+    this.challengeTimerInterval = setInterval(() => {
+      this.challengeSecondsLeft--;
+      this.challengeTimerDashoffset = (10 - this.challengeSecondsLeft) * 10;
+      this.cdr.detectChanges();
+      if (this.challengeSecondsLeft <= 0) {
+        this.stopChallengeTimer();
+        onTimeout();
+      }
+    }, 1000);
+  }
+
+  stopChallengeTimer() {
+    if (this.challengeTimerInterval) {
+      clearInterval(this.challengeTimerInterval);
+      this.challengeTimerInterval = null;
+    }
+  }
+
+  // ================= CARD TRADING SYSTEM =================
+  invitarIntercambio(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.waitingForTradeResponse = true;
+    this.tradeInvitedUsername = username;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Invitación de intercambio enviada a ${username}.`, system: true });
+
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE',
+      username: this.jugador?.username,
+      targetUsername: username
+    }));
+
+    this.startChallengeTimer(() => {
+      this.cancelarTradeInvite();
+      this.chatLog.push({ sender: 'SISTEMA', text: `${username} no respondió a la propuesta de intercambio.`, system: true });
+    });
+    this.cdr.detectChanges();
+  }
+
+  cancelarTradeInvite() {
+    this.waitingForTradeResponse = false;
+    this.stopChallengeTimer();
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeInvitedUsername,
+      accepted: false
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleIncomingTradeInvite(msg: any) {
+    this.incomingTradeInvite = msg;
+    this.startChallengeTimer(() => {
+      this.responderTrade(false);
+    });
+    this.cdr.detectChanges();
+  }
+
+  responderTrade(accepted: boolean) {
+    const challenger = this.incomingTradeInvite?.username;
+    this.incomingTradeInvite = null;
+    this.stopChallengeTimer();
+
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: challenger,
+      accepted: accepted
+    }));
+
+    if (accepted) {
+      this.abrirSalaTrading(challenger);
+    }
+    this.cdr.detectChanges();
+  }
+
+  handleTradeInviteResponse(msg: any) {
+    this.waitingForTradeResponse = false;
+    this.stopChallengeTimer();
+
+    if (msg.accepted) {
+      this.abrirSalaTrading(msg.username);
+    } else {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó la invitación de intercambio.`, system: true });
+      this.cdr.detectChanges();
+    }
+  }
+
+  abrirSalaTrading(opponentUsername: string) {
+    this.activeTradeSession = true;
+    this.tradeOpponentUsername = opponentUsername;
+    this.tradeLeftCards = [];
+    this.tradeRightCards = [];
+    this.tradeLeftReady = false;
+    this.tradeRightReady = false;
+    this.tradeCollectionSearchText = '';
+    this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
+    this.tradeShowValueWarning = false;
+    this.tradeShowContinuationPrompt = false;
+    this.tradeWaitingForContinuation = false;
+    this.filtrarColeccionTrade();
+    this.precargarColeccionTrade(!this.tradeCollectionLoaded || this.userTradeCollection.length === 0);
+    this.cdr.detectChanges();
+  }
+
+  cerrarTradeSala() {
+    this.activeTradeSession = false;
+    this.socket?.send(JSON.stringify({
+      type: 'TRADE_CLOSE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeOpponentUsername
+    }));
+    this.chatLog.push({ sender: 'SISTEMA', text: `Se ha cerrado la sala de intercambio.`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  getEmptySlots(length: number): number[] {
+    const slots = 3 - length;
+    return slots > 0 ? Array(slots).fill(0) : [];
+  }
+
+  addCardToTrade(card: Card) {
+    if (this.tradeLeftReady) return;
+    if (this.tradeLeftCards.length >= 3) {
+      alert('Máximo 3 cartas por intercambio.');
+      return;
+    }
+    this.tradeLeftCards.push(card);
+    this.notifyTradeUpdate();
+    this.cdr.detectChanges();
+  }
+
+  removeCardFromTrade(card: Card) {
+    if (this.tradeLeftReady) return;
+    this.tradeLeftCards = this.tradeLeftCards.filter(c => c.id !== card.id);
+    this.notifyTradeUpdate();
+    this.cdr.detectChanges();
+  }
+
+  isCardInTrade(card: Card): boolean {
+    return this.tradeLeftCards.some(c => c.id === card.id);
+  }
+
+  notifyTradeUpdate() {
+    this.socket?.send(JSON.stringify({
+      type: 'TRADE_UPDATE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeOpponentUsername,
+      accepted: this.tradeLeftReady,
+      details: JSON.stringify(this.tradeLeftCards)
+    }));
+  }
+
+  toggleTradeReady() {
+    if (this.tradeLeftCards.length === 0) return;
+
+    if (!this.tradeLeftReady) {
+      // Check rarity value differences
+      const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+      const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+
+      if (myValue > oppValue + 2) {
+        this.tradeShowValueWarning = true;
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+
+    this.confirmarReady();
+  }
+
+  confirmarAdvertenciaValor(confirm: boolean) {
+    this.tradeShowValueWarning = false;
+    if (confirm) {
+      this.confirmarReady();
+    }
+    this.cdr.detectChanges();
+  }
+
+  confirmarReady() {
+    this.tradeLeftReady = !this.tradeLeftReady;
+    this.notifyTradeUpdate();
+
+    if (this.tradeLeftReady && this.tradeRightReady) {
+      this.executeTradeTransaction();
+    }
+    this.cdr.detectChanges();
+  }
+
+  executeTradeTransaction() {
+    const myIds = this.tradeLeftCards.map(c => c.id);
+    const oppIds = this.tradeRightCards.map(c => c.id);
+
+    this.jugadorService.ejecutarTrade(
+      this.jugador!.username,
+      this.tradeOpponentUsername,
+      myIds,
+      oppIds
+    ).subscribe({
+      next: () => {
+        this.tradeShowContinuationPrompt = true;
+        this.tradeCollectionLoaded = false;
+        this.precargarColeccionTrade(true);
+        this.refrescarTodo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al realizar el trade:', err);
+        alert('Transacción de intercambio fallida: ' + err.message);
+        this.tradeLeftReady = false;
+        this.notifyTradeUpdate();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  responderSeguirTrading(continueTrading: boolean) {
+    this.tradeShowContinuationPrompt = false;
+    if (continueTrading) {
+      this.tradeWaitingForContinuation = true;
+      this.socket?.send(JSON.stringify({
+        type: 'TRADE_UPDATE',
+        username: this.jugador?.username,
+        targetUsername: this.tradeOpponentUsername,
+        accepted: true,
+        details: 'CONTINUE'
+      }));
+    } else {
+      this.cerrarTradeSala();
+    }
+    this.cdr.detectChanges();
+  }
+
+  handleTradeUpdate(msg: any) {
+    if (msg.details === 'CONTINUE') {
+      if (this.tradeWaitingForContinuation) {
+        // Both clicked continue trading! Reset trading session
+        this.abrirSalaTrading(this.tradeOpponentUsername);
+      } else {
+        this.tradeRightReady = true;
+        this.cdr.detectChanges();
+      }
+      return;
+    }
+
+    try {
+      const oppCards = JSON.parse(msg.details || '[]');
+      this.tradeRightCards = oppCards;
+      this.tradeRightReady = msg.accepted;
+
+      if (this.tradeLeftReady && this.tradeRightReady) {
+        this.executeTradeTransaction();
+      }
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error('Error parsing trade update details:', e);
+    }
+  }
+
+  handleTradeClose(msg: any) {
+    this.activeTradeSession = false;
+    this.tradeShowContinuationPrompt = false;
+    this.tradeWaitingForContinuation = false;
+    this.chatLog.push({ sender: 'SISTEMA', text: `${this.tradeOpponentUsername} cerró la sala de intercambio.`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  filtrarColeccionTrade() {
+    const search = this.tradeCollectionSearchText.trim().toLowerCase();
+    this.tradeCollectionFiltrada = this.userTradeCollection.filter(c => {
+      const attackText = [
+        c.attacks,
+        ...(c.ataques || []).flatMap((atk) => [atk.nombre, atk.texto])
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch = !search ||
+        c.nombre.toLowerCase().includes(search) ||
+        c.id.toLowerCase().includes(search) ||
+        attackText.includes(search);
+      const matchRarity = !this.tradeCollectionFilterRarity || (c.rarity || 'Common') === this.tradeCollectionFilterRarity;
+      const matchType = !this.tradeCollectionFilterType || c.tipo === this.tradeCollectionFilterType;
+      const matchSupertype = !this.tradeCollectionFilterSupertype || c.supertype === this.tradeCollectionFilterSupertype;
+      const matchSubtype = !this.tradeCollectionFilterSubtype || (c.subtypes || []).includes(this.tradeCollectionFilterSubtype);
+      return matchSearch && matchRarity && matchType && matchSupertype && matchSubtype;
+    });
+  }
+
+  limpiarFiltrosTrade() {
+    this.tradeCollectionSearchText = '';
+    this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
+    this.filtrarColeccionTrade();
+  }
+
+  trackCardById(_index: number, card: Card): string {
+    return card.id;
+  }
+
+  trackOtherPlayerByUsername(_index: number, player: OtherPlayerNPC): string {
+    return player.username;
+  }
+
+  getCardRarityValue(rarity: string): number {
+    if (rarity === 'Secret Rare') return 4;
+    if (rarity === 'Rare') return 2;
+    if (rarity === 'Uncommon') return 1;
+    return 0; // Common
+  }
+
+  isMyOfferFair(): boolean {
+    return this.tradeLeftCards.length > 0;
+  }
+
+  isOpponentOfferFair(): boolean {
+    return this.tradeRightCards.length > 0;
+  }
+
+  getMyOfferFairnessText(): string {
+    if (this.tradeLeftCards.length === 0) return 'Vacío';
+    const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (Monólogo)';
+    return 'Oferta Sincronizada';
+  }
+
+  getOpponentOfferFairnessText(): string {
+    if (this.tradeRightCards.length === 0) return 'Vacío';
+    const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (Monólogo)';
+    return 'Oferta Sincronizada';
   }
 }

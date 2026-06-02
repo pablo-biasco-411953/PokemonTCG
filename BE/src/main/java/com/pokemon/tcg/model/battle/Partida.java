@@ -17,6 +17,12 @@ public class Partida {
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
 
+    private String jugadorUsername;
+    private String botUsername;
+    private boolean coinFlipped = false;
+    private String coinFlipWinner;
+    private String coinFlipResult;
+
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
 
@@ -68,4 +74,19 @@ public class Partida {
     public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
         this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
     }
+
+    public String getJugadorUsername() { return jugadorUsername; }
+    public void setJugadorUsername(String jugadorUsername) { this.jugadorUsername = jugadorUsername; }
+
+    public String getBotUsername() { return botUsername; }
+    public void setBotUsername(String botUsername) { this.botUsername = botUsername; }
+
+    public boolean isCoinFlipped() { return coinFlipped; }
+    public void setCoinFlipped(boolean coinFlipped) { this.coinFlipped = coinFlipped; }
+
+    public String getCoinFlipWinner() { return coinFlipWinner; }
+    public void setCoinFlipWinner(String coinFlipWinner) { this.coinFlipWinner = coinFlipWinner; }
+
+    public String getCoinFlipResult() { return coinFlipResult; }
+    public void setCoinFlipResult(String coinFlipResult) { this.coinFlipResult = coinFlipResult; }
 }

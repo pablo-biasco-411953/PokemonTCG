@@ -837,7 +837,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
 
-        if (data.turnoActual === 'BOT' && hpServidorJugador < this.hpRenderJugador) {
+        if (hpServidorJugador < this.hpRenderJugador) {
           this.datosPendientesBot = data;
           this.ejecutarIAEnemiga();
           return;
@@ -1309,6 +1309,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     await this.delay(1000);
     this.cargandoAccion = false;
     await this.mostrarOverlayTurnoBot();
+
+    if (this.partida?.botUsername) {
+      // PvP match: do not trigger bot AI. Just unblock animation and poll/wait.
+      this.bloqueadoPorAnimacion = false;
+      this.cdr.detectChanges();
+      return;
+    }
 
     try {
       const estadoPostBot = await this.battleBoardCombat.ejecutarTurnoBot(this.matchId!);
@@ -2039,6 +2046,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     await this.mostrarOverlayTurnoBot();
+
+    if (this.partida?.botUsername) {
+      // PvP match: do not trigger bot AI. Just unblock animation and poll/wait.
+      this.bloqueadoPorAnimacion = false;
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+      return;
+    }
 
     try {
       console.log('?? Disparando IA en el backend...');

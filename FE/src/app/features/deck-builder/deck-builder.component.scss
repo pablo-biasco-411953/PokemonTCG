@@ -202,6 +202,16 @@ $pokedex-neon-verde: #00ff7f;
   }
 }
 
+:host(.embedded) {
+  display: block;
+  height: 100%;
+
+  .builder-container.pokedex-chassis {
+    height: 100%;
+    border-radius: 16px;
+  }
+}
+
 // --- SCROLL ---
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: #222; }
