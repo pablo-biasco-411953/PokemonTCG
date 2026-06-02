@@ -84,7 +84,7 @@
   </div>
 
   <header class="hub-top-hud">
-    <button class="trainer-chip trainer-chip-button" type="button" (click)="characterMenuOpen = !characterMenuOpen">
+    <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
       <span class="avatar-dot"></span>
       <div>
         <small>TRAINER</small>
@@ -92,18 +92,6 @@
         <em>{{ selectedCharacterLabel }}</em>
       </div>
     </button>
-
-    <div class="character-menu" *ngIf="characterMenuOpen">
-      <button
-        *ngFor="let option of characterOptions"
-        type="button"
-        [class.active]="selectedCharacterId === option.id"
-        (click)="selectCharacter(option)"
-      >
-        <span>{{ option.label }}</span>
-        <small>walk ready</small>
-      </button>
-    </div>
 
     <div class="hub-title">
       <span>POKÉFETCH HUB</span>
@@ -227,5 +215,199 @@
         <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
       </div>
     }
+  </div>
+
+  <!-- ================= FIRST-TIME SETUP (ONBOARDING) / STANDARD CUSTOMIZATION MODAL ================= -->
+  <div class="customizer-overlay" *ngIf="showFirstTimeSetup || customizationModalOpen" [class.onboarding]="showFirstTimeSetup">
+    <div class="customizer-card two-columns">
+      
+      <!-- COLUMNA 1: PREVISUALIZADOR 3D EN VIVO -->
+      <div class="customizer-preview-pane">
+        <div class="canvas-wrapper">
+          <canvas 
+            #previewCanvas 
+            class="customizer-preview-canvas"
+            (pointerdown)="onPreviewPointerDown($event)"
+            (pointermove)="onPreviewPointerMove($event)"
+            (pointerup)="onPreviewPointerUp($event)"
+            (pointercancel)="onPreviewPointerUp($event)"></canvas>
+          <div class="preview-lights-indicator"></div>
+        </div>
+
+        <!-- Girar Vista (Rotación 3D del Modelo en el Preview) -->
+        <div class="trait-row slider-row rotation-slider-row">
+          <div class="trait-header">
+            <span>Girar Vista (Rotación 3D)</span>
+            <strong>{{ previewRotationDegrees }}°</strong>
+          </div>
+          <input 
+            type="range" 
+            min="0" 
+            max="6.283" 
+            step="0.05" 
+            class="customizer-slider" 
+            [(ngModel)]="customizerRotationY"
+            (input)="onRotationSliderChange()">
+        </div>
+      </div>
+
+      <!-- COLUMNA 2: FORMULARIO DE PERSONALIZACIÓN -->
+      <div class="customizer-form-pane">
+        
+        <!-- HEADER -->
+        <div class="customizer-header">
+          <span class="customizer-kicker">{{ showFirstTimeSetup ? '¡BIENVENIDO ENTRENADOR!' : 'LABORATORIO DE ESTILO' }}</span>
+          <h2>{{ showFirstTimeSetup ? 'Crea tu Avatar' : 'Personalizar Entrenador' }}</h2>
+          <p class="customizer-subtitle">
+            {{ showFirstTimeSetup ? 'Antes de explorar el campus, definí tus rasgos y estilo único:' : 'Modificá tu aspecto y equipamiento en tiempo real:' }}
+          </p>
+        </div>
+
+        <!-- ONBOARDING GENDER SELECTION -->
+        <div class="customizer-section">
+          <label class="section-label">¿CÓMO TE DEFINÍS?</label>
+          <div class="gender-toggle-container">
+            <button 
+              type="button" 
+              class="gender-btn piba" 
+              [class.active]="customizerGender === 'piba'" 
+              (click)="changeCustomizerGender('piba')">
+              <span class="gender-symbol">♀</span> PIBA
+            </button>
+            <button 
+              type="button" 
+              class="gender-btn pibe" 
+              [class.active]="customizerGender === 'pibe'" 
+              (click)="changeCustomizerGender('pibe')">
+              <span class="gender-symbol">♂</span> PIBE
+            </button>
+          </div>
+        </div>
+
+        <!-- CHARACTER MODEL SELECTOR -->
+        <div class="customizer-section">
+          <label class="section-label">ELEGÍ TU MODELO BASE</label>
+          <div class="character-grid">
+            <button 
+              *ngFor="let option of filteredCharacterOptions" 
+              type="button" 
+              class="char-card" 
+              [class.active]="customizerSelectedId === option.id"
+              (click)="onCustomizerModelSelect(option.id)">
+              <div class="char-avatar-placeholder">
+                <span class="avatar-dot small-dot"></span>
+              </div>
+              <strong>{{ option.label }}</strong>
+              <small>Disponible</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- TRAITS CUSTOMIZATION -->
+        <div class="customizer-section">
+          <label class="section-label">RASGOS BÁSICOS</label>
+          
+          <!-- Altura (Scale slider) -->
+          <div class="trait-row slider-row">
+            <div class="trait-header">
+              <span>Estatura (Altura)</span>
+              <strong>x{{ customizerHeight.toFixed(2) }}</strong>
+            </div>
+            <input 
+              type="range" 
+              min="0.82" 
+              max="1.18" 
+              step="0.02" 
+              class="customizer-slider" 
+              [(ngModel)]="customizerHeight"
+              (input)="applyLivePreviewCustomizations()">
+          </div>
+
+          <!-- Color de Piel -->
+          <div class="trait-row">
+            <span>Tono de Piel</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of skinColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerSkinColor === color.value"
+                [title]="color.name"
+                (click)="customizerSkinColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+
+          <!-- Color de Ojos -->
+          <div class="trait-row">
+            <span>Color de Ojos</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of eyeColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerEyeColor === color.value"
+                [title]="color.name"
+                (click)="customizerEyeColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+
+          <!-- Color de Pelo -->
+          <div class="trait-row">
+            <span>Color de Pelo</span>
+            <div class="swatch-grid">
+              <button 
+                *ngFor="let color of hairColors" 
+                type="button" 
+                class="swatch-btn" 
+                [style.background-color]="color.value"
+                [class.active]="customizerHairColor === color.value"
+                [title]="color.name"
+                (click)="customizerHairColor = color.value; applyLivePreviewCustomizations()">
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPANION SELECTION -->
+        <div class="customizer-section companion-section">
+          <div class="companion-toggle-header">
+            <div>
+              <label class="section-label">ACOMPAÑANTE</label>
+              <p class="section-desc">Equipar compañero de aventuras (Pikachu)</p>
+            </div>
+            <button 
+              type="button" 
+              class="comp-toggle-btn" 
+              [class.enabled]="customizerPikachu"
+              (click)="customizerPikachu = !customizerPikachu; applyLivePreviewCustomizations()">
+              <strong>{{ customizerPikachu ? 'EQUIPADO' : 'DESACTIVADO' }}</strong>
+            </button>
+          </div>
+        </div>
+
+        <!-- FOOTER ACTIONS -->
+        <div class="customizer-actions">
+          <button 
+            *ngIf="!showFirstTimeSetup" 
+            type="button" 
+            class="cancel-btn" 
+            (click)="cancelCustomizations()">
+            Cancelar
+          </button>
+          <button 
+            type="button" 
+            class="save-btn" 
+            (click)="saveCustomizations()">
+            {{ showFirstTimeSetup ? '¡COMENZAR AVENTURA!' : 'GUARDAR RASGOS' }}
+          </button>
+        </div>
+
+      </div>
+
+    </div>
   </div>
 </div>
