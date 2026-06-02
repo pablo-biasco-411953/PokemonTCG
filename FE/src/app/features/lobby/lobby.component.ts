@@ -99,6 +99,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // WebSocket Multiplayer
   private socket?: WebSocket;
+  private reconnectTimeout?: ReturnType<typeof setTimeout>;
+  private lobbyDestroyed = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
@@ -177,11 +179,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   tradeRightReady = false;
   tradeCollectionSearchText = '';
   tradeCollectionFilterRarity = '';
+  tradeCollectionFilterType = '';
+  tradeCollectionFilterSupertype = '';
+  tradeCollectionFilterSubtype = '';
   tradeCollectionFiltrada: Card[] = [];
+  tradeCollectionLoading = false;
+  tradeCollectionError = '';
+  tradeCollectionRarities: string[] = [];
+  tradeCollectionTypes: string[] = [];
+  tradeCollectionSupertypes: string[] = [];
+  tradeCollectionSubtypes: string[] = [];
   tradeShowValueWarning = false;
   tradeShowContinuationPrompt = false;
   tradeWaitingForContinuation = false;
-  private userTradeCollection: Card[] = [];
+  userTradeCollection: Card[] = [];
+  private tradeCollectionLoaded = false;
 
   get graphicsQualityLabel(): string {
     if (this.graphicsQuality === 'low') return 'BAJO 🔴';
@@ -445,8 +457,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
-        this.connectWebSocket();
-
         // Verificación de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
         if (!setupCompleted) {
@@ -548,6 +558,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
       this.initHubWorld();
+      this.connectWebSocket();
       this.animateHub();
       
       if (this.showFirstTimeSetup) {
@@ -557,6 +568,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.lobbyDestroyed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;
@@ -623,7 +639,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Refresca resumen, sobres y mazos del jugador.
   refrescarTodo() {
-    if (!this.jugador?.username) return;
+    if (!this.jugador?.username || this.lobbyDestroyed) return;
 
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
@@ -633,6 +649,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
           const idsUnicos = new Set(res.cartasObtenidas.map((c: Card) => c.pokemonId || c.id));
           this.cantidadCartasUnicas = idsUnicos.size;
+          this.setTradeCollection(res.cartasObtenidas);
+          this.tradeCollectionLoaded = true;
         } else {
           this.cantidadCartasUnicas = res.cantidadCartas ?? 0;
         }
@@ -673,6 +691,52 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.cargarMazosDeJugador();
+    this.precargarColeccionTrade();
+  }
+
+  precargarColeccionTrade(force = false) {
+    if (!this.jugador?.username) return;
+    if (!force && this.tradeCollectionLoaded && this.userTradeCollection.length > 0) return;
+
+    this.tradeCollectionLoading = true;
+    this.tradeCollectionError = '';
+
+    this.jugadorService.getColeccion(this.jugador.username).subscribe({
+      next: (cards) => {
+        this.setTradeCollection(cards);
+        this.tradeCollectionLoaded = true;
+        this.tradeCollectionLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al precargar coleccion para trade:', err);
+        this.tradeCollectionLoading = false;
+        this.tradeCollectionError = 'No se pudo cargar tu coleccion.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private setTradeCollection(cards: Card[]) {
+    this.userTradeCollection = Array.isArray(cards) ? cards : [];
+    this.tradeCollectionRarities = this.getUniqueCardValues(this.userTradeCollection, (card) => card.rarity || 'Common');
+    this.tradeCollectionTypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.tipo);
+    this.tradeCollectionSupertypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.supertype);
+    this.tradeCollectionSubtypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.subtypes || []);
+    this.filtrarColeccionTrade();
+  }
+
+  private getUniqueCardValues(cards: Card[], picker: (card: Card) => string | string[] | undefined | null): string[] {
+    const values = new Set<string>();
+    cards.forEach((card) => {
+      const raw = picker(card);
+      const list = Array.isArray(raw) ? raw : [raw];
+      list.forEach((value) => {
+        const clean = (value || '').toString().trim();
+        if (clean) values.add(clean);
+      });
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
   }
 
   // Carga los mazos visibles y rellena slots vacios.
@@ -3400,8 +3464,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       this.socket.onclose = () => {
+        if (this.lobbyDestroyed) return;
         console.warn('Conexión WebSocket cerrada. Reintentando en 5 segundos...');
-        setTimeout(() => this.connectWebSocket(), 5000);
+        this.reconnectTimeout = setTimeout(() => this.connectWebSocket(), 5000);
       };
 
       this.socket.onerror = (error) => {
@@ -3513,6 +3578,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerOtherPlayer(msg: any) {
+    if (!this.scene) {
+      setTimeout(() => this.registerOtherPlayer(msg), 100);
+      return;
+    }
+
     const username = msg.username;
     if (this.otherPlayers.has(username)) {
       this.updateOtherPlayerState(msg);
@@ -3871,11 +3941,41 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (isBehindCamera) {
         p.screenX = undefined;
         p.screenY = undefined;
+        this.syncOtherPlayerOverlay(p, false);
       } else {
         p.screenX = (projected.x * 0.5 + 0.5) * 100;
         p.screenY = (-projected.y * 0.5 + 0.5) * 100;
+        this.syncOtherPlayerOverlay(p, true);
       }
     });
+  }
+
+  private syncOtherPlayerOverlay(player: OtherPlayerNPC, visible: boolean) {
+    const selectorName = this.escapeCssValue(player.username);
+    const tag = document.querySelector<HTMLElement>(`[data-player-tag="${selectorName}"]`);
+    const bubble = document.querySelector<HTMLElement>(`[data-player-bubble="${selectorName}"]`);
+
+    [tag, bubble].forEach((element) => {
+      if (!element) return;
+      const shouldShow = visible && player.screenX !== undefined && player.screenY !== undefined && (element === tag || !!player.chatBubble);
+      if (!shouldShow) {
+        element.classList.remove('visible');
+        element.style.display = 'none';
+        return;
+      }
+
+      element.style.display = 'block';
+      element.style.left = `${player.screenX}%`;
+      element.style.top = `${player.screenY}%`;
+      element.classList.add('visible');
+    });
+  }
+
+  private escapeCssValue(value: string): string {
+    if (typeof CSS !== 'undefined' && CSS.escape) {
+      return CSS.escape(value);
+    }
+    return value.replace(/["\\]/g, '\\$&');
   }
 
   private updateOtherPlayerPikachuAI(p: OtherPlayerNPC, delta: number) {
@@ -4491,18 +4591,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tradeRightReady = false;
     this.tradeCollectionSearchText = '';
     this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
     this.tradeShowValueWarning = false;
     this.tradeShowContinuationPrompt = false;
     this.tradeWaitingForContinuation = false;
-
-    // Load collection
-    this.jugadorService.getColeccion(this.jugador!.username).subscribe({
-      next: (cards) => {
-        this.userTradeCollection = cards;
-        this.filtrarColeccionTrade();
-      },
-      error: (err) => console.error('Error al cargar coleccion para trade:', err)
-    });
+    this.filtrarColeccionTrade();
+    this.precargarColeccionTrade(!this.tradeCollectionLoaded || this.userTradeCollection.length === 0);
     this.cdr.detectChanges();
   }
 
@@ -4602,6 +4698,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe({
       next: () => {
         this.tradeShowContinuationPrompt = true;
+        this.tradeCollectionLoaded = false;
+        this.precargarColeccionTrade(true);
         this.refrescarTodo();
         this.cdr.detectChanges();
       },
@@ -4667,11 +4765,39 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filtrarColeccionTrade() {
+    const search = this.tradeCollectionSearchText.trim().toLowerCase();
     this.tradeCollectionFiltrada = this.userTradeCollection.filter(c => {
-      const matchSearch = !this.tradeCollectionSearchText || c.nombre.toLowerCase().includes(this.tradeCollectionSearchText.toLowerCase());
+      const attackText = [
+        c.attacks,
+        ...(c.ataques || []).flatMap((atk) => [atk.nombre, atk.texto])
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch = !search ||
+        c.nombre.toLowerCase().includes(search) ||
+        c.id.toLowerCase().includes(search) ||
+        attackText.includes(search);
       const matchRarity = !this.tradeCollectionFilterRarity || (c.rarity || 'Common') === this.tradeCollectionFilterRarity;
-      return matchSearch && matchRarity;
+      const matchType = !this.tradeCollectionFilterType || c.tipo === this.tradeCollectionFilterType;
+      const matchSupertype = !this.tradeCollectionFilterSupertype || c.supertype === this.tradeCollectionFilterSupertype;
+      const matchSubtype = !this.tradeCollectionFilterSubtype || (c.subtypes || []).includes(this.tradeCollectionFilterSubtype);
+      return matchSearch && matchRarity && matchType && matchSupertype && matchSubtype;
     });
+  }
+
+  limpiarFiltrosTrade() {
+    this.tradeCollectionSearchText = '';
+    this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
+    this.filtrarColeccionTrade();
+  }
+
+  trackCardById(_index: number, card: Card): string {
+    return card.id;
+  }
+
+  trackOtherPlayerByUsername(_index: number, player: OtherPlayerNPC): string {
+    return player.username;
   }
 
   getCardRarityValue(rarity: string): number {
