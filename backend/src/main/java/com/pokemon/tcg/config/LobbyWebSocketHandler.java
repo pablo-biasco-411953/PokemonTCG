@@ -77,6 +77,10 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
             // Difundir la actualización de movimiento al resto de los jugadores
             broadcastToOthers(username, payload);
         }
+        else if ("CHAT".equals(type) || "EMOTE".equals(type)) {
+            // Difundir mensajes de chat y emotes al resto de los jugadores
+            broadcastToOthers(username, payload);
+        }
     }
 
     @Override

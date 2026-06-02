@@ -81,6 +81,8 @@ export interface OtherPlayerNPC {
   currentAnimation: 'idle' | 'walking' | 'running';
   screenX?: number;
   screenY?: number;
+  chatBubble?: string;
+  chatBubbleTimeout?: any;
 }
 
 @Component({
@@ -101,6 +103,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private lastMoveSentTime = 0;
   private lastSentRotY = 0;
   private lastSentAnimation: 'idle' | 'walking' | 'running' = 'idle';
+
+  // Estado de Chat
+  chatActive = false;
+  chatText = '';
+  chatLog: Array<{ sender: string; text: string; system?: boolean }> = [];
+  localChatBubble: string | null = null;
+  localBubbleScreenX?: number;
+  localBubbleScreenY?: number;
+  private localBubbleTimeout?: any;
+
+  // Estado de Emotes
+  showEmoteMenu = false;
+  isPlayingEmote = false;
+  emoteAnimationName?: string;
 
   get otherPlayersList(): OtherPlayerNPC[] {
     return Array.from(this.otherPlayers.values());
@@ -544,6 +560,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (this.showDebugPanel && this.debugCatalogoCompleto.length === 0) {
         this.cargarCatalogoGodMode();
       }
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.toggleChat();
       return;
     }
 
@@ -3060,15 +3082,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
 
-    // update multiplayer
-    this.updateOtherPlayers(delta);
-    this.checkAndSendMove();
-
     this.updateDayNightCycle(elapsed);
     this.updateHubObjects(elapsed);
     this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch)); // Clampar Pitch
+    
+    // Update camera first
     this.updateCamera(delta);
+    
+    // Force camera matrix update to prevent projection lag
+    this.camera.updateMatrixWorld(true);
+
+    // Update other players and local bubble projection using the new camera matrices
+    this.updateOtherPlayers(delta);
+    this.updateLocalPlayerBubbleProjection();
     this.updateInteractionState();
+
+    this.checkAndSendMove();
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -3086,6 +3115,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const backPressed = this.keys.has('s') || this.keys.has('arrowdown');
     const leftPressed = this.keys.has('a') || this.keys.has('arrowleft');
     const rightPressed = this.keys.has('d') || this.keys.has('arrowright');
+
+    const isMovingInput = forwardPressed || backPressed || leftPressed || rightPressed;
+    if (isMovingInput && this.isPlayingEmote) {
+      this.isPlayingEmote = false;
+      this.emoteAnimationName = undefined;
+      this.activePlayerAction?.fadeOut(0.15);
+      this.activePlayerAction = undefined;
+    }
 
     if (leftPressed) this.player.rotation.y += rotateSpeed * delta;
     if (rightPressed) this.player.rotation.y -= rotateSpeed * delta;
@@ -3368,6 +3405,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.updateOtherPlayerState(msg);
       } else if (type === 'LEAVE') {
         this.removeOtherPlayer(username);
+      } else if (type === 'CHAT') {
+        this.addChatMessage(username, msg.text);
+        const p = this.otherPlayers.get(username);
+        if (p) {
+          this.showOtherPlayerSpeechBubble(p, msg.text);
+        }
+      } else if (type === 'EMOTE') {
+        const p = this.otherPlayers.get(username);
+        if (p) {
+          this.playOtherPlayerEmote(p, msg.emote);
+        }
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
@@ -3880,5 +3928,250 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!yaExiste) {
       this.debugReplaceCardId = mazo.cartas[0].id;
     }
+  }
+
+  // ================= MÉTODOS DE CHAT DEL LOBBY =================
+
+  toggleChat() {
+    this.ngZone.run(() => {
+      if (!this.chatActive) {
+        this.chatActive = true;
+        this.keys.clear(); // Limpiar teclas activas para no moverse mientras se chatea
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          const inputEl = document.querySelector('.chat-input-wrapper input') as HTMLInputElement;
+          if (inputEl) {
+            inputEl.focus();
+          }
+        }, 50);
+      } else {
+        this.sendChatMessage();
+      }
+    });
+  }
+
+  closeChat() {
+    this.ngZone.run(() => {
+      this.chatActive = false;
+      this.chatText = '';
+      this.cdr.detectChanges();
+      const inputEl = document.querySelector('.chat-input-wrapper input') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.blur();
+      }
+    });
+  }
+
+  sendChatMessage() {
+    if (!this.chatText.trim()) {
+      this.closeChat();
+      return;
+    }
+
+    const textToSend = this.chatText.trim();
+
+    // Agregar localmente
+    this.addChatMessage(this.jugador?.username || 'PLAYER', textToSend);
+
+    // Mostrar burbuja arriba de nuestra cabeza
+    this.showLocalSpeechBubble(textToSend);
+
+    // Enviar por WebSocket
+    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.jugador?.username) {
+      this.socket.send(JSON.stringify({
+        type: 'CHAT',
+        username: this.jugador.username,
+        text: textToSend
+      }));
+    }
+
+    this.chatText = '';
+    this.closeChat();
+  }
+
+  showLocalSpeechBubble(text: string) {
+    if (this.localBubbleTimeout) {
+      clearTimeout(this.localBubbleTimeout);
+    }
+    this.localChatBubble = text;
+    this.localBubbleTimeout = setTimeout(() => {
+      this.localChatBubble = null;
+      this.cdr.detectChanges();
+    }, 5000);
+  }
+
+  addChatMessage(sender: string, text: string, system = false) {
+    this.chatLog.push({ sender, text, system });
+    if (this.chatLog.length > 50) {
+      this.chatLog.shift();
+    }
+    this.cdr.detectChanges();
+
+    // Scroll al final
+    setTimeout(() => {
+      const el = document.querySelector('.chat-messages');
+      if (el) {
+        el.scrollTop = el.scrollHeight;
+      }
+    }, 50);
+  }
+
+  showOtherPlayerSpeechBubble(p: OtherPlayerNPC, text: string) {
+    if (p.chatBubbleTimeout) {
+      clearTimeout(p.chatBubbleTimeout);
+    }
+    p.chatBubble = text;
+    p.chatBubbleTimeout = setTimeout(() => {
+      p.chatBubble = undefined;
+      p.chatBubbleTimeout = undefined;
+      this.cdr.detectChanges();
+    }, 5000);
+    this.cdr.detectChanges();
+  }
+
+  onChatInputBlur() {
+    setTimeout(() => {
+      if (this.chatActive) {
+        this.closeChat();
+      }
+    }, 100);
+  }
+
+  private updateLocalPlayerBubbleProjection() {
+    if (!this.camera) return;
+    if (this.localChatBubble) {
+      const scale = this.currentCharacterOption?.scale || 1.0;
+      const heightStr = localStorage.getItem('lobbyHeight') || '1.0';
+      const heightFactor = parseFloat(heightStr);
+      const headPos = this.player.position.clone().add(new THREE.Vector3(0, scale * heightFactor * 2.25, 0));
+      const projected = headPos.project(this.camera);
+      const isBehindCamera = projected.z > 1.0;
+      if (isBehindCamera) {
+        this.localBubbleScreenX = undefined;
+        this.localBubbleScreenY = undefined;
+      } else {
+        this.localBubbleScreenX = (projected.x * 0.5 + 0.5) * 100;
+        this.localBubbleScreenY = (-projected.y * 0.5 + 0.5) * 100;
+      }
+    } else {
+      this.localBubbleScreenX = undefined;
+      this.localBubbleScreenY = undefined;
+    }
+  }
+
+  // ================= MÉTODOS DE EMOTES =================
+
+  @HostListener('window:mousedown', ['$event'])
+  onMouseDown(event: MouseEvent) {
+    if (event.button === 1) { // Ruedita del mouse
+      event.preventDefault();
+      this.toggleEmoteMenu();
+    }
+  }
+
+  @HostListener('window:auxclick', ['$event'])
+  onAuxClick(event: MouseEvent) {
+    if (event.button === 1) {
+      event.preventDefault();
+    }
+  }
+
+  getAvailableEmotes(): string[] {
+    const list = Array.from(this.playerActions.keys());
+    return list.filter(name => !/idle|walk|run|standing/i.test(name));
+  }
+
+  toggleEmoteMenu() {
+    this.ngZone.run(() => {
+      this.showEmoteMenu = !this.showEmoteMenu;
+      if (this.showEmoteMenu) {
+        this.keys.clear(); // Limpiar movimiento al abrir el menú de gestos
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  closeEmoteMenu() {
+    this.ngZone.run(() => {
+      this.showEmoteMenu = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  triggerEmote(emoteName: string) {
+    this.closeEmoteMenu();
+    this.playLocalEmote(emoteName);
+
+    // Enviar a otros
+    if (this.socket && this.socket.readyState === WebSocket.OPEN && this.jugador?.username) {
+      this.socket.send(JSON.stringify({
+        type: 'EMOTE',
+        username: this.jugador.username,
+        emote: emoteName
+      }));
+    }
+  }
+
+  playLocalEmote(emoteName: string) {
+    const action = this.playerActions.get(emoteName);
+    if (!action) return;
+
+    this.isPlayingEmote = true;
+    this.emoteAnimationName = emoteName;
+
+    if (this.activePlayerAction) {
+      this.activePlayerAction.fadeOut(0.15);
+    }
+
+    action.reset();
+    const isLoopable = ['dance', 'dancing', 'pose', 'idle_hints', 'talking'].some(word => emoteName.includes(word));
+    if (!isLoopable) {
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+
+      const onFinished = (e: any) => {
+        if (e.action === action) {
+          this.playerMixer?.removeEventListener('finished', onFinished);
+          this.isPlayingEmote = false;
+          this.emoteAnimationName = undefined;
+          this.setPlayerAnimation('idle', 0.25);
+        }
+      };
+      this.playerMixer?.addEventListener('finished', onFinished);
+    } else {
+      action.setLoop(THREE.LoopRepeat, Number.POSITIVE_INFINITY);
+    }
+
+    action.fadeIn(0.15).play();
+    this.activePlayerAction = action;
+  }
+
+  playOtherPlayerEmote(p: OtherPlayerNPC, emoteName: string) {
+    const action = p.actions.get(emoteName);
+    if (!action) return;
+
+    if (p.active) {
+      p.active.fadeOut(0.15);
+    }
+
+    action.reset();
+    const isLoopable = ['dance', 'dancing', 'pose', 'idle_hints', 'talking'].some(word => emoteName.includes(word));
+    if (!isLoopable) {
+      action.setLoop(THREE.LoopOnce, 1);
+      action.clampWhenFinished = true;
+
+      const onFinished = (e: any) => {
+        if (e.action === action) {
+          p.mixer?.removeEventListener('finished', onFinished);
+          this.setOtherPlayerAnimation(p, p.currentAnimation, 0.25);
+        }
+      };
+      p.mixer?.addEventListener('finished', onFinished);
+    } else {
+      action.setLoop(THREE.LoopRepeat, Number.POSITIVE_INFINITY);
+    }
+
+    action.fadeIn(0.15).play();
+    p.active = action;
   }
 }

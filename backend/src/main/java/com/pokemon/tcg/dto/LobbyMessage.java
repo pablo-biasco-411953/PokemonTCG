@@ -57,4 +57,13 @@ public class LobbyMessage {
 
     public String getAnimation() { return animation; }
     public void setAnimation(String animation) { this.animation = animation; }
+
+    private String text;
+    private String emote;
+
+    public String getText() { return text; }
+    public void setText(String text) { this.text = text; }
+
+    public String getEmote() { return emote; }
+    public void setEmote(String emote) { this.emote = emote; }
 }

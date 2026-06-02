@@ -21,6 +21,57 @@
     </div>
   </div>
 
+  <!-- SPEECH BUBBLES FOR MULTIPLAYER -->
+  <!-- Speech bubbles for other players -->
+  <div
+    *ngFor="let other of otherPlayersList"
+    class="player-speech-bubble"
+    [style.left.%]="other.screenX"
+    [style.top.%]="other.screenY"
+    [class.visible]="other.screenX !== undefined && other.screenY !== undefined && other.chatBubble"
+  >
+    <div class="speech-content">
+      {{ other.chatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- Speech bubble for local player -->
+  <div
+    class="player-speech-bubble local-speech"
+    [style.left.%]="localBubbleScreenX"
+    [style.top.%]="localBubbleScreenY"
+    [class.visible]="localBubbleScreenX !== undefined && localBubbleScreenY !== undefined && localChatBubble"
+  >
+    <div class="speech-content">
+      {{ localChatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- CHAT WINDOW (BOTTOM LEFT) -->
+  <div class="lobby-chat-container">
+    <div class="chat-messages">
+      <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
+        <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
+        <span class="chat-text">{{ msg.text }}</span>
+      </div>
+      <div *ngIf="chatLog.length === 0" class="chat-empty">
+        Presioná ENTER para chatear en el lobby
+      </div>
+    </div>
+    <div class="chat-input-wrapper" [class.active]="chatActive">
+      <input
+        #chatInput
+        type="text"
+        [(ngModel)]="chatText"
+        (keydown.escape)="closeChat()"
+        placeholder="Escribe un mensaje y presiona Enter..."
+        maxlength="100"
+      />
+    </div>
+  </div>
+
   <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
     <div class="ddp-header">
       <span>MODO DIOS LOBBY (F3)</span>
@@ -126,6 +177,11 @@
     <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
       <small>GRÁFICOS</small>
       <strong>{{ graphicsQualityLabel }}</strong>
+    </button>
+
+    <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
+      <small>ACCIONES</small>
+      <strong>EMOTES</strong>
     </button>
 
     <div class="resource-chip">
@@ -451,6 +507,35 @@
         <span class="loading-status-text">CARGANDO CAMPUS UTN...</span>
         <span class="loading-percentage">{{ hubLoadingProgress }}%</span>
       </div>
+    </div>
+  </div>
+
+  <!-- EMOTE MENU OVERLAY -->
+  <div class="emote-menu-overlay" *ngIf="showEmoteMenu" (click)="closeEmoteMenu()">
+    <div class="emote-menu-card" (click)="$event.stopPropagation()">
+      <button class="close-emote-menu" (click)="closeEmoteMenu()">×</button>
+      <div class="emote-header">
+        <span class="emote-kicker">GESTOS Y ANIMACIONES</span>
+        <h3>Seleccionar Emote</h3>
+        <p class="emote-desc">Hará una acción o pose especial</p>
+      </div>
+      <div class="emote-grid" *ngIf="getAvailableEmotes().length > 0; else noEmotes">
+        <button
+          *ngFor="let emote of getAvailableEmotes()"
+          type="button"
+          class="emote-btn"
+          (click)="triggerEmote(emote)"
+        >
+          <span class="emote-icon">✨</span>
+          <strong>{{ emote | uppercase }}</strong>
+        </button>
+      </div>
+      <ng-template #noEmotes>
+        <div class="no-emotes-wrapper">
+          <span class="no-emotes-icon">⚠️</span>
+          <p class="no-emotes-copy">Este personaje no posee animaciones adicionales para reproducir.</p>
+        </div>
+      </ng-template>
     </div>
   </div>
 </div>
