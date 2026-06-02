@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
+// un cambio boludo
 @Service
 /**
  * Genera sobres aleatorios y los agrega a la colección del jugador.
