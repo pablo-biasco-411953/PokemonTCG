@@ -410,4 +410,27 @@
 
     </div>
   </div>
+
+  <!-- ================= ULTRA-PREMIUM HUB LOADING OVERLAY ================= -->
+  <div class="hub-loading-overlay" *ngIf="showHubLoadingOverlay" [class.fade-out]="hubLoadingProgress === 100">
+    <div class="loading-content">
+      <!-- Pikachu running GIF, offset in % sync'd to loaded progress -->
+      <div class="pikachu-runner-container" [style.left.%]="hubLoadingProgress">
+        <img src="/images/pikarunning.gif" alt="Pikachu running" class="pikachu-gif">
+        <span class="lightning-spark">⚡</span>
+      </div>
+
+      <!-- Sleek UTN progress bar track -->
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" [style.width.%]="hubLoadingProgress"></div>
+        <div class="loading-bar-glow" [style.width.%]="hubLoadingProgress"></div>
+      </div>
+
+      <!-- Loading statistics and status message -->
+      <div class="loading-stats">
+        <span class="loading-status-text">CARGANDO CAMPUS UTN...</span>
+        <span class="loading-percentage">{{ hubLoadingProgress }}%</span>
+      </div>
+    </div>
+  </div>
 </div>
