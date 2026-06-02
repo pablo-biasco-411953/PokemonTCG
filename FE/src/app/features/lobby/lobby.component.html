@@ -6,6 +6,21 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
+  <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
+  <div 
+    *ngFor="let other of otherPlayersList" 
+    class="player-nametag" 
+    [style.left.%]="other.screenX" 
+    [style.top.%]="other.screenY"
+    [class.visible]="other.screenX !== undefined && other.screenY !== undefined"
+  >
+    <div class="nametag-bubble">
+      <span class="nametag-dot"></span>
+      <span class="nametag-text">{{ other.username }}</span>
+      <small *ngIf="other.pikachuEnabled" class="nametag-pikachu">⚡ PK</small>
+    </div>
+  </div>
+
   <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
     <div class="ddp-header">
       <span>MODO DIOS LOBBY (F3)</span>
@@ -106,11 +121,6 @@
     <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
       <small>PIKACHU</small>
       <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
-    </button>
-
-    <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
-      <small>GRÁFICOS</small>
-      <strong>{{ graphicsQualityLabel }}</strong>
     </button>
 
     <div class="resource-chip">
