@@ -75,6 +75,7 @@ export interface OtherPlayerNPC {
   mixer?: THREE.AnimationMixer;
   actions: Map<string, THREE.AnimationAction>;
   active?: THREE.AnimationAction;
+  isPlayingEmote?: boolean;
   pikachu?: CampusNpc;
   targetPosition: THREE.Vector3;
   targetRotationY: number;
@@ -150,6 +151,37 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   dayPhaseLabel = 'Mañana';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+
+  // Interaction & Context Menu State
+  selectedPlayerForMenu: OtherPlayerNPC | null = null;
+  playerMenuX = 0;
+  playerMenuY = 0;
+
+  // Challenge / Duel State
+  incomingChallenge: any = null;
+  waitingForChallengeResponse = false;
+  challengedUsername = '';
+  challengeSecondsLeft = 10;
+  challengeTimerDashoffset = 0;
+  private challengeTimerInterval: any = null;
+
+  // Trade State
+  incomingTradeInvite: any = null;
+  waitingForTradeResponse = false;
+  tradeInvitedUsername = '';
+  activeTradeSession = false;
+  tradeOpponentUsername = '';
+  tradeLeftCards: Card[] = [];
+  tradeRightCards: Card[] = [];
+  tradeLeftReady = false;
+  tradeRightReady = false;
+  tradeCollectionSearchText = '';
+  tradeCollectionFilterRarity = '';
+  tradeCollectionFiltrada: Card[] = [];
+  tradeShowValueWarning = false;
+  tradeShowContinuationPrompt = false;
+  tradeWaitingForContinuation = false;
+  private userTradeCollection: Card[] = [];
 
   get graphicsQualityLabel(): string {
     if (this.graphicsQuality === 'low') return 'BAJO 🔴';
@@ -606,6 +638,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         this.jugador = { ...this.jugador!, ...res };
+
+        if (res.characterId) {
+          localStorage.setItem('lobbyCharacter', res.characterId);
+          this.selectedCharacterId = res.characterId;
+        }
+        if (res.skinColor) {
+          localStorage.setItem('lobbySkinColor', res.skinColor);
+        }
+        if (res.hairColor) {
+          localStorage.setItem('lobbyHairColor', res.hairColor);
+        }
+        if (res.eyeColor) {
+          localStorage.setItem('lobbyEyeColor', res.eyeColor);
+        }
+        if (res.height) {
+          localStorage.setItem('lobbyHeight', res.height.toString());
+        }
+        if (res.pikachuCompanion !== undefined) {
+          localStorage.setItem('pikachuCompanion', res.pikachuCompanion ? 'true' : 'false');
+          this.pikachuEnabled = res.pikachuCompanion;
+        }
+
+        this.ngZone.runOutsideAngular(() => {
+          this.loadAnimatedPlayerAsset();
+          if (this.pikachuEnabled) {
+            this.createPikachuCompanion();
+          }
+        });
+
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error al obtener datos del jugador', err)
@@ -1187,6 +1248,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.selectedCharacterId = this.customizerSelectedId;
     this.pikachuEnabled = this.customizerPikachu;
+
+    // Guardar en la base de datos
+    if (this.jugador?.username) {
+      this.jugadorService.guardarPersonalizacion(this.jugador.username, {
+        characterId: this.customizerSelectedId,
+        skinColor: this.customizerSkinColor,
+        hairColor: this.customizerHairColor,
+        eyeColor: this.customizerEyeColor,
+        height: this.customizerHeight,
+        pikachuCompanion: this.customizerPikachu
+      }).subscribe({
+        next: () => console.log('Personalización guardada en base de datos.'),
+        error: (err) => console.error('Error al guardar personalización en DB:', err)
+      });
+    }
 
     // Sincronizar Pikachu en el escenario principal del lobby
     if (this.pikachuEnabled) {
@@ -3179,7 +3255,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (move !== 0) {
       this.setPlayerAnimation(isRunning ? 'running' : 'walking');
-    } else {
+    } else if (!this.isPlayingEmote) {
       this.setPlayerAnimation('idle');
     }
 
@@ -3416,6 +3492,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (p) {
           this.playOtherPlayerEmote(p, msg.emote);
         }
+      } else if (type === 'CHALLENGE_DUEL') {
+        this.handleIncomingChallenge(msg);
+      } else if (type === 'CHALLENGE_DUEL_RESPONSE') {
+        this.handleChallengeResponse(msg);
+      } else if (type === 'INVITE_TRADE') {
+        this.handleIncomingTradeInvite(msg);
+      } else if (type === 'INVITE_TRADE_RESPONSE') {
+        this.handleTradeInviteResponse(msg);
+      } else if (type === 'TRADE_UPDATE') {
+        this.handleTradeUpdate(msg);
+      } else if (type === 'TRADE_CLOSE') {
+        this.handleTradeClose(msg);
+      } else if (type === 'BATTLE_START') {
+        this.router.navigate(['/battle', msg.details]);
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
@@ -3706,6 +3796,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setOtherPlayerAnimation(p: OtherPlayerNPC, preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
+    if (p.isPlayingEmote) {
+      if (preferred === 'idle') {
+        return;
+      } else {
+        p.isPlayingEmote = false;
+      }
+    }
     if (p.actions.size === 0) return;
 
     const option = this.characterOptions.find((o) => o.id === p.characterId) || this.characterOptions[0];
@@ -4154,6 +4251,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       p.active.fadeOut(0.15);
     }
 
+    p.isPlayingEmote = true;
     action.reset();
     const isLoopable = ['dance', 'dancing', 'pose', 'idle_hints', 'talking'].some(word => emoteName.includes(word));
     if (!isLoopable) {
@@ -4163,6 +4261,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       const onFinished = (e: any) => {
         if (e.action === action) {
           p.mixer?.removeEventListener('finished', onFinished);
+          p.isPlayingEmote = false;
           this.setOtherPlayerAnimation(p, p.currentAnimation, 0.25);
         }
       };
@@ -4173,5 +4272,436 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     action.fadeIn(0.15).play();
     p.active = action;
+  }
+
+  // ================= INTERACTION MENU & CHAT STUBS =================
+  openPlayerMenu(event: MouseEvent, player: OtherPlayerNPC) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.selectedPlayerForMenu = player;
+    this.playerMenuX = event.clientX;
+    this.playerMenuY = event.clientY;
+    this.cdr.detectChanges();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    this.selectedPlayerForMenu = null;
+  }
+
+  agregarAmigo(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Solicitud de amistad enviada a ${username} (función en base de datos pendiente).`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  // ================= DUEL CHALLENGE SYSTEM =================
+  retarADuelo(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.waitingForChallengeResponse = true;
+    this.challengedUsername = username;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Has retado a ${username} a un duelo.`, system: true });
+
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL',
+      username: this.jugador?.username,
+      targetUsername: username
+    }));
+
+    this.startChallengeTimer(() => {
+      this.cancelarRetoDuelo();
+      this.chatLog.push({ sender: 'SISTEMA', text: `El oponente ${username} no respondió el reto a duelo.`, system: true });
+    });
+    this.cdr.detectChanges();
+  }
+
+  cancelarRetoDuelo() {
+    this.waitingForChallengeResponse = false;
+    this.stopChallengeTimer();
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: this.challengedUsername,
+      accepted: false
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleIncomingChallenge(msg: any) {
+    this.incomingChallenge = msg;
+    this.startChallengeTimer(() => {
+      this.responderDuelo(false);
+    });
+    this.cdr.detectChanges();
+  }
+
+  responderDuelo(accepted: boolean) {
+    const challenger = this.incomingChallenge?.username;
+    this.incomingChallenge = null;
+    this.stopChallengeTimer();
+
+    this.socket?.send(JSON.stringify({
+      type: 'CHALLENGE_DUEL_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: challenger,
+      accepted: accepted,
+      details: this.selectedBattleDeckId ? this.selectedBattleDeckId.toString() : ''
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleChallengeResponse(msg: any) {
+    this.waitingForChallengeResponse = false;
+    this.stopChallengeTimer();
+
+    if (msg.accepted) {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} aceptó el combate. Iniciando...`, system: true });
+      this.cdr.detectChanges();
+
+      const p2MazoId = parseInt(msg.details || '0');
+      if (!this.selectedBattleDeckId) {
+        this.chatLog.push({ sender: 'SISTEMA', text: `Error: No tienes mazo seleccionado.`, system: true });
+        return;
+      }
+
+      this.battleService.startBattleOnline(
+        this.jugador!.username,
+        this.selectedBattleDeckId,
+        msg.username,
+        p2MazoId
+      ).subscribe({
+        next: (partida) => {
+          this.socket?.send(JSON.stringify({
+            type: 'BATTLE_START',
+            username: this.jugador?.username,
+            targetUsername: msg.username,
+            details: partida.id
+          }));
+          this.router.navigate(['/battle', partida.id]);
+        },
+        error: (err) => {
+          console.error('Error al arrancar batalla online:', err);
+          alert('Error al iniciar combate online: ' + err.message);
+        }
+      });
+    } else {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó el duelo o la invitación expiró.`, system: true });
+      this.cdr.detectChanges();
+    }
+  }
+
+  startChallengeTimer(onTimeout: () => void) {
+    this.stopChallengeTimer();
+    this.challengeSecondsLeft = 10;
+    this.challengeTimerDashoffset = 0;
+    this.challengeTimerInterval = setInterval(() => {
+      this.challengeSecondsLeft--;
+      this.challengeTimerDashoffset = (10 - this.challengeSecondsLeft) * 10;
+      this.cdr.detectChanges();
+      if (this.challengeSecondsLeft <= 0) {
+        this.stopChallengeTimer();
+        onTimeout();
+      }
+    }, 1000);
+  }
+
+  stopChallengeTimer() {
+    if (this.challengeTimerInterval) {
+      clearInterval(this.challengeTimerInterval);
+      this.challengeTimerInterval = null;
+    }
+  }
+
+  // ================= CARD TRADING SYSTEM =================
+  invitarIntercambio(username: string) {
+    this.selectedPlayerForMenu = null;
+    this.waitingForTradeResponse = true;
+    this.tradeInvitedUsername = username;
+    this.chatLog.push({ sender: 'SISTEMA', text: `Invitación de intercambio enviada a ${username}.`, system: true });
+
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE',
+      username: this.jugador?.username,
+      targetUsername: username
+    }));
+
+    this.startChallengeTimer(() => {
+      this.cancelarTradeInvite();
+      this.chatLog.push({ sender: 'SISTEMA', text: `${username} no respondió a la propuesta de intercambio.`, system: true });
+    });
+    this.cdr.detectChanges();
+  }
+
+  cancelarTradeInvite() {
+    this.waitingForTradeResponse = false;
+    this.stopChallengeTimer();
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeInvitedUsername,
+      accepted: false
+    }));
+    this.cdr.detectChanges();
+  }
+
+  handleIncomingTradeInvite(msg: any) {
+    this.incomingTradeInvite = msg;
+    this.startChallengeTimer(() => {
+      this.responderTrade(false);
+    });
+    this.cdr.detectChanges();
+  }
+
+  responderTrade(accepted: boolean) {
+    const challenger = this.incomingTradeInvite?.username;
+    this.incomingTradeInvite = null;
+    this.stopChallengeTimer();
+
+    this.socket?.send(JSON.stringify({
+      type: 'INVITE_TRADE_RESPONSE',
+      username: this.jugador?.username,
+      targetUsername: challenger,
+      accepted: accepted
+    }));
+
+    if (accepted) {
+      this.abrirSalaTrading(challenger);
+    }
+    this.cdr.detectChanges();
+  }
+
+  handleTradeInviteResponse(msg: any) {
+    this.waitingForTradeResponse = false;
+    this.stopChallengeTimer();
+
+    if (msg.accepted) {
+      this.abrirSalaTrading(msg.username);
+    } else {
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó la invitación de intercambio.`, system: true });
+      this.cdr.detectChanges();
+    }
+  }
+
+  abrirSalaTrading(opponentUsername: string) {
+    this.activeTradeSession = true;
+    this.tradeOpponentUsername = opponentUsername;
+    this.tradeLeftCards = [];
+    this.tradeRightCards = [];
+    this.tradeLeftReady = false;
+    this.tradeRightReady = false;
+    this.tradeCollectionSearchText = '';
+    this.tradeCollectionFilterRarity = '';
+    this.tradeShowValueWarning = false;
+    this.tradeShowContinuationPrompt = false;
+    this.tradeWaitingForContinuation = false;
+
+    // Load collection
+    this.jugadorService.getColeccion(this.jugador!.username).subscribe({
+      next: (cards) => {
+        this.userTradeCollection = cards;
+        this.filtrarColeccionTrade();
+      },
+      error: (err) => console.error('Error al cargar coleccion para trade:', err)
+    });
+    this.cdr.detectChanges();
+  }
+
+  cerrarTradeSala() {
+    this.activeTradeSession = false;
+    this.socket?.send(JSON.stringify({
+      type: 'TRADE_CLOSE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeOpponentUsername
+    }));
+    this.chatLog.push({ sender: 'SISTEMA', text: `Se ha cerrado la sala de intercambio.`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  getEmptySlots(length: number): number[] {
+    const slots = 3 - length;
+    return slots > 0 ? Array(slots).fill(0) : [];
+  }
+
+  addCardToTrade(card: Card) {
+    if (this.tradeLeftReady) return;
+    if (this.tradeLeftCards.length >= 3) {
+      alert('Máximo 3 cartas por intercambio.');
+      return;
+    }
+    this.tradeLeftCards.push(card);
+    this.notifyTradeUpdate();
+    this.cdr.detectChanges();
+  }
+
+  removeCardFromTrade(card: Card) {
+    if (this.tradeLeftReady) return;
+    this.tradeLeftCards = this.tradeLeftCards.filter(c => c.id !== card.id);
+    this.notifyTradeUpdate();
+    this.cdr.detectChanges();
+  }
+
+  isCardInTrade(card: Card): boolean {
+    return this.tradeLeftCards.some(c => c.id === card.id);
+  }
+
+  notifyTradeUpdate() {
+    this.socket?.send(JSON.stringify({
+      type: 'TRADE_UPDATE',
+      username: this.jugador?.username,
+      targetUsername: this.tradeOpponentUsername,
+      accepted: this.tradeLeftReady,
+      details: JSON.stringify(this.tradeLeftCards)
+    }));
+  }
+
+  toggleTradeReady() {
+    if (this.tradeLeftCards.length === 0) return;
+
+    if (!this.tradeLeftReady) {
+      // Check rarity value differences
+      const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+      const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+
+      if (myValue > oppValue + 2) {
+        this.tradeShowValueWarning = true;
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+
+    this.confirmarReady();
+  }
+
+  confirmarAdvertenciaValor(confirm: boolean) {
+    this.tradeShowValueWarning = false;
+    if (confirm) {
+      this.confirmarReady();
+    }
+    this.cdr.detectChanges();
+  }
+
+  confirmarReady() {
+    this.tradeLeftReady = !this.tradeLeftReady;
+    this.notifyTradeUpdate();
+
+    if (this.tradeLeftReady && this.tradeRightReady) {
+      this.executeTradeTransaction();
+    }
+    this.cdr.detectChanges();
+  }
+
+  executeTradeTransaction() {
+    const myIds = this.tradeLeftCards.map(c => c.id);
+    const oppIds = this.tradeRightCards.map(c => c.id);
+
+    this.jugadorService.ejecutarTrade(
+      this.jugador!.username,
+      this.tradeOpponentUsername,
+      myIds,
+      oppIds
+    ).subscribe({
+      next: () => {
+        this.tradeShowContinuationPrompt = true;
+        this.refrescarTodo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al realizar el trade:', err);
+        alert('Transacción de intercambio fallida: ' + err.message);
+        this.tradeLeftReady = false;
+        this.notifyTradeUpdate();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  responderSeguirTrading(continueTrading: boolean) {
+    this.tradeShowContinuationPrompt = false;
+    if (continueTrading) {
+      this.tradeWaitingForContinuation = true;
+      this.socket?.send(JSON.stringify({
+        type: 'TRADE_UPDATE',
+        username: this.jugador?.username,
+        targetUsername: this.tradeOpponentUsername,
+        accepted: true,
+        details: 'CONTINUE'
+      }));
+    } else {
+      this.cerrarTradeSala();
+    }
+    this.cdr.detectChanges();
+  }
+
+  handleTradeUpdate(msg: any) {
+    if (msg.details === 'CONTINUE') {
+      if (this.tradeWaitingForContinuation) {
+        // Both clicked continue trading! Reset trading session
+        this.abrirSalaTrading(this.tradeOpponentUsername);
+      } else {
+        this.tradeRightReady = true;
+        this.cdr.detectChanges();
+      }
+      return;
+    }
+
+    try {
+      const oppCards = JSON.parse(msg.details || '[]');
+      this.tradeRightCards = oppCards;
+      this.tradeRightReady = msg.accepted;
+
+      if (this.tradeLeftReady && this.tradeRightReady) {
+        this.executeTradeTransaction();
+      }
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.error('Error parsing trade update details:', e);
+    }
+  }
+
+  handleTradeClose(msg: any) {
+    this.activeTradeSession = false;
+    this.tradeShowContinuationPrompt = false;
+    this.tradeWaitingForContinuation = false;
+    this.chatLog.push({ sender: 'SISTEMA', text: `${this.tradeOpponentUsername} cerró la sala de intercambio.`, system: true });
+    this.cdr.detectChanges();
+  }
+
+  filtrarColeccionTrade() {
+    this.tradeCollectionFiltrada = this.userTradeCollection.filter(c => {
+      const matchSearch = !this.tradeCollectionSearchText || c.nombre.toLowerCase().includes(this.tradeCollectionSearchText.toLowerCase());
+      const matchRarity = !this.tradeCollectionFilterRarity || (c.rarity || 'Common') === this.tradeCollectionFilterRarity;
+      return matchSearch && matchRarity;
+    });
+  }
+
+  getCardRarityValue(rarity: string): number {
+    if (rarity === 'Secret Rare') return 4;
+    if (rarity === 'Rare') return 2;
+    if (rarity === 'Uncommon') return 1;
+    return 0; // Common
+  }
+
+  isMyOfferFair(): boolean {
+    return this.tradeLeftCards.length > 0;
+  }
+
+  isOpponentOfferFair(): boolean {
+    return this.tradeRightCards.length > 0;
+  }
+
+  getMyOfferFairnessText(): string {
+    if (this.tradeLeftCards.length === 0) return 'Vacío';
+    const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (Monólogo)';
+    return 'Oferta Sincronizada';
+  }
+
+  getOpponentOfferFairnessText(): string {
+    if (this.tradeRightCards.length === 0) return 'Vacío';
+    const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
+    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (Monólogo)';
+    return 'Oferta Sincronizada';
   }
 }

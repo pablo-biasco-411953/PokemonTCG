@@ -81,6 +81,22 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
             // Difundir mensajes de chat y emotes al resto de los jugadores
             broadcastToOthers(username, payload);
         }
+        else if ("CHALLENGE_DUEL".equals(type) || "CHALLENGE_DUEL_RESPONSE".equals(type) ||
+                 "INVITE_TRADE".equals(type) || "INVITE_TRADE_RESPONSE".equals(type) ||
+                 "TRADE_UPDATE".equals(type) || "TRADE_CLOSE".equals(type) ||
+                 "BATTLE_START".equals(type)) {
+            String target = lobbyMsg.getTargetUsername();
+            if (target != null && sessions.containsKey(target)) {
+                WebSocketSession targetSession = sessions.get(target);
+                if (targetSession != null && targetSession.isOpen()) {
+                    try {
+                        targetSession.sendMessage(new TextMessage(payload));
+                    } catch (IOException e) {
+                        System.err.println("Falla al enviar socket directo a " + target + ": " + e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
     @Override
