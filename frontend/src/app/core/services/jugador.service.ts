@@ -9,7 +9,7 @@ import { JugadorDatosResponse } from '../../shared/models/jugador';
 })
 export class JugadorService {
   // Servicio para consultar resumen y coleccion del jugador.
-  private apiUrl = 'http://localhost:8080/api/jugadores';
+  private apiUrl = `http://${window.location.hostname}:8080/api/jugadores`;
 
   constructor(private http: HttpClient) { }
 

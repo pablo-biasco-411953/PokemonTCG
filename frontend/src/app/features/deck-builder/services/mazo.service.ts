@@ -8,7 +8,7 @@ import { Mazo } from '../../../shared/models/mazo';
 })
 export class MazoService {
   // Servicio para crear, listar y actualizar mazos.
-  private apiUrl = 'http://localhost:8080/api/mazos';
+  private apiUrl = `http://${window.location.hostname}:8080/api/mazos`;
 
   constructor(private http: HttpClient) { }
 

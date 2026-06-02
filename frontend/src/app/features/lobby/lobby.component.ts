@@ -62,6 +62,27 @@ interface CampusNpc {
   active?: THREE.AnimationAction;
 }
 
+export interface OtherPlayerNPC {
+  username: string;
+  characterId: string;
+  skinColor: string;
+  hairColor: string;
+  eyeColor: string;
+  height: number;
+  pikachuEnabled: boolean;
+  root: THREE.Group;
+  modelGroup?: THREE.Group;
+  mixer?: THREE.AnimationMixer;
+  actions: Map<string, THREE.AnimationAction>;
+  active?: THREE.AnimationAction;
+  pikachu?: CampusNpc;
+  targetPosition: THREE.Vector3;
+  targetRotationY: number;
+  currentAnimation: 'idle' | 'walking' | 'running';
+  screenX?: number;
+  screenY?: number;
+}
+
 @Component({
   selector: 'app-lobby',
   templateUrl: './lobby.component.html',
@@ -72,6 +93,18 @@ interface CampusNpc {
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('previewCanvas') previewCanvas?: ElementRef<HTMLCanvasElement>;
+
+  // WebSocket Multiplayer
+  private socket?: WebSocket;
+  otherPlayers = new Map<string, OtherPlayerNPC>();
+  private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
+  private lastMoveSentTime = 0;
+  private lastSentRotY = 0;
+  private lastSentAnimation: 'idle' | 'walking' | 'running' = 'idle';
+
+  get otherPlayersList(): OtherPlayerNPC[] {
+    return Array.from(this.otherPlayers.values());
+  }
 
   // Estado principal del lobby.
   jugador: Jugador | null = null;
@@ -349,6 +382,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
+        this.connectWebSocket();
 
         // Verificación de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
@@ -384,6 +418,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.socket) {
+      this.socket.close();
+      this.socket = undefined;
+    }
     if (this.visualProgressInterval) {
       clearInterval(this.visualProgressInterval);
     }
@@ -393,6 +431,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.playerMixer.stopAllAction();
       this.playerMixer.uncacheRoot(this.player);
     }
+    // Limpiar otros jugadores
+    this.otherPlayers.forEach((p) => {
+      p.mixer?.stopAllAction();
+      if (p.pikachu) {
+        p.pikachu.mixer?.stopAllAction();
+      }
+    });
+    this.otherPlayers.clear();
+
     this.disposable.forEach((item) => item.dispose());
     this.renderer?.dispose();
   }
@@ -1048,6 +1095,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showFirstTimeSetup = false;
     this.destroyPreviewScene();
     this.cdr.detectChanges();
+
+    // Notificar a otros de nuestra personalización actualizada
+    this.sendJoinMessage();
   }
 
   cancelCustomizations() {
@@ -1074,6 +1124,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.pikachu.mixer?.stopAllAction();
       this.pikachu = undefined;
     }
+    // Notificar a otros
+    this.sendJoinMessage();
   }
 
   warpToSpot(id: HubSpot['id']) {
@@ -2719,6 +2771,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setPlayerAnimation(preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
+    this.localAnimationState = preferred;
     const action = this.findPlayerAction(preferred);
     if (!action || action === this.activePlayerAction) return;
 
@@ -2901,8 +2954,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
+
+    // update multiplayer
+    this.updateOtherPlayers(delta);
+    this.checkAndSendMove();
+
     this.updateDayNightCycle(elapsed);
     this.updateHubObjects(elapsed);
+    this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch)); // Clampar Pitch
     this.updateCamera(delta);
     this.updateInteractionState();
     this.renderer.render(this.scene, this.camera);
@@ -3092,6 +3151,607 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentInteraction = closest;
         this.cdr.detectChanges();
       });
+    }
+  }
+
+  // ================= CLIENTE WEBSOCKET & MULTIPLAYER REPLICATION =================
+
+  private getWsUrl(): string {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.hostname || 'localhost';
+    return `${protocol}//${host}:8080/lobby-ws`;
+  }
+
+  private connectWebSocket() {
+    if (!this.jugador?.username) return;
+
+    try {
+      const wsUrl = this.getWsUrl();
+      console.log('Conectando a WebSocket del Lobby:', wsUrl);
+      this.socket = new WebSocket(wsUrl);
+
+      this.socket.onopen = () => {
+        console.log('Conexión WebSocket establecida con éxito.');
+        this.sendJoinMessage();
+      };
+
+      this.socket.onmessage = (event) => {
+        this.ngZone.run(() => {
+          this.handleWebSocketMessage(event.data);
+        });
+      };
+
+      this.socket.onclose = () => {
+        console.warn('Conexión WebSocket cerrada. Reintentando en 5 segundos...');
+        setTimeout(() => this.connectWebSocket(), 5000);
+      };
+
+      this.socket.onerror = (error) => {
+        console.error('Error en WebSocket del Lobby:', error);
+      };
+    } catch (e) {
+      console.error('Error al instanciar WebSocket:', e);
+    }
+  }
+
+  private sendJoinMessage() {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN || !this.jugador?.username) return;
+
+    const payload = {
+      type: 'JOIN',
+      username: this.jugador.username,
+      characterId: this.selectedCharacterId,
+      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
+      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
+      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
+      pikachuCompanion: this.pikachuEnabled,
+      x: this.player.position.x,
+      y: this.player.position.y,
+      z: this.player.position.z,
+      rotY: this.player.rotation.y,
+      animation: this.localAnimationState
+    };
+
+    this.socket.send(JSON.stringify(payload));
+  }
+
+  private checkAndSendMove() {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN || !this.jugador?.username) return;
+
+    const now = performance.now();
+    if (now - this.lastMoveSentTime < 45) return;
+
+    const isMoving = this.playerVelocity.lengthSq() > 0.001 || Math.abs(this.player.rotation.y - this.lastSentRotY) > 0.01;
+    if (!isMoving && this.localAnimationState === 'idle' && this.lastSentAnimation === 'idle') {
+      return;
+    }
+
+    const payload = {
+      type: 'MOVE',
+      username: this.jugador.username,
+      characterId: this.selectedCharacterId,
+      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
+      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
+      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
+      pikachuCompanion: this.pikachuEnabled,
+      x: this.player.position.x,
+      y: this.player.position.y,
+      z: this.player.position.z,
+      rotY: this.player.rotation.y,
+      animation: this.localAnimationState
+    };
+
+    this.socket.send(JSON.stringify(payload));
+    this.lastMoveSentTime = now;
+    this.lastSentRotY = this.player.rotation.y;
+    this.lastSentAnimation = this.localAnimationState;
+  }
+
+  private handleWebSocketMessage(dataStr: string) {
+    try {
+      const msg = JSON.parse(dataStr);
+      if (!msg || !msg.username || msg.username === this.jugador?.username) return;
+
+      const type = msg.type;
+      const username = msg.username;
+
+      if (type === 'JOIN') {
+        this.registerOtherPlayer(msg);
+      } else if (type === 'MOVE') {
+        this.updateOtherPlayerState(msg);
+      } else if (type === 'LEAVE') {
+        this.removeOtherPlayer(username);
+      }
+    } catch (e) {
+      console.error('Error parseando mensaje WebSocket:', e);
+    }
+  }
+
+  private registerOtherPlayer(msg: any) {
+    const username = msg.username;
+    if (this.otherPlayers.has(username)) {
+      this.updateOtherPlayerState(msg);
+      return;
+    }
+
+    console.log('Registrando nuevo jugador online en el lobby:', username);
+
+    const root = new THREE.Group();
+    root.position.set(msg.x, msg.y, msg.z);
+    root.rotation.y = msg.rotY;
+    this.scene?.add(root);
+
+    const otherPlayer: OtherPlayerNPC = {
+      username: username,
+      characterId: msg.characterId,
+      skinColor: msg.skinColor,
+      hairColor: msg.hairColor,
+      eyeColor: msg.eyeColor,
+      height: msg.height || 1.0,
+      pikachuEnabled: msg.pikachuCompanion,
+      root: root,
+      actions: new Map(),
+      targetPosition: new THREE.Vector3(msg.x, msg.y, msg.z),
+      targetRotationY: msg.rotY,
+      currentAnimation: msg.animation || 'idle'
+    };
+
+    this.createFallbackOtherPlayerAvatar(otherPlayer);
+    this.otherPlayers.set(username, otherPlayer);
+    this.loadOtherPlayerModel(otherPlayer);
+
+    if (otherPlayer.pikachuEnabled) {
+      this.createOtherPlayerPikachu(otherPlayer);
+    }
+  }
+
+  private loadOtherPlayerModel(p: OtherPlayerNPC) {
+    const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
+    const loader = new GLTFLoader(this.hubLoadingManager);
+    loader.load(
+      option.path,
+      (gltf) => {
+        if (!this.otherPlayers.has(p.username)) {
+          gltf.scene.clear();
+          return;
+        }
+
+        // Limpiar fallback/previo
+        p.root.clear();
+
+        const model = gltf.scene;
+        model.name = 'AnimatedOtherPlayerAsset';
+        model.scale.setScalar(option.scale);
+        model.position.set(0, option.yOffset, 0);
+        model.rotation.y = option.rotationY;
+        model.traverse((child) => {
+          const mesh = child as THREE.Mesh;
+          if (mesh.isMesh) {
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+          }
+        });
+
+        this.applyOtherPlayerCustomizations(model, p);
+
+        p.root.add(model);
+        p.modelGroup = model;
+        p.mixer = new THREE.AnimationMixer(model);
+        p.actions.clear();
+
+        gltf.animations.forEach((clip) => {
+          const action = p.mixer!.clipAction(clip);
+          p.actions.set(clip.name.toLowerCase(), action);
+        });
+
+        this.setOtherPlayerAnimation(p, p.currentAnimation, 0);
+      },
+      undefined,
+      (error) => {
+        console.warn('No se pudo cargar el player GLB de ' + p.username, error);
+      }
+    );
+  }
+
+  private applyOtherPlayerCustomizations(model: THREE.Group, p: OtherPlayerNPC) {
+    const skinHex = p.skinColor;
+    const hairHex = p.hairColor;
+    const eyeHex = p.eyeColor;
+    const heightFactor = p.height;
+
+    const option = this.characterOptions.find(o => o.id === p.characterId) || this.characterOptions[0];
+    model.scale.setScalar(option.scale * heightFactor);
+
+    model.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat: any) => mat.clone());
+          } else {
+            child.material = child.material.clone();
+          }
+        }
+
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((mat: any) => {
+          const name = (mat.name || '').toLowerCase();
+          
+          if (skinHex && (
+            name.includes('skin') || 
+            name.includes('piel') || 
+            name.includes('face') || 
+            name.includes('head') || 
+            name.includes('cara') || 
+            name.includes('kao') ||
+            name.includes('hada')
+          )) {
+            mat.color.set(skinHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(skinHex).multiplyScalar(0.06);
+            }
+          }
+
+          if (hairHex && (
+            name.includes('hair') || 
+            name.includes('pelo') || 
+            name.includes('cabello') ||
+            name.includes('kami') ||
+            name.includes('toubu')
+          )) {
+            mat.color.set(hairHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(hairHex).multiplyScalar(0.06);
+            }
+          }
+
+          if (eyeHex && (
+            name.includes('eye') || 
+            name.includes('ojo') ||
+            name.includes('iris') ||
+            name.includes('pupil') ||
+            name.includes('hitomi') ||
+            name.includes('eyeball') ||
+            name.includes('gaigan') ||
+            name.includes('mayu') ||
+            name.includes('matsuge')
+          )) {
+            mat.color.set(eyeHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(eyeHex).multiplyScalar(0.06);
+            }
+          }
+        });
+      }
+    });
+  }
+
+  private createFallbackOtherPlayerAvatar(p: OtherPlayerNPC) {
+    const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.42, metalness: 0.12 });
+    const jacketMaterial = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.38 });
+    const capMaterial = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35 });
+    const darkMaterial = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5 });
+    this.disposable.push(bodyMaterial, jacketMaterial, capMaterial, darkMaterial);
+
+    const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 0.78, 8, 18), bodyMaterial);
+    body.position.y = 1.05;
+    body.castShadow = true;
+    p.root.add(body);
+    this.disposable.push(body.geometry);
+
+    const chest = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.5, 0.18), jacketMaterial);
+    chest.position.set(0, 1.16, 0.28);
+    chest.castShadow = true;
+    p.root.add(chest);
+    this.disposable.push(chest.geometry);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 18), new THREE.MeshStandardMaterial({ color: p.skinColor || '#ffd2a6', roughness: 0.52 }));
+    head.position.y = 1.78;
+    head.castShadow = true;
+    p.root.add(head);
+    this.disposable.push(head.geometry, head.material as THREE.Material);
+
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(0.31, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMaterial);
+    cap.position.y = 1.89;
+    cap.rotation.x = -0.08;
+    cap.castShadow = true;
+    p.root.add(cap);
+    this.disposable.push(cap.geometry);
+
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.06, 0.28), capMaterial);
+    brim.position.set(0, 1.87, 0.24);
+    brim.castShadow = true;
+    p.root.add(brim);
+    this.disposable.push(brim.geometry);
+
+    const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.72, 0.2), darkMaterial);
+    backpack.position.set(0, 1.12, -0.35);
+    backpack.castShadow = true;
+    p.root.add(backpack);
+    this.disposable.push(backpack.geometry);
+
+    const legGeometry = new THREE.CapsuleGeometry(0.12, 0.48, 6, 10);
+    const leftLeg = new THREE.Mesh(legGeometry, darkMaterial);
+    leftLeg.position.set(-0.17, 0.42, 0);
+    leftLeg.castShadow = true;
+    p.root.add(leftLeg);
+    const rightLeg = leftLeg.clone();
+    rightLeg.position.x = 0.17;
+    p.root.add(rightLeg);
+    this.disposable.push(legGeometry);
+  }
+
+  private createOtherPlayerPikachu(p: OtherPlayerNPC) {
+    if (!this.scene || p.pikachu) return;
+
+    const root = new THREE.Group();
+    root.position.copy(p.root.position).add(new THREE.Vector3(1.2, 0, 1.8));
+    this.scene.add(root);
+    const companion: CampusNpc = { root, actions: new Map() };
+    p.pikachu = companion;
+
+    this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
+      if (!this.otherPlayers.has(p.username)) {
+        model.clear();
+        this.scene?.remove(root);
+        return;
+      }
+      model.scale.setScalar(0.42);
+      model.rotation.y = Math.PI;
+      this.centerModelPivot(model);
+      this.alignModelBottom(model, 0);
+      root.add(model);
+      companion.mixer = new THREE.AnimationMixer(model);
+      animations.forEach((clip) => companion.actions.set(clip.name.toLowerCase(), companion.mixer!.clipAction(clip)));
+      this.setNpcAnimation(companion, ['idle'], 0);
+    });
+  }
+
+  private updateOtherPlayerState(msg: any) {
+    const username = msg.username;
+    const p = this.otherPlayers.get(username);
+    if (!p) {
+      this.registerOtherPlayer(msg);
+      return;
+    }
+
+    p.targetPosition.set(msg.x, msg.y, msg.z);
+    p.targetRotationY = msg.rotY;
+
+    const needsReload = 
+      p.characterId !== msg.characterId ||
+      p.skinColor !== msg.skinColor ||
+      p.hairColor !== msg.hairColor ||
+      p.eyeColor !== msg.eyeColor ||
+      p.height !== msg.height;
+
+    if (needsReload) {
+      p.characterId = msg.characterId;
+      p.skinColor = msg.skinColor;
+      p.hairColor = msg.hairColor;
+      p.eyeColor = msg.eyeColor;
+      p.height = msg.height || 1.0;
+      this.loadOtherPlayerModel(p);
+    }
+
+    if (p.pikachuEnabled !== msg.pikachuCompanion) {
+      p.pikachuEnabled = msg.pikachuCompanion;
+      if (p.pikachuEnabled) {
+        this.createOtherPlayerPikachu(p);
+      } else if (p.pikachu) {
+        this.scene?.remove(p.pikachu.root);
+        p.pikachu.mixer?.stopAllAction();
+        p.pikachu = undefined;
+      }
+    }
+
+    if (p.currentAnimation !== msg.animation) {
+      p.currentAnimation = msg.animation || 'idle';
+      this.setOtherPlayerAnimation(p, p.currentAnimation);
+    }
+  }
+
+  private setOtherPlayerAnimation(p: OtherPlayerNPC, preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
+    if (p.actions.size === 0) return;
+
+    const option = this.characterOptions.find((o) => o.id === p.characterId) || this.characterOptions[0];
+    const candidates: Record<typeof preferred, string[]> = {
+      idle: option.idleHints ?? ['idle', 'standing'],
+      walking: option.walkHints ?? ['walking', 'walk'],
+      running: option.runHints ?? ['running', 'run']
+    };
+
+    let action: THREE.AnimationAction | undefined;
+    for (const name of candidates[preferred]) {
+      const exact = p.actions.get(name);
+      if (exact) {
+        action = exact;
+        break;
+      }
+    }
+
+    if (!action) {
+      action = Array.from(p.actions.entries())
+        .find(([name]) => candidates[preferred].some((candidate) => name.includes(candidate)))?.[1];
+    }
+
+    if (!action || action === p.active) return;
+    action.reset().fadeIn(fade).play();
+    p.active?.fadeOut(fade);
+    p.active = action;
+  }
+
+  private removeOtherPlayer(username: string) {
+    const p = this.otherPlayers.get(username);
+    if (!p) return;
+
+    console.log('Removiendo jugador online del lobby:', username);
+
+    if (p.pikachu) {
+      this.scene?.remove(p.pikachu.root);
+      p.pikachu.mixer?.stopAllAction();
+    }
+
+    this.scene?.remove(p.root);
+    p.mixer?.stopAllAction();
+    this.otherPlayers.delete(username);
+  }
+
+  private updateOtherPlayers(delta: number) {
+    if (!this.camera) return;
+
+    this.otherPlayers.forEach((p) => {
+      p.mixer?.update(delta);
+
+      const lerpFactor = 1 - Math.pow(0.0001, delta);
+      p.root.position.lerp(p.targetPosition, lerpFactor);
+
+      let diff = p.targetRotationY - p.root.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      p.root.rotation.y += diff * lerpFactor;
+
+      this.updateOtherPlayerPikachuAI(p, delta);
+
+      const headPos = p.root.position.clone().add(new THREE.Vector3(0, p.height * 2.25, 0));
+      const projected = headPos.project(this.camera!);
+
+      const isBehindCamera = projected.z > 1.0;
+      if (isBehindCamera) {
+        p.screenX = undefined;
+        p.screenY = undefined;
+      } else {
+        p.screenX = (projected.x * 0.5 + 0.5) * 100;
+        p.screenY = (-projected.y * 0.5 + 0.5) * 100;
+      }
+    });
+  }
+
+  private updateOtherPlayerPikachuAI(p: OtherPlayerNPC, delta: number) {
+    if (!p.pikachu) return;
+
+    const root = p.pikachu.root;
+    p.pikachu.mixer?.update(delta);
+
+    if (!root.userData['initialized']) {
+      root.userData['initialized'] = true;
+      root.userData['state'] = 'following';
+      root.userData['targetPos'] = root.position.clone();
+      root.userData['idleTimer'] = 0;
+      root.userData['isMoving'] = false;
+    }
+
+    const distToPlayer = root.position.distanceTo(p.root.position);
+    
+    if (distToPlayer > 12.0) {
+      const behind = new THREE.Vector3(Math.sin(p.root.rotation.y + 0.65), 0, Math.cos(p.root.rotation.y + 0.65));
+      const tpTarget = p.root.position.clone().addScaledVector(behind, 1.85);
+      root.position.copy(tpTarget);
+      root.userData['targetPos'] = tpTarget.clone();
+      root.userData['state'] = 'following';
+      root.userData['isMoving'] = false;
+    }
+
+    const isPlayerMoving = p.currentAnimation !== 'idle';
+
+    let target = root.userData['targetPos'] as THREE.Vector3;
+    let state = root.userData['state'] as string;
+    let idleTimer = root.userData['idleTimer'] as number;
+
+    if (distToPlayer > 5.5 || isPlayerMoving) {
+      state = 'following';
+      idleTimer = 0;
+    } else if (state === 'following' && distToPlayer <= 2.2) {
+      state = 'idle';
+      idleTimer = 1.5 + Math.random() * 2.0;
+    }
+
+    let speed = 0;
+
+    if (state === 'following') {
+      const behind = new THREE.Vector3(
+        Math.sin(p.root.rotation.y + 0.65),
+        0,
+        Math.cos(p.root.rotation.y + 0.65)
+      );
+      target = p.root.position.clone().addScaledVector(behind, 1.85);
+      speed = p.currentAnimation === 'running' ? 7.6 : 4.4;
+    } else if (state === 'idle') {
+      speed = 0;
+      target = root.position.clone();
+      
+      if (idleTimer > 0) {
+        idleTimer -= delta;
+      } else {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 1.0 + Math.random() * 1.8;
+        target = p.root.position.clone().add(new THREE.Vector3(
+          Math.cos(angle) * radius,
+          0,
+          Math.sin(angle) * radius
+        ));
+        state = 'wandering';
+      }
+    } else if (state === 'wandering') {
+      speed = 1.8;
+      
+      const distanceToWanderTarget = root.position.distanceTo(target);
+      if (distanceToWanderTarget < 0.25 || distToPlayer > 3.4) {
+        state = 'idle';
+        idleTimer = 2.5 + Math.random() * 3.5;
+        target = root.position.clone();
+      }
+    }
+
+    root.userData['state'] = state;
+    root.userData['targetPos'] = target;
+    root.userData['idleTimer'] = idleTimer;
+
+    const distToTarget = root.position.distanceTo(target);
+    let isMoving = root.userData['isMoving'] || false;
+    if (distToTarget > 0.55) {
+      isMoving = true;
+    }
+    if (distToTarget < 0.18) {
+      isMoving = false;
+    }
+    root.userData['isMoving'] = isMoving;
+
+    if (isMoving && speed > 0) {
+      const moveDir = target.clone().sub(root.position);
+      moveDir.y = 0;
+      moveDir.normalize();
+
+      const targetRotation = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
+      
+      let diff = targetRotation - root.rotation.y;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      root.rotation.y += diff * (1 - Math.pow(0.0001, delta));
+
+      const step = speed * delta;
+      if (distToTarget > step) {
+        root.position.addScaledVector(moveDir, step);
+      } else {
+        root.position.copy(target);
+        isMoving = false;
+        root.userData['isMoving'] = false;
+      }
+
+      this.setNpcAnimation(p.pikachu!, speed > 4.8 ? ['run', 'running', 'walk', 'walking'] : ['walk', 'walking']);
+    } else {
+      const lookDir = p.root.position.clone().sub(root.position);
+      lookDir.y = 0;
+      if (lookDir.lengthSq() > 0.05) {
+        lookDir.normalize();
+        const targetRotation = Math.atan2(lookDir.x, lookDir.z) + Math.PI;
+        let diff = targetRotation - root.rotation.y;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        root.rotation.y += diff * (1 - Math.pow(0.002, delta));
+      }
+      this.setNpcAnimation(p.pikachu!, ['idle']);
     }
   }
 
