@@ -527,7 +527,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
   private initWallpaper(): void {
     const canvas = this.wallpaperCanvas.nativeElement;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
 
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0x91d7ff, 0.026);
@@ -758,12 +758,7 @@ export class LoginComponent implements AfterViewInit, OnDestroy {
 
     if (this.particleSystem) {
       this.particleSystem.rotation.y = t * 0.015;
-      const pos = this.particleSystem.geometry.getAttribute('position') as THREE.BufferAttribute;
-      for (let i = 0; i < pos.count; i++) {
-        const z = pos.getZ(i) + 0.025;
-        pos.setZ(i, z > 4 ? -11 : z);
-      }
-      pos.needsUpdate = true;
+      this.particleSystem.position.z = (t * 1.5) % 14;
     }
 
     this.lightningBolts.forEach((bolt) => {
