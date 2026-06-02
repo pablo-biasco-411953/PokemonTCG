@@ -8,8 +8,9 @@
 
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 
-    *ngFor="let other of otherPlayersList" 
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
     class="player-nametag" 
+    [attr.data-player-tag]="other.username"
     [style.left.%]="other.screenX" 
     [style.top.%]="other.screenY"
     [class.visible]="other.screenX !== undefined && other.screenY !== undefined"
@@ -24,8 +25,9 @@
   <!-- SPEECH BUBBLES FOR MULTIPLAYER -->
   <!-- Speech bubbles for other players -->
   <div
-    *ngFor="let other of otherPlayersList"
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername"
     class="player-speech-bubble"
+    [attr.data-player-bubble]="other.username"
     [style.left.%]="other.screenX"
     [style.top.%]="other.screenY"
     [class.visible]="other.screenX !== undefined && other.screenY !== undefined && other.chatBubble"
@@ -316,7 +318,7 @@
             <span>Girar Vista (Rotación 3D)</span>
             <strong>{{ previewRotationDegrees }}°</strong>
           </div>
-          <input 
+          <input
             type="range" 
             min="0" 
             max="6.283" 
@@ -742,25 +744,48 @@
       <div class="trade-collection-area">
         <div class="collection-filter-bar">
           <h3>Tu Colección</h3>
+          <div class="collection-title-block">
+            <h3>Tu ColecciÃ³n</h3>
+            <small>{{ tradeCollectionFiltrada.length }}/{{ userTradeCollection.length }} cartas</small>
+          </div>
           <input
             type="text"
-            placeholder="Filtrar por nombre..."
+            placeholder="Nombre, ID o ataque..."
             [(ngModel)]="tradeCollectionSearchText"
             (input)="filtrarColeccionTrade()"
           >
           <select [(ngModel)]="tradeCollectionFilterRarity" (change)="filtrarColeccionTrade()">
             <option value="">Todas las rarezas</option>
-            <option value="Common">Comunes</option>
-            <option value="Uncommon">Poco Comunes</option>
-            <option value="Rare">Raras</option>
-            <option value="Secret Rare">Secretas Raras</option>
+            <option *ngFor="let rarity of tradeCollectionRarities" [value]="rarity">{{ rarity }}</option>
           </select>
+          <select [(ngModel)]="tradeCollectionFilterType" (change)="filtrarColeccionTrade()">
+            <option value="">Todos los tipos</option>
+            <option *ngFor="let type of tradeCollectionTypes" [value]="type">{{ type }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSupertype" (change)="filtrarColeccionTrade()">
+            <option value="">Todas las clases</option>
+            <option *ngFor="let supertype of tradeCollectionSupertypes" [value]="supertype">{{ supertype }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSubtype" (change)="filtrarColeccionTrade()">
+            <option value="">Todos los subtipos</option>
+            <option *ngFor="let subtype of tradeCollectionSubtypes" [value]="subtype">{{ subtype }}</option>
+          </select>
+          <button type="button" class="btn-clear-trade-filters" (click)="limpiarFiltrosTrade()">Limpiar</button>
         </div>
 
-        <div class="trade-collection-grid">
+        <div class="trade-collection-state" *ngIf="tradeCollectionLoading">
+          <span class="trade-loader"></span>
+          Sincronizando colecciÃ³n...
+        </div>
+        <div class="trade-collection-state error" *ngIf="!tradeCollectionLoading && tradeCollectionError">
+          {{ tradeCollectionError }}
+          <button type="button" (click)="precargarColeccionTrade(true)">Reintentar</button>
+        </div>
+
+        <div class="trade-collection-grid" *ngIf="!tradeCollectionLoading && !tradeCollectionError">
           <div
             class="trade-collection-item"
-            *ngFor="let card of tradeCollectionFiltrada"
+            *ngFor="let card of tradeCollectionFiltrada; trackBy: trackCardById"
             (click)="addCardToTrade(card)"
             [class.already-in-trade]="isCardInTrade(card)"
           >
@@ -768,6 +793,7 @@
             <div class="card-overlay-info">
               <strong>{{ card.nombre }}</strong>
               <small>{{ card.rarity || 'Common' }}</small>
+              <small>{{ card.tipo || card.supertype || 'Card' }}</small>
             </div>
           </div>
           <div class="collection-empty" *ngIf="tradeCollectionFiltrada.length === 0">
