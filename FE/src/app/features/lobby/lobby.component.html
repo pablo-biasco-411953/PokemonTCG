@@ -108,6 +108,11 @@
       <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
     </button>
 
+    <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
+      <small>GRÁFICOS</small>
+      <strong>{{ graphicsQualityLabel }}</strong>
+    </button>
+
     <div class="resource-chip">
       <small>{{ 'lobby.openPack' | t }}</small>
       <strong>{{ sobresDisponibles }}</strong>

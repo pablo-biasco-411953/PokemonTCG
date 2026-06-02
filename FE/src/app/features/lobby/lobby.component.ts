@@ -100,6 +100,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
   dayPhaseLabel = 'Mañana';
   currentInteraction: HubSpot | null = null;
+  graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+
+  get graphicsQualityLabel(): string {
+    if (this.graphicsQuality === 'low') return 'BAJO 🔴';
+    if (this.graphicsQuality === 'medium') return 'MEDIO 🟡';
+    return 'ALTO 🟢';
+  }
 
   // Propiedades para el modal de personalización y Onboarding
   customizationModalOpen = false;
@@ -344,6 +351,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Recupera al jugador guardado y carga su estado inicial.
   ngOnInit(): void {
+    const storedQuality = localStorage.getItem('ptcg_graphics_quality') as 'low' | 'medium' | 'high' | null;
+    if (storedQuality) {
+      this.graphicsQuality = storedQuality;
+    } else {
+      this.graphicsQuality = this.detectGraphicsQuality();
+      localStorage.setItem('ptcg_graphics_quality', this.graphicsQuality);
+    }
+
     try {
       const data = localStorage.getItem('jugador');
       if (data) {
@@ -369,6 +384,82 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       console.error('Error parseando datos del jugador:', error);
       this.router.navigate(['/login']);
     }
+  }
+
+  private detectGraphicsQuality(): 'low' | 'medium' | 'high' {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl') as any;
+      if (!gl) return 'medium';
+      
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (!debugInfo) return 'medium';
+      
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '';
+      console.log('Detected GL_RENDERER:', renderer);
+      const rendererLower = renderer.toLowerCase();
+      
+      if (
+        rendererLower.includes('intel') ||
+        rendererLower.includes('uhd') ||
+        rendererLower.includes('hd graphics') ||
+        rendererLower.includes('mobile') ||
+        rendererLower.includes('microsoft basic') ||
+        rendererLower.includes('swiftshader') ||
+        rendererLower.includes('software') ||
+        rendererLower.includes('llvmpipe')
+      ) {
+        return 'low';
+      }
+      if (
+        rendererLower.includes('nvidia') ||
+        rendererLower.includes('geforce') ||
+        rendererLower.includes('rtx') ||
+        rendererLower.includes('gtx') ||
+        rendererLower.includes('radeon') ||
+        rendererLower.includes('amd') ||
+        rendererLower.includes('apple gpu') ||
+        rendererLower.includes('m1') ||
+        rendererLower.includes('m2') ||
+        rendererLower.includes('m3')
+      ) {
+        return 'high';
+      }
+      return 'medium';
+    } catch (e) {
+      console.warn('Error detecting WebGL renderer:', e);
+      return 'medium';
+    }
+  }
+
+  setGraphicsQuality(quality: 'low' | 'medium' | 'high', updateRenderer: boolean = true) {
+    this.graphicsQuality = quality;
+    localStorage.setItem('ptcg_graphics_quality', quality);
+    if (updateRenderer) {
+      this.updateRendererPixelRatio();
+      // Force update shadow state immediately
+      if (this.scene && this.sunLight && this.moonLight) {
+        const elapsed = this.clock.elapsedTime;
+        this.updateDayNightCycle(elapsed);
+      }
+      this.cdr.detectChanges();
+    }
+  }
+
+  cycleGraphicsQuality() {
+    const qualities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+    const nextIndex = (qualities.indexOf(this.graphicsQuality) + 1) % qualities.length;
+    this.setGraphicsQuality(qualities[nextIndex]);
+  }
+
+  updateRendererPixelRatio() {
+    if (!this.renderer) return;
+    let maxDPR = 1.35;
+    if (this.graphicsQuality === 'low') maxDPR = 1.0;
+    else if (this.graphicsQuality === 'medium') maxDPR = 1.25;
+    else if (this.graphicsQuality === 'high') maxDPR = 1.6;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDPR));
+    this.resizeHub();
   }
 
   // Intenta reproducir el video decorativo apenas exista en el DOM.
@@ -655,7 +746,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           alpha: true,
           antialias: true
         });
-        this.previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
         this.previewRenderer.setSize(width, height, false);
         this.previewRenderer.shadowMap.enabled = true;
 
@@ -1222,7 +1313,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private initHubWorld() {
     const canvas = this.hubCanvas.nativeElement;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+    this.updateRendererPixelRatio();
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(0x030712);
@@ -1291,17 +1382,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.sunLight = new THREE.DirectionalLight(0xfff4c0, 3.4);
     this.sunLight.castShadow = true;
-    this.sunLight.shadow.mapSize.set(2048, 2048);
+    this.sunLight.shadow.mapSize.set(1024, 1024);
     this.sunLight.shadow.camera.near = 1;
     this.sunLight.shadow.camera.far = 95;
     this.sunLight.shadow.camera.left = -42;
     this.sunLight.shadow.camera.right = 42;
     this.sunLight.shadow.camera.top = 42;
     this.sunLight.shadow.camera.bottom = -42;
+    this.sunLight.shadow.bias = -0.0005;
     this.scene.add(this.sunLight);
 
     this.moonLight = new THREE.DirectionalLight(0xc7d2fe, 0.25);
     this.moonLight.castShadow = true;
+    this.moonLight.shadow.bias = -0.0005;
     this.moonLight.position.set(-20, 18, 18);
     this.scene.add(this.moonLight);
 
@@ -1420,6 +1513,18 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
     
+    // Optimización de sombras según la calidad gráfica activa
+    const sunVisible = sunHeight > 0.03;
+    if (this.graphicsQuality === 'low') {
+      this.sunLight.castShadow = false;
+      this.moonLight.castShadow = false;
+    } else if (this.graphicsQuality === 'medium') {
+      this.sunLight.castShadow = sunVisible;
+      this.moonLight.castShadow = !sunVisible;
+    } else {
+      this.sunLight.castShadow = true;
+      this.moonLight.castShadow = true;
+    }
     // 1. Posicionamiento original de luces direccionales para mantener dirección de sombras perfecta
     const sunX = Math.cos(orbit) * 58;
     const sunY = Math.max(-12, sunHeight * 42);
@@ -1784,7 +1889,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           // Alinear el bottom del modelo ya rotado para evitar errores flotantes o de clipping
           this.alignModelBottom(model, y + 0.08);
           this.scene!.add(model);
-        });
+        }, { castShadow: false, receiveShadow: false });
       }
 
       // 7 productos en la estantería derecha (recta, inclinada hacia abajo 0.08 rad)
@@ -1811,7 +1916,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           // Alinear el bottom del modelo ya rotado
           this.alignModelBottom(model, y + 0.08);
           this.scene!.add(model);
-        });
+        }, { castShadow: false, receiveShadow: false });
       }
     });
 
@@ -1828,7 +1933,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.rotation.y = 0; // facing front! (No Math.PI!)
         this.alignModelBottom(model, 0.4);
         this.scene!.add(model);
-      });
+      }, { castShadow: false });
     });
 
     // Luz focalizada sobre la máquina expendedora de Coca-Cola en el centro del fondo
@@ -1917,7 +2022,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.rotation.y = Math.random() * Math.PI * 2;
         
         this.scene!.add(model);
-      });
+      }, { castShadow: false });
     });
   }
 
@@ -2100,7 +2205,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       model.rotation.set(0.2, 0.65, 0); // Apuntando al cielo
       
       this.scene!.add(model);
-    });
+    }, { castShadow: false });
 
     for (let z = 16; z > -35; z -= 9) {
       this.addLampPost(-6.2, z);
@@ -2174,7 +2279,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(light);
       
       this.lampLights.push(light);
-    });
+    }, { castShadow: false });
   }
 
   private createAmbientPokemon() {
@@ -2190,7 +2295,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void) {
+  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void, options: { castShadow?: boolean; receiveShadow?: boolean } = { castShadow: true, receiveShadow: true }) {
     const loader = new GLTFLoader(this.hubLoadingManager);
     loader.load(
       path,
@@ -2214,8 +2319,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
+            mesh.castShadow = options.castShadow !== false;
+            mesh.receiveShadow = options.receiveShadow !== false;
           }
         });
         onLoad(model, gltf.animations);
