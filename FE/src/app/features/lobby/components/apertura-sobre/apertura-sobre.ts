@@ -124,7 +124,7 @@ private estaCerrandoSobre: boolean = false; // Flag de seguridad
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.35));
     this.rendererContainer.nativeElement.appendChild(this.renderer.domElement);
 
     const pmrem = new THREE.PMREMGenerator(this.renderer);
