@@ -71,6 +71,7 @@ interface CampusNpc {
 })
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('previewCanvas') previewCanvas?: ElementRef<HTMLCanvasElement>;
 
   // Estado principal del lobby.
   jugador: Jugador | null = null;
@@ -95,12 +96,85 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   kioskShopOpen = false;
   vendorCameraFocus = false;
   characterMenuOpen = false;
-  selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda';
+  selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
   dayPhaseLabel = 'Mañana';
   currentInteraction: HubSpot | null = null;
+
+  // Propiedades para el modal de personalización y Onboarding
+  customizationModalOpen = false;
+  showFirstTimeSetup = false;
+  
+  customizerGender: 'pibe' | 'piba' = 'piba';
+  customizerSelectedId = 'hilda-sygna';
+  customizerHeight = 1.0;
+  customizerSkinColor = '#ffe0bd';
+  customizerHairColor = '#5c4033';
+  customizerEyeColor = '#2563eb';
+  customizerPikachu = true;
+  customizerRotationY = 0;
+
+  // Variables para la escena de previsualización 3D secundaria aislada en el modal
+  private previewRenderer?: THREE.WebGLRenderer;
+  private previewScene?: THREE.Scene;
+  private previewCamera?: THREE.PerspectiveCamera;
+  private previewModelGroup = new THREE.Group();
+  private previewMixer?: THREE.AnimationMixer;
+  private previewActions = new Map<string, THREE.AnimationAction>();
+  private activePreviewAction?: THREE.AnimationAction;
+  private previewMixers: THREE.AnimationMixer[] = [];
+
+  // Swatches predefinidos premium de rasgos de entrenador
+  readonly skinColors = [
+    { name: 'Alabastro', value: '#fff1e0' },
+    { name: 'Claro Nórdico', value: '#ffe0bd' },
+    { name: 'Durazno Cálido', value: '#ffcd94' },
+    { name: 'Trigo', value: '#f0c294' },
+    { name: 'Bronceado UTN', value: '#e0ac69' },
+    { name: 'Oliva Dorado', value: '#c68642' },
+    { name: 'Canela', value: '#b0733a' },
+    { name: 'Marrón Oscuro', value: '#8d5524' },
+    { name: 'Ébano Profundo', value: '#5c3412' },
+    { name: 'Gris Androide', value: '#d1d5db' }
+  ];
+
+  readonly hairColors = [
+    { name: 'Castaño Oscuro', value: '#3d2314' },
+    { name: 'Chocolate', value: '#5c4033' },
+    { name: 'Castaño Claro', value: '#a87c55' },
+    { name: 'Negro Azabache', value: '#121212' },
+    { name: 'Rubio Platino', value: '#fef08a' },
+    { name: 'Rubio Dorado', value: '#f59e0b' },
+    { name: 'Pelirrojo Fuego', value: '#ea580c' },
+    { name: 'Naranja Neón', value: '#ff7c3b' },
+    { name: 'Rosa Sakura', value: '#ec4899' },
+    { name: 'Violeta Eléctrico', value: '#8b5cf6' },
+    { name: 'Azul UTN', value: '#3b82f6' },
+    { name: 'Celeste Pastel', value: '#60a5fa' },
+    { name: 'Verde Esmeralda', value: '#10b981' },
+    { name: 'Blanco Sabio', value: '#f8fafc' }
+  ];
+
+  readonly eyeColors = [
+    { name: 'Azul Eléctrico', value: '#2563eb' },
+    { name: 'Celeste Cristal', value: '#38bdf8' },
+    { name: 'Verde Esmeralda', value: '#16a34a' },
+    { name: 'Verde Menta', value: '#34d399' },
+    { name: 'Marrón Avellana', value: '#854d0e' },
+    { name: 'Rojo Rubí', value: '#dc2626' },
+    { name: 'Violeta Místico', value: '#7c3aed' },
+    { name: 'Dorado Pokémon', value: '#facc15' }
+  ];
+
+  get filteredCharacterOptions(): CharacterOption[] {
+    if (this.customizerGender === 'pibe') {
+      return this.characterOptions.filter(o => o.id === 'ash' || o.id === 'robot');
+    } else {
+      return this.characterOptions.filter(o => o.id === 'hilda-sygna' || o.id === 'lillie');
+    }
+  }
+
   readonly characterOptions: CharacterOption[] = [
-    { id: 'hilda', label: 'Hilda Regular', path: '/models/characters/hilda_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
     { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models/characters/hilda_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
     { id: 'lillie', label: 'Lillie', path: '/models/characters/lillie__anniversary_50.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
     { id: 'ash', label: 'Ash', path: '/models/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, rotationY: Math.PI, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'], runHints: ['walking'] },
@@ -206,6 +280,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
+
+        // Verificación de Onboarding por primera vez
+        const setupCompleted = localStorage.getItem('firstTimeSetup');
+        if (!setupCompleted) {
+          this.showFirstTimeSetup = true;
+          this.customizerGender = 'piba'; // Piba por defecto
+          this.customizerSelectedId = 'hilda-sygna';
+          this.customizerHeight = 1.0;
+          this.customizerSkinColor = '#ffe0bd';
+          this.customizerHairColor = '#5c4033';
+          this.customizerEyeColor = '#2563eb';
+          this.customizerPikachu = true;
+        }
       } else {
         this.router.navigate(['/login']);
       }
@@ -220,6 +307,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ngZone.runOutsideAngular(() => {
       this.initHubWorld();
       this.animateHub();
+      
+      if (this.showFirstTimeSetup) {
+        this.initPreviewScene();
+      }
     });
   }
 
@@ -404,6 +495,493 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get selectedCharacterLabel(): string {
     return this.characterOptions.find((option) => option.id === this.selectedCharacterId)?.label || 'Trainer';
+  }
+
+  openCustomizationModal() {
+    this.customizerGender = (this.selectedCharacterId === 'ash' || this.selectedCharacterId === 'robot') ? 'pibe' : 'piba';
+    this.customizerSelectedId = this.selectedCharacterId;
+    this.customizerHeight = parseFloat(localStorage.getItem('lobbyHeight') || '1.0');
+    this.customizerSkinColor = localStorage.getItem('lobbySkinColor') || '#ffe0bd';
+    this.customizerHairColor = localStorage.getItem('lobbyHairColor') || '#5c4033';
+    this.customizerEyeColor = localStorage.getItem('lobbyEyeColor') || '#2563eb';
+    this.customizerPikachu = this.pikachuEnabled;
+    this.customizerRotationY = 0;
+
+    this.customizationModalOpen = true;
+    this.characterMenuOpen = false;
+    this.cdr.detectChanges();
+
+    // Inicializar el escenario 3D de previsualización en el modal
+    this.initPreviewScene();
+  }
+
+  changeCustomizerGender(gender: 'pibe' | 'piba') {
+    this.customizerGender = gender;
+    this.customizerSelectedId = gender === 'pibe' ? 'ash' : 'hilda-sygna';
+    
+    // Vista previa instantánea al cambiar de género en el 3D del modal
+    this.onCustomizerModelSelect(this.customizerSelectedId);
+    this.cdr.detectChanges();
+  }
+
+  onCustomizerModelSelect(id: string) {
+    this.customizerSelectedId = id;
+    
+    this.ngZone.runOutsideAngular(() => {
+      this.loadPreviewModel();
+      this.loadPreviewPikachu();
+    });
+  }
+
+  applyLivePreviewCustomizations() {
+    const model = this.previewModelGroup.getObjectByName('PreviewCharacterModel') as THREE.Group;
+    if (model) {
+      this.applyPreviewCustomizationsDirect(model);
+    }
+    
+    // Actualizar el Pikachu del preview si se des/activó en vivo
+    this.loadPreviewPikachu();
+
+    // Reproducir pose expresiva en el lienzo de vista previa
+    this.playPreviewReactAnimation();
+  }
+
+  // ================= SCENE DE PREVISUALIZACIÓN 3D AISLADA (MODAL) =================
+  private initPreviewScene() {
+    this.ngZone.runOutsideAngular(() => {
+      let attempts = 0;
+      const tryInit = () => {
+        attempts++;
+        const canvas = document.querySelector('.customizer-preview-canvas') as HTMLCanvasElement;
+        if (!canvas) {
+          if (attempts < 8) {
+            setTimeout(tryInit, 100);
+          } else {
+            console.error('Failed to locate preview canvas in customization modal after multiple attempts.');
+          }
+          return;
+        }
+
+        const width = canvas.clientWidth || 220;
+        const height = canvas.clientHeight || 300;
+        console.log(`Initializing preview scene on canvas: ${width}x${height}`);
+
+        // Dispose existing preview renderer if any to prevent leaks
+        if (this.previewRenderer) {
+          this.destroyPreviewScene();
+        }
+
+        this.previewScene = new THREE.Scene();
+        this.previewScene.background = null; // Fondo transparente para combinar con glassmorphism
+
+        this.previewCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 20);
+        this.previewCamera.position.set(0, 1.0, 2.0);
+        this.previewCamera.lookAt(0, 0.82, 0);
+
+        this.previewRenderer = new THREE.WebGLRenderer({
+          canvas: canvas,
+          alpha: true,
+          antialias: true
+        });
+        this.previewRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        this.previewRenderer.setSize(width, height, false);
+        this.previewRenderer.shadowMap.enabled = true;
+
+        // Iluminación dedicada del preview
+        const ambient = new THREE.AmbientLight(0xffffff, 1.6);
+        this.previewScene.add(ambient);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 2.6);
+        dirLight.position.set(1.5, 3.5, 2.5);
+        dirLight.castShadow = true;
+        this.previewScene.add(dirLight);
+
+        // Añadir el grupo de modelo
+        this.previewModelGroup = new THREE.Group();
+        this.previewScene.add(this.previewModelGroup);
+
+        // Cargar los elementos iniciales
+        this.loadPreviewModel();
+        this.loadPreviewPikachu();
+
+        // Iniciar bucle de animación
+        this.animatePreview();
+      };
+
+      setTimeout(tryInit, 100);
+    });
+  }
+
+  private loadPreviewModel() {
+    if (!this.previewScene) return;
+
+    this.previewModelGroup.clear();
+    this.previewMixer?.stopAllAction();
+    this.previewMixer = undefined;
+    this.previewActions.clear();
+    this.activePreviewAction = undefined;
+
+    // Marcador de carga procedimental
+    const bodyGeom = new THREE.CapsuleGeometry(0.18, 0.44, 6, 12);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6 });
+    const fallbackMesh = new THREE.Mesh(bodyGeom, bodyMat);
+    fallbackMesh.position.y = 0.44;
+    this.previewModelGroup.add(fallbackMesh);
+
+    const option = this.characterOptions.find((o) => o.id === this.customizerSelectedId) || this.characterOptions[0];
+    const loader = new GLTFLoader();
+    loader.load(
+      option.path,
+      (gltf) => {
+        this.previewModelGroup.clear();
+
+        const model = gltf.scene;
+        model.name = 'PreviewCharacterModel';
+        
+        model.scale.setScalar(option.scale);
+        model.position.set(0, option.yOffset, 0);
+        model.rotation.y = option.rotationY;
+        
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+          }
+        });
+
+        // Aplicar rasgos elegidos en vivo
+        this.applyPreviewCustomizationsDirect(model);
+
+        this.previewModelGroup.add(model);
+        this.previewMixer = new THREE.AnimationMixer(model);
+
+        gltf.animations.forEach((clip) => {
+          const action = this.previewMixer!.clipAction(clip);
+          this.previewActions.set(clip.name.toLowerCase(), action);
+        });
+
+        // Pose idle
+        const candidates = option.idleHints ?? ['idle', 'standing'];
+        let idleAction: THREE.AnimationAction | undefined;
+        for (const name of candidates) {
+          const act = this.previewActions.get(name.toLowerCase());
+          if (act) {
+            idleAction = act;
+            break;
+          }
+        }
+        if (idleAction) {
+          idleAction.play();
+          this.activePreviewAction = idleAction;
+        }
+      },
+      undefined,
+      (err) => console.warn('Error loading GLB in preview', err)
+    );
+  }
+
+  private applyPreviewCustomizationsDirect(model: THREE.Group) {
+    const skinHex = this.customizerSkinColor;
+    const hairHex = this.customizerHairColor;
+    const eyeHex = this.customizerEyeColor;
+    const heightFactor = this.customizerHeight;
+
+    const option = this.characterOptions.find(o => o.id === this.customizerSelectedId) || this.characterOptions[0];
+    
+    // Escala combinada
+    model.scale.setScalar(option.scale * heightFactor);
+
+    model.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat: any) => mat.clone());
+          } else {
+            child.material = child.material.clone();
+          }
+        }
+
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((mat: any) => {
+          const name = (mat.name || '').toLowerCase();
+          
+          if (skinHex && (
+            name.includes('skin') || 
+            name.includes('piel') || 
+            name.includes('face') || 
+            name.includes('head') || 
+            name.includes('cara') || 
+            name.includes('kao') ||
+            name.includes('hada')
+          )) {
+            mat.color.set(skinHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(skinHex).multiplyScalar(0.06);
+            }
+          }
+
+          if (hairHex && (
+            name.includes('hair') || 
+            name.includes('pelo') || 
+            name.includes('cabello') ||
+            name.includes('kami') ||
+            name.includes('toubu')
+          )) {
+            mat.color.set(hairHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(hairHex).multiplyScalar(0.06);
+            }
+          }
+
+          if (eyeHex && (
+            name.includes('eye') || 
+            name.includes('ojo') ||
+            name.includes('iris') ||
+            name.includes('pupil') ||
+            name.includes('hitomi') ||
+            name.includes('eyeball') ||
+            name.includes('gaigan') ||
+            name.includes('mayu') ||
+            name.includes('matsuge')
+          )) {
+            mat.color.set(eyeHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(eyeHex).multiplyScalar(0.06);
+            }
+          }
+        });
+      }
+    });
+  }
+
+  private loadPreviewPikachu() {
+    if (!this.previewScene) return;
+
+    const existing = this.previewScene.getObjectByName('PreviewPikachu');
+    if (existing) this.previewScene.remove(existing);
+
+    if (!this.customizerPikachu) return;
+
+    const loader = new GLTFLoader();
+    loader.load(
+      '/models/characters/pikachu.glb',
+      (gltf) => {
+        const model = gltf.scene;
+        model.name = 'PreviewPikachu';
+        
+        model.scale.setScalar(0.016);
+        model.position.set(-0.35, 0, 0.15);
+        model.rotation.y = Math.PI / 6;
+        
+        model.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            child.castShadow = true;
+          }
+        });
+
+        this.previewScene?.add(model);
+
+        const mixer = new THREE.AnimationMixer(model);
+        if (gltf.animations.length > 0) {
+          mixer.clipAction(gltf.animations[0]).play();
+        }
+        this.previewMixers.push(mixer);
+      }
+    );
+  }
+
+  private animatePreview() {
+    if (!this.previewRenderer || !this.previewScene || !this.previewCamera) return;
+
+    if (!this.showFirstTimeSetup && !this.customizationModalOpen) {
+      this.destroyPreviewScene();
+      return;
+    }
+
+    requestAnimationFrame(() => this.animatePreview());
+
+    const delta = 0.016;
+    this.previewMixer?.update(delta);
+    this.previewMixers.forEach((m) => m.update(delta));
+
+    this.previewRenderer.render(this.previewScene, this.previewCamera);
+  }
+
+  private destroyPreviewScene() {
+    if (this.previewReactTimeout) {
+      clearTimeout(this.previewReactTimeout);
+      this.previewReactTimeout = undefined;
+    }
+    this.previewMixer?.stopAllAction();
+    this.previewMixer = undefined;
+    this.previewMixers.forEach((m) => m.stopAllAction());
+    this.previewMixers = [];
+    this.previewRenderer?.dispose();
+    this.previewRenderer = undefined;
+    this.previewScene = undefined;
+    this.previewCamera = undefined;
+  }
+
+  private previewReactTimeout?: any;
+
+  playPreviewReactAnimation() {
+    if (!this.previewMixer || this.previewActions.size === 0) return;
+
+    const reactKeywords = ['pose', 'talking', 'speak', 'greeting', 'yes', 'happy', 'wave', 'jump', 'dance', 'interact', 'look'];
+    let reactAction: THREE.AnimationAction | undefined;
+
+    for (const kw of reactKeywords) {
+      for (const [name, action] of this.previewActions.entries()) {
+        if (name.includes(kw) && !name.includes('walk') && !name.includes('run')) {
+          reactAction = action;
+          break;
+        }
+      }
+      if (reactAction) break;
+    }
+
+    if (!reactAction) {
+      for (const [name, action] of this.previewActions.entries()) {
+        if (!name.includes('walk') && !name.includes('run') && name !== 'idle') {
+          reactAction = action;
+          break;
+        }
+      }
+    }
+
+    if (reactAction) {
+      // Limpiar cualquier timeout previo para evitar cruce de animaciones superpuestas
+      if (this.previewReactTimeout) {
+        clearTimeout(this.previewReactTimeout);
+        this.previewReactTimeout = undefined;
+      }
+
+      // Si hay otra animación activa que no es esta, desvanecerla
+      if (this.activePreviewAction && this.activePreviewAction !== reactAction) {
+        this.activePreviewAction.fadeOut(0.12);
+      }
+
+      // Forzar reinicio y reproducción inmediata de la animación gestual
+      reactAction.reset();
+      reactAction.setLoop(THREE.LoopOnce, 1);
+      reactAction.clampWhenFinished = true;
+      reactAction.fadeIn(0.08).play();
+      this.activePreviewAction = reactAction;
+
+      const duration = reactAction.getClip().duration;
+      // Programar la transición suave de regreso al estado Idle
+      this.previewReactTimeout = setTimeout(() => {
+        if (this.showFirstTimeSetup || this.customizationModalOpen) {
+          const option = this.characterOptions.find((o) => o.id === this.customizerSelectedId) || this.characterOptions[0];
+          const candidates = option.idleHints ?? ['idle', 'standing'];
+          let idleAction: THREE.AnimationAction | undefined;
+          for (const name of candidates) {
+            const act = this.previewActions.get(name.toLowerCase());
+            if (act) {
+              idleAction = act;
+              break;
+            }
+          }
+          if (idleAction && this.activePreviewAction === reactAction) {
+            idleAction.reset().fadeIn(0.18).play();
+            reactAction.fadeOut(0.18);
+            this.activePreviewAction = idleAction;
+          }
+        }
+        this.previewReactTimeout = undefined;
+      }, (duration * 1000) - 100);
+    }
+  }
+
+  get previewRotationDegrees(): number {
+    const deg = Math.round((this.customizerRotationY / (Math.PI * 2)) * 360) % 360;
+    return deg < 0 ? deg + 360 : deg;
+  }
+
+  onRotationSliderChange() {
+    if (this.previewModelGroup) {
+      this.previewModelGroup.rotation.y = this.customizerRotationY;
+    }
+  }
+
+  private isDraggingPreview = false;
+  private lastPreviewPointerX = 0;
+
+  onPreviewPointerDown(event: PointerEvent) {
+    if (event.button === 0 || event.pointerType === 'touch') {
+      this.isDraggingPreview = true;
+      this.lastPreviewPointerX = event.clientX;
+      const canvas = event.currentTarget as HTMLCanvasElement;
+      try {
+        canvas.setPointerCapture(event.pointerId);
+      } catch (e) {}
+    }
+  }
+
+  onPreviewPointerMove(event: PointerEvent) {
+    if (this.isDraggingPreview) {
+      const dx = event.clientX - this.lastPreviewPointerX;
+      this.lastPreviewPointerX = event.clientX;
+      
+      this.customizerRotationY = (this.customizerRotationY - dx * 0.012) % (Math.PI * 2);
+      if (this.customizerRotationY < 0) {
+        this.customizerRotationY += Math.PI * 2;
+      }
+      
+      this.onRotationSliderChange();
+      this.cdr.detectChanges();
+    }
+  }
+
+  onPreviewPointerUp(event: PointerEvent) {
+    if (this.isDraggingPreview) {
+      this.isDraggingPreview = false;
+      const canvas = event.currentTarget as HTMLCanvasElement;
+      try {
+        canvas.releasePointerCapture(event.pointerId);
+      } catch (e) {}
+    }
+  }
+
+  saveCustomizations() {
+    // Guardar cambios finales en localStorage
+    localStorage.setItem('lobbyCharacter', this.customizerSelectedId);
+    localStorage.setItem('lobbySkinColor', this.customizerSkinColor);
+    localStorage.setItem('lobbyHairColor', this.customizerHairColor);
+    localStorage.setItem('lobbyEyeColor', this.customizerEyeColor);
+    localStorage.setItem('lobbyHeight', this.customizerHeight.toString());
+    localStorage.setItem('pikachuCompanion', this.customizerPikachu ? 'true' : 'false');
+    localStorage.setItem('firstTimeSetup', 'completed');
+
+    this.selectedCharacterId = this.customizerSelectedId;
+    this.pikachuEnabled = this.customizerPikachu;
+
+    // Sincronizar Pikachu en el escenario principal del lobby
+    if (this.pikachuEnabled) {
+      if (!this.pikachu) {
+        this.ngZone.runOutsideAngular(() => this.createPikachuCompanion());
+      }
+    } else {
+      if (this.pikachu) {
+        this.scene?.remove(this.pikachu.root);
+        this.pikachu.mixer?.stopAllAction();
+        this.pikachu = undefined;
+      }
+    }
+
+    // Recargar modelo principal del jugador en el lobby
+    this.ngZone.runOutsideAngular(() => this.loadAnimatedPlayerAsset());
+
+    this.customizationModalOpen = false;
+    this.showFirstTimeSetup = false;
+    this.destroyPreviewScene();
+    this.cdr.detectChanges();
+  }
+
+  cancelCustomizations() {
+    this.customizationModalOpen = false;
+    this.destroyPreviewScene();
+    this.cdr.detectChanges();
   }
 
   selectCharacter(option: CharacterOption) {
@@ -655,21 +1233,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.moonLight.position.set(-20, 18, 18);
     this.scene.add(this.moonLight);
 
-    const sunGeometry = new THREE.SphereGeometry(2.4, 32, 24);
+    const sunGeometry = new THREE.SphereGeometry(9.5, 32, 24); // Esfera solar majestuosa
     const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xfff2a3 });
     this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
+    this.sunMesh.renderOrder = -19; // Domo de cielo trasero
     this.scene.add(this.sunMesh);
     this.disposable.push(sunGeometry, sunMaterial);
 
-    const moonGeometry = new THREE.SphereGeometry(1.35, 28, 18);
+    const moonGeometry = new THREE.SphereGeometry(4.8, 28, 18); // Esfera lunar majestuosa
     const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e7ff });
     this.moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
+    this.moonMesh.renderOrder = -19; // Domo de cielo trasero
     this.scene.add(this.moonMesh);
     this.disposable.push(moonGeometry, moonMaterial);
 
     const skyGeometry = new THREE.SphereGeometry(120, 40, 24);
     const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide });
     this.skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
+    this.skyDome.renderOrder = -20; // Fondo absoluto
     this.scene.add(this.skyDome);
     this.disposable.push(skyGeometry, skyMaterial);
 
@@ -766,30 +1347,73 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const t = (elapsed % this.cycleSeconds) / this.cycleSeconds;
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
+    
+    // 1. Posicionamiento original de luces direccionales para mantener dirección de sombras perfecta
     const sunX = Math.cos(orbit) * 58;
     const sunY = Math.max(-12, sunHeight * 42);
     const sunZ = -24 + Math.sin(t * Math.PI * 2 + 0.7) * 16;
-
     this.sunLight.position.set(sunX, sunY, sunZ);
-    this.sunMesh.position.copy(this.sunLight.position);
     this.moonLight.position.set(-sunX, Math.max(8, -sunY), -sunZ);
-    this.moonMesh.position.copy(this.moonLight.position);
 
+    // 2. Posicionamiento físico de las mallas visuales (sunMesh y moonMesh) a gran distancia (106)
+    // Esto las sitúa fuera de la caja de montañas (Z/X = 78) pero dentro del domo celeste (radio 120),
+    // resolviendo el problema de oclusión de forma física y matemáticamente perfecta.
+    const rawX = Math.cos(orbit);
+    const rawY = Math.sin(orbit);
+    const rawZ = -0.32 + Math.sin(orbit) * 0.15; // Inclinación celeste diagonal hermosa
+    const dir = new THREE.Vector3(rawX, rawY, rawZ).normalize();
+
+    const sunMeshPos = dir.clone().multiplyScalar(106.0);
+    this.sunMesh.position.copy(sunMeshPos);
+
+    const moonMeshPos = dir.clone().multiplyScalar(-106.0);
+    this.moonMesh.position.copy(moonMeshPos);
+
+    // 3. Factores de fase dinámica con amanecer (sunrise) y atardecer (sunset) unificados
     const daylight = THREE.MathUtils.clamp((sunHeight + 0.18) / 1.18, 0, 1);
-    const sunset = 1 - Math.min(1, Math.abs(t - 0.62) / 0.13);
+    const sunsetFactor = 1 - Math.min(1, Math.abs(t - 0.60) / 0.10);
+    const sunriseFactor = 1 - Math.min(1, Math.abs(t - 0.08) / 0.08);
+    const twilight = THREE.MathUtils.clamp(Math.max(sunsetFactor, sunriseFactor), 0, 1);
     const night = 1 - daylight;
 
+    // 4. Ajustes de intensidades lumínicas
     this.sunLight.intensity = 0.25 + daylight * 3.9;
     this.moonLight.intensity = 0.18 + night * 1.25;
-    this.ambientLight.intensity = 0.22 + daylight * 0.82 + sunset * 0.18;
+    this.ambientLight.intensity = 0.22 + daylight * 0.82 + twilight * 0.18;
 
+    // 5. Gradiente dinámico de color del domo del cielo usando twilight (aplica a amaneceres y atardeceres)
     const skyDay = new THREE.Color(0x86cfff);
-    const skySunset = new THREE.Color(0xf59e66);
+    const skySunset = new THREE.Color(0xfc5a03); // Naranja vibrante y profundo
     const skyNight = new THREE.Color(0x030712);
-    const skyColor = skyDay.clone().lerp(skySunset, sunset * 0.85).lerp(skyNight, night * 0.88);
+    const skyColor = skyDay.clone().lerp(skySunset, twilight * 0.95).lerp(skyNight, night * 0.88);
     (this.skyDome.material as THREE.MeshBasicMaterial).color.copy(skyColor);
     this.scene.fog?.color.copy(skyColor.clone().lerp(new THREE.Color(0x07111f), 0.55));
     this.renderer?.setClearColor(skyColor);
+
+    // 6. Tinte anaranjado cálido de las luces en el amanecer y atardecer
+    if (twilight > 0.02) {
+      const orangeColor = new THREE.Color(0xfc5a03);
+      this.sunLight.color.copy(new THREE.Color(0xfff4c0).clone().lerp(orangeColor, twilight * 0.92));
+      this.ambientLight.color.copy(new THREE.Color(0xffffff).clone().lerp(orangeColor, twilight * 0.88));
+    } else if (night > 0.05) {
+      this.sunLight.color.setHex(0xffffff);
+      this.ambientLight.color.copy(new THREE.Color(0xffffff).clone().lerp(new THREE.Color(0xc7d2fe), night * 0.5));
+    } else {
+      this.sunLight.color.setHex(0xfff4c0);
+      this.ambientLight.color.setHex(0xffffff);
+    }
+
+    // 7. Tinte dinámico del Sol majestuoso: de amarillo a rojo-naranja ardiente al atardecer/amanecer
+    const sunColorDay = new THREE.Color(0xfffdb5); // Amarillo blanquecino brillante
+    const sunColorSunset = new THREE.Color(0xff3b00); // Naranja-rojo ardiente y espectacular
+    const sunColor = sunColorDay.clone().lerp(sunColorSunset, twilight * 0.95);
+    (this.sunMesh.material as THREE.MeshBasicMaterial).color.copy(sunColor);
+
+    // 8. Tinte dinámico de la Luna: de índigo plateado a rosáceo suave al cruzarse con el crepúsculo
+    const moonColorNight = new THREE.Color(0xe0e7ff);
+    const moonColorSunset = new THREE.Color(0xfca5a5); // Rosáceo suave
+    const moonColor = moonColorNight.clone().lerp(moonColorSunset, twilight * 0.5);
+    (this.moonMesh.material as THREE.MeshBasicMaterial).color.copy(moonColor);
 
     this.sunMesh.visible = daylight > 0.03;
     this.moonMesh.visible = night > 0.18;
@@ -1255,7 +1879,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.disposable.push(alphaTexture);
 
-      // Dos capas de montañas para lograr un efecto Parallax hermoso y nítido
+      // --- CAPA TRASERA DE MONTAÑAS (Existentes, frente al kiosco) ---
       // Capa trasera (más lejana, más oscura/azulada)
       const geometryBack = new THREE.PlaneGeometry(160, 32);
       const materialBack = new THREE.MeshBasicMaterial({
@@ -1267,6 +1891,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       const mountainsBack = new THREE.Mesh(geometryBack, materialBack);
       mountainsBack.position.set(0, 11.5, -78);
+      mountainsBack.renderOrder = -10; // Dibujarse antes que las mallas del escenario (renderOrder 0)
       this.scene!.add(mountainsBack);
       this.disposable.push(geometryBack, materialBack);
 
@@ -1281,8 +1906,107 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       });
       const mountainsFront = new THREE.Mesh(geometryFront, materialFront);
       mountainsFront.position.set(18, 9.5, -68);
+      mountainsFront.renderOrder = -10;
       this.scene!.add(mountainsFront);
       this.disposable.push(geometryFront, materialFront);
+
+      // --- CAPAS LATERALES DE MONTAÑAS (Para rodear el escenario) ---
+      // Capa Izquierda Trasera (Más altas!)
+      const geometryLeftBack = new THREE.PlaneGeometry(160, 38);
+      const materialLeftBack = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x121e2e,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsLeftBack = new THREE.Mesh(geometryLeftBack, materialLeftBack);
+      mountainsLeftBack.position.set(-78, 16.0, 0);
+      mountainsLeftBack.rotation.y = Math.PI / 2; // Orientada hacia el centro
+      mountainsLeftBack.renderOrder = -10;
+      this.scene!.add(mountainsLeftBack);
+      this.disposable.push(geometryLeftBack, materialLeftBack);
+
+      // Capa Izquierda Delantera (Más altas!)
+      const geometryLeftFront = new THREE.PlaneGeometry(160, 34);
+      const materialLeftFront = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x1e3046,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsLeftFront = new THREE.Mesh(geometryLeftFront, materialLeftFront);
+      mountainsLeftFront.position.set(-68, 14.0, 10);
+      mountainsLeftFront.rotation.y = Math.PI / 2;
+      mountainsLeftFront.renderOrder = -10;
+      this.scene!.add(mountainsLeftFront);
+      this.disposable.push(geometryLeftFront, materialLeftFront);
+
+      // Capa Derecha Trasera (Más bajas!)
+      const geometryRightBack = new THREE.PlaneGeometry(160, 24);
+      const materialRightBack = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x121e2e,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsRightBack = new THREE.Mesh(geometryRightBack, materialRightBack);
+      mountainsRightBack.position.set(78, 9.0, 0);
+      mountainsRightBack.rotation.y = -Math.PI / 2; // Orientada hacia el centro
+      mountainsRightBack.renderOrder = -10;
+      this.scene!.add(mountainsRightBack);
+      this.disposable.push(geometryRightBack, materialRightBack);
+
+      // Capa Derecha Delantera (Más bajas!)
+      const geometryRightFront = new THREE.PlaneGeometry(160, 20);
+      const materialRightFront = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x1e3046,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsRightFront = new THREE.Mesh(geometryRightFront, materialRightFront);
+      mountainsRightFront.position.set(68, 7.0, -10);
+      mountainsRightFront.rotation.y = -Math.PI / 2;
+      mountainsRightFront.renderOrder = -10;
+      this.scene!.add(mountainsRightFront);
+      this.disposable.push(geometryRightFront, materialRightFront);
+
+      // --- CAPAS TRASERAS/REAR DE MONTAÑAS (En la parte de atrás del mapa, Z = 78) ---
+      // Capa Trasera Rear (Back)
+      const geometryRearBack = new THREE.PlaneGeometry(160, 26);
+      const materialRearBack = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x142030,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsRearBack = new THREE.Mesh(geometryRearBack, materialRearBack);
+      mountainsRearBack.position.set(0, 10.0, 78);
+      mountainsRearBack.rotation.y = Math.PI; // Orientada hacia el centro
+      mountainsRearBack.renderOrder = -10;
+      this.scene!.add(mountainsRearBack);
+      this.disposable.push(geometryRearBack, materialRearBack);
+
+      // Capa Trasera Rear (Front)
+      const geometryRearFront = new THREE.PlaneGeometry(160, 22);
+      const materialRearFront = new THREE.MeshBasicMaterial({
+        map: alphaTexture,
+        transparent: true,
+        color: 0x22354c,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const mountainsRearFront = new THREE.Mesh(geometryRearFront, materialRearFront);
+      mountainsRearFront.position.set(-15, 8.0, 68);
+      mountainsRearFront.rotation.y = Math.PI;
+      mountainsRearFront.renderOrder = -10;
+      this.scene!.add(mountainsRearFront);
+      this.disposable.push(geometryRearFront, materialRearFront);
     });
   }
 
@@ -1441,6 +2165,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
       model.scale.setScalar(0.42);
       model.rotation.y = Math.PI;
+      this.centerModelPivot(model);
+      this.alignModelBottom(model, 0); // Sentar al ras del pasto
       root.add(model);
       companion.mixer = new THREE.AnimationMixer(model);
       animations.forEach((clip) => companion.actions.set(clip.name.toLowerCase(), companion.mixer!.clipAction(clip)));
@@ -1470,9 +2196,25 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       root.userData['state'] = 'following'; // 'following' | 'wandering' | 'idle'
       root.userData['targetPos'] = root.position.clone();
       root.userData['idleTimer'] = 0;
+      root.userData['isMoving'] = false;
     }
 
     const distToPlayer = root.position.distanceTo(this.player.position);
+    
+    // Teletransportar a Pikachu detrás del jugador si se aleja excesivamente (distToPlayer > 12.0)
+    if (distToPlayer > 12.0) {
+      const behind = new THREE.Vector3(
+        Math.sin(this.player.rotation.y + 0.65),
+        0,
+        Math.cos(this.player.rotation.y + 0.65)
+      );
+      const tpTarget = this.player.position.clone().addScaledVector(behind, 1.85);
+      root.position.copy(tpTarget);
+      root.userData['targetPos'] = tpTarget.clone();
+      root.userData['state'] = 'following';
+      root.userData['isMoving'] = false;
+    }
+
     const isPlayerMoving = this.playerVelocity.lengthSq() > 0.08;
 
     let target = root.userData['targetPos'] as THREE.Vector3;
@@ -1537,15 +2279,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
-    // Movimiento físico y rotación suave
+    // Movimiento físico y rotación suave con amortiguador de histeresis para evitar resets de animación
     const distToTarget = root.position.distanceTo(target);
-    if (distToTarget > 0.08 && speed > 0) {
+    let isMoving = root.userData['isMoving'] || false;
+    if (distToTarget > 0.55) {
+      isMoving = true;
+    }
+    if (distToTarget < 0.18) {
+      isMoving = false;
+    }
+    root.userData['isMoving'] = isMoving;
+
+    if (isMoving && speed > 0) {
       const moveDir = target.clone().sub(root.position);
       moveDir.y = 0;
       moveDir.normalize();
 
-      // Rotar suavemente hacia la dirección de movimiento para que no rote bruscamente
-      const targetRotation = Math.atan2(moveDir.x, moveDir.z);
+      // Rotar suavemente hacia la dirección de movimiento para que no rote bruscamente (con desfase Math.PI del modelo)
+      const targetRotation = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
       
       // Evitar rotaciones bruscas de 360 grados
       let diff = targetRotation - root.rotation.y;
@@ -1559,6 +2310,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         root.position.addScaledVector(moveDir, step);
       } else {
         root.position.copy(target);
+        isMoving = false;
+        root.userData['isMoving'] = false;
       }
 
       // Elegir animación adecuada según velocidad
@@ -1569,7 +2322,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       lookDir.y = 0;
       if (lookDir.lengthSq() > 0.05) {
         lookDir.normalize();
-        const targetRotation = Math.atan2(lookDir.x, lookDir.z);
+        // Con desfase Math.PI del modelo para que mire de frente al jugador
+        const targetRotation = Math.atan2(lookDir.x, lookDir.z) + Math.PI;
         let diff = targetRotation - root.rotation.y;
         while (diff < -Math.PI) diff += Math.PI * 2;
         while (diff > Math.PI) diff -= Math.PI * 2;
@@ -1792,6 +2546,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         });
 
+        // Aplicar personalización de rasgos (piel, pelo, ojos, altura)
+        this.applyCharacterCustomizations(model);
+
         this.player.add(model);
         this.playerMixer = new THREE.AnimationMixer(model);
         this.playerActions.clear();
@@ -1808,6 +2565,85 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         console.warn('No se pudo cargar el player GLB, usando fallback procedural.', error);
       }
     );
+  }
+
+  private applyCharacterCustomizations(model: THREE.Group) {
+    const skinHex = localStorage.getItem('lobbySkinColor');
+    const hairHex = localStorage.getItem('lobbyHairColor');
+    const eyeHex = localStorage.getItem('lobbyEyeColor');
+    const heightStr = localStorage.getItem('lobbyHeight') || '1.0';
+    const heightFactor = parseFloat(heightStr);
+
+    const option = this.currentCharacterOption || this.characterOptions[0];
+    
+    // Aplicar escala combinada del personaje base y el factor de altura
+    model.scale.setScalar(option.scale * heightFactor);
+
+    model.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        // Clonar materiales para evitar alterar otros NPCs compartidos
+        if (child.material) {
+          if (Array.isArray(child.material)) {
+            child.material = child.material.map((mat: any) => mat.clone());
+          } else {
+            child.material = child.material.clone();
+          }
+        }
+
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((mat: any) => {
+          const name = (mat.name || '').toLowerCase();
+          
+          // 1. Modificar color de Piel
+          if (skinHex && (
+            name.includes('skin') || 
+            name.includes('piel') || 
+            name.includes('face') || 
+            name.includes('head') || 
+            name.includes('cara') || 
+            name.includes('kao') ||
+            name.includes('hada')
+          )) {
+            mat.color.set(skinHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(skinHex).multiplyScalar(0.06);
+            }
+          }
+
+          // 2. Modificar color de Pelo
+          if (hairHex && (
+            name.includes('hair') || 
+            name.includes('pelo') || 
+            name.includes('cabello') ||
+            name.includes('kami') ||
+            name.includes('toubu')
+          )) {
+            mat.color.set(hairHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(hairHex).multiplyScalar(0.06);
+            }
+          }
+
+          // 3. Modificar color de Ojos
+          if (eyeHex && (
+            name.includes('eye') || 
+            name.includes('ojo') ||
+            name.includes('iris') ||
+            name.includes('pupil') ||
+            name.includes('hitomi') ||
+            name.includes('eyeball') ||
+            name.includes('gaigan') ||
+            name.includes('mayu') ||
+            name.includes('matsuge')
+          )) {
+            mat.color.set(eyeHex);
+            if (mat.emissive && typeof mat.emissive.set === 'function') {
+              mat.emissive.set(eyeHex).multiplyScalar(0.06);
+            }
+          }
+        });
+      }
+    });
   }
 
   private setPlayerAnimation(preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
@@ -2110,6 +2946,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateCamera(delta: number) {
     if (!this.camera) return;
+
+    if (this.showFirstTimeSetup || this.customizationModalOpen) {
+      // Hermoso plano medio corto de primer plano frente al jugador para personalizarlo en tiempo real!
+      const angle = this.player.rotation.y + Math.PI; // Enfocar de frente
+      const previewDistance = 1.95;
+      const targetPosition = this.player.position.clone().add(new THREE.Vector3(
+        Math.sin(angle) * previewDistance,
+        1.15,
+        Math.cos(angle) * previewDistance
+      ));
+      const lookAt = this.player.position.clone().add(new THREE.Vector3(0, 0.88, 0));
+      
+      this.camera.position.lerp(targetPosition, 1 - Math.pow(0.0005, delta));
+      this.camera.lookAt(lookAt);
+      return;
+    }
 
     if (this.vendorCameraFocus) {
       // Apuntar al centro de Hilda re-ubicada en X=-19.6 para que no la tape la estantería
