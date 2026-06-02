@@ -99,6 +99,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // WebSocket Multiplayer
   private socket?: WebSocket;
+  private reconnectTimeout?: ReturnType<typeof setTimeout>;
+  private lobbyDestroyed = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
@@ -445,8 +447,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
-        this.connectWebSocket();
-
         // Verificación de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
         if (!setupCompleted) {
@@ -548,6 +548,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
       this.initHubWorld();
+      this.connectWebSocket();
       this.animateHub();
       
       if (this.showFirstTimeSetup) {
@@ -557,6 +558,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.lobbyDestroyed = true;
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;
@@ -623,7 +629,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Refresca resumen, sobres y mazos del jugador.
   refrescarTodo() {
-    if (!this.jugador?.username) return;
+    if (!this.jugador?.username || this.lobbyDestroyed) return;
+    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
 
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
@@ -3400,8 +3407,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       };
 
       this.socket.onclose = () => {
+        if (this.lobbyDestroyed) return;
         console.warn('Conexión WebSocket cerrada. Reintentando en 5 segundos...');
-        setTimeout(() => this.connectWebSocket(), 5000);
+        this.reconnectTimeout = setTimeout(() => this.connectWebSocket(), 5000);
       };
 
       this.socket.onerror = (error) => {
@@ -3513,6 +3521,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerOtherPlayer(msg: any) {
+    if (!this.scene) {
+      setTimeout(() => this.registerOtherPlayer(msg), 100);
+      return;
+    }
+
     const username = msg.username;
     if (this.otherPlayers.has(username)) {
       this.updateOtherPlayerState(msg);

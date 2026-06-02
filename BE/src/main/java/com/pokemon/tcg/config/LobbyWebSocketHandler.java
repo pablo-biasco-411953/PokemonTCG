@@ -39,9 +39,18 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
         String type = lobbyMsg.getType();
 
         if ("JOIN".equals(type)) {
+            WebSocketSession previousSession = sessions.get(username);
+            if (previousSession != null && previousSession != session && previousSession.isOpen()) {
+                try {
+                    previousSession.close(CloseStatus.NORMAL);
+                } catch (IOException e) {
+                    System.err.println("No se pudo cerrar sesión anterior de " + username + ": " + e.getMessage());
+                }
+            }
             // Guardar el nombre en los atributos de sesión para identificarlo al desconectarse
             session.getAttributes().put("username", username);
             sessions.put(username, session);
+            lobbyMsg.setType("JOIN");
             playersState.put(username, lobbyMsg);
 
             System.out.println("Jugador conectado al Lobby Online: " + username);
@@ -53,6 +62,7 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
             for (Map.Entry<String, LobbyMessage> entry : playersState.entrySet()) {
                 if (!entry.getKey().equals(username)) {
                     try {
+                        entry.getValue().setType("JOIN");
                         String existingPlayerJson = objectMapper.writeValueAsString(entry.getValue());
                         session.sendMessage(new TextMessage(existingPlayerJson));
                     } catch (IOException e) {
@@ -103,6 +113,10 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         String username = (String) session.getAttributes().get("username");
         if (username != null) {
+            if (sessions.get(username) != session) {
+                return;
+            }
+
             System.out.println("Jugador desconectado del Lobby Online: " + username);
             sessions.remove(username);
             playersState.remove(username);
