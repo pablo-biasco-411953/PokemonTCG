@@ -9,6 +9,12 @@ export interface Jugador {
   nivel?: number;
   coleccion?: Card[];
   cartasObtenidas?: Card[];
+  characterId?: string;
+  skinColor?: string;
+  hairColor?: string;
+  eyeColor?: string;
+  height?: number;
+  pikachuCompanion?: boolean;
 }
 
 // Respuesta resumida para el header del lobby.
@@ -17,4 +23,10 @@ export interface JugadorDatosResponse {
   sobresDisponibles: number;
   cantidadCartas: number;
   cartasObtenidas?: Card[];
+  characterId?: string;
+  skinColor?: string;
+  hairColor?: string;
+  eyeColor?: string;
+  height?: number;
+  pikachuCompanion?: boolean;
 }

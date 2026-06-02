@@ -28,4 +28,5 @@ export interface Card {
   subtypes?: string[];
   debilidades?: CardWeakness[];
   resistencias?: CardWeakness[];
+  rarity?: string;
 }

@@ -1,3 +1,4 @@
+com\pokemon\tcg\dto\PersonalizacionRequest.class
 com\pokemon\tcg\model\battle\Partida.class
 com\pokemon\tcg\service\AuthService.class
 com\pokemon\tcg\controller\BattleController.class
@@ -20,6 +21,7 @@ com\pokemon\tcg\dto\JugadorDTO.class
 com\pokemon\tcg\model\Card$4.class
 com\pokemon\tcg\config\WebSocketConfig.class
 com\pokemon\tcg\dto\ChooseTurnRequest.class
+com\pokemon\tcg\dto\StartBattleOnlineRequest.class
 com\pokemon\tcg\service\BattleService.class
 com\pokemon\tcg\dto\LobbyMessage.class
 com\pokemon\tcg\dto\GuardarMazoRequest.class
@@ -52,6 +54,7 @@ com\pokemon\tcg\dto\JugadorDatosResponse.class
 com\pokemon\tcg\model\battle\Ataque.class
 com\pokemon\tcg\model\Card$2.class
 com\pokemon\tcg\service\BattleAttackService$KoResolver.class
+com\pokemon\tcg\dto\TradeExecutionRequest.class
 com\pokemon\tcg\service\BattleEngineService.class
 com\pokemon\tcg\dto\UnirEnergiaRequest.class
 com\pokemon\tcg\config\LobbyWebSocketHandler.class

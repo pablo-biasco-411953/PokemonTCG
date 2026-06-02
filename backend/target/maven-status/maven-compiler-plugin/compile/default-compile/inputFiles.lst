@@ -28,6 +28,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ChooseTurnRe
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\JugadorController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\AuthController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\RegisterRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\PersonalizacionRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\BackendApplication.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\PasswordRecoveryService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ForgotPasswordRequest.java
@@ -43,6 +44,8 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleEn
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleKoService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\CartaEnJuego.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\GuardarMazoRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\StartBattleOnlineRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\TradeExecutionRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\DataLoader.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\BattleController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\LobbyWebSocketHandler.java
