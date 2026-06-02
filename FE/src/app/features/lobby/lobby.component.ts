@@ -215,6 +215,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   zoomX: number = 0;
   zoomY: number = 0;
 
+  // Loading manager para el escenario 3D del Lobby
+  private hubLoadingManager = new THREE.LoadingManager();
+  showHubLoadingOverlay = true;
+  hubLoadingProgress = 0;
+  hubVisualProgress = 0;
+  private visualProgressInterval?: any;
+
   constructor(
     private sobreService: SobreService,
     private mazoService: MazoService,
@@ -224,7 +231,69 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) {
+    this.hubLoadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+      this.ngZone.run(() => {
+        this.showHubLoadingOverlay = true;
+        this.hubLoadingProgress = 0;
+        this.hubVisualProgress = 0;
+        this.cdr.detectChanges();
+        this.startVisualProgressLoop();
+      });
+    };
+
+    this.hubLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+      this.ngZone.run(() => {
+        const progress = Math.round((itemsLoaded / itemsTotal) * 100);
+        // Aseguramos que la carga real progrese, pero evitamos saltos toscos
+        this.hubLoadingProgress = Math.max(this.hubLoadingProgress, progress);
+        this.cdr.detectChanges();
+      });
+    };
+
+    this.hubLoadingManager.onLoad = () => {
+      this.ngZone.run(() => {
+        this.hubLoadingProgress = 100;
+        this.cdr.detectChanges();
+      });
+    };
+
+    this.hubLoadingManager.onError = (url) => {
+      console.warn('Error cargando recurso 3D:', url);
+    };
+  }
+
+  private startVisualProgressLoop() {
+    if (this.visualProgressInterval) {
+      clearInterval(this.visualProgressInterval);
+    }
+    this.hubVisualProgress = 0;
+
+    this.ngZone.runOutsideAngular(() => {
+      this.visualProgressInterval = setInterval(() => {
+        if (this.hubVisualProgress < this.hubLoadingProgress) {
+          const gap = this.hubLoadingProgress - this.hubVisualProgress;
+          // Si la brecha es grande (ej. carga rápida o caché), el incremento es mayor, pero siempre continuo
+          const step = Math.max(1, Math.min(4, Math.floor(gap * 0.08)));
+          this.hubVisualProgress += step;
+
+          this.ngZone.run(() => {
+            this.cdr.detectChanges();
+          });
+        } else if (this.hubVisualProgress >= 100) {
+          clearInterval(this.visualProgressInterval);
+          this.visualProgressInterval = undefined;
+
+          this.ngZone.run(() => {
+            setTimeout(() => {
+              this.showHubLoadingOverlay = false;
+              this.cdr.detectChanges();
+            }, 900); // 900ms para un desvanecimiento estético y suave
+          });
+        }
+      }, 30); // Loop a ~33fps para una transición sedosa de la barra y Pikachu
+    });
+  }
 
   private renderer?: THREE.WebGLRenderer;
   private scene?: THREE.Scene;
@@ -315,6 +384,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.visualProgressInterval) {
+      clearInterval(this.visualProgressInterval);
+    }
     cancelAnimationFrame(this.animationId);
     window.removeEventListener('resize', this.resizeHub);
     if (this.playerMixer) {
@@ -2119,7 +2191,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void) {
-    const loader = new GLTFLoader();
+    const loader = new GLTFLoader(this.hubLoadingManager);
     loader.load(
       path,
       (gltf) => {
@@ -2527,7 +2599,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.player.clear();
     this.createFallbackTrainerAvatar();
 
-    const loader = new GLTFLoader();
+    const loader = new GLTFLoader(this.hubLoadingManager);
     loader.load(
       option.path,
       (gltf) => {

@@ -1371,3 +1371,122 @@ kbd {
   }
 }
 
+/* ================= HUB LOADING OVERLAY ================= */
+.hub-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #060e22 0%, #02050c 100%);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+  pointer-events: auto;
+
+  &.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+.loading-content {
+  width: min(460px, 90%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 60px; // Espacio fijo para que Pikachu absoluto no colapse
+}
+
+.pikachu-runner-container {
+  position: absolute;
+  top: 0px;
+  height: 60px;
+  width: 60px;
+  transform: translateX(-50%);
+  transition: left 0.3s cubic-bezier(0.1, 0.8, 0.1, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+
+  .pikachu-gif {
+    width: 60px;
+    height: auto;
+    filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.6));
+    object-fit: contain;
+  }
+
+  .lightning-spark {
+    position: absolute;
+    bottom: 2px;
+    right: -4px;
+    font-size: 13px;
+    color: #facc15;
+    text-shadow: 0 0 10px rgba(250, 204, 21, 0.9);
+    animation: sparkFlash 0.3s steps(2, start) infinite;
+  }
+}
+
+.loading-bar-track {
+  position: relative;
+  width: 100%;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.6);
+  overflow: visible;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #facc15, #eab308 50%, #22d3ee);
+  transition: width 0.25s cubic-bezier(0.1, 0.8, 0.1, 1);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.35);
+}
+
+.loading-bar-glow {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: transparent;
+  box-shadow: 0 0 20px 4px rgba(34, 211, 238, 0.6);
+  border-radius: 99px;
+  transition: width 0.25s cubic-bezier(0.1, 0.8, 0.1, 1);
+  pointer-events: none;
+}
+
+.loading-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 4px;
+  margin-top: 4px;
+}
+
+.loading-status-text {
+  color: rgba(226, 232, 240, 0.6);
+  font-family: $font-tech;
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 800;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
+}
+
+.loading-percentage {
+  color: #22d3ee;
+  font-family: $font-tech;
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 12px rgba(34, 211, 238, 0.6);
+}
+
+@keyframes sparkFlash {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
