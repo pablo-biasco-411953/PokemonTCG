@@ -19,6 +19,7 @@ $font-pixel: 'VT323', monospace;
   color: #eef8ff;
   font-family: $font-body;
   background: #030712;
+  touch-action: none;
 }
 
 .hub-canvas {
@@ -27,6 +28,7 @@ $font-pixel: 'VT323', monospace;
   width: 100%;
   height: 100%;
   display: block;
+  touch-action: none;
 }
 
 .lobby-3d-shell::before,
@@ -2894,6 +2896,8 @@ kbd {
 
 .landscape-guard,
 .mobile-drive-pad,
+.mobile-analog-pad,
+.mobile-chat-toggle,
 .mobile-action-pad {
   display: none;
 }
@@ -2902,10 +2906,11 @@ kbd {
   .hub-top-hud {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
-    right: max(8px, env(safe-area-inset-right));
-    grid-template-columns: auto 1fr auto auto;
+    right: max(86px, calc(env(safe-area-inset-right) + 86px));
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
-    align-items: start;
+    align-items: flex-start;
   }
 
   .trainer-chip {
@@ -2943,7 +2948,9 @@ kbd {
   }
 
   .hub-title {
+    flex: 1 1 180px;
     min-width: 0;
+    max-width: 270px;
     padding: 9px 12px;
   }
 
@@ -2964,19 +2971,26 @@ kbd {
   }
 
   .audio-chip {
-    min-width: 106px;
+    min-width: 74px;
     gap: 4px;
     padding: 7px 8px;
   }
 
   .audio-mini-controls {
-    gap: 3px;
+    display: none;
   }
 
-  .audio-mini-controls button {
-    height: 20px;
-    border-radius: 6px;
-    font-size: 8px;
+  .hub-top-hud > .resource-chip:last-child {
+    order: 20;
+    padding: 7px 10px;
+  }
+
+  .hub-top-hud > .resource-chip:last-child small {
+    font-size: 7px;
+  }
+
+  .hub-top-hud > .resource-chip:last-child strong {
+    font-size: 18px;
   }
 
   .hub-help-panel {
@@ -3011,13 +3025,42 @@ kbd {
   }
 
   .lobby-chat-container {
-    left: max(8px, env(safe-area-inset-left));
-    bottom: max(88px, env(safe-area-inset-bottom));
-    width: min(320px, 40vw);
-    max-height: 34vh;
+    display: none;
   }
 
-  .mobile-drive-pad,
+  .lobby-chat-container.mobile-open {
+    left: 50%;
+    right: auto;
+    bottom: max(70px, env(safe-area-inset-bottom));
+    display: flex;
+    width: min(420px, calc(100vw - 220px));
+    height: min(34vh, 180px);
+    max-height: 34vh;
+    transform: translateX(-50%);
+    z-index: 17;
+  }
+
+  .mobile-chat-toggle {
+    position: absolute;
+    left: max(14px, env(safe-area-inset-left));
+    bottom: max(122px, calc(env(safe-area-inset-bottom) + 122px));
+    z-index: 16;
+    display: block;
+    height: 34px;
+    padding: 0 14px;
+    border: 1px solid rgba(125, 211, 252, .36);
+    border-radius: 999px;
+    background: rgba(2, 6, 23, .68);
+    color: #e0fbff;
+    font-family: $font-tech;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .12em;
+    box-shadow: 0 12px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobile-analog-pad,
   .mobile-action-pad {
     position: absolute;
     z-index: 15;
@@ -3027,26 +3070,57 @@ kbd {
     touch-action: none;
   }
 
-  .mobile-drive-pad {
+  .mobile-analog-pad {
     left: max(12px, env(safe-area-inset-left));
     bottom: max(12px, env(safe-area-inset-bottom));
-    grid-template-columns: repeat(3, 46px);
-    grid-template-rows: repeat(2, 46px);
-    gap: 6px;
+    width: 104px;
+    height: 104px;
+    place-items: center;
+    border: 1px solid rgba(125, 211, 252, .32);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(34, 211, 238, .16), transparent 46%),
+      rgba(2, 6, 23, .42);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 26px rgba(0,0,0,.3);
+    backdrop-filter: blur(10px);
   }
 
-  .drive-key {
-    border: 1px solid rgba(125, 211, 252, .36);
-    border-radius: 14px;
-    background: rgba(2, 6, 23, .62);
-    color: #e0fbff;
+  .analog-ring {
+    position: absolute;
+    inset: 16px;
+    border: 1px dashed rgba(224, 251, 255, .28);
+    border-radius: 999px;
+  }
+
+  .analog-stick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(250, 204, 21, .72);
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(255, 247, 173, .96), rgba(34, 211, 238, .86));
+    box-shadow: 0 0 24px rgba(34, 211, 238, .28), inset 0 1px 0 rgba(255,255,255,.46);
+    transition: box-shadow .12s ease;
+  }
+
+  .analog-stick.active {
+    box-shadow: 0 0 30px rgba(250, 204, 21, .42), inset 0 1px 0 rgba(255,255,255,.5);
+  }
+
+  .mobile-analog-pad span {
+    position: absolute;
+    left: 50%;
+    bottom: -16px;
+    transform: translateX(-50%);
+    color: rgba(224, 251, 255, .72);
     font-family: $font-tech;
+    font-size: 8px;
     font-weight: 900;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 24px rgba(0,0,0,.28);
-    backdrop-filter: blur(12px);
+    letter-spacing: .16em;
   }
 
-  .drive-key:active,
   .mobile-action-pad button:active,
   .mobile-action-pad button.active {
     border-color: rgba($gold, .74);
@@ -3054,17 +3128,17 @@ kbd {
     transform: translateY(1px);
   }
 
-  .drive-key.up { grid-column: 2; grid-row: 1; }
-  .drive-key.left { grid-column: 1; grid-row: 2; }
-  .drive-key.down { grid-column: 2; grid-row: 2; }
-  .drive-key.right { grid-column: 3; grid-row: 2; }
-
   .mobile-action-pad {
     right: max(12px, env(safe-area-inset-right));
     bottom: max(14px, env(safe-area-inset-bottom));
-    grid-template-columns: 56px 66px;
+    grid-template-columns: 38px 54px 64px;
     gap: 10px;
     align-items: end;
+  }
+
+  .mobile-camera-zoom {
+    display: grid;
+    gap: 6px;
   }
 
   .mobile-action-pad button {
@@ -3078,6 +3152,13 @@ kbd {
     font-weight: 900;
     box-shadow: 0 12px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
     backdrop-filter: blur(12px);
+  }
+
+  .mobile-camera-zoom button {
+    width: 38px;
+    height: 32px;
+    color: #e0fbff;
+    font-size: 17px;
   }
 
   .mobile-interact {
@@ -3152,13 +3233,32 @@ kbd {
 
 @media (max-width: 720px) and (orientation: landscape) {
   .hub-top-hud {
-    transform: scale(.88);
-    transform-origin: top left;
-    right: -10vw;
+    transform: none;
+    right: max(74px, calc(env(safe-area-inset-right) + 74px));
   }
 
-  .lobby-chat-container {
-    display: none;
+  .trainer-chip {
+    max-width: 112px;
+  }
+
+  .trainer-chip .avatar-dot {
+    width: 26px;
+    height: 26px;
+  }
+
+  .hub-title {
+    max-width: 205px;
+  }
+
+  .companion-chip,
+  .audio-chip {
+    padding: 6px 8px;
+  }
+
+  .lobby-chat-container.mobile-open {
+    display: flex;
+    width: min(360px, calc(100vw - 190px));
+    height: min(32vh, 142px);
   }
 
   .interaction-prompt {
@@ -3166,17 +3266,28 @@ kbd {
     width: min(360px, calc(100vw - 180px));
   }
 
-  .mobile-drive-pad {
-    grid-template-columns: repeat(3, 40px);
-    grid-template-rows: repeat(2, 40px);
+  .mobile-analog-pad {
+    width: 92px;
+    height: 92px;
+  }
+
+  .analog-stick {
+    width: 40px;
+    height: 40px;
   }
 
   .mobile-action-pad {
-    grid-template-columns: 50px 58px;
+    grid-template-columns: 34px 48px 58px;
+    gap: 8px;
   }
 
   .mobile-action-pad button {
-    height: 46px;
+    height: 44px;
+  }
+
+  .mobile-camera-zoom button {
+    width: 34px;
+    height: 28px;
   }
 
   .mobile-interact {
