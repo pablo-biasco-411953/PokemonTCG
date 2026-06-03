@@ -20,6 +20,12 @@
   (setHp)="debugSetHp($event.objetivo, $event.hp)"
 ></app-battle-board-debug-panel>
 
+<div class="battle-landscape-guard" aria-hidden="true">
+  <div class="battle-phone-icon"></div>
+  <strong>Gira el celular</strong>
+  <span>La batalla necesita pantalla horizontal.</span>
+</div>
+
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
   <div class="intro-lines">
     <span *ngFor="let l of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" [style.--ln]="l"></span>

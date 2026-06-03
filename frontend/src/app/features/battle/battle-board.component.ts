@@ -181,6 +181,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // -----------------------------------------------
 
   ngOnInit(): void {
+    this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
     this.jugadorNombre = this.obtenerNombreJugadorLocal();
@@ -215,6 +216,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
+  }
+
+  private requestLandscapeOrientation(): void {
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: any) => Promise<void> };
+    orientation?.lock?.('landscape').catch(() => undefined);
   }
 
   // -----------------------------------------------

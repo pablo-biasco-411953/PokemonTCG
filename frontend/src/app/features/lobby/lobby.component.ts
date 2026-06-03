@@ -436,7 +436,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private moonMesh?: THREE.Mesh;
   private skyDome?: THREE.Mesh;
   private clouds: THREE.Group[] = [];
-  private keys = new Set<string>();
+  keys = new Set<string>();
   private clock = new THREE.Clock();
   private animationId = 0;
   private worldObjects: THREE.Object3D[] = [];
@@ -675,6 +675,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   // Intenta reproducir el video decorativo apenas exista en el DOM.
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
+      this.requestLandscapeOrientation();
       this.initHubWorld();
       this.connectWebSocket();
       this.animateHub();
@@ -760,6 +761,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:pointerdown')
   onAnyPointerDown() {
     this.unlockLobbyAudio();
+    this.requestLandscapeOrientation();
   }
 
   @HostListener('window:pointermove', ['$event'])
@@ -1567,7 +1569,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  private interactWithCurrentSpot() {
+  interactWithCurrentSpot() {
     if (!this.currentInteraction) return;
 
     if (this.currentInteraction.id === 'deck') {
@@ -1816,6 +1818,23 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     kioskLight.position.set(-18, 4.2, -18);
     this.scene.add(kioskLight);
     this.updateShadowQuality();
+  }
+
+  pressMobileKey(event: PointerEvent, key: string) {
+    event.preventDefault();
+    this.unlockLobbyAudio();
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    this.keys.add(key);
+  }
+
+  releaseMobileKey(event: PointerEvent, key: string) {
+    event.preventDefault();
+    this.keys.delete(key);
+  }
+
+  private requestLandscapeOrientation() {
+    const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: any) => Promise<void> };
+    orientation?.lock?.('landscape').catch(() => undefined);
   }
 
   openKioskShop() {

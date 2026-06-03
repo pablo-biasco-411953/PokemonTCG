@@ -2892,4 +2892,297 @@ kbd {
   }
 }
 
+.landscape-guard,
+.mobile-drive-pad,
+.mobile-action-pad {
+  display: none;
+}
+
+@media (max-width: 920px), (pointer: coarse) {
+  .hub-top-hud {
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    grid-template-columns: auto 1fr auto auto;
+    gap: 6px;
+    align-items: start;
+  }
+
+  .trainer-chip {
+    min-width: 0;
+    max-width: 138px;
+    padding: 8px 9px;
+    gap: 8px;
+  }
+
+  .trainer-chip .avatar-dot {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+  }
+
+  .trainer-chip small,
+  .resource-chip small,
+  .hub-title span {
+    font-size: 8px;
+    letter-spacing: .1em;
+  }
+
+  .trainer-chip strong,
+  .resource-chip strong,
+  .hub-title strong {
+    font-size: 11px;
+    letter-spacing: .04em;
+  }
+
+  .trainer-chip em {
+    max-width: 84px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .hub-title {
+    min-width: 0;
+    padding: 9px 12px;
+  }
+
+  .cycle-chip,
+  .graphics-chip,
+  .emote-chip-hud {
+    display: none;
+  }
+
+  .resource-chip {
+    padding: 8px 10px;
+    border-radius: 12px;
+  }
+
+  .companion-chip strong,
+  .audio-chip strong {
+    font-size: 11px;
+  }
+
+  .audio-chip {
+    min-width: 106px;
+    gap: 4px;
+    padding: 7px 8px;
+  }
+
+  .audio-mini-controls {
+    gap: 3px;
+  }
+
+  .audio-mini-controls button {
+    height: 20px;
+    border-radius: 6px;
+    font-size: 8px;
+  }
+
+  .hub-help-panel {
+    display: none;
+  }
+
+  .hub-radar {
+    right: max(8px, env(safe-area-inset-right));
+    top: 82px;
+    gap: 5px;
+  }
+
+  .radar-node {
+    min-width: 72px;
+    height: 30px;
+    font-size: 10px;
+  }
+
+  .interaction-prompt {
+    left: 50%;
+    right: auto;
+    bottom: max(72px, env(safe-area-inset-bottom));
+    width: min(420px, calc(100vw - 190px));
+    transform: translateX(-50%);
+    padding: 10px 14px;
+  }
+
+  .interaction-prompt .prompt-key {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
+  }
+
+  .lobby-chat-container {
+    left: max(8px, env(safe-area-inset-left));
+    bottom: max(88px, env(safe-area-inset-bottom));
+    width: min(320px, 40vw);
+    max-height: 34vh;
+  }
+
+  .mobile-drive-pad,
+  .mobile-action-pad {
+    position: absolute;
+    z-index: 15;
+    display: grid;
+    pointer-events: auto;
+    user-select: none;
+    touch-action: none;
+  }
+
+  .mobile-drive-pad {
+    left: max(12px, env(safe-area-inset-left));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(2, 46px);
+    gap: 6px;
+  }
+
+  .drive-key {
+    border: 1px solid rgba(125, 211, 252, .36);
+    border-radius: 14px;
+    background: rgba(2, 6, 23, .62);
+    color: #e0fbff;
+    font-family: $font-tech;
+    font-weight: 900;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 24px rgba(0,0,0,.28);
+    backdrop-filter: blur(12px);
+  }
+
+  .drive-key:active,
+  .mobile-action-pad button:active,
+  .mobile-action-pad button.active {
+    border-color: rgba($gold, .74);
+    background: rgba(250, 204, 21, .18);
+    transform: translateY(1px);
+  }
+
+  .drive-key.up { grid-column: 2; grid-row: 1; }
+  .drive-key.left { grid-column: 1; grid-row: 2; }
+  .drive-key.down { grid-column: 2; grid-row: 2; }
+  .drive-key.right { grid-column: 3; grid-row: 2; }
+
+  .mobile-action-pad {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    grid-template-columns: 56px 66px;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .mobile-action-pad button {
+    height: 52px;
+    border: 1px solid rgba(125, 211, 252, .36);
+    border-radius: 999px;
+    background: rgba(2, 6, 23, .64);
+    color: #fff7ad;
+    font-family: $font-tech;
+    font-size: 12px;
+    font-weight: 900;
+    box-shadow: 0 12px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+    backdrop-filter: blur(12px);
+  }
+
+  .mobile-interact {
+    width: 66px;
+    height: 66px !important;
+    color: #020617 !important;
+    background: linear-gradient(135deg, #fde047, #22d3ee) !important;
+  }
+
+  .kiosk-shop-panel,
+  .battle-select-panel,
+  .player-menu,
+  .trade-modal {
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .deck-builder-overlay {
+    inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    border-radius: 14px;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 920px) {
+  .landscape-guard {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 35%, rgba(34, 211, 238, .22), transparent 32%),
+      linear-gradient(135deg, rgba(2, 6, 23, .96), rgba(8, 13, 30, .98));
+    color: #e0fbff;
+    pointer-events: auto;
+  }
+
+  .landscape-guard strong {
+    color: #fff7ad;
+    font-family: $font-tech;
+    font-size: clamp(20px, 7vw, 34px);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .landscape-guard span {
+    max-width: 280px;
+    color: rgba(226, 232, 240, .78);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .phone-tilt-icon {
+    width: 74px;
+    height: 112px;
+    border: 4px solid rgba(125, 211, 252, .74);
+    border-radius: 18px;
+    box-shadow: 0 0 32px rgba(34, 211, 238, .24);
+    animation: tiltPhone 1.8s ease-in-out infinite;
+  }
+
+  @keyframes tiltPhone {
+    0%, 100% { transform: rotate(0deg); }
+    55% { transform: rotate(90deg); }
+  }
+}
+
+@media (max-width: 720px) and (orientation: landscape) {
+  .hub-top-hud {
+    transform: scale(.88);
+    transform-origin: top left;
+    right: -10vw;
+  }
+
+  .lobby-chat-container {
+    display: none;
+  }
+
+  .interaction-prompt {
+    bottom: 76px;
+    width: min(360px, calc(100vw - 180px));
+  }
+
+  .mobile-drive-pad {
+    grid-template-columns: repeat(3, 40px);
+    grid-template-rows: repeat(2, 40px);
+  }
+
+  .mobile-action-pad {
+    grid-template-columns: 50px 58px;
+  }
+
+  .mobile-action-pad button {
+    height: 46px;
+  }
+
+  .mobile-interact {
+    width: 58px;
+    height: 58px !important;
+  }
+}
+
 
