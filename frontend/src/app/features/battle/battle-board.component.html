@@ -624,7 +624,7 @@
         (cdkDropListDropped)="soltarCarta($event, 'banca')"
       >
         <div
-          *ngFor="let b of partida.jugador.banca"
+          *ngFor="let b of partida.jugador.banca; trackBy: trackByCardId"
           class="bench-slot occupied player-slot"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b)"
@@ -664,7 +664,7 @@
         [cdkDropListSortingDisabled]="true"
       >
         <div
-          *ngFor="let carta of partida.jugador.mano; let i = index"
+          *ngFor="let carta of partida.jugador.mano; let i = index; trackBy: trackByCardId"
           class="hand-card-hitbox"
           [class.nueva-carta]="cartasNuevas.has(carta.id)"
           [class.simulated-hover]="esHoverSobreManoJugador() && hoveredCardIndex === i"
