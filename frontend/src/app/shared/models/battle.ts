@@ -34,6 +34,7 @@ export interface Partida {
   coinFlipped?: boolean;
   coinFlipWinner?: string;
   coinFlipResult?: string;
+  coinFlipCallerUsername?: string;
 }
 
 export interface StartBattleResponse extends Partida {}

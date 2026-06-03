@@ -103,6 +103,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private socket?: WebSocket;
   private reconnectTimeout?: ReturnType<typeof setTimeout>;
   private lobbyDestroyed = false;
+  private personalizationSynced = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
@@ -768,12 +769,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           this.pikachuEnabled = res.pikachuCompanion;
         }
 
+        this.personalizationSynced = true;
         this.ngZone.runOutsideAngular(() => {
           this.loadAnimatedPlayerAsset();
           if (this.pikachuEnabled) {
             this.createPikachuCompanion();
           }
         });
+        this.sendJoinMessage();
 
         this.cdr.detectChanges();
       },
@@ -3036,7 +3039,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.player.clear();
     this.createFallbackTrainerAvatar();
 
-    this.loadCachedGltf(option.path, this.hubLoadingManager).then(
+    const loader = new GLTFLoader(this.hubLoadingManager);
+    loader.load(
+      option.path,
       (gltf) => {
         this.player.clear();
 
@@ -3055,6 +3060,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Aplicar personalización de rasgos (piel, pelo, ojos, altura)
         this.applyCharacterCustomizations(model);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')));
 
         this.player.add(model);
         this.playerMixer = new THREE.AnimationMixer(model);
@@ -3067,6 +3073,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setPlayerAnimation('idle', 0);
       },
+      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB, usando fallback procedural.', error);
       }
@@ -3150,6 +3157,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  private normalizeVisibleCharacterHeight(model: THREE.Group, targetHeight: number) {
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    if (!Number.isFinite(size.y) || size.y <= 0.01) return;
+
+    model.scale.multiplyScalar(targetHeight / size.y);
+    this.alignModelBottom(model, 0);
   }
 
   private setPlayerAnimation(preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
@@ -3605,7 +3622,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.socket.onopen = () => {
         console.log('Conexión WebSocket establecida con éxito.');
-        this.sendJoinMessage();
+        if (this.personalizationSynced) {
+          this.sendJoinMessage();
+        }
       };
 
       this.socket.onmessage = (event) => {
@@ -3633,13 +3652,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'JOIN',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3648,6 +3661,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.socket.send(JSON.stringify(payload));
+  }
+
+  private getLocalLobbyIdentityPayload() {
+    return {
+      username: this.jugador!.username,
+      characterId: this.normalizeCharacterId(this.selectedCharacterId),
+      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
+      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
+      height: this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')),
+      pikachuCompanion: this.pikachuEnabled
+    };
+  }
+
+  private normalizeCharacterId(characterId?: string): string {
+    return this.characterOptions.some((option) => option.id === characterId) ? characterId! : this.characterOptions[0].id;
+  }
+
+  private normalizeHeight(height: number): number {
+    if (!Number.isFinite(height) || height <= 0) return 1;
+    return Math.max(0.72, Math.min(1.28, height));
   }
 
   private checkAndSendMove() {
@@ -3663,13 +3697,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'MOVE',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3749,11 +3777,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const otherPlayer: OtherPlayerNPC = {
       username: username,
-      characterId: msg.characterId,
-      skinColor: msg.skinColor,
-      hairColor: msg.hairColor,
-      eyeColor: msg.eyeColor,
-      height: msg.height || 1.0,
+      characterId: this.normalizeCharacterId(msg.characterId),
+      skinColor: msg.skinColor || '#ffe0bd',
+      hairColor: msg.hairColor || '#5c4033',
+      eyeColor: msg.eyeColor || '#2563eb',
+      height: this.normalizeHeight(Number(msg.height)),
       pikachuEnabled: msg.pikachuCompanion,
       root: root,
       actions: new Map(),
@@ -3772,8 +3800,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadOtherPlayerModel(p: OtherPlayerNPC) {
+    p.characterId = this.normalizeCharacterId(p.characterId);
+    p.height = this.normalizeHeight(Number(p.height));
     const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
-    this.loadCachedGltf(option.path, this.remoteAvatarLoadingManager).then(
+    const loader = new GLTFLoader(this.remoteAvatarLoadingManager);
+    loader.load(
+      option.path,
       (gltf) => {
         if (!this.otherPlayers.has(p.username)) {
           gltf.scene.clear();
@@ -3797,6 +3829,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         });
 
         this.applyOtherPlayerCustomizations(model, p);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * p.height);
 
         p.root.add(model);
         p.modelGroup = model;
@@ -3810,6 +3843,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setOtherPlayerAnimation(p, p.currentAnimation, 0);
       },
+      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB de ' + p.username, error);
       }
@@ -3988,11 +4022,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       p.height !== msg.height;
 
     if (needsReload) {
-      p.characterId = msg.characterId;
-      p.skinColor = msg.skinColor;
-      p.hairColor = msg.hairColor;
-      p.eyeColor = msg.eyeColor;
-      p.height = msg.height || 1.0;
+      p.characterId = this.normalizeCharacterId(msg.characterId);
+      p.skinColor = msg.skinColor || '#ffe0bd';
+      p.hairColor = msg.hairColor || '#5c4033';
+      p.eyeColor = msg.eyeColor || '#2563eb';
+      p.height = this.normalizeHeight(Number(msg.height));
       this.loadOtherPlayerModel(p);
     }
 
