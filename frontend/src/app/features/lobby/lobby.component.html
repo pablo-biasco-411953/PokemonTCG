@@ -196,6 +196,18 @@
       <strong>{{ graphicsQualityLabel }}</strong>
     </button>
 
+    <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
+      <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
+        <small>AUDIO</small>
+        <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+      <div class="audio-mini-controls">
+        <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" title="Musica ambiental">MUS</button>
+        <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" title="Pasos y efectos">SFX</button>
+        <button type="button" (click)="cycleLobbyVolume()" title="Volumen">{{ audioVolumeLabel }}</button>
+      </div>
+    </div>
+
     <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
       <small>ACCIONES</small>
       <strong>EMOTES</strong>

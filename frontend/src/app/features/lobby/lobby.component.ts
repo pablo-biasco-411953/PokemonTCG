@@ -451,6 +451,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private fpsSampleFrames = 0;
   private adaptivePixelRatioScale = 1;
   private lastAppliedPixelRatio = 0;
+  audioEnabled = localStorage.getItem('lobbyAudioEnabled') !== 'false';
+  musicEnabled = localStorage.getItem('lobbyMusicEnabled') !== 'false';
+  sfxEnabled = localStorage.getItem('lobbySfxEnabled') !== 'false';
+  audioVolume = Number(localStorage.getItem('lobbyAudioVolume') || '0.55');
+  private ambientTracks = ['/assets/login-bgm.mp3'];
+  private ambientTrackIndex = Number(localStorage.getItem('lobbyAmbientTrack') || '0');
+  private ambientAudio?: HTMLAudioElement;
+  private audioContext?: AudioContext;
+  private masterGain?: GainNode;
+  private sfxGain?: GainNode;
+  private footstepClock = 0;
+  private nextPikachuChirpAt = 4;
+  private remotePikachuChirpTimers = new Map<string, number>();
 
   // Control de cámara con mouse (órbita y zoom)
   private cameraOrbitYaw = 0;
@@ -665,11 +678,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.otherPlayers.clear();
 
     this.disposable.forEach((item) => item.dispose());
+    this.shutdownLobbyAudio();
     this.renderer?.dispose();
   }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
+    this.unlockLobbyAudio();
     if (event.key === 'F3') {
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
@@ -1781,11 +1796,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const poseEntry = Array.from(npc.actions.entries()).find(([name]) => name.includes('pose_03'));
     if (poseEntry) {
       const action = poseEntry[1];
+      npc.active?.fadeOut(0.08);
+      action.stop();
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
+      action.clampWhenFinished = false;
       action.fadeIn(0.12).play();
-      npc.active?.fadeOut(0.12);
       npc.active = action;
     }
   }
@@ -2329,7 +2345,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       npc.mixer.addEventListener('finished', (e) => {
         const poseEntry = Array.from(npc.actions.entries()).find(([name]) => name.includes('pose_03'));
         if (poseEntry && e.action === poseEntry[1]) {
-          this.setNpcAnimation(npc, ['speak_1']);
+          poseEntry[1].stop();
+          npc.active = undefined;
+          this.setNpcAnimation(npc, ['speak_1', 'mouth_01', 'idle'], 0.12);
         }
       });
 
@@ -3361,6 +3379,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
+    this.updateLobbyAudio(delta);
 
     this.updateDayNightCycle(elapsed);
     if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
@@ -3407,6 +3426,209 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.debugStatsTime = 0;
     this.debugStatsFrames = 0;
+  }
+
+  toggleLobbyAudio() {
+    this.audioEnabled = !this.audioEnabled;
+    localStorage.setItem('lobbyAudioEnabled', String(this.audioEnabled));
+    if (this.audioEnabled) {
+      this.unlockLobbyAudio();
+    } else {
+      this.pauseAmbientMusic();
+    }
+  }
+
+  toggleLobbyMusic() {
+    this.musicEnabled = !this.musicEnabled;
+    localStorage.setItem('lobbyMusicEnabled', String(this.musicEnabled));
+    if (this.musicEnabled) {
+      this.unlockLobbyAudio();
+    } else {
+      this.pauseAmbientMusic();
+    }
+  }
+
+  toggleLobbySfx() {
+    this.sfxEnabled = !this.sfxEnabled;
+    localStorage.setItem('lobbySfxEnabled', String(this.sfxEnabled));
+  }
+
+  cycleLobbyVolume() {
+    const levels = [0.25, 0.45, 0.65, 0.85];
+    const current = levels.findIndex((level) => this.audioVolume <= level + 0.01);
+    this.audioVolume = levels[(current + 1) % levels.length];
+    localStorage.setItem('lobbyAudioVolume', String(this.audioVolume));
+    this.applyLobbyAudioLevels();
+    this.unlockLobbyAudio();
+  }
+
+  get audioVolumeLabel(): string {
+    return `${Math.round(this.audioVolume * 100)}%`;
+  }
+
+  private unlockLobbyAudio() {
+    if (!this.audioEnabled) return;
+    this.ensureLobbyAudioGraph();
+    this.audioContext?.resume().catch(() => undefined);
+    this.playAmbientMusic();
+  }
+
+  private ensureLobbyAudioGraph() {
+    if (!this.audioContext) {
+      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtor) return;
+      this.audioContext = new AudioCtor();
+      this.masterGain = this.audioContext.createGain();
+      this.sfxGain = this.audioContext.createGain();
+      this.sfxGain.connect(this.masterGain);
+      this.masterGain.connect(this.audioContext.destination);
+    }
+
+    if (!this.ambientAudio) {
+      const track = this.ambientTracks[this.ambientTrackIndex % this.ambientTracks.length];
+      this.ambientAudio = new Audio(track);
+      this.ambientAudio.loop = true;
+      this.ambientAudio.preload = 'auto';
+    }
+
+    this.applyLobbyAudioLevels();
+  }
+
+  private applyLobbyAudioLevels() {
+    if (this.masterGain) this.masterGain.gain.value = this.audioEnabled ? this.audioVolume : 0;
+    if (this.sfxGain) this.sfxGain.gain.value = this.sfxEnabled ? 0.78 : 0;
+    if (this.ambientAudio) {
+      this.ambientAudio.volume = this.audioEnabled && this.musicEnabled ? Math.min(0.42, this.audioVolume * 0.48) : 0;
+    }
+  }
+
+  private playAmbientMusic() {
+    if (!this.audioEnabled || !this.musicEnabled) return;
+    this.ensureLobbyAudioGraph();
+    this.applyLobbyAudioLevels();
+    this.ambientAudio?.play().catch(() => undefined);
+  }
+
+  private pauseAmbientMusic() {
+    this.ambientAudio?.pause();
+  }
+
+  private shutdownLobbyAudio() {
+    this.pauseAmbientMusic();
+    this.ambientAudio = undefined;
+    this.audioContext?.close().catch(() => undefined);
+    this.audioContext = undefined;
+    this.masterGain = undefined;
+    this.sfxGain = undefined;
+  }
+
+  private updateLobbyAudio(delta: number) {
+    if (!this.audioEnabled || !this.sfxEnabled || !this.audioContext || !this.sfxGain) return;
+
+    const speedSq = this.playerVelocity.lengthSq();
+    const isMoving = speedSq > 0.18 && !this.kioskShopOpen && !this.deckBuilderOpen;
+    if (isMoving) {
+      const running = this.localAnimationState === 'running';
+      this.footstepClock -= delta;
+      if (this.footstepClock <= 0) {
+        this.playFootstep(this.player.position, running);
+        this.footstepClock = running ? 0.24 : 0.38;
+      }
+    } else {
+      this.footstepClock = 0;
+    }
+
+    this.nextPikachuChirpAt -= delta;
+    if (this.pikachu && this.nextPikachuChirpAt <= 0) {
+      const distance = this.pikachu.root.position.distanceTo(this.player.position);
+      if (distance < 7.5) this.playPikachuChirp(this.pikachu.root.position, false);
+      this.nextPikachuChirpAt = 7 + Math.random() * 9;
+    }
+
+    this.otherPlayers.forEach((other) => {
+      if (!other.pikachu) return;
+      const current = (this.remotePikachuChirpTimers.get(other.username) ?? (5 + Math.random() * 8)) - delta;
+      if (current <= 0) {
+        const distance = other.pikachu.root.position.distanceTo(this.player.position);
+        if (distance < 10) this.playPikachuChirp(other.pikachu.root.position, true);
+        this.remotePikachuChirpTimers.set(other.username, 9 + Math.random() * 12);
+      } else {
+        this.remotePikachuChirpTimers.set(other.username, current);
+      }
+    });
+  }
+
+  private playFootstep(position: THREE.Vector3, running: boolean) {
+    const ctx = this.audioContext;
+    if (!ctx || !this.sfxGain) return;
+    const { pan, volume } = this.getSpatialAudioMix(position, 18);
+    if (volume <= 0.01) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    const panner = ctx.createStereoPanner();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(running ? 92 : 74, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(running ? 42 : 36, ctx.currentTime + 0.07);
+    filter.type = 'lowpass';
+    filter.frequency.value = running ? 620 : 480;
+    panner.pan.value = pan;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime((running ? 0.11 : 0.075) * volume, ctx.currentTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.105);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.sfxGain);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  }
+
+  private playPikachuChirp(position: THREE.Vector3, distant: boolean) {
+    const ctx = this.audioContext;
+    if (!ctx || !this.sfxGain) return;
+    const { pan, volume } = this.getSpatialAudioMix(position, distant ? 12 : 9);
+    if (volume <= 0.015) return;
+
+    const now = ctx.currentTime;
+    const panner = ctx.createStereoPanner();
+    const gain = ctx.createGain();
+    panner.pan.value = pan;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime((distant ? 0.045 : 0.075) * volume, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+    panner.connect(gain);
+    gain.connect(this.sfxGain);
+
+    [780, 1040, 1320].forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      const start = now + index * 0.055;
+      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.18, start + 0.08);
+      osc.connect(panner);
+      osc.start(start);
+      osc.stop(start + 0.12);
+    });
+  }
+
+  private getSpatialAudioMix(position: THREE.Vector3, maxDistance: number): { pan: number; volume: number } {
+    const distance = position.distanceTo(this.player.position);
+    const volume = Math.max(0, 1 - distance / maxDistance) ** 1.6;
+    if (!this.camera) return { pan: 0, volume };
+
+    const toSound = position.clone().sub(this.camera.position);
+    toSound.y = 0;
+    if (toSound.lengthSq() < 0.001) return { pan: 0, volume };
+    toSound.normalize();
+
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+    right.y = 0;
+    right.normalize();
+    return { pan: Math.max(-0.9, Math.min(0.9, right.dot(toSound))), volume };
   }
 
   private updatePlayer(delta: number) {
@@ -4449,6 +4671,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
+    this.unlockLobbyAudio();
     if (event.button === 1) { // Ruedita del mouse
       event.preventDefault();
       this.toggleEmoteMenu();
