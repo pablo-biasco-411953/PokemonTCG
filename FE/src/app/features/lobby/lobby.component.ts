@@ -437,6 +437,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private skyDome?: THREE.Mesh;
   private clouds: THREE.Group[] = [];
   keys = new Set<string>();
+  mobileJoystickActive = false;
+  mobileJoystickX = 0;
+  mobileJoystickY = 0;
+  private mobileJoystickPointerId: number | null = null;
   private clock = new THREE.Clock();
   private animationId = 0;
   private worldObjects: THREE.Object3D[] = [];
@@ -483,6 +487,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     '/images/cards/sm9-1.png',
     '/images/cards/back.png'
   ];
+
+  private get isMobileViewport(): boolean {
+    return window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth <= 920 || window.innerHeight <= 520;
+  }
 
   // Recupera al jugador guardado y carga su estado inicial.
   ngOnInit(): void {
@@ -1712,6 +1720,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0x07111f, 0.019);
 
+    if (this.isMobileViewport) {
+      this.cameraZoomDistance = 4.8;
+      this.cameraOrbitPitch = 0.18;
+    }
+
     this.camera = new THREE.PerspectiveCamera(56, 1, 0.1, 180);
     this.camera.position.set(0, 5.2, 11.5);
 
@@ -1830,6 +1843,52 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   releaseMobileKey(event: PointerEvent, key: string) {
     event.preventDefault();
     this.keys.delete(key);
+  }
+
+  startMobileJoystick(event: PointerEvent) {
+    event.preventDefault();
+    this.unlockLobbyAudio();
+    this.mobileJoystickActive = true;
+    this.mobileJoystickPointerId = event.pointerId;
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    this.updateMobileJoystick(event);
+  }
+
+  moveMobileJoystick(event: PointerEvent) {
+    if (!this.mobileJoystickActive || event.pointerId !== this.mobileJoystickPointerId) return;
+    event.preventDefault();
+    this.updateMobileJoystick(event);
+  }
+
+  endMobileJoystick(event: PointerEvent) {
+    if (this.mobileJoystickPointerId !== null && event.pointerId !== this.mobileJoystickPointerId) return;
+    event.preventDefault();
+    this.mobileJoystickActive = false;
+    this.mobileJoystickPointerId = null;
+    this.mobileJoystickX = 0;
+    this.mobileJoystickY = 0;
+  }
+
+  mobileCameraZoomStep(direction: number) {
+    this.unlockLobbyAudio();
+    this.cameraZoomDistance = Math.max(3.2, Math.min(10.5, this.cameraZoomDistance + direction * 0.8));
+  }
+
+  private updateMobileJoystick(event: PointerEvent) {
+    const pad = event.currentTarget as HTMLElement;
+    const rect = pad.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const maxRadius = Math.min(rect.width, rect.height) * 0.34;
+    const rawX = event.clientX - centerX;
+    const rawY = event.clientY - centerY;
+    const distance = Math.hypot(rawX, rawY);
+    const scale = distance > maxRadius ? maxRadius / distance : 1;
+    const x = rawX * scale;
+    const y = rawY * scale;
+
+    this.mobileJoystickX = Math.abs(x) < 4 ? 0 : x / maxRadius;
+    this.mobileJoystickY = Math.abs(y) < 4 ? 0 : y / maxRadius;
   }
 
   private requestLandscapeOrientation() {
@@ -3737,8 +3796,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const backPressed = this.keys.has('s') || this.keys.has('arrowdown');
     const leftPressed = this.keys.has('a') || this.keys.has('arrowleft');
     const rightPressed = this.keys.has('d') || this.keys.has('arrowright');
+    const analogTurn = Math.abs(this.mobileJoystickX) > 0.08 ? this.mobileJoystickX : 0;
+    const analogMove = Math.abs(this.mobileJoystickY) > 0.08 ? this.mobileJoystickY : 0;
 
-    const isMovingInput = forwardPressed || backPressed || leftPressed || rightPressed;
+    const isMovingInput = forwardPressed || backPressed || leftPressed || rightPressed || analogTurn !== 0 || analogMove !== 0;
     if (isMovingInput && this.isPlayingEmote) {
       this.isPlayingEmote = false;
       this.emoteAnimationName = undefined;
@@ -3746,11 +3807,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.activePlayerAction = undefined;
     }
 
-    if (leftPressed) this.player.rotation.y += rotateSpeed * delta;
-    if (rightPressed) this.player.rotation.y -= rotateSpeed * delta;
+    if (analogTurn !== 0) {
+      this.player.rotation.y -= analogTurn * rotateSpeed * delta;
+    } else {
+      if (leftPressed) this.player.rotation.y += rotateSpeed * delta;
+      if (rightPressed) this.player.rotation.y -= rotateSpeed * delta;
+    }
 
     const direction = new THREE.Vector3(Math.sin(this.player.rotation.y), 0, Math.cos(this.player.rotation.y));
-    const move = (forwardPressed ? -1 : 0) + (backPressed ? 1 : 0);
+    const keyboardMove = (forwardPressed ? -1 : 0) + (backPressed ? 1 : 0);
+    const move = analogMove !== 0 ? analogMove : keyboardMove;
     this.playerVelocity.lerp(direction.multiplyScalar(move * walkSpeed), 0.18);
 
     // Guardar posición anterior para resolver colisiones

@@ -52,7 +52,11 @@
   </div>
 
   <!-- CHAT WINDOW (BOTTOM LEFT) -->
-  <div class="lobby-chat-container">
+  <button class="mobile-chat-toggle" type="button" (click)="toggleChat()">
+    CHAT
+  </button>
+
+  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
     <div class="chat-messages">
       <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
         <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
@@ -232,14 +236,28 @@
     <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
   </aside>
 
-  <div class="mobile-drive-pad" aria-label="Controles tactiles">
-    <button type="button" class="drive-key up" (pointerdown)="pressMobileKey($event, 'w')" (pointerup)="releaseMobileKey($event, 'w')" (pointercancel)="releaseMobileKey($event, 'w')">W</button>
-    <button type="button" class="drive-key left" (pointerdown)="pressMobileKey($event, 'a')" (pointerup)="releaseMobileKey($event, 'a')" (pointercancel)="releaseMobileKey($event, 'a')">A</button>
-    <button type="button" class="drive-key down" (pointerdown)="pressMobileKey($event, 's')" (pointerup)="releaseMobileKey($event, 's')" (pointercancel)="releaseMobileKey($event, 's')">S</button>
-    <button type="button" class="drive-key right" (pointerdown)="pressMobileKey($event, 'd')" (pointerup)="releaseMobileKey($event, 'd')" (pointercancel)="releaseMobileKey($event, 'd')">D</button>
+  <div
+    class="mobile-analog-pad"
+    aria-label="Movimiento analogico"
+    (pointerdown)="startMobileJoystick($event)"
+    (pointermove)="moveMobileJoystick($event)"
+    (pointerup)="endMobileJoystick($event)"
+    (pointercancel)="endMobileJoystick($event)"
+  >
+    <div class="analog-ring"></div>
+    <div
+      class="analog-stick"
+      [class.active]="mobileJoystickActive"
+      [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
+    ></div>
+    <span>MOVER</span>
   </div>
 
   <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <div class="mobile-camera-zoom" aria-label="Zoom de camara">
+      <button type="button" (click)="mobileCameraZoomStep(-1)">+</button>
+      <button type="button" (click)="mobileCameraZoomStep(1)">-</button>
+    </div>
     <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
     <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
   </div>
