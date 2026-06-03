@@ -6,10 +6,11 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
-  <div class="landscape-guard" aria-hidden="true">
+  <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
     <div class="phone-tilt-icon"></div>
     <strong>Gira el celular</strong>
-    <span>El lobby 3D se juega mejor en horizontal.</span>
+    <span>El lobby 3D se ve mejor en horizontal, pero podés seguir jugando así.</span>
   </div>
 
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->

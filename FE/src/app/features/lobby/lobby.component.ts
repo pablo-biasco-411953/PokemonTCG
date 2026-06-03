@@ -172,6 +172,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   dayPhaseLabel = 'Mañana';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+  landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
 
   // Interaction & Context Menu State
   selectedPlayerForMenu: OtherPlayerNPC | null = null;
@@ -777,7 +778,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:pointerdown')
   onAnyPointerDown() {
     this.unlockLobbyAudio();
-    this.requestLandscapeOrientation();
   }
 
   @HostListener('window:pointermove', ['$event'])
@@ -1934,8 +1934,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private requestLandscapeOrientation() {
-    const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: any) => Promise<void> };
-    orientation?.lock?.('landscape').catch(() => undefined);
+    // No bloqueamos orientacion: solo mostramos una sugerencia descartable en mobile.
+  }
+
+  dismissLandscapeHint() {
+    this.landscapeHintDismissed = true;
+    localStorage.setItem('lobbyLandscapeHintDismissed', 'true');
   }
 
   openKioskShop() {

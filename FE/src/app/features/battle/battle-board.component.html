@@ -20,10 +20,11 @@
   (setHp)="debugSetHp($event.objetivo, $event.hp)"
 ></app-battle-board-debug-panel>
 
-<div class="battle-landscape-guard" aria-hidden="true">
+<div class="battle-landscape-guard" *ngIf="!landscapeHintDismissed">
+  <button class="battle-landscape-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
   <div class="battle-phone-icon"></div>
   <strong>Gira el celular</strong>
-  <span>La batalla necesita pantalla horizontal.</span>
+  <span>La batalla se ve mejor en horizontal, pero podés seguir jugando así.</span>
 </div>
 
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
