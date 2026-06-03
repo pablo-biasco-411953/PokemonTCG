@@ -68,6 +68,8 @@ public class BattleEngineService {
         prepararPremios(tableroBot);
 
         Partida partida = new Partida(tableroJugador, tableroBot);
+        partida.setJugadorUsername(username);
+        partida.setCoinFlipCallerUsername(username);
         partida.setMulligansJugador(mulligansJugador);
         partida.setMulligansBot(mulligansBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
@@ -109,20 +111,63 @@ public class BattleEngineService {
         }
     }
 
-    public boolean lanzarMoneda(String matchId) {
+    public synchronized Partida lanzarMoneda(String matchId, String callerUsername, String eleccion) {
         Partida partida = getPartidaOThrow(matchId);
-        boolean jugadorGana = random.nextBoolean();
-        partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
-        return jugadorGana;
+        if (!partida.isCoinFlipped()) {
+            String callerAutorizado = partida.getCoinFlipCallerUsername();
+            if (partida.getBotUsername() != null && callerAutorizado != null && !callerAutorizado.equals(callerUsername)) {
+                return partida;
+            }
+
+            String resultado = random.nextBoolean() ? "CARA" : "CRUZ";
+            String eleccionNormalizada = "CRUZ".equalsIgnoreCase(eleccion) ? "CRUZ" : "CARA";
+            boolean callerWon = resultado.equals(eleccionNormalizada);
+            String oponente = callerUsername != null && callerUsername.equals(partida.getJugadorUsername())
+                    ? partida.getBotUsername()
+                    : partida.getJugadorUsername();
+            if (oponente == null || oponente.isBlank()) {
+                oponente = "BOT";
+            }
+
+            partida.setCoinFlipped(true);
+            partida.setCoinFlipResult(resultado);
+            partida.setCoinFlipWinner(callerWon ? callerUsername : oponente);
+
+            if (partida.getBotUsername() == null) {
+                partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
+            }
+        }
+        return partida;
     }
 
-    public void elegirTurno(String matchId, boolean vaPrimero) {
+    public void elegirTurno(String matchId, boolean vaPrimero, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        if (vaPrimero) {
-            partida.setTurnoActual(Partida.Turno.JUGADOR);
+        if (partida.getBotUsername() == null) {
+            if (vaPrimero) {
+                partida.setTurnoActual(Partida.Turno.JUGADOR);
+            } else {
+                partida.setTurnoActual(Partida.Turno.BOT);
+                ejecutarTurnoBot(matchId);
+            }
+            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         } else {
-            partida.setTurnoActual(Partida.Turno.BOT);
-            ejecutarTurnoBot(matchId);
+            if (partida.getFaseActual() == Partida.Fase.TURNO_NORMAL) {
+                return;
+            }
+            if (partida.getCoinFlipWinner() != null && !partida.getCoinFlipWinner().equals(callerUsername)) {
+                return;
+            }
+            if (vaPrimero) {
+                partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.JUGADOR : Partida.Turno.BOT);
+            } else {
+                partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.BOT : Partida.Turno.JUGADOR);
+            }
+            if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+                robarCarta(partida.getJugador());
+            } else {
+                robarCarta(partida.getBot());
+            }
+            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         }
     }
 
@@ -130,11 +175,11 @@ public class BattleEngineService {
         return partidasEnCurso.get(matchId);
     }
 
-    public void jugarPokemon(String matchId, String cartaId) {
+    public void jugarPokemon(String matchId, String cartaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         Card carta = encontrarCartaEnMano(tablero, cartaId);
 
         if (carta == null) throw new IllegalArgumentException("La carta no está en tu mano.");
@@ -156,11 +201,11 @@ public class BattleEngineService {
         }
     }
 
-    public void unirEnergia(String matchId, String cartaId, String energiaId) {
+    public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaId);
         Card energia = encontrarCartaEnMano(tablero, energiaId);
 
@@ -171,10 +216,10 @@ public class BattleEngineService {
         tablero.getMano().remove(energia);
     }
 
-    public void realizarRetirada(String matchId, String nuevoActivoId) {
+    public void realizarRetirada(String matchId, String nuevoActivoId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
-        TableroJugador tablero = partida.getJugador();
+        validarTurno(partida, callerUsername);
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         CartaEnJuego activoViejo = tablero.getActivo();
 
         if (activoViejo == null) throw new IllegalStateException("No hay un Pokémon activo para retirar.");
@@ -215,11 +260,11 @@ public class BattleEngineService {
         System.out.println("🔄 Retirada: " + activoViejo.getCard().getNombre() + " a la banca (Curado). Entra " + suplente.getCard().getNombre());
     }
 
-    public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca) {
+    public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
 
         if (tablero.getActivo() != null) {
             throw new IllegalStateException("Ya tenés un Pokémon activo. Debés retirarlo primero.");
@@ -235,20 +280,23 @@ public class BattleEngineService {
         System.out.println("🚀 " + elegido.getCard().getNombre() + " ahora es tu Pokémon activo.");
     }
 
-    public void realizarAtaque(String matchId, String nombreAtaqueElegido) {
+    public void realizarAtaque(String matchId, String nombreAtaqueElegido, String callerUsername) {
         Partida partida = partidasEnCurso.get(matchId);
 
         if (partida == null) return;
-        if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
-            throw new IllegalStateException("No es tu turno para atacar.");
-        }
+        validarTurno(partida, callerUsername);
 
-        CartaEnJuego activoJugador = partida.getJugador().getActivo();
-        CartaEnJuego activoBot = partida.getBot().getActivo();
+        TableroJugador tableroAtacante = getTableroDeJugador(partida, callerUsername);
+        TableroJugador tableroDefensor = getTableroOponente(partida, callerUsername);
+
+        CartaEnJuego activoJugador = tableroAtacante.getActivo();
+        CartaEnJuego activoBot = tableroDefensor.getActivo();
+
+        if (activoBot == null) throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
 
         if (activoBot.isInvulnerable()) {
             System.out.println("🚫 El ataque rebotó: " + activoBot.getCard().getNombre() + " es invulnerable.");
-            this.pasarTurno(matchId); // Pasamos el turno sin hacer daño
+            this.pasarTurno(matchId, callerUsername); // Pasamos el turno sin hacer daño
             return;
         }
         if (activoJugador == null) throw new IllegalStateException("No tenés un Pokémon activo.");
@@ -304,8 +352,8 @@ public class BattleEngineService {
             // 🚩 6. GUARDAMOS LA VERDAD EN LA PARTIDA
             partida.setUltimasMonedasLanzadas(historialMonedas);
 
-            System.out.println("🔄 Ataque finalizado. Pasando turno al BOT...");
-            this.pasarTurno(matchId);
+            System.out.println("🔄 Ataque finalizado. Pasando turno al oponente...");
+            this.pasarTurno(matchId, callerUsername);
 
         } else {
             throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
@@ -629,12 +677,12 @@ public class BattleEngineService {
         }
     }
 
-    public void pasarTurno(String matchId) {
+    public void pasarTurno(String matchId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador jugador = partida.getJugador();
-        TableroJugador bot = partida.getBot(); // 🚩 Necesitamos esta referencia para limpiarle el escudo
+        TableroJugador jugador = getTableroDeJugador(partida, callerUsername);
+        TableroJugador bot = getTableroOponente(partida, callerUsername);
 
         if (jugador.getActivo() == null && !jugador.getBanca().isEmpty()) {
             throw new IllegalStateException("Debés subir un Pokémon de tu banca a la posición Activa antes de terminar tu turno.");
@@ -648,7 +696,7 @@ public class BattleEngineService {
             // ❌ ACÁ YA NO SE APAGA TU ESCUDO
         }
 
-        // 🚩 EL ESCUDO DEL BOT SE APAGA ACÁ (Ya pasó tu turno para atacarlo)
+        // 🚩 EL ESCUDO DEL OPONENTE SE APAGA ACÁ (Ya pasó tu turno para atacarlo)
         if (bot.getActivo() != null) {
             bot.getActivo().setInvulnerable(false);
         }
@@ -656,7 +704,19 @@ public class BattleEngineService {
         aplicarMantenimientoEntreTurnos(partida);
 
         partida.setYaSeRetiroEsteTurno(false);
-        partida.setTurnoActual(Partida.Turno.BOT);
+
+        if (partida.getBotUsername() == null) {
+            partida.setTurnoActual(Partida.Turno.BOT);
+            ejecutarTurnoBot(matchId);
+        } else {
+            if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+                partida.setTurnoActual(Partida.Turno.BOT);
+                robarCarta(partida.getBot());
+            } else {
+                partida.setTurnoActual(Partida.Turno.JUGADOR);
+                robarCarta(partida.getJugador());
+            }
+        }
     }
 
 
@@ -782,9 +842,51 @@ public class BattleEngineService {
         return p;
     }
 
-    private void validarTurnoJugador(Partida partida) {
-        if (partida.getTurnoActual() != Partida.Turno.JUGADOR)
-            throw new IllegalStateException("No es tu turno.");
+    public void validarTurno(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null) {
+            if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
+                throw new IllegalStateException("No es tu turno.");
+            }
+        } else {
+            if (callerUsername == null) {
+                throw new IllegalStateException("Se requiere usuario para partida online.");
+            }
+            if (callerUsername.equals(partida.getJugadorUsername())) {
+                if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
+                    throw new IllegalStateException("No es tu turno.");
+                }
+            } else if (callerUsername.equals(partida.getBotUsername())) {
+                if (partida.getTurnoActual() != Partida.Turno.BOT) {
+                    throw new IllegalStateException("No es tu turno.");
+                }
+            } else {
+                throw new IllegalStateException("No eres parte de esta partida.");
+            }
+        }
+    }
+
+    public TableroJugador getTableroDeJugador(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null || callerUsername == null) {
+            return partida.getJugador();
+        }
+        if (callerUsername.equals(partida.getJugadorUsername())) {
+            return partida.getJugador();
+        } else if (callerUsername.equals(partida.getBotUsername())) {
+            return partida.getBot();
+        }
+        throw new IllegalArgumentException("Usuario no válido para esta partida.");
+    }
+
+    public TableroJugador getTableroOponente(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null || callerUsername == null) {
+            return partida.getBot();
+        }
+        if (callerUsername.equals(partida.getJugadorUsername())) {
+            return partida.getBot();
+        } else if (callerUsername.equals(partida.getBotUsername())) {
+            return partida.getJugador();
+        }
+        throw new IllegalArgumentException("Usuario no válido para esta partida.");
     }
 
     private Card encontrarCartaEnMano(TableroJugador tablero, String id) {
@@ -901,11 +1003,11 @@ public class BattleEngineService {
         return c.getSupertype().equalsIgnoreCase("Energy");
     }
 
-    public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId) {
+    public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
 
         Card cartaEvolucion = encontrarCartaEnMano(tablero, cartaManoId);
         if (cartaEvolucion == null) {
@@ -991,5 +1093,52 @@ public class BattleEngineService {
 
     public java.util.List<com.pokemon.tcg.model.Card> obtenerCatalogoCartasDebug() {
         return cardRepo.findAll();
+    }
+
+    public Partida startBattleOnline(String player1, Long player1MazoId, String player2, Long player2MazoId) {
+        Jugador j1 = jugadorRepo.findByUsername(player1);
+        if (j1 == null) throw new IllegalArgumentException("Jugador no encontrado: " + player1);
+        Jugador j2 = jugadorRepo.findByUsername(player2);
+        if (j2 == null) throw new IllegalArgumentException("Jugador no encontrado: " + player2);
+
+        Mazo mazo1 = mazoRepo.findById(player1MazoId)
+                .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + player1MazoId));
+        Mazo mazo2 = mazoRepo.findById(player2MazoId)
+                .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + player2MazoId));
+
+        if (mazo1.getCartas().size() < 60 || mazo2.getCartas().size() < 60)
+            throw new IllegalStateException("Los mazos deben tener 60 cartas.");
+
+        TableroJugador tableroJugador = new TableroJugador();
+        TableroJugador tableroBot = new TableroJugador();
+
+        List<Card> m1 = new ArrayList<>(mazo1.getCartas());
+        Collections.shuffle(m1);
+        tableroJugador.setMazo(m1);
+
+        List<Card> m2 = new ArrayList<>(mazo2.getCartas());
+        Collections.shuffle(m2);
+        tableroBot.setMazo(m2);
+
+        int mulligansJugador = prepararManoConMulligan(tableroJugador);
+        int mulligansBot = prepararManoConMulligan(tableroBot);
+
+        robarCartas(tableroJugador, mulligansBot);
+        robarCartas(tableroBot, mulligansJugador);
+
+        prepararPremios(tableroJugador);
+        prepararPremios(tableroBot);
+
+        Partida partida = new Partida(tableroJugador, tableroBot);
+        partida.setJugadorUsername(player1);
+        partida.setBotUsername(player2);
+        partida.setCoinFlipCallerUsername(player1);
+        partida.setMulligansJugador(mulligansJugador);
+        partida.setMulligansBot(mulligansBot);
+        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
+
+        partidasEnCurso.put(partida.getId(), partida);
+        System.out.println("✅ Partida Online creada con ID: " + partida.getId());
+        return partida;
     }
 }

@@ -27,4 +27,19 @@ export class JugadorService {
   debugSetSobres(username: string, cantidad: number): Observable<JugadorDatosResponse> {
     return this.http.post<JugadorDatosResponse>(`${this.apiUrl}/${username}/debug/sobres`, { cantidad });
   }
+
+  // Guarda la personalización de estilo en base de datos.
+  guardarPersonalizacion(username: string, config: any): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${username}/personalizacion`, config);
+  }
+
+  // Ejecuta la transacción de intercambio de cartas.
+  ejecutarTrade(playerA: string, playerB: string, playerACards: string[], playerBCards: string[]): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/trade/execute`, {
+      playerA,
+      playerB,
+      playerACardIds: playerACards,
+      playerBCardIds: playerBCards
+    });
+  }
 }

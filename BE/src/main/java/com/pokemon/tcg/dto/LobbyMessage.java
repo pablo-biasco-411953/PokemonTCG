@@ -66,4 +66,21 @@ public class LobbyMessage {
 
     public String getEmote() { return emote; }
     public void setEmote(String emote) { this.emote = emote; }
+
+    private String targetUsername;
+    private String challengeId;
+    private boolean accepted;
+    private String details;
+
+    public String getTargetUsername() { return targetUsername; }
+    public void setTargetUsername(String targetUsername) { this.targetUsername = targetUsername; }
+
+    public String getChallengeId() { return challengeId; }
+    public void setChallengeId(String challengeId) { this.challengeId = challengeId; }
+
+    public boolean isAccepted() { return accepted; }
+    public void setAccepted(boolean accepted) { this.accepted = accepted; }
+
+    public String getDetails() { return details; }
+    public void setDetails(String details) { this.details = details; }
 }
