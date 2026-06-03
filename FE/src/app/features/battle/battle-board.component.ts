@@ -108,6 +108,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private ataqueRealizado = false;
   private pollingPartida: ReturnType<typeof setInterval> | null = null;
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
+  private lastAppliedStateSignature = '';
   public botEstaAtacando = false;
   private datosPendientesBot: Partida | null = null;
   animandoEvolucionId: string | null = null;
@@ -191,6 +192,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => {
         this.partida = data;
+        this.lastAppliedStateSignature = this.crearFirmaPartida(data);
         if (data.faseActual === 'LANZAMIENTO_MONEDA') {
           setTimeout(() => {
             this.estadoCoinFlip = this.puedeCantarSorteo(data) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
@@ -316,6 +318,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return !!estado?.botUsername;
   }
 
+  trackByCardId(index: number, item: any): string {
+    return item?.card?.id || item?.id || String(index);
+  }
+
+  private crearFirmaPartida(estado: Partida | null | undefined): string {
+    return estado ? JSON.stringify(estado) : '';
+  }
+
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
     return !this.esPartidaOnline(estado) || estado?.coinFlipCallerUsername === this.jugadorNombre;
   }
@@ -329,6 +339,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.battleService.getState(this.matchId).subscribe({
         next: async (data) => {
           this.partida = data;
+          this.lastAppliedStateSignature = this.crearFirmaPartida(data);
 
           if (data.faseActual === 'TURNO_NORMAL') {
             this.finalizarCoinFlip();
@@ -910,6 +921,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           return;
         }
         if (!data) return;
+        const firmaNueva = this.crearFirmaPartida(data);
+        if (firmaNueva === this.lastAppliedStateSignature) return;
 
         const hpServidorJugador = data.jugador?.activo?.hpActual || 0;
 
@@ -934,6 +947,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         // --- ACTUALIZACIÓN DEL ESTADO ---
         this.partida = data;
+        this.lastAppliedStateSignature = firmaNueva;
 
         if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
           this.esperandoMiNuevoTurno = false;
@@ -1049,6 +1063,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     // Orquesta la transicion dramatica hacia el turno del bot.
     this.bloqueadoPorAnimacion = true;
     this.partida = dataServidor;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(dataServidor);
     setTimeout(() => {
       this.turnoOverlayTipo = 'bot';
       this.showTurnOverlay = true;
@@ -1200,6 +1215,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     try {
       const nuevoEstado: any = await firstValueFrom(this.battleService.getState(this.matchId!));
       this.partida = this.battleBoardState.clonarPartida(nuevoEstado);
+      this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
       this.cdr.detectChanges();
       console.log('Tablero recargado manualmente.');
     } catch (error) {
@@ -1323,6 +1339,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.bloqueadoPorAnimacion = true;
           const miHp = this.hpRenderJugador;
           this.partida = data;
+          this.lastAppliedStateSignature = this.crearFirmaPartida(data);
           this.hpRenderJugador = miHp;
           this.cdr.detectChanges();
           await new Promise((f) => setTimeout(f, 1200));
@@ -1334,6 +1351,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.cdr.detectChanges();
           if (this.esPartidaOnline(data)) {
             this.partida = data;
+            this.lastAppliedStateSignature = this.crearFirmaPartida(data);
             this.hpRenderJugador = data.jugador?.activo?.hpActual || 0;
             this.bloqueadoPorAnimacion = false;
             this.cdr.detectChanges();
@@ -1343,6 +1361,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           return;
         }
         this.partida = data;
+        this.lastAppliedStateSignature = this.crearFirmaPartida(data);
         this.hpRenderJugador = data.jugador?.activo?.hpActual || 0;
         this.cdr.detectChanges();
       },
@@ -1952,6 +1971,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
     if (!estado) return;
     this.partida = this.battleBoardState.clonarPartida(estado);
+    this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
   }
 
