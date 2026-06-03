@@ -6,6 +6,12 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
+  <div class="landscape-guard" aria-hidden="true">
+    <div class="phone-tilt-icon"></div>
+    <strong>Gira el celular</strong>
+    <span>El lobby 3D se juega mejor en horizontal.</span>
+  </div>
+
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 
     *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
@@ -225,6 +231,18 @@
     <div class="help-key"><kbd>Shift</kbd><span>correr</span></div>
     <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
   </aside>
+
+  <div class="mobile-drive-pad" aria-label="Controles tactiles">
+    <button type="button" class="drive-key up" (pointerdown)="pressMobileKey($event, 'w')" (pointerup)="releaseMobileKey($event, 'w')" (pointercancel)="releaseMobileKey($event, 'w')">W</button>
+    <button type="button" class="drive-key left" (pointerdown)="pressMobileKey($event, 'a')" (pointerup)="releaseMobileKey($event, 'a')" (pointercancel)="releaseMobileKey($event, 'a')">A</button>
+    <button type="button" class="drive-key down" (pointerdown)="pressMobileKey($event, 's')" (pointerup)="releaseMobileKey($event, 's')" (pointercancel)="releaseMobileKey($event, 's')">S</button>
+    <button type="button" class="drive-key right" (pointerdown)="pressMobileKey($event, 'd')" (pointerup)="releaseMobileKey($event, 'd')" (pointercancel)="releaseMobileKey($event, 'd')">D</button>
+  </div>
+
+  <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
+    <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
+  </div>
 
   <div class="hub-radar">
     <button
