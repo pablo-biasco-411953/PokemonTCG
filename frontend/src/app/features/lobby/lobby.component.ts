@@ -462,8 +462,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private masterGain?: GainNode;
   private sfxGain?: GainNode;
   private footstepClock = 0;
-  private nextPikachuChirpAt = 4;
+  private nextPikachuChirpAt = 2.5;
   private remotePikachuChirpTimers = new Map<string, number>();
+  private readonly groundLift = 0.035;
 
   // Control de cámara con mouse (órbita y zoom)
   private cameraOrbitYaw = 0;
@@ -570,6 +571,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('ptcg_graphics_quality', quality);
     if (updateRenderer) {
       this.updateRendererPixelRatio();
+      this.updateShadowQuality();
       // Force update shadow state immediately
       if (this.scene && this.sunLight && this.moonLight) {
         const elapsed = this.clock.elapsedTime;
@@ -634,6 +636,40 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.85) return Math.min(max, 2);
     if (this.graphicsQuality === 'medium') return Math.min(max, 4);
     return Math.min(max, 8);
+  }
+
+  private updateShadowQuality() {
+    if (!this.renderer) return;
+    const enabled = this.graphicsQuality !== 'low';
+    this.renderer.shadowMap.enabled = enabled;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const sunSize = this.graphicsQuality === 'high' ? 2048 : 1024;
+    const moonSize = this.graphicsQuality === 'high' ? 1024 : 512;
+    if (this.sunLight) {
+      this.sunLight.castShadow = enabled;
+      this.sunLight.shadow.mapSize.set(sunSize, sunSize);
+      this.sunLight.shadow.camera.left = this.graphicsQuality === 'high' ? -58 : -42;
+      this.sunLight.shadow.camera.right = this.graphicsQuality === 'high' ? 58 : 42;
+      this.sunLight.shadow.camera.top = this.graphicsQuality === 'high' ? 58 : 42;
+      this.sunLight.shadow.camera.bottom = this.graphicsQuality === 'high' ? -58 : -42;
+      this.sunLight.shadow.camera.far = this.graphicsQuality === 'high' ? 125 : 95;
+      this.sunLight.shadow.radius = this.graphicsQuality === 'high' ? 3 : 2;
+      this.sunLight.shadow.normalBias = 0.018;
+      this.sunLight.shadow.map?.dispose();
+      this.sunLight.shadow.map = null as any;
+      this.sunLight.shadow.camera.updateProjectionMatrix();
+    }
+
+    if (this.moonLight) {
+      this.moonLight.castShadow = enabled && this.graphicsQuality === 'high';
+      this.moonLight.shadow.mapSize.set(moonSize, moonSize);
+      this.moonLight.shadow.radius = 2;
+      this.moonLight.shadow.normalBias = 0.022;
+      this.moonLight.shadow.map?.dispose();
+      this.moonLight.shadow.map = null as any;
+      this.moonLight.shadow.camera.updateProjectionMatrix();
+    }
   }
 
   // Intenta reproducir el video decorativo apenas exista en el DOM.
@@ -719,6 +755,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     this.keys.delete(event.key.toLowerCase());
+  }
+
+  @HostListener('window:pointerdown')
+  onAnyPointerDown() {
+    this.unlockLobbyAudio();
   }
 
   @HostListener('window:pointermove', ['$event'])
@@ -1738,11 +1779,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sunLight.shadow.camera.top = 42;
     this.sunLight.shadow.camera.bottom = -42;
     this.sunLight.shadow.bias = -0.0005;
+    this.sunLight.shadow.normalBias = 0.015;
     this.scene.add(this.sunLight);
 
     this.moonLight = new THREE.DirectionalLight(0xc7d2fe, 0.25);
     this.moonLight.castShadow = true;
     this.moonLight.shadow.bias = -0.0005;
+    this.moonLight.shadow.normalBias = 0.018;
     this.moonLight.position.set(-20, 18, 18);
     this.scene.add(this.moonLight);
 
@@ -1772,6 +1815,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const kioskLight = new THREE.PointLight(0xffd37a, 2.2, 18);
     kioskLight.position.set(-18, 4.2, -18);
     this.scene.add(kioskLight);
+    this.updateShadowQuality();
   }
 
   openKioskShop() {
@@ -1994,25 +2038,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private createGrassTexture(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
-    const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-    gradient.addColorStop(0, '#6faa4d');
-    gradient.addColorStop(0.48, '#83bc5b');
-    gradient.addColorStop(1, '#4e8438');
+    const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+    gradient.addColorStop(0, '#78ad56');
+    gradient.addColorStop(0.42, '#6f9f4b');
+    gradient.addColorStop(1, '#4f7f39');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillRect(0, 0, 512, 512);
 
-    for (let i = 0; i < 1300; i++) {
-      const x = Math.random() * 256;
-      const y = Math.random() * 256;
-      const length = 2 + Math.random() * 5;
-      ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(37, 92, 34, .28)' : 'rgba(181, 225, 132, .25)';
-      ctx.lineWidth = 0.7 + Math.random() * 0.7;
+    for (let i = 0; i < 90; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      const radius = 18 + Math.random() * 56;
+      const patch = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      patch.addColorStop(0, Math.random() > 0.5 ? 'rgba(42, 96, 40, .18)' : 'rgba(174, 217, 119, .16)');
+      patch.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = patch;
+      ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    }
+
+    for (let i = 0; i < 3200; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      const length = 2 + Math.random() * 7;
+      ctx.strokeStyle = Math.random() > 0.48 ? 'rgba(34, 84, 31, .22)' : 'rgba(199, 236, 151, .18)';
+      ctx.lineWidth = 0.45 + Math.random() * 0.8;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.random() * 3 - 1.5, y - length);
+      ctx.lineTo(x + Math.random() * 4 - 2, y - length);
       ctx.stroke();
     }
 
@@ -2020,10 +2075,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(32, 32);
+    texture.repeat.set(9, 9);
     texture.anisotropy = this.getRuntimeAnisotropy();
     this.disposable.push(texture);
     return texture;
+  }
+
+  private getGroundHeightAt(x: number, z: number): number {
+    let height = 0;
+    const inside = (cx: number, cz: number, sx: number, sz: number) =>
+      x >= cx - sx / 2 && x <= cx + sx / 2 && z >= cz - sz / 2 && z <= cz + sz / 2;
+
+    if (inside(0, -8, 9.2, 58)) height = Math.max(height, 0.09);
+    if (inside(-5.15, -8, 1.1, 58) || inside(5.15, -8, 1.1, 58)) height = Math.max(height, 0.15);
+    if (inside(-18, -18, 16, 18)) height = Math.max(height, 0.08);
+    if (inside(18, -4, 24, 13)) height = Math.max(height, 0.08);
+    if (inside(-19, -19.6, 10.4, 8.4)) height = Math.max(height, 0.4);
+
+    return height;
   }
 
   private addBox(size: [number, number, number], position: [number, number, number], color: number, options: { roughness?: number; metalness?: number; emissive?: number; opacity?: number } = {}) {
@@ -2691,6 +2760,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(root);
     const companion: CampusNpc = { root, actions: new Map() };
     this.pikachu = companion;
+    this.nextPikachuChirpAt = 1.2;
 
     this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
       model.scale.setScalar(0.42);
@@ -2806,6 +2876,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Guardar variables de estado actualizadas
     root.userData['state'] = state;
+    target.y = this.getGroundHeightAt(target.x, target.z) + this.groundLift;
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
@@ -2819,6 +2890,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       isMoving = false;
     }
     root.userData['isMoving'] = isMoving;
+    root.position.y += (target.y - root.position.y) * (1 - Math.pow(0.0001, delta));
 
     if (isMoving && speed > 0) {
       const moveDir = target.clone().sub(root.position);
@@ -2986,6 +3058,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.player = new THREE.Group();
     this.player.position.set(0, 0, 8.5);
+    this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift;
     this.scene.add(this.player);
     this.createFallbackTrainerAvatar();
     this.loadAnimatedPlayerAsset();
@@ -3542,7 +3615,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.pikachu && this.nextPikachuChirpAt <= 0) {
       const distance = this.pikachu.root.position.distanceTo(this.player.position);
       if (distance < 7.5) this.playPikachuChirp(this.pikachu.root.position, false);
-      this.nextPikachuChirpAt = 7 + Math.random() * 9;
+      this.nextPikachuChirpAt = 4 + Math.random() * 6;
     }
 
     this.otherPlayers.forEach((other) => {
@@ -3551,7 +3624,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (current <= 0) {
         const distance = other.pikachu.root.position.distanceTo(this.player.position);
         if (distance < 10) this.playPikachuChirp(other.pikachu.root.position, true);
-        this.remotePikachuChirpTimers.set(other.username, 9 + Math.random() * 12);
+        this.remotePikachuChirpTimers.set(other.username, 6 + Math.random() * 9);
       } else {
         this.remotePikachuChirpTimers.set(other.username, current);
       }
@@ -3598,20 +3671,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const gain = ctx.createGain();
     panner.pan.value = pan;
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime((distant ? 0.045 : 0.075) * volume, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
+    gain.gain.exponentialRampToValueAtTime((distant ? 0.055 : 0.105) * volume, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
     panner.connect(gain);
     gain.connect(this.sfxGain);
 
-    [780, 1040, 1320].forEach((freq, index) => {
+    [980, 1320, 1180, 1560, 1280, 1720].forEach((freq, index) => {
       const osc = ctx.createOscillator();
-      osc.type = 'sine';
-      const start = now + index * 0.055;
+      osc.type = index % 2 === 0 ? 'sine' : 'triangle';
+      const start = now + index * 0.052;
       osc.frequency.setValueAtTime(freq, start);
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.18, start + 0.08);
+      osc.frequency.exponentialRampToValueAtTime(freq * (index < 3 ? 1.16 : 0.92), start + 0.08);
       osc.connect(panner);
       osc.start(start);
-      osc.stop(start + 0.12);
+      osc.stop(start + 0.105);
     });
   }
 
@@ -3721,9 +3794,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.playerMixer) {
       const bob = Math.sin(this.clock.elapsedTime * (forwardPressed || backPressed ? 11 : 3)) * (forwardPressed || backPressed ? 0.045 : 0.015);
-      this.player.position.y = Math.max(0, bob);
+      this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift + Math.max(0, bob);
     } else {
-      this.player.position.y = 0;
+      this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift;
     }
   }
 
@@ -3993,7 +4066,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('Registrando nuevo jugador online en el lobby:', username);
 
     const root = new THREE.Group();
-    root.position.set(msg.x, msg.y, msg.z);
+    root.position.set(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z);
     root.rotation.y = msg.rotY;
     this.scene?.add(root);
 
@@ -4007,7 +4080,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       pikachuEnabled: msg.pikachuCompanion,
       root: root,
       actions: new Map(),
-      targetPosition: new THREE.Vector3(msg.x, msg.y, msg.z),
+      targetPosition: new THREE.Vector3(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z),
       targetRotationY: msg.rotY,
       currentAnimation: msg.animation || 'idle'
     };
@@ -4045,7 +4118,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = false;
+            mesh.castShadow = true;
             mesh.receiveShadow = true;
           }
         });
@@ -4233,7 +4306,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    p.targetPosition.set(msg.x, msg.y, msg.z);
+    p.targetPosition.set(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z);
     p.targetRotationY = msg.rotY;
 
     const needsReload = 
@@ -4466,6 +4539,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     root.userData['state'] = state;
+    target.y = this.getGroundHeightAt(target.x, target.z) + this.groundLift;
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
@@ -4478,6 +4552,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       isMoving = false;
     }
     root.userData['isMoving'] = isMoving;
+    root.position.y += (target.y - root.position.y) * (1 - Math.pow(0.0001, delta));
 
     if (isMoving && speed > 0) {
       const moveDir = target.clone().sub(root.position);
