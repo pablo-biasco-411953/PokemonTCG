@@ -16,6 +16,7 @@ import { Mazo } from '../../shared/models/mazo';
 import { Partida } from '../../shared/models/battle';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Datos usados por el zoom flotante de una carta.
 export interface PokemonZoomUI {
@@ -136,6 +137,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   mostrarAnimacionSobre: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
+  debugPanelX = 18;
+  debugPanelY = 18;
+  debugFps = 0;
+  debugFrameMs = 0;
+  debugDrawCalls = 0;
+  debugTriangles = 0;
+  debugGeometries = 0;
+  debugTextures = 0;
+  debugPixelRatio = 1;
+  debugAdaptiveScale = 1;
+  private debugStatsTime = 0;
+  private debugStatsFrames = 0;
+  private debugPanelDragging = false;
+  private debugPanelDragOffsetX = 0;
+  private debugPanelDragOffsetY = 0;
   debugSobresCantidad: number = 0;
   debugCatalogoCompleto: Card[] = [];
   debugCatalogoFiltrado: Card[] = [];
@@ -319,6 +335,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Loading manager para el escenario 3D del Lobby
   private hubLoadingManager = new THREE.LoadingManager();
+  private remoteAvatarLoadingManager = new THREE.LoadingManager();
   showHubLoadingOverlay = true;
   hubLoadingProgress = 0;
   hubVisualProgress = 0;
@@ -334,7 +351,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
   ) {
-    this.hubLoadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+    this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
+      if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
       this.ngZone.run(() => {
         this.showHubLoadingOverlay = true;
         this.hubLoadingProgress = 0;
@@ -344,7 +362,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     };
 
-    this.hubLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+    this.hubLoadingManager.onProgress = (_url, itemsLoaded, itemsTotal) => {
+      if (!this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
       this.ngZone.run(() => {
         const progress = Math.round((itemsLoaded / itemsTotal) * 100);
         // Aseguramos que la carga real progrese, pero evitamos saltos toscos
@@ -425,6 +444,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private lampLights: THREE.PointLight[] = [];
   private lampEmissiveMaterials: THREE.Material[] = [];
   private readonly playerAssetPath = '/models/player/RobotExpressive.glb';
+  private readonly gltfCache = new Map<string, Promise<any>>();
+  private frameCounter = 0;
+  private fpsSampleTime = 0;
+  private fpsSampleFrames = 0;
+  private adaptivePixelRatioScale = 1;
+  private lastAppliedPixelRatio = 0;
 
   // Control de cámara con mouse (órbita y zoom)
   private cameraOrbitYaw = 0;
@@ -552,8 +577,49 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.graphicsQuality === 'low') maxDPR = 1.0;
     else if (this.graphicsQuality === 'medium') maxDPR = 1.25;
     else if (this.graphicsQuality === 'high') maxDPR = 1.6;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDPR));
+    const target = Math.min(window.devicePixelRatio, maxDPR) * this.adaptivePixelRatioScale;
+    const capped = Math.max(0.72, target);
+    if (Math.abs(capped - this.lastAppliedPixelRatio) < 0.03) return;
+    this.lastAppliedPixelRatio = capped;
+    this.renderer.setPixelRatio(capped);
     this.resizeHub();
+  }
+
+  private updateAdaptivePerformance(delta: number) {
+    if (!this.renderer) return;
+
+    this.fpsSampleTime += delta;
+    this.fpsSampleFrames++;
+    if (this.fpsSampleTime < 1.4) return;
+
+    const fps = this.fpsSampleFrames / this.fpsSampleTime;
+    const overlayPressure = this.deckBuilderOpen || this.activeTradeSession || this.kioskShopOpen || this.mostrarAnimacionSobre;
+    const minScale = overlayPressure ? 0.7 : 0.78;
+    const maxScale = overlayPressure ? 0.88 : 1;
+    let nextScale = this.adaptivePixelRatioScale;
+
+    if (fps < 42) {
+      nextScale = Math.max(minScale, nextScale - 0.08);
+    } else if (fps > 57) {
+      nextScale = Math.min(maxScale, nextScale + 0.04);
+    } else if (overlayPressure && nextScale > maxScale) {
+      nextScale = maxScale;
+    }
+
+    this.fpsSampleTime = 0;
+    this.fpsSampleFrames = 0;
+
+    if (Math.abs(nextScale - this.adaptivePixelRatioScale) >= 0.03) {
+      this.adaptivePixelRatioScale = nextScale;
+      this.updateRendererPixelRatio();
+    }
+  }
+
+  private getRuntimeAnisotropy(): number {
+    const max = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.85) return Math.min(max, 2);
+    if (this.graphicsQuality === 'medium') return Math.min(max, 4);
+    return Math.min(max, 8);
   }
 
   // Intenta reproducir el video decorativo apenas exista en el DOM.
@@ -639,6 +705,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.keys.delete(event.key.toLowerCase());
   }
 
+  @HostListener('window:pointermove', ['$event'])
+  onWindowPointerMove(event: PointerEvent) {
+    if (!this.debugPanelDragging) return;
+    const maxX = Math.max(12, window.innerWidth - 260);
+    const maxY = Math.max(12, window.innerHeight - 120);
+    this.debugPanelX = Math.max(8, Math.min(maxX, event.clientX - this.debugPanelDragOffsetX));
+    this.debugPanelY = Math.max(8, Math.min(maxY, event.clientY - this.debugPanelDragOffsetY));
+  }
+
+  @HostListener('window:pointerup')
+  onWindowPointerUp() {
+    this.debugPanelDragging = false;
+  }
+
+  startDebugPanelDrag(event: PointerEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.debugPanelDragging = true;
+    this.debugPanelDragOffsetX = event.clientX - this.debugPanelX;
+    this.debugPanelDragOffsetY = event.clientY - this.debugPanelY;
+  }
+
   // Refresca resumen, sobres y mazos del jugador.
   refrescarTodo() {
     if (!this.jugador?.username || this.lobbyDestroyed) return;
@@ -717,6 +805,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private loadCachedGltf(path: string, manager?: THREE.LoadingManager): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
+    if (!this.gltfCache.has(path)) {
+      const loader = new GLTFLoader(manager || this.hubLoadingManager);
+      this.gltfCache.set(path, new Promise((resolve, reject) => {
+        loader.load(path, resolve, undefined, reject);
+      }));
+    }
+
+    return this.gltfCache.get(path)!.then((gltf: any) => ({
+      scene: cloneSkeleton(gltf.scene) as THREE.Group,
+      animations: gltf.animations || []
+    }));
   }
 
   private setTradeCollection(cards: Card[]) {
@@ -1900,7 +2002,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(32, 32);
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
     this.disposable.push(texture);
     return texture;
   }
@@ -2524,10 +2626,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void, options: { castShadow?: boolean; receiveShadow?: boolean } = { castShadow: true, receiveShadow: true }) {
-    const loader = new GLTFLoader(this.hubLoadingManager);
-    loader.load(
-      path,
+  private loadSceneAsset(
+    path: string,
+    onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void,
+    options: { castShadow?: boolean; receiveShadow?: boolean; manager?: THREE.LoadingManager } = { castShadow: true, receiveShadow: true }
+  ) {
+    this.loadCachedGltf(path, options.manager || this.hubLoadingManager).then(
       (gltf) => {
         const model = gltf.scene;
         
@@ -2554,7 +2658,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         onLoad(model, gltf.animations);
       },
-      undefined,
       (error) => console.warn(`No se pudo cargar ${path}`, error)
     );
   }
@@ -2933,9 +3036,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.player.clear();
     this.createFallbackTrainerAvatar();
 
-    const loader = new GLTFLoader(this.hubLoadingManager);
-    loader.load(
-      option.path,
+    this.loadCachedGltf(option.path, this.hubLoadingManager).then(
       (gltf) => {
         this.player.clear();
 
@@ -2966,7 +3067,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setPlayerAnimation('idle', 0);
       },
-      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB, usando fallback procedural.', error);
       }
@@ -3124,7 +3224,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private createTexturedCard(texturePath: string, width = 0.72, height = 1.0): THREE.Mesh {
     const texture = new THREE.TextureLoader().load(texturePath);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
 
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshStandardMaterial({
@@ -3143,7 +3243,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private createPackMesh(width = 0.92, height = 1.22): THREE.Mesh {
     const texture = new THREE.TextureLoader().load('/images/cards/sobre.png');
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
 
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshStandardMaterial({
@@ -3231,14 +3331,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const delta = Math.min(this.clock.getDelta(), 0.05);
     const elapsed = this.clock.elapsedTime;
+    this.frameCounter++;
+    this.updateAdaptivePerformance(delta);
+    this.updateDebugStats(delta);
+    const overlayPressure = this.deckBuilderOpen || this.activeTradeSession || this.kioskShopOpen || this.mostrarAnimacionSobre;
+    const reduceDecorativeWork = overlayPressure || this.adaptivePixelRatioScale < 0.9;
+
     this.playerMixer?.update(delta);
-    this.sceneMixers.forEach((mixer) => mixer.update(delta));
+    if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
+      this.sceneMixers.forEach((mixer) => mixer.update(delta * (reduceDecorativeWork ? 2 : 1)));
+    }
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
 
     this.updateDayNightCycle(elapsed);
-    this.updateHubObjects(elapsed);
+    if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
+      this.updateHubObjects(elapsed);
+    }
     this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch)); // Clampar Pitch
     
     // Update camera first
@@ -3254,6 +3364,32 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.checkAndSendMove();
     this.renderer.render(this.scene, this.camera);
+  }
+
+  private updateDebugStats(delta: number) {
+    if (!this.showDebugPanel || !this.renderer) return;
+
+    this.debugStatsTime += delta;
+    this.debugStatsFrames++;
+    if (this.debugStatsTime < 0.5) return;
+
+    const fps = this.debugStatsFrames / this.debugStatsTime;
+    const info = this.renderer.info;
+
+    this.ngZone.run(() => {
+      this.debugFps = Math.round(fps);
+      this.debugFrameMs = Math.round((1000 / Math.max(1, fps)) * 10) / 10;
+      this.debugDrawCalls = info.render.calls;
+      this.debugTriangles = info.render.triangles;
+      this.debugGeometries = info.memory.geometries;
+      this.debugTextures = info.memory.textures;
+      this.debugPixelRatio = Math.round(this.lastAppliedPixelRatio * 100) / 100;
+      this.debugAdaptiveScale = Math.round(this.adaptivePixelRatioScale * 100);
+      this.cdr.detectChanges();
+    });
+
+    this.debugStatsTime = 0;
+    this.debugStatsFrames = 0;
   }
 
   private updatePlayer(delta: number) {
@@ -3637,9 +3773,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadOtherPlayerModel(p: OtherPlayerNPC) {
     const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
-    const loader = new GLTFLoader(this.hubLoadingManager);
-    loader.load(
-      option.path,
+    this.loadCachedGltf(option.path, this.remoteAvatarLoadingManager).then(
       (gltf) => {
         if (!this.otherPlayers.has(p.username)) {
           gltf.scene.clear();
@@ -3657,7 +3791,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = true;
+            mesh.castShadow = false;
             mesh.receiveShadow = true;
           }
         });
@@ -3676,7 +3810,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setOtherPlayerAnimation(p, p.currentAnimation, 0);
       },
-      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB de ' + p.username, error);
       }
@@ -3833,7 +3966,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       companion.mixer = new THREE.AnimationMixer(model);
       animations.forEach((clip) => companion.actions.set(clip.name.toLowerCase(), companion.mixer!.clipAction(clip)));
       this.setNpcAnimation(companion, ['idle'], 0);
-    });
+    }, { manager: this.remoteAvatarLoadingManager });
   }
 
   private updateOtherPlayerState(msg: any) {
@@ -3937,7 +4070,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.camera) return;
 
     this.otherPlayers.forEach((p) => {
-      p.mixer?.update(delta);
+      const distanceToCamera = p.root.position.distanceTo(this.camera!.position);
+      const farAway = distanceToCamera > 46;
+      const skipAnimationFrame = farAway && this.frameCounter % 3 !== 0;
+      if (!skipAnimationFrame) {
+        p.mixer?.update(delta * (farAway ? 3 : 1));
+      }
 
       const lerpFactor = 1 - Math.pow(0.0001, delta);
       p.root.position.lerp(p.targetPosition, lerpFactor);
@@ -3947,7 +4085,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       while (diff > Math.PI) diff -= Math.PI * 2;
       p.root.rotation.y += diff * lerpFactor;
 
-      this.updateOtherPlayerPikachuAI(p, delta);
+      if (!skipAnimationFrame) {
+        this.updateOtherPlayerPikachuAI(p, delta * (farAway ? 3 : 1));
+      }
 
       const headPos = p.root.position.clone().add(new THREE.Vector3(0, p.height * 2.25, 0));
       const projected = headPos.project(this.camera!);

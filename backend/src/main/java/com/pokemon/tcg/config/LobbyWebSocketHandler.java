@@ -11,6 +11,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class LobbyWebSocketHandler extends TextWebSocketHandler {
@@ -20,6 +24,8 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
     
     // Almacena el último estado conocido (posición, colores, avatar) de cada jugador
     private final Map<String, LobbyMessage> playersState = new ConcurrentHashMap<>();
+    private final Map<String, ScheduledFuture<?>> pendingDisconnects = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService disconnectScheduler = Executors.newSingleThreadScheduledExecutor();
     
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -39,6 +45,11 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
         String type = lobbyMsg.getType();
 
         if ("JOIN".equals(type)) {
+            ScheduledFuture<?> pendingDisconnect = pendingDisconnects.remove(username);
+            if (pendingDisconnect != null) {
+                pendingDisconnect.cancel(false);
+            }
+
             WebSocketSession previousSession = sessions.get(username);
             if (previousSession != null && previousSession != session && previousSession.isOpen()) {
                 try {
@@ -117,17 +128,31 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
                 return;
             }
 
-            System.out.println("Jugador desconectado del Lobby Online: " + username);
-            sessions.remove(username);
-            playersState.remove(username);
+            ScheduledFuture<?> pending = disconnectScheduler.schedule(() -> {
+                if (sessions.get(username) != session) {
+                    return;
+                }
+
+                System.out.println("Jugador desconectado del Lobby Online: " + username);
+                sessions.remove(username);
+                playersState.remove(username);
+                pendingDisconnects.remove(username);
+
+                try {
+                    LobbyMessage leaveMsg = new LobbyMessage();
+                    leaveMsg.setType("LEAVE");
+                    leaveMsg.setUsername(username);
+
+                    String leaveJson = objectMapper.writeValueAsString(leaveMsg);
+                    broadcastToOthers(username, leaveJson);
+                } catch (IOException e) {
+                    System.err.println("Error difundiendo salida de " + username + ": " + e.getMessage());
+                }
+            }, 2500, TimeUnit.MILLISECONDS);
+
+            pendingDisconnects.put(username, pending);
 
             // Difundir evento LEAVE a los demás para remover su malla 3D de inmediato
-            LobbyMessage leaveMsg = new LobbyMessage();
-            leaveMsg.setType("LEAVE");
-            leaveMsg.setUsername(username);
-            
-            String leaveJson = objectMapper.writeValueAsString(leaveMsg);
-            broadcastToOthers(username, leaveJson);
         }
     }
 
