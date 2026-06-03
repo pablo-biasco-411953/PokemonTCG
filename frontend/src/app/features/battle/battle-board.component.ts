@@ -55,6 +55,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   matchId: string | null = null;
   partida: Partida | null = null;
   jugadorNombre = '';
+  landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
 
   // Gesto de moneda
   private yStart = 0;
@@ -220,8 +221,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private requestLandscapeOrientation(): void {
-    const orientation = screen.orientation as ScreenOrientation & { lock?: (orientation: any) => Promise<void> };
-    orientation?.lock?.('landscape').catch(() => undefined);
+    // No bloqueamos orientacion en mobile: el aviso es solo una sugerencia descartable.
+  }
+
+  dismissLandscapeHint(): void {
+    this.landscapeHintDismissed = true;
+    localStorage.setItem('battleLandscapeHintDismissed', 'true');
   }
 
   // -----------------------------------------------
