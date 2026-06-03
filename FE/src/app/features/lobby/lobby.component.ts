@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SobreService } from './services/sobre.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
+import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
@@ -15,6 +16,7 @@ import { Mazo } from '../../shared/models/mazo';
 import { Partida } from '../../shared/models/battle';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Datos usados por el zoom flotante de una carta.
 export interface PokemonZoomUI {
@@ -91,7 +93,7 @@ export interface OtherPlayerNPC {
   templateUrl: './lobby.component.html',
   styleUrls: ['./lobby.component.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, AperturaSobreComponent, TranslatePipe]
+  imports: [CommonModule, FormsModule, AperturaSobreComponent, DeckBuilderComponent, TranslatePipe]
 })
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
@@ -101,6 +103,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private socket?: WebSocket;
   private reconnectTimeout?: ReturnType<typeof setTimeout>;
   private lobbyDestroyed = false;
+  private personalizationSynced = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
@@ -135,6 +138,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   mostrarAnimacionSobre: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
+  debugPanelX = 18;
+  debugPanelY = 18;
+  debugFps = 0;
+  debugFrameMs = 0;
+  debugDrawCalls = 0;
+  debugTriangles = 0;
+  debugGeometries = 0;
+  debugTextures = 0;
+  debugPixelRatio = 1;
+  debugAdaptiveScale = 1;
+  private debugStatsTime = 0;
+  private debugStatsFrames = 0;
+  private debugPanelDragging = false;
+  private debugPanelDragOffsetX = 0;
+  private debugPanelDragOffsetY = 0;
   debugSobresCantidad: number = 0;
   debugCatalogoCompleto: Card[] = [];
   debugCatalogoFiltrado: Card[] = [];
@@ -147,6 +165,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   battlePanelOpen = false;
   kioskShopOpen = false;
   vendorCameraFocus = false;
+  deckBuilderOpen = false;
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
@@ -179,11 +198,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   tradeRightReady = false;
   tradeCollectionSearchText = '';
   tradeCollectionFilterRarity = '';
+  tradeCollectionFilterType = '';
+  tradeCollectionFilterSupertype = '';
+  tradeCollectionFilterSubtype = '';
   tradeCollectionFiltrada: Card[] = [];
+  tradeCollectionLoading = false;
+  tradeCollectionError = '';
+  tradeCollectionRarities: string[] = [];
+  tradeCollectionTypes: string[] = [];
+  tradeCollectionSupertypes: string[] = [];
+  tradeCollectionSubtypes: string[] = [];
   tradeShowValueWarning = false;
   tradeShowContinuationPrompt = false;
   tradeWaitingForContinuation = false;
-  private userTradeCollection: Card[] = [];
+  userTradeCollection: Card[] = [];
+  private tradeCollectionLoaded = false;
 
   get graphicsQualityLabel(): string {
     if (this.graphicsQuality === 'low') return 'BAJO 🔴';
@@ -307,6 +336,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Loading manager para el escenario 3D del Lobby
   private hubLoadingManager = new THREE.LoadingManager();
+  private remoteAvatarLoadingManager = new THREE.LoadingManager();
   showHubLoadingOverlay = true;
   hubLoadingProgress = 0;
   hubVisualProgress = 0;
@@ -322,7 +352,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef
   ) {
-    this.hubLoadingManager.onStart = (url, itemsLoaded, itemsTotal) => {
+    this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
+      if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
       this.ngZone.run(() => {
         this.showHubLoadingOverlay = true;
         this.hubLoadingProgress = 0;
@@ -332,7 +363,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     };
 
-    this.hubLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+    this.hubLoadingManager.onProgress = (_url, itemsLoaded, itemsTotal) => {
+      if (!this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
       this.ngZone.run(() => {
         const progress = Math.round((itemsLoaded / itemsTotal) * 100);
         // Aseguramos que la carga real progrese, pero evitamos saltos toscos
@@ -413,6 +445,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private lampLights: THREE.PointLight[] = [];
   private lampEmissiveMaterials: THREE.Material[] = [];
   private readonly playerAssetPath = '/models/player/RobotExpressive.glb';
+  private readonly gltfCache = new Map<string, Promise<any>>();
+  private frameCounter = 0;
+  private fpsSampleTime = 0;
+  private fpsSampleFrames = 0;
+  private adaptivePixelRatioScale = 1;
+  private lastAppliedPixelRatio = 0;
 
   // Control de cámara con mouse (órbita y zoom)
   private cameraOrbitYaw = 0;
@@ -540,8 +578,49 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.graphicsQuality === 'low') maxDPR = 1.0;
     else if (this.graphicsQuality === 'medium') maxDPR = 1.25;
     else if (this.graphicsQuality === 'high') maxDPR = 1.6;
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, maxDPR));
+    const target = Math.min(window.devicePixelRatio, maxDPR) * this.adaptivePixelRatioScale;
+    const capped = Math.max(0.72, target);
+    if (Math.abs(capped - this.lastAppliedPixelRatio) < 0.03) return;
+    this.lastAppliedPixelRatio = capped;
+    this.renderer.setPixelRatio(capped);
     this.resizeHub();
+  }
+
+  private updateAdaptivePerformance(delta: number) {
+    if (!this.renderer) return;
+
+    this.fpsSampleTime += delta;
+    this.fpsSampleFrames++;
+    if (this.fpsSampleTime < 1.4) return;
+
+    const fps = this.fpsSampleFrames / this.fpsSampleTime;
+    const overlayPressure = this.deckBuilderOpen || this.activeTradeSession || this.kioskShopOpen || this.mostrarAnimacionSobre;
+    const minScale = overlayPressure ? 0.7 : 0.78;
+    const maxScale = overlayPressure ? 0.88 : 1;
+    let nextScale = this.adaptivePixelRatioScale;
+
+    if (fps < 42) {
+      nextScale = Math.max(minScale, nextScale - 0.08);
+    } else if (fps > 57) {
+      nextScale = Math.min(maxScale, nextScale + 0.04);
+    } else if (overlayPressure && nextScale > maxScale) {
+      nextScale = maxScale;
+    }
+
+    this.fpsSampleTime = 0;
+    this.fpsSampleFrames = 0;
+
+    if (Math.abs(nextScale - this.adaptivePixelRatioScale) >= 0.03) {
+      this.adaptivePixelRatioScale = nextScale;
+      this.updateRendererPixelRatio();
+    }
+  }
+
+  private getRuntimeAnisotropy(): number {
+    const max = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.85) return Math.min(max, 2);
+    if (this.graphicsQuality === 'medium') return Math.min(max, 4);
+    return Math.min(max, 8);
   }
 
   // Intenta reproducir el video decorativo apenas exista en el DOM.
@@ -627,10 +706,31 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.keys.delete(event.key.toLowerCase());
   }
 
+  @HostListener('window:pointermove', ['$event'])
+  onWindowPointerMove(event: PointerEvent) {
+    if (!this.debugPanelDragging) return;
+    const maxX = Math.max(12, window.innerWidth - 260);
+    const maxY = Math.max(12, window.innerHeight - 120);
+    this.debugPanelX = Math.max(8, Math.min(maxX, event.clientX - this.debugPanelDragOffsetX));
+    this.debugPanelY = Math.max(8, Math.min(maxY, event.clientY - this.debugPanelDragOffsetY));
+  }
+
+  @HostListener('window:pointerup')
+  onWindowPointerUp() {
+    this.debugPanelDragging = false;
+  }
+
+  startDebugPanelDrag(event: PointerEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.debugPanelDragging = true;
+    this.debugPanelDragOffsetX = event.clientX - this.debugPanelX;
+    this.debugPanelDragOffsetY = event.clientY - this.debugPanelY;
+  }
+
   // Refresca resumen, sobres y mazos del jugador.
   refrescarTodo() {
     if (!this.jugador?.username || this.lobbyDestroyed) return;
-    if (this.socket && (this.socket.readyState === WebSocket.OPEN || this.socket.readyState === WebSocket.CONNECTING)) return;
 
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
@@ -640,6 +740,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
           const idsUnicos = new Set(res.cartasObtenidas.map((c: Card) => c.pokemonId || c.id));
           this.cantidadCartasUnicas = idsUnicos.size;
+          this.setTradeCollection(res.cartasObtenidas);
+          this.tradeCollectionLoaded = true;
         } else {
           this.cantidadCartasUnicas = res.cantidadCartas ?? 0;
         }
@@ -667,12 +769,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           this.pikachuEnabled = res.pikachuCompanion;
         }
 
+        this.personalizationSynced = true;
         this.ngZone.runOutsideAngular(() => {
           this.loadAnimatedPlayerAsset();
           if (this.pikachuEnabled) {
             this.createPikachuCompanion();
           }
         });
+        this.sendJoinMessage();
 
         this.cdr.detectChanges();
       },
@@ -680,6 +784,66 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.cargarMazosDeJugador();
+    this.precargarColeccionTrade();
+  }
+
+  precargarColeccionTrade(force = false) {
+    if (!this.jugador?.username) return;
+    if (!force && this.tradeCollectionLoaded && this.userTradeCollection.length > 0) return;
+
+    this.tradeCollectionLoading = true;
+    this.tradeCollectionError = '';
+
+    this.jugadorService.getColeccion(this.jugador.username).subscribe({
+      next: (cards) => {
+        this.setTradeCollection(cards);
+        this.tradeCollectionLoaded = true;
+        this.tradeCollectionLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al precargar coleccion para trade:', err);
+        this.tradeCollectionLoading = false;
+        this.tradeCollectionError = 'No se pudo cargar tu coleccion.';
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private loadCachedGltf(path: string, manager?: THREE.LoadingManager): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
+    if (!this.gltfCache.has(path)) {
+      const loader = new GLTFLoader(manager || this.hubLoadingManager);
+      this.gltfCache.set(path, new Promise((resolve, reject) => {
+        loader.load(path, resolve, undefined, reject);
+      }));
+    }
+
+    return this.gltfCache.get(path)!.then((gltf: any) => ({
+      scene: cloneSkeleton(gltf.scene) as THREE.Group,
+      animations: gltf.animations || []
+    }));
+  }
+
+  private setTradeCollection(cards: Card[]) {
+    this.userTradeCollection = Array.isArray(cards) ? cards : [];
+    this.tradeCollectionRarities = this.getUniqueCardValues(this.userTradeCollection, (card) => card.rarity || 'Common');
+    this.tradeCollectionTypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.tipo);
+    this.tradeCollectionSupertypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.supertype);
+    this.tradeCollectionSubtypes = this.getUniqueCardValues(this.userTradeCollection, (card) => card.subtypes || []);
+    this.filtrarColeccionTrade();
+  }
+
+  private getUniqueCardValues(cards: Card[], picker: (card: Card) => string | string[] | undefined | null): string[] {
+    const values = new Set<string>();
+    cards.forEach((card) => {
+      const raw = picker(card);
+      const list = Array.isArray(raw) ? raw : [raw];
+      list.forEach((value) => {
+        const clean = (value || '').toString().trim();
+        if (clean) values.add(clean);
+      });
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b));
   }
 
   // Carga los mazos visibles y rellena slots vacios.
@@ -768,7 +932,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Navega al editor de mazos.
   irAlDeckBuilder() {
-    this.router.navigate(['/deck-builder']);
+    this.deckBuilderOpen = true;
+    this.keys.clear();
+    this.playerVelocity.set(0, 0, 0);
+    this.setPlayerAnimation('idle');
+    this.cdr.detectChanges();
+  }
+
+  cerrarDeckBuilder(refresh = false) {
+    this.deckBuilderOpen = false;
+    if (refresh) {
+      this.refrescarTodo();
+    }
+    this.cdr.detectChanges();
   }
 
   // Crea una partida usando el mazo elegido.
@@ -1663,10 +1839,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  private updateDayNightCycle(elapsed: number) {
+  private updateDayNightCycle(_elapsed: number) {
     if (!this.scene || !this.sunLight || !this.moonLight || !this.ambientLight || !this.sunMesh || !this.moonMesh || !this.skyDome) return;
 
-    const t = (elapsed % this.cycleSeconds) / this.cycleSeconds;
+    const syncedElapsed = Date.now() / 1000;
+    const t = (syncedElapsed % this.cycleSeconds) / this.cycleSeconds;
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
     
@@ -1828,7 +2005,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(32, 32);
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
     this.disposable.push(texture);
     return texture;
   }
@@ -2452,10 +2629,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private loadSceneAsset(path: string, onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void, options: { castShadow?: boolean; receiveShadow?: boolean } = { castShadow: true, receiveShadow: true }) {
-    const loader = new GLTFLoader(this.hubLoadingManager);
-    loader.load(
-      path,
+  private loadSceneAsset(
+    path: string,
+    onLoad: (model: THREE.Group, animations: THREE.AnimationClip[]) => void,
+    options: { castShadow?: boolean; receiveShadow?: boolean; manager?: THREE.LoadingManager } = { castShadow: true, receiveShadow: true }
+  ) {
+    this.loadCachedGltf(path, options.manager || this.hubLoadingManager).then(
       (gltf) => {
         const model = gltf.scene;
         
@@ -2482,7 +2661,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         });
         onLoad(model, gltf.animations);
       },
-      undefined,
       (error) => console.warn(`No se pudo cargar ${path}`, error)
     );
   }
@@ -2882,6 +3060,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Aplicar personalización de rasgos (piel, pelo, ojos, altura)
         this.applyCharacterCustomizations(model);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')));
 
         this.player.add(model);
         this.playerMixer = new THREE.AnimationMixer(model);
@@ -2980,6 +3159,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private normalizeVisibleCharacterHeight(model: THREE.Group, targetHeight: number) {
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    if (!Number.isFinite(size.y) || size.y <= 0.01) return;
+
+    model.scale.multiplyScalar(targetHeight / size.y);
+    this.alignModelBottom(model, 0);
+  }
+
   private setPlayerAnimation(preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
     this.localAnimationState = preferred;
     const action = this.findPlayerAction(preferred);
@@ -3052,7 +3241,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private createTexturedCard(texturePath: string, width = 0.72, height = 1.0): THREE.Mesh {
     const texture = new THREE.TextureLoader().load(texturePath);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
 
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshStandardMaterial({
@@ -3071,7 +3260,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private createPackMesh(width = 0.92, height = 1.22): THREE.Mesh {
     const texture = new THREE.TextureLoader().load('/images/cards/sobre.png');
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = this.renderer?.capabilities.getMaxAnisotropy() ?? 1;
+    texture.anisotropy = this.getRuntimeAnisotropy();
 
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshStandardMaterial({
@@ -3159,14 +3348,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const delta = Math.min(this.clock.getDelta(), 0.05);
     const elapsed = this.clock.elapsedTime;
+    this.frameCounter++;
+    this.updateAdaptivePerformance(delta);
+    this.updateDebugStats(delta);
+    const overlayPressure = this.deckBuilderOpen || this.activeTradeSession || this.kioskShopOpen || this.mostrarAnimacionSobre;
+    const reduceDecorativeWork = overlayPressure || this.adaptivePixelRatioScale < 0.9;
+
     this.playerMixer?.update(delta);
-    this.sceneMixers.forEach((mixer) => mixer.update(delta));
+    if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
+      this.sceneMixers.forEach((mixer) => mixer.update(delta * (reduceDecorativeWork ? 2 : 1)));
+    }
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
 
     this.updateDayNightCycle(elapsed);
-    this.updateHubObjects(elapsed);
+    if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
+      this.updateHubObjects(elapsed);
+    }
     this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch)); // Clampar Pitch
     
     // Update camera first
@@ -3184,8 +3383,34 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderer.render(this.scene, this.camera);
   }
 
+  private updateDebugStats(delta: number) {
+    if (!this.showDebugPanel || !this.renderer) return;
+
+    this.debugStatsTime += delta;
+    this.debugStatsFrames++;
+    if (this.debugStatsTime < 0.5) return;
+
+    const fps = this.debugStatsFrames / this.debugStatsTime;
+    const info = this.renderer.info;
+
+    this.ngZone.run(() => {
+      this.debugFps = Math.round(fps);
+      this.debugFrameMs = Math.round((1000 / Math.max(1, fps)) * 10) / 10;
+      this.debugDrawCalls = info.render.calls;
+      this.debugTriangles = info.render.triangles;
+      this.debugGeometries = info.memory.geometries;
+      this.debugTextures = info.memory.textures;
+      this.debugPixelRatio = Math.round(this.lastAppliedPixelRatio * 100) / 100;
+      this.debugAdaptiveScale = Math.round(this.adaptivePixelRatioScale * 100);
+      this.cdr.detectChanges();
+    });
+
+    this.debugStatsTime = 0;
+    this.debugStatsFrames = 0;
+  }
+
   private updatePlayer(delta: number) {
-    if (this.kioskShopOpen) {
+    if (this.kioskShopOpen || this.deckBuilderOpen) {
       this.playerVelocity.set(0, 0, 0);
       this.setPlayerAnimation('idle');
       return;
@@ -3397,7 +3622,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.socket.onopen = () => {
         console.log('Conexión WebSocket establecida con éxito.');
-        this.sendJoinMessage();
+        if (this.personalizationSynced) {
+          this.sendJoinMessage();
+        }
       };
 
       this.socket.onmessage = (event) => {
@@ -3425,13 +3652,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'JOIN',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3440,6 +3661,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.socket.send(JSON.stringify(payload));
+  }
+
+  private getLocalLobbyIdentityPayload() {
+    return {
+      username: this.jugador!.username,
+      characterId: this.normalizeCharacterId(this.selectedCharacterId),
+      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
+      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
+      height: this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')),
+      pikachuCompanion: this.pikachuEnabled
+    };
+  }
+
+  private normalizeCharacterId(characterId?: string): string {
+    return this.characterOptions.some((option) => option.id === characterId) ? characterId! : this.characterOptions[0].id;
+  }
+
+  private normalizeHeight(height: number): number {
+    if (!Number.isFinite(height) || height <= 0) return 1;
+    return Math.max(0.72, Math.min(1.28, height));
   }
 
   private checkAndSendMove() {
@@ -3455,13 +3697,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'MOVE',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3504,6 +3740,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.handleIncomingChallenge(msg);
       } else if (type === 'CHALLENGE_DUEL_RESPONSE') {
         this.handleChallengeResponse(msg);
+      } else if (type === 'BATTLE_START') {
+        this.handleBattleStart(msg);
       } else if (type === 'INVITE_TRADE') {
         this.handleIncomingTradeInvite(msg);
       } else if (type === 'INVITE_TRADE_RESPONSE') {
@@ -3512,8 +3750,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.handleTradeUpdate(msg);
       } else if (type === 'TRADE_CLOSE') {
         this.handleTradeClose(msg);
-      } else if (type === 'BATTLE_START') {
-        this.router.navigate(['/battle', msg.details]);
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
@@ -3541,11 +3777,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const otherPlayer: OtherPlayerNPC = {
       username: username,
-      characterId: msg.characterId,
-      skinColor: msg.skinColor,
-      hairColor: msg.hairColor,
-      eyeColor: msg.eyeColor,
-      height: msg.height || 1.0,
+      characterId: this.normalizeCharacterId(msg.characterId),
+      skinColor: msg.skinColor || '#ffe0bd',
+      hairColor: msg.hairColor || '#5c4033',
+      eyeColor: msg.eyeColor || '#2563eb',
+      height: this.normalizeHeight(Number(msg.height)),
       pikachuEnabled: msg.pikachuCompanion,
       root: root,
       actions: new Map(),
@@ -3564,8 +3800,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadOtherPlayerModel(p: OtherPlayerNPC) {
+    p.characterId = this.normalizeCharacterId(p.characterId);
+    p.height = this.normalizeHeight(Number(p.height));
     const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
-    const loader = new GLTFLoader(this.hubLoadingManager);
+    const loader = new GLTFLoader(this.remoteAvatarLoadingManager);
     loader.load(
       option.path,
       (gltf) => {
@@ -3585,12 +3823,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = true;
+            mesh.castShadow = false;
             mesh.receiveShadow = true;
           }
         });
 
         this.applyOtherPlayerCustomizations(model, p);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * p.height);
 
         p.root.add(model);
         p.modelGroup = model;
@@ -3761,7 +4000,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       companion.mixer = new THREE.AnimationMixer(model);
       animations.forEach((clip) => companion.actions.set(clip.name.toLowerCase(), companion.mixer!.clipAction(clip)));
       this.setNpcAnimation(companion, ['idle'], 0);
-    });
+    }, { manager: this.remoteAvatarLoadingManager });
   }
 
   private updateOtherPlayerState(msg: any) {
@@ -3783,11 +4022,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       p.height !== msg.height;
 
     if (needsReload) {
-      p.characterId = msg.characterId;
-      p.skinColor = msg.skinColor;
-      p.hairColor = msg.hairColor;
-      p.eyeColor = msg.eyeColor;
-      p.height = msg.height || 1.0;
+      p.characterId = this.normalizeCharacterId(msg.characterId);
+      p.skinColor = msg.skinColor || '#ffe0bd';
+      p.hairColor = msg.hairColor || '#5c4033';
+      p.eyeColor = msg.eyeColor || '#2563eb';
+      p.height = this.normalizeHeight(Number(msg.height));
       this.loadOtherPlayerModel(p);
     }
 
@@ -3865,7 +4104,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.camera) return;
 
     this.otherPlayers.forEach((p) => {
-      p.mixer?.update(delta);
+      const distanceToCamera = p.root.position.distanceTo(this.camera!.position);
+      const farAway = distanceToCamera > 46;
+      const skipAnimationFrame = farAway && this.frameCounter % 3 !== 0;
+      if (!skipAnimationFrame) {
+        p.mixer?.update(delta * (farAway ? 3 : 1));
+      }
 
       const lerpFactor = 1 - Math.pow(0.0001, delta);
       p.root.position.lerp(p.targetPosition, lerpFactor);
@@ -3875,7 +4119,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       while (diff > Math.PI) diff -= Math.PI * 2;
       p.root.rotation.y += diff * lerpFactor;
 
-      this.updateOtherPlayerPikachuAI(p, delta);
+      if (!skipAnimationFrame) {
+        this.updateOtherPlayerPikachuAI(p, delta * (farAway ? 3 : 1));
+      }
 
       const headPos = p.root.position.clone().add(new THREE.Vector3(0, p.height * 2.25, 0));
       const projected = headPos.project(this.camera!);
@@ -3884,11 +4130,41 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (isBehindCamera) {
         p.screenX = undefined;
         p.screenY = undefined;
+        this.syncOtherPlayerOverlay(p, false);
       } else {
         p.screenX = (projected.x * 0.5 + 0.5) * 100;
         p.screenY = (-projected.y * 0.5 + 0.5) * 100;
+        this.syncOtherPlayerOverlay(p, true);
       }
     });
+  }
+
+  private syncOtherPlayerOverlay(player: OtherPlayerNPC, visible: boolean) {
+    const selectorName = this.escapeCssValue(player.username);
+    const tag = document.querySelector<HTMLElement>(`[data-player-tag="${selectorName}"]`);
+    const bubble = document.querySelector<HTMLElement>(`[data-player-bubble="${selectorName}"]`);
+
+    [tag, bubble].forEach((element) => {
+      if (!element) return;
+      const shouldShow = visible && player.screenX !== undefined && player.screenY !== undefined && (element === tag || !!player.chatBubble);
+      if (!shouldShow) {
+        element.classList.remove('visible');
+        element.style.display = 'none';
+        return;
+      }
+
+      element.style.display = 'block';
+      element.style.left = `${player.screenX}%`;
+      element.style.top = `${player.screenY}%`;
+      element.classList.add('visible');
+    });
+  }
+
+  private escapeCssValue(value: string): string {
+    if (typeof CSS !== 'undefined' && CSS.escape) {
+      return CSS.escape(value);
+    }
+    return value.replace(/["\\]/g, '\\$&');
   }
 
   private updateOtherPlayerPikachuAI(p: OtherPlayerNPC, delta: number) {
@@ -4353,6 +4629,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.incomingChallenge = null;
     this.stopChallengeTimer();
 
+    if (accepted && !this.selectedBattleDeckId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Elegí un mazo sincronizado antes de aceptar el duelo.', system: true });
+      accepted = false;
+    }
+
     this.socket?.send(JSON.stringify({
       type: 'CHALLENGE_DUEL_RESPONSE',
       username: this.jugador?.username,
@@ -4374,6 +4655,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       const p2MazoId = parseInt(msg.details || '0');
       if (!this.selectedBattleDeckId) {
         this.chatLog.push({ sender: 'SISTEMA', text: `Error: No tienes mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
+        return;
+      }
+      if (!p2MazoId) {
+        this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} no tiene mazo seleccionado.`, system: true });
+        this.cdr.detectChanges();
         return;
       }
 
@@ -4394,13 +4681,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         error: (err) => {
           console.error('Error al arrancar batalla online:', err);
-          alert('Error al iniciar combate online: ' + err.message);
+          const backendMessage = typeof err.error === 'string' ? err.error : err.message;
+          alert('Error al iniciar combate online: ' + backendMessage);
         }
       });
     } else {
       this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó el duelo o la invitación expiró.`, system: true });
       this.cdr.detectChanges();
     }
+  }
+
+  handleBattleStart(msg: any) {
+    const partidaId = msg.details;
+    if (!partidaId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Llegó inicio de batalla sin ID de partida.', system: true });
+      this.cdr.detectChanges();
+      return;
+    }
+    this.router.navigate(['/battle', partidaId]);
   }
 
   startChallengeTimer(onTimeout: () => void) {
@@ -4504,18 +4802,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.tradeRightReady = false;
     this.tradeCollectionSearchText = '';
     this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
     this.tradeShowValueWarning = false;
     this.tradeShowContinuationPrompt = false;
     this.tradeWaitingForContinuation = false;
-
-    // Load collection
-    this.jugadorService.getColeccion(this.jugador!.username).subscribe({
-      next: (cards) => {
-        this.userTradeCollection = cards;
-        this.filtrarColeccionTrade();
-      },
-      error: (err) => console.error('Error al cargar coleccion para trade:', err)
-    });
+    this.filtrarColeccionTrade();
+    this.precargarColeccionTrade(!this.tradeCollectionLoaded || this.userTradeCollection.length === 0);
     this.cdr.detectChanges();
   }
 
@@ -4615,6 +4909,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe({
       next: () => {
         this.tradeShowContinuationPrompt = true;
+        this.tradeCollectionLoaded = false;
+        this.precargarColeccionTrade(true);
         this.refrescarTodo();
         this.cdr.detectChanges();
       },
@@ -4680,11 +4976,39 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filtrarColeccionTrade() {
+    const search = this.tradeCollectionSearchText.trim().toLowerCase();
     this.tradeCollectionFiltrada = this.userTradeCollection.filter(c => {
-      const matchSearch = !this.tradeCollectionSearchText || c.nombre.toLowerCase().includes(this.tradeCollectionSearchText.toLowerCase());
+      const attackText = [
+        c.attacks,
+        ...(c.ataques || []).flatMap((atk) => [atk.nombre, atk.texto])
+      ].filter(Boolean).join(' ').toLowerCase();
+      const matchSearch = !search ||
+        c.nombre.toLowerCase().includes(search) ||
+        c.id.toLowerCase().includes(search) ||
+        attackText.includes(search);
       const matchRarity = !this.tradeCollectionFilterRarity || (c.rarity || 'Common') === this.tradeCollectionFilterRarity;
-      return matchSearch && matchRarity;
+      const matchType = !this.tradeCollectionFilterType || c.tipo === this.tradeCollectionFilterType;
+      const matchSupertype = !this.tradeCollectionFilterSupertype || c.supertype === this.tradeCollectionFilterSupertype;
+      const matchSubtype = !this.tradeCollectionFilterSubtype || (c.subtypes || []).includes(this.tradeCollectionFilterSubtype);
+      return matchSearch && matchRarity && matchType && matchSupertype && matchSubtype;
     });
+  }
+
+  limpiarFiltrosTrade() {
+    this.tradeCollectionSearchText = '';
+    this.tradeCollectionFilterRarity = '';
+    this.tradeCollectionFilterType = '';
+    this.tradeCollectionFilterSupertype = '';
+    this.tradeCollectionFilterSubtype = '';
+    this.filtrarColeccionTrade();
+  }
+
+  trackCardById(_index: number, card: Card): string {
+    return card.id;
+  }
+
+  trackOtherPlayerByUsername(_index: number, player: OtherPlayerNPC): string {
+    return player.username;
   }
 
   getCardRarityValue(rarity: string): number {
