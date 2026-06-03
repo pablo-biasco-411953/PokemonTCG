@@ -103,6 +103,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private socket?: WebSocket;
   private reconnectTimeout?: ReturnType<typeof setTimeout>;
   private lobbyDestroyed = false;
+  private personalizationSynced = false;
   otherPlayers = new Map<string, OtherPlayerNPC>();
   private localAnimationState: 'idle' | 'walking' | 'running' = 'idle';
   private lastMoveSentTime = 0;
@@ -450,6 +451,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private fpsSampleFrames = 0;
   private adaptivePixelRatioScale = 1;
   private lastAppliedPixelRatio = 0;
+  audioEnabled = localStorage.getItem('lobbyAudioEnabled') !== 'false';
+  musicEnabled = localStorage.getItem('lobbyMusicEnabled') !== 'false';
+  sfxEnabled = localStorage.getItem('lobbySfxEnabled') !== 'false';
+  audioVolume = Number(localStorage.getItem('lobbyAudioVolume') || '0.55');
+  private ambientTracks = ['/assets/login-bgm.mp3'];
+  private ambientTrackIndex = Number(localStorage.getItem('lobbyAmbientTrack') || '0');
+  private ambientAudio?: HTMLAudioElement;
+  private audioContext?: AudioContext;
+  private masterGain?: GainNode;
+  private sfxGain?: GainNode;
+  private footstepClock = 0;
+  private nextPikachuChirpAt = 2.5;
+  private remotePikachuChirpTimers = new Map<string, number>();
+  private readonly groundLift = 0.035;
 
   // Control de cámara con mouse (órbita y zoom)
   private cameraOrbitYaw = 0;
@@ -556,6 +571,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('ptcg_graphics_quality', quality);
     if (updateRenderer) {
       this.updateRendererPixelRatio();
+      this.updateShadowQuality();
       // Force update shadow state immediately
       if (this.scene && this.sunLight && this.moonLight) {
         const elapsed = this.clock.elapsedTime;
@@ -622,6 +638,40 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return Math.min(max, 8);
   }
 
+  private updateShadowQuality() {
+    if (!this.renderer) return;
+    const enabled = this.graphicsQuality !== 'low';
+    this.renderer.shadowMap.enabled = enabled;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const sunSize = this.graphicsQuality === 'high' ? 2048 : 1024;
+    const moonSize = this.graphicsQuality === 'high' ? 1024 : 512;
+    if (this.sunLight) {
+      this.sunLight.castShadow = enabled;
+      this.sunLight.shadow.mapSize.set(sunSize, sunSize);
+      this.sunLight.shadow.camera.left = this.graphicsQuality === 'high' ? -58 : -42;
+      this.sunLight.shadow.camera.right = this.graphicsQuality === 'high' ? 58 : 42;
+      this.sunLight.shadow.camera.top = this.graphicsQuality === 'high' ? 58 : 42;
+      this.sunLight.shadow.camera.bottom = this.graphicsQuality === 'high' ? -58 : -42;
+      this.sunLight.shadow.camera.far = this.graphicsQuality === 'high' ? 125 : 95;
+      this.sunLight.shadow.radius = this.graphicsQuality === 'high' ? 3 : 2;
+      this.sunLight.shadow.normalBias = 0.018;
+      this.sunLight.shadow.map?.dispose();
+      this.sunLight.shadow.map = null as any;
+      this.sunLight.shadow.camera.updateProjectionMatrix();
+    }
+
+    if (this.moonLight) {
+      this.moonLight.castShadow = enabled && this.graphicsQuality === 'high';
+      this.moonLight.shadow.mapSize.set(moonSize, moonSize);
+      this.moonLight.shadow.radius = 2;
+      this.moonLight.shadow.normalBias = 0.022;
+      this.moonLight.shadow.map?.dispose();
+      this.moonLight.shadow.map = null as any;
+      this.moonLight.shadow.camera.updateProjectionMatrix();
+    }
+  }
+
   // Intenta reproducir el video decorativo apenas exista en el DOM.
   ngAfterViewInit(): void {
     this.ngZone.runOutsideAngular(() => {
@@ -664,11 +714,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.otherPlayers.clear();
 
     this.disposable.forEach((item) => item.dispose());
+    this.shutdownLobbyAudio();
     this.renderer?.dispose();
   }
 
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
+    this.unlockLobbyAudio();
     if (event.key === 'F3') {
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
@@ -703,6 +755,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:keyup', ['$event'])
   onKeyUp(event: KeyboardEvent) {
     this.keys.delete(event.key.toLowerCase());
+  }
+
+  @HostListener('window:pointerdown')
+  onAnyPointerDown() {
+    this.unlockLobbyAudio();
   }
 
   @HostListener('window:pointermove', ['$event'])
@@ -768,12 +825,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           this.pikachuEnabled = res.pikachuCompanion;
         }
 
+        this.personalizationSynced = true;
         this.ngZone.runOutsideAngular(() => {
           this.loadAnimatedPlayerAsset();
           if (this.pikachuEnabled) {
             this.createPikachuCompanion();
           }
         });
+        this.sendJoinMessage();
 
         this.cdr.detectChanges();
       },
@@ -1720,11 +1779,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sunLight.shadow.camera.top = 42;
     this.sunLight.shadow.camera.bottom = -42;
     this.sunLight.shadow.bias = -0.0005;
+    this.sunLight.shadow.normalBias = 0.015;
     this.scene.add(this.sunLight);
 
     this.moonLight = new THREE.DirectionalLight(0xc7d2fe, 0.25);
     this.moonLight.castShadow = true;
     this.moonLight.shadow.bias = -0.0005;
+    this.moonLight.shadow.normalBias = 0.018;
     this.moonLight.position.set(-20, 18, 18);
     this.scene.add(this.moonLight);
 
@@ -1754,6 +1815,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const kioskLight = new THREE.PointLight(0xffd37a, 2.2, 18);
     kioskLight.position.set(-18, 4.2, -18);
     this.scene.add(kioskLight);
+    this.updateShadowQuality();
   }
 
   openKioskShop() {
@@ -1778,11 +1840,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const poseEntry = Array.from(npc.actions.entries()).find(([name]) => name.includes('pose_03'));
     if (poseEntry) {
       const action = poseEntry[1];
+      npc.active?.fadeOut(0.08);
+      action.stop();
       action.reset();
       action.setLoop(THREE.LoopOnce, 1);
-      action.clampWhenFinished = true;
+      action.clampWhenFinished = false;
       action.fadeIn(0.12).play();
-      npc.active?.fadeOut(0.12);
       npc.active = action;
     }
   }
@@ -1975,25 +2038,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private createGrassTexture(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d')!;
-    const gradient = ctx.createLinearGradient(0, 0, 256, 256);
-    gradient.addColorStop(0, '#6faa4d');
-    gradient.addColorStop(0.48, '#83bc5b');
-    gradient.addColorStop(1, '#4e8438');
+    const gradient = ctx.createLinearGradient(0, 0, 512, 512);
+    gradient.addColorStop(0, '#78ad56');
+    gradient.addColorStop(0.42, '#6f9f4b');
+    gradient.addColorStop(1, '#4f7f39');
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillRect(0, 0, 512, 512);
 
-    for (let i = 0; i < 1300; i++) {
-      const x = Math.random() * 256;
-      const y = Math.random() * 256;
-      const length = 2 + Math.random() * 5;
-      ctx.strokeStyle = Math.random() > 0.5 ? 'rgba(37, 92, 34, .28)' : 'rgba(181, 225, 132, .25)';
-      ctx.lineWidth = 0.7 + Math.random() * 0.7;
+    for (let i = 0; i < 90; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      const radius = 18 + Math.random() * 56;
+      const patch = ctx.createRadialGradient(x, y, 0, x, y, radius);
+      patch.addColorStop(0, Math.random() > 0.5 ? 'rgba(42, 96, 40, .18)' : 'rgba(174, 217, 119, .16)');
+      patch.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = patch;
+      ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    }
+
+    for (let i = 0; i < 3200; i++) {
+      const x = Math.random() * 512;
+      const y = Math.random() * 512;
+      const length = 2 + Math.random() * 7;
+      ctx.strokeStyle = Math.random() > 0.48 ? 'rgba(34, 84, 31, .22)' : 'rgba(199, 236, 151, .18)';
+      ctx.lineWidth = 0.45 + Math.random() * 0.8;
       ctx.beginPath();
       ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.random() * 3 - 1.5, y - length);
+      ctx.lineTo(x + Math.random() * 4 - 2, y - length);
       ctx.stroke();
     }
 
@@ -2001,10 +2075,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(32, 32);
+    texture.repeat.set(9, 9);
     texture.anisotropy = this.getRuntimeAnisotropy();
     this.disposable.push(texture);
     return texture;
+  }
+
+  private getGroundHeightAt(x: number, z: number): number {
+    let height = 0;
+    const inside = (cx: number, cz: number, sx: number, sz: number) =>
+      x >= cx - sx / 2 && x <= cx + sx / 2 && z >= cz - sz / 2 && z <= cz + sz / 2;
+
+    if (inside(0, -8, 9.2, 58)) height = Math.max(height, 0.09);
+    if (inside(-5.15, -8, 1.1, 58) || inside(5.15, -8, 1.1, 58)) height = Math.max(height, 0.15);
+    if (inside(-18, -18, 16, 18)) height = Math.max(height, 0.08);
+    if (inside(18, -4, 24, 13)) height = Math.max(height, 0.08);
+    if (inside(-19, -19.6, 10.4, 8.4)) height = Math.max(height, 0.4);
+
+    return height;
   }
 
   private addBox(size: [number, number, number], position: [number, number, number], color: number, options: { roughness?: number; metalness?: number; emissive?: number; opacity?: number } = {}) {
@@ -2326,7 +2414,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       npc.mixer.addEventListener('finished', (e) => {
         const poseEntry = Array.from(npc.actions.entries()).find(([name]) => name.includes('pose_03'));
         if (poseEntry && e.action === poseEntry[1]) {
-          this.setNpcAnimation(npc, ['speak_1']);
+          poseEntry[1].stop();
+          npc.active = undefined;
+          this.setNpcAnimation(npc, ['speak_1', 'mouth_01', 'idle'], 0.12);
         }
       });
 
@@ -2670,6 +2760,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(root);
     const companion: CampusNpc = { root, actions: new Map() };
     this.pikachu = companion;
+    this.nextPikachuChirpAt = 1.2;
 
     this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
       model.scale.setScalar(0.42);
@@ -2785,6 +2876,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Guardar variables de estado actualizadas
     root.userData['state'] = state;
+    target.y = this.getGroundHeightAt(target.x, target.z) + this.groundLift;
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
@@ -2798,6 +2890,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       isMoving = false;
     }
     root.userData['isMoving'] = isMoving;
+    root.position.y += (target.y - root.position.y) * (1 - Math.pow(0.0001, delta));
 
     if (isMoving && speed > 0) {
       const moveDir = target.clone().sub(root.position);
@@ -2965,6 +3058,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.player = new THREE.Group();
     this.player.position.set(0, 0, 8.5);
+    this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift;
     this.scene.add(this.player);
     this.createFallbackTrainerAvatar();
     this.loadAnimatedPlayerAsset();
@@ -3036,7 +3130,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.player.clear();
     this.createFallbackTrainerAvatar();
 
-    this.loadCachedGltf(option.path, this.hubLoadingManager).then(
+    const loader = new GLTFLoader(this.hubLoadingManager);
+    loader.load(
+      option.path,
       (gltf) => {
         this.player.clear();
 
@@ -3055,6 +3151,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Aplicar personalización de rasgos (piel, pelo, ojos, altura)
         this.applyCharacterCustomizations(model);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')));
 
         this.player.add(model);
         this.playerMixer = new THREE.AnimationMixer(model);
@@ -3067,6 +3164,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setPlayerAnimation('idle', 0);
       },
+      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB, usando fallback procedural.', error);
       }
@@ -3150,6 +3248,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  private normalizeVisibleCharacterHeight(model: THREE.Group, targetHeight: number) {
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    if (!Number.isFinite(size.y) || size.y <= 0.01) return;
+
+    model.scale.multiplyScalar(targetHeight / size.y);
+    this.alignModelBottom(model, 0);
   }
 
   private setPlayerAnimation(preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
@@ -3344,6 +3452,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
+    this.updateLobbyAudio(delta);
 
     this.updateDayNightCycle(elapsed);
     if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
@@ -3390,6 +3499,209 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.debugStatsTime = 0;
     this.debugStatsFrames = 0;
+  }
+
+  toggleLobbyAudio() {
+    this.audioEnabled = !this.audioEnabled;
+    localStorage.setItem('lobbyAudioEnabled', String(this.audioEnabled));
+    if (this.audioEnabled) {
+      this.unlockLobbyAudio();
+    } else {
+      this.pauseAmbientMusic();
+    }
+  }
+
+  toggleLobbyMusic() {
+    this.musicEnabled = !this.musicEnabled;
+    localStorage.setItem('lobbyMusicEnabled', String(this.musicEnabled));
+    if (this.musicEnabled) {
+      this.unlockLobbyAudio();
+    } else {
+      this.pauseAmbientMusic();
+    }
+  }
+
+  toggleLobbySfx() {
+    this.sfxEnabled = !this.sfxEnabled;
+    localStorage.setItem('lobbySfxEnabled', String(this.sfxEnabled));
+  }
+
+  cycleLobbyVolume() {
+    const levels = [0.25, 0.45, 0.65, 0.85];
+    const current = levels.findIndex((level) => this.audioVolume <= level + 0.01);
+    this.audioVolume = levels[(current + 1) % levels.length];
+    localStorage.setItem('lobbyAudioVolume', String(this.audioVolume));
+    this.applyLobbyAudioLevels();
+    this.unlockLobbyAudio();
+  }
+
+  get audioVolumeLabel(): string {
+    return `${Math.round(this.audioVolume * 100)}%`;
+  }
+
+  private unlockLobbyAudio() {
+    if (!this.audioEnabled) return;
+    this.ensureLobbyAudioGraph();
+    this.audioContext?.resume().catch(() => undefined);
+    this.playAmbientMusic();
+  }
+
+  private ensureLobbyAudioGraph() {
+    if (!this.audioContext) {
+      const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtor) return;
+      this.audioContext = new AudioCtor();
+      this.masterGain = this.audioContext.createGain();
+      this.sfxGain = this.audioContext.createGain();
+      this.sfxGain.connect(this.masterGain);
+      this.masterGain.connect(this.audioContext.destination);
+    }
+
+    if (!this.ambientAudio) {
+      const track = this.ambientTracks[this.ambientTrackIndex % this.ambientTracks.length];
+      this.ambientAudio = new Audio(track);
+      this.ambientAudio.loop = true;
+      this.ambientAudio.preload = 'auto';
+    }
+
+    this.applyLobbyAudioLevels();
+  }
+
+  private applyLobbyAudioLevels() {
+    if (this.masterGain) this.masterGain.gain.value = this.audioEnabled ? this.audioVolume : 0;
+    if (this.sfxGain) this.sfxGain.gain.value = this.sfxEnabled ? 0.78 : 0;
+    if (this.ambientAudio) {
+      this.ambientAudio.volume = this.audioEnabled && this.musicEnabled ? Math.min(0.42, this.audioVolume * 0.48) : 0;
+    }
+  }
+
+  private playAmbientMusic() {
+    if (!this.audioEnabled || !this.musicEnabled) return;
+    this.ensureLobbyAudioGraph();
+    this.applyLobbyAudioLevels();
+    this.ambientAudio?.play().catch(() => undefined);
+  }
+
+  private pauseAmbientMusic() {
+    this.ambientAudio?.pause();
+  }
+
+  private shutdownLobbyAudio() {
+    this.pauseAmbientMusic();
+    this.ambientAudio = undefined;
+    this.audioContext?.close().catch(() => undefined);
+    this.audioContext = undefined;
+    this.masterGain = undefined;
+    this.sfxGain = undefined;
+  }
+
+  private updateLobbyAudio(delta: number) {
+    if (!this.audioEnabled || !this.sfxEnabled || !this.audioContext || !this.sfxGain) return;
+
+    const speedSq = this.playerVelocity.lengthSq();
+    const isMoving = speedSq > 0.18 && !this.kioskShopOpen && !this.deckBuilderOpen;
+    if (isMoving) {
+      const running = this.localAnimationState === 'running';
+      this.footstepClock -= delta;
+      if (this.footstepClock <= 0) {
+        this.playFootstep(this.player.position, running);
+        this.footstepClock = running ? 0.24 : 0.38;
+      }
+    } else {
+      this.footstepClock = 0;
+    }
+
+    this.nextPikachuChirpAt -= delta;
+    if (this.pikachu && this.nextPikachuChirpAt <= 0) {
+      const distance = this.pikachu.root.position.distanceTo(this.player.position);
+      if (distance < 7.5) this.playPikachuChirp(this.pikachu.root.position, false);
+      this.nextPikachuChirpAt = 4 + Math.random() * 6;
+    }
+
+    this.otherPlayers.forEach((other) => {
+      if (!other.pikachu) return;
+      const current = (this.remotePikachuChirpTimers.get(other.username) ?? (5 + Math.random() * 8)) - delta;
+      if (current <= 0) {
+        const distance = other.pikachu.root.position.distanceTo(this.player.position);
+        if (distance < 10) this.playPikachuChirp(other.pikachu.root.position, true);
+        this.remotePikachuChirpTimers.set(other.username, 6 + Math.random() * 9);
+      } else {
+        this.remotePikachuChirpTimers.set(other.username, current);
+      }
+    });
+  }
+
+  private playFootstep(position: THREE.Vector3, running: boolean) {
+    const ctx = this.audioContext;
+    if (!ctx || !this.sfxGain) return;
+    const { pan, volume } = this.getSpatialAudioMix(position, 18);
+    if (volume <= 0.01) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    const panner = ctx.createStereoPanner();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(running ? 92 : 74, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(running ? 42 : 36, ctx.currentTime + 0.07);
+    filter.type = 'lowpass';
+    filter.frequency.value = running ? 620 : 480;
+    panner.pan.value = pan;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime((running ? 0.11 : 0.075) * volume, ctx.currentTime + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.105);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(panner);
+    panner.connect(this.sfxGain);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.12);
+  }
+
+  private playPikachuChirp(position: THREE.Vector3, distant: boolean) {
+    const ctx = this.audioContext;
+    if (!ctx || !this.sfxGain) return;
+    const { pan, volume } = this.getSpatialAudioMix(position, distant ? 12 : 9);
+    if (volume <= 0.015) return;
+
+    const now = ctx.currentTime;
+    const panner = ctx.createStereoPanner();
+    const gain = ctx.createGain();
+    panner.pan.value = pan;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime((distant ? 0.055 : 0.105) * volume, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+    panner.connect(gain);
+    gain.connect(this.sfxGain);
+
+    [980, 1320, 1180, 1560, 1280, 1720].forEach((freq, index) => {
+      const osc = ctx.createOscillator();
+      osc.type = index % 2 === 0 ? 'sine' : 'triangle';
+      const start = now + index * 0.052;
+      osc.frequency.setValueAtTime(freq, start);
+      osc.frequency.exponentialRampToValueAtTime(freq * (index < 3 ? 1.16 : 0.92), start + 0.08);
+      osc.connect(panner);
+      osc.start(start);
+      osc.stop(start + 0.105);
+    });
+  }
+
+  private getSpatialAudioMix(position: THREE.Vector3, maxDistance: number): { pan: number; volume: number } {
+    const distance = position.distanceTo(this.player.position);
+    const volume = Math.max(0, 1 - distance / maxDistance) ** 1.6;
+    if (!this.camera) return { pan: 0, volume };
+
+    const toSound = position.clone().sub(this.camera.position);
+    toSound.y = 0;
+    if (toSound.lengthSq() < 0.001) return { pan: 0, volume };
+    toSound.normalize();
+
+    const right = new THREE.Vector3(1, 0, 0).applyQuaternion(this.camera.quaternion);
+    right.y = 0;
+    right.normalize();
+    return { pan: Math.max(-0.9, Math.min(0.9, right.dot(toSound))), volume };
   }
 
   private updatePlayer(delta: number) {
@@ -3482,9 +3794,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.playerMixer) {
       const bob = Math.sin(this.clock.elapsedTime * (forwardPressed || backPressed ? 11 : 3)) * (forwardPressed || backPressed ? 0.045 : 0.015);
-      this.player.position.y = Math.max(0, bob);
+      this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift + Math.max(0, bob);
     } else {
-      this.player.position.y = 0;
+      this.player.position.y = this.getGroundHeightAt(this.player.position.x, this.player.position.z) + this.groundLift;
     }
   }
 
@@ -3605,7 +3917,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.socket.onopen = () => {
         console.log('Conexión WebSocket establecida con éxito.');
-        this.sendJoinMessage();
+        if (this.personalizationSynced) {
+          this.sendJoinMessage();
+        }
       };
 
       this.socket.onmessage = (event) => {
@@ -3633,13 +3947,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'JOIN',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3648,6 +3956,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     };
 
     this.socket.send(JSON.stringify(payload));
+  }
+
+  private getLocalLobbyIdentityPayload() {
+    return {
+      username: this.jugador!.username,
+      characterId: this.normalizeCharacterId(this.selectedCharacterId),
+      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
+      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
+      height: this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')),
+      pikachuCompanion: this.pikachuEnabled
+    };
+  }
+
+  private normalizeCharacterId(characterId?: string): string {
+    return this.characterOptions.some((option) => option.id === characterId) ? characterId! : this.characterOptions[0].id;
+  }
+
+  private normalizeHeight(height: number): number {
+    if (!Number.isFinite(height) || height <= 0) return 1;
+    return Math.max(0.72, Math.min(1.28, height));
   }
 
   private checkAndSendMove() {
@@ -3663,13 +3992,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const payload = {
       type: 'MOVE',
-      username: this.jugador.username,
-      characterId: this.selectedCharacterId,
-      skinColor: localStorage.getItem('lobbySkinColor') || '#ffe0bd',
-      hairColor: localStorage.getItem('lobbyHairColor') || '#5c4033',
-      eyeColor: localStorage.getItem('lobbyEyeColor') || '#2563eb',
-      height: parseFloat(localStorage.getItem('lobbyHeight') || '1.0'),
-      pikachuCompanion: this.pikachuEnabled,
+      ...this.getLocalLobbyIdentityPayload(),
       x: this.player.position.x,
       y: this.player.position.y,
       z: this.player.position.z,
@@ -3743,21 +4066,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('Registrando nuevo jugador online en el lobby:', username);
 
     const root = new THREE.Group();
-    root.position.set(msg.x, msg.y, msg.z);
+    root.position.set(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z);
     root.rotation.y = msg.rotY;
     this.scene?.add(root);
 
     const otherPlayer: OtherPlayerNPC = {
       username: username,
-      characterId: msg.characterId,
-      skinColor: msg.skinColor,
-      hairColor: msg.hairColor,
-      eyeColor: msg.eyeColor,
-      height: msg.height || 1.0,
+      characterId: this.normalizeCharacterId(msg.characterId),
+      skinColor: msg.skinColor || '#ffe0bd',
+      hairColor: msg.hairColor || '#5c4033',
+      eyeColor: msg.eyeColor || '#2563eb',
+      height: this.normalizeHeight(Number(msg.height)),
       pikachuEnabled: msg.pikachuCompanion,
       root: root,
       actions: new Map(),
-      targetPosition: new THREE.Vector3(msg.x, msg.y, msg.z),
+      targetPosition: new THREE.Vector3(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z),
       targetRotationY: msg.rotY,
       currentAnimation: msg.animation || 'idle'
     };
@@ -3772,8 +4095,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private loadOtherPlayerModel(p: OtherPlayerNPC) {
+    p.characterId = this.normalizeCharacterId(p.characterId);
+    p.height = this.normalizeHeight(Number(p.height));
     const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
-    this.loadCachedGltf(option.path, this.remoteAvatarLoadingManager).then(
+    const loader = new GLTFLoader(this.remoteAvatarLoadingManager);
+    loader.load(
+      option.path,
       (gltf) => {
         if (!this.otherPlayers.has(p.username)) {
           gltf.scene.clear();
@@ -3791,12 +4118,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.traverse((child) => {
           const mesh = child as THREE.Mesh;
           if (mesh.isMesh) {
-            mesh.castShadow = false;
+            mesh.castShadow = true;
             mesh.receiveShadow = true;
           }
         });
 
         this.applyOtherPlayerCustomizations(model, p);
+        this.normalizeVisibleCharacterHeight(model, 1.72 * p.height);
 
         p.root.add(model);
         p.modelGroup = model;
@@ -3810,6 +4138,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         this.setOtherPlayerAnimation(p, p.currentAnimation, 0);
       },
+      undefined,
       (error) => {
         console.warn('No se pudo cargar el player GLB de ' + p.username, error);
       }
@@ -3977,7 +4306,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    p.targetPosition.set(msg.x, msg.y, msg.z);
+    p.targetPosition.set(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z);
     p.targetRotationY = msg.rotY;
 
     const needsReload = 
@@ -3988,11 +4317,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       p.height !== msg.height;
 
     if (needsReload) {
-      p.characterId = msg.characterId;
-      p.skinColor = msg.skinColor;
-      p.hairColor = msg.hairColor;
-      p.eyeColor = msg.eyeColor;
-      p.height = msg.height || 1.0;
+      p.characterId = this.normalizeCharacterId(msg.characterId);
+      p.skinColor = msg.skinColor || '#ffe0bd';
+      p.hairColor = msg.hairColor || '#5c4033';
+      p.eyeColor = msg.eyeColor || '#2563eb';
+      p.height = this.normalizeHeight(Number(msg.height));
       this.loadOtherPlayerModel(p);
     }
 
@@ -4210,6 +4539,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     root.userData['state'] = state;
+    target.y = this.getGroundHeightAt(target.x, target.z) + this.groundLift;
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
@@ -4222,6 +4552,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       isMoving = false;
     }
     root.userData['isMoving'] = isMoving;
+    root.position.y += (target.y - root.position.y) * (1 - Math.pow(0.0001, delta));
 
     if (isMoving && speed > 0) {
       const moveDir = target.clone().sub(root.position);
@@ -4415,6 +4746,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
+    this.unlockLobbyAudio();
     if (event.button === 1) { // Ruedita del mouse
       event.preventDefault();
       this.toggleEmoteMenu();

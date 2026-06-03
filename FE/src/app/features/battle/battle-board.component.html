@@ -49,6 +49,13 @@
       </div>
     </ng-container>
 
+    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
+      <div class="resultado-panel">
+        <p class="res-ganaste">SORTEO INICIAL</p>
+        <p class="res-sub">{{ nombreRival }} está eligiendo cara o cruz...</p>
+      </div>
+    </ng-container>
+
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
@@ -78,7 +85,7 @@
         <p class="res-ganaste">¡GANASTE EL SORTEO!</p>
         <div class="choice-buttons small">
           <button (click)="seleccionarTurno(true)">YO PRIMERO</button>
-          <button (click)="seleccionarTurno(false)">BOT PRIMERO</button>
+          <button (click)="seleccionarTurno(false)">{{ nombreRival }} PRIMERO</button>
         </div>
       </div>
     </ng-container>
@@ -86,7 +93,7 @@
     <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
       <div class="resultado-panel">
         <p class="res-perdiste">PERDISTE EL SORTEO</p>
-        <p class="res-sub">El Bot decidió ir primero.</p>
+        <p class="res-sub">{{ nombreGanadorSorteo }} elige quién empieza.</p>
       </div>
     </ng-container>
   </div>
@@ -617,7 +624,7 @@
         (cdkDropListDropped)="soltarCarta($event, 'banca')"
       >
         <div
-          *ngFor="let b of partida.jugador.banca"
+          *ngFor="let b of partida.jugador.banca; trackBy: trackByCardId"
           class="bench-slot occupied player-slot"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b)"
@@ -657,7 +664,7 @@
         [cdkDropListSortingDisabled]="true"
       >
         <div
-          *ngFor="let carta of partida.jugador.mano; let i = index"
+          *ngFor="let carta of partida.jugador.mano; let i = index; trackBy: trackByCardId"
           class="hand-card-hitbox"
           [class.nueva-carta]="cartasNuevas.has(carta.id)"
           [class.simulated-hover]="esHoverSobreManoJugador() && hoveredCardIndex === i"

@@ -57,12 +57,12 @@ $font-pixel: 'VT323', monospace;
   position: absolute;
   top: 22px;
   left: 28px;
-  right: 178px;
+  right: 24px;
   z-index: 8;
   display: grid;
-  grid-template-columns: minmax(190px, 1fr) auto auto auto auto minmax(120px, auto);
+  grid-template-columns: minmax(160px, 1fr) auto auto auto auto auto auto minmax(96px, auto);
   align-items: start;
-  gap: 18px;
+  gap: 12px;
   pointer-events: none;
 }
 
@@ -98,6 +98,7 @@ $font-pixel: 'VT323', monospace;
 .trainer-chip-button,
 .companion-chip,
 .graphics-chip,
+.audio-chip,
 .emote-chip-hud {
   border: 1px solid rgba(125, 211, 252, .28);
   cursor: pointer;
@@ -110,10 +111,61 @@ $font-pixel: 'VT323', monospace;
 .trainer-chip-button:hover,
 .companion-chip:hover,
 .graphics-chip:hover,
+.audio-chip:hover,
 .emote-chip-hud:hover {
   transform: translateY(-2px);
   border-color: rgba($gold, .65);
   box-shadow: 0 20px 52px rgba(250, 204, 21, .18);
+}
+
+.audio-chip {
+  display: grid;
+  gap: 6px;
+  min-width: 128px;
+  padding: 9px 10px;
+}
+
+.audio-chip > button,
+.audio-mini-controls button {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.audio-chip > button {
+  padding: 0;
+  text-align: left;
+}
+
+.audio-chip.muted strong {
+  color: rgba(248, 113, 113, .95);
+  text-shadow: 0 0 14px rgba(248, 113, 113, .42);
+}
+
+.audio-mini-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr;
+  gap: 5px;
+}
+
+.audio-mini-controls button {
+  height: 24px;
+  border: 1px solid rgba(125, 211, 252, .22);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, .52);
+  color: rgba(226, 232, 240, .6);
+  font-family: $font-tech;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.audio-mini-controls button.enabled {
+  border-color: rgba($green, .48);
+  color: $green;
+  box-shadow: 0 0 14px rgba($green, .15);
 }
 
 .trainer-chip em {

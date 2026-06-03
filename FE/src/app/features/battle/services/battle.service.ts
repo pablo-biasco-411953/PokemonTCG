@@ -49,8 +49,8 @@ export class BattleService {
   }
 
   // Ejecuta el lanzamiento inicial de moneda.
-  lanzarMoneda(matchId: string): Observable<boolean> {
-    return this.http.post<boolean>(`${this.base}/${matchId}/coin-flip`, {}, this.getHeaders());
+  lanzarMoneda(matchId: string, eleccion: 'CARA' | 'CRUZ'): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/coin-flip`, { eleccion }, this.getHeaders());
   }
 
   // Define quien toma el primer turno.
