@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representa el estado de un jugador en la partida.
+ * Agrupa todas las zonas visibles de un jugador dentro de una partida.
  */
 public class TableroJugador {
     // Mazo oculto
@@ -14,9 +14,7 @@ public class TableroJugador {
     private List<Card> mano = new ArrayList<>();
     // Premios (6, ocultos)
     private List<Card> premios = new ArrayList<>();
-    // PokÃ©mon activo
     private CartaEnJuego activo;
-    // Banca (mÃ¡ximo 5 PokÃ©mon bÃ¡sicos)
     private List<CartaEnJuego> banca = new ArrayList<>();
     // Pila de descarte
     private List<Card> pilaDescarte = new ArrayList<>();

@@ -36,49 +36,50 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        List<Card> todasLasCartas;
+
         if (cardRepo.count() == 0) {
-            try {
-                InputStream inputStream = getClass().getResourceAsStream("/cards.json");
+            try (InputStream inputStream = getClass().getResourceAsStream("/cards.json")) {
                 if (inputStream == null) {
-                    System.out.println("❌ ERROR: No se encontró el archivo /cards.json");
+                    System.out.println("[DataLoader] No se encontro /cards.json");
                     return;
                 }
 
-                List<Card> todasLasCartas = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
+                todasLasCartas = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
                 cardRepo.saveAll(todasLasCartas);
-                System.out.println("✅ Cartas cargadas: " + todasLasCartas.size());
-
-                // --- CREACIÓN DE USUARIO TEST: PABLO ---
-                crearUsuarioTest(todasLasCartas);
-
+                System.out.println("[DataLoader] Cartas cargadas: " + todasLasCartas.size());
             } catch (Exception e) {
-                System.out.println("❌ ERROR en DataLoader: " + e.getMessage());
+                System.out.println("[DataLoader] Error cargando cartas: " + e.getMessage());
                 e.printStackTrace();
+                return;
             }
+        } else {
+            todasLasCartas = cardRepo.findAll();
+        }
+
+        if (jugadorRepo.findByUsername("Pablo") == null) {
+            crearUsuarioTest(todasLasCartas);
         }
     }
 
     private void crearUsuarioTest(List<Card> todasLasCartas) {
-        // 1. Crear el Jugador
         Jugador pablo = new Jugador("Pablo");
+        pablo.setPasswordHash("2ab74e1d95f6aff7947352ee0d793c366a8ab33452a87a3e39b003b42c843cf9");
         pablo.setSobresDisponibles(10);
 
-        // 2. Separar cartas
         List<Card> soloPokemones = todasLasCartas.stream()
-                .filter(c -> "Pokémon".equalsIgnoreCase(c.getSupertype()))
+                .filter(c -> "Pokemon".equalsIgnoreCase(c.getSupertype()) || "Pokémon".equalsIgnoreCase(c.getSupertype()))
                 .toList();
         List<Card> soloEnergias = todasLasCartas.stream()
                 .filter(c -> "Energy".equalsIgnoreCase(c.getSupertype()))
                 .toList();
 
-        // 3. Colección de 120 cartas al azar
         List<Card> coleccionRandom = new ArrayList<>(todasLasCartas);
         Collections.shuffle(coleccionRandom);
         pablo.setColeccion(new ArrayList<>(coleccionRandom.subList(0, Math.min(120, coleccionRandom.size()))));
 
         jugadorRepo.save(pablo);
 
-        // 4. Mazo de 60 cartas
         Mazo mazoTest = new Mazo("Mazo Inicial Pablo", pablo);
         List<Card> cartasMazo = new ArrayList<>();
 
@@ -88,13 +89,13 @@ public class DataLoader implements CommandLineRunner {
 
         List<Card> energiasParaMazo = new ArrayList<>(soloEnergias);
         Collections.shuffle(energiasParaMazo);
-        for(int i = 0; i < 20; i++) {
+        for (int i = 0; i < 20 && !energiasParaMazo.isEmpty(); i++) {
             cartasMazo.add(energiasParaMazo.get(i % energiasParaMazo.size()));
         }
 
         mazoTest.setCartas(cartasMazo);
         mazoRepo.save(mazoTest);
 
-        System.out.println("🚀 [TEST DATA] Usuario 'Pablo' listo para la batalla.");
+        System.out.println("[DataLoader] Usuario Pablo listo para pruebas.");
     }
 }

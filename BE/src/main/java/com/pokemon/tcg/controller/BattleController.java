@@ -1,6 +1,7 @@
 package com.pokemon.tcg.controller;
 
 import com.pokemon.tcg.model.battle.Partida;
+import com.pokemon.tcg.model.battle.TableroJugador;
 import com.pokemon.tcg.service.BattleEngineService;
 import com.pokemon.tcg.dto.*;
 import org.springframework.http.ResponseEntity;
@@ -28,20 +29,37 @@ public class BattleController {
         }
     }
 
-
+    @PostMapping("/start-online")
+    public ResponseEntity<?> startBattleOnline(@RequestBody StartBattleOnlineRequest request) {
+        try {
+            Partida partida = battleEngine.startBattleOnline(
+                request.getPlayer1(), request.getPlayer1MazoId(),
+                request.getPlayer2(), request.getPlayer2MazoId()
+            );
+            return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @GetMapping("/state/{matchId}")
-    public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId) {
+    public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId,
+                                             @RequestHeader(value = "X-Username", required = false) String username) {
         Partida partida = battleEngine.getEstadoPartida(matchId);
         if (partida == null) return ResponseEntity.notFound().build();
+
+        if (username != null && username.equals(partida.getBotUsername())) {
+            return ResponseEntity.ok(swapPerspective(partida));
+        }
         return ResponseEntity.ok(partida);
     }
 
     @PostMapping("/{matchId}/evolve")
     public ResponseEntity<?> evolucionarPokemon(@PathVariable String matchId,
+                                                @RequestHeader(value = "X-Username", required = false) String username,
                                                 @RequestBody EvolveRequest request) {
         try {
-            battleEngine.evolucionarPokemon(matchId, request.getCartaManoId(), request.getCartaTableroId());
+            battleEngine.evolucionarPokemon(matchId, request.getCartaManoId(), request.getCartaTableroId(), username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -55,16 +73,16 @@ public class BattleController {
             Partida partidaActualizada = battleEngine.getEstadoPartida(matchId);
             return ResponseEntity.ok(partidaActualizada);
         } catch (Exception e) {
-            // 🚩 ESTA LÍNEA ES CLAVE: Nos va a imprimir en rojo exactamente dónde falló el bot
             e.printStackTrace();
             return ResponseEntity.badRequest().body("Error del bot: " + e.getMessage());
         }
     }
 
     @PostMapping("/{matchId}/coin-flip")
-    public ResponseEntity<?> lanzarMoneda(@PathVariable String matchId) {
+    public ResponseEntity<?> lanzarMoneda(@PathVariable String matchId,
+                                          @RequestHeader(value = "X-Username", required = false) String username) {
         try {
-            boolean jugadorGana = battleEngine.lanzarMoneda(matchId);
+            boolean jugadorGana = battleEngine.lanzarMoneda(matchId, username);
             return ResponseEntity.ok(jugadorGana);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -73,21 +91,22 @@ public class BattleController {
 
     @PostMapping("/{matchId}/choose-turn")
     public ResponseEntity<?> elegirTurno(@PathVariable String matchId,
+                                         @RequestHeader(value = "X-Username", required = false) String username,
                                          @RequestBody ChooseTurnRequest request) {
         try {
-            battleEngine.elegirTurno(matchId, request.isVaPrimero());
+            battleEngine.elegirTurno(matchId, request.isVaPrimero(), username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // 🚩 ACÁ ESTÁ EL FIX: Solo 2 parámetros, sin 'posicion'
     @PostMapping("/{matchId}/play-pokemon")
     public ResponseEntity<?> jugarPokemon(@PathVariable String matchId,
+                                          @RequestHeader(value = "X-Username", required = false) String username,
                                           @RequestBody JugarPokemonRequest request) {
         try {
-            battleEngine.jugarPokemon(matchId, request.getCartaId());
+            battleEngine.jugarPokemon(matchId, request.getCartaId(), username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -96,9 +115,10 @@ public class BattleController {
 
     @PostMapping("/{matchId}/attach-energy")
     public ResponseEntity<?> unirEnergia(@PathVariable String matchId,
+                                         @RequestHeader(value = "X-Username", required = false) String username,
                                          @RequestBody UnirEnergiaRequest request) {
         try {
-            battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId());
+            battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId(), username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -106,9 +126,11 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/attack")
-    public ResponseEntity<?> atacar(@PathVariable String matchId, @RequestParam String nombreAtaque) {
+    public ResponseEntity<?> atacar(@PathVariable String matchId,
+                                    @RequestHeader(value = "X-Username", required = false) String username,
+                                    @RequestParam String nombreAtaque) {
         try {
-            battleEngine.realizarAtaque(matchId, nombreAtaque);
+            battleEngine.realizarAtaque(matchId, nombreAtaque, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -116,9 +138,11 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/promote")
-    public ResponseEntity<?> promoteToActive(@PathVariable String matchId, @RequestBody String cartaId) {
+    public ResponseEntity<?> promoteToActive(@PathVariable String matchId,
+                                             @RequestHeader(value = "X-Username", required = false) String username,
+                                             @RequestBody String cartaId) {
         try {
-            battleEngine.subirAActivoDesdeBanca(matchId, cartaId);
+            battleEngine.subirAActivoDesdeBanca(matchId, cartaId, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -126,9 +150,10 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/pass-turn")
-    public ResponseEntity<?> pasarTurno(@PathVariable String matchId) {
+    public ResponseEntity<?> pasarTurno(@PathVariable String matchId,
+                                        @RequestHeader(value = "X-Username", required = false) String username) {
         try {
-            battleEngine.pasarTurno(matchId);
+            battleEngine.pasarTurno(matchId, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -137,13 +162,81 @@ public class BattleController {
 
     @PostMapping("/{matchId}/retreat")
     public ResponseEntity<?> retirarPokemon(@PathVariable String matchId,
+                                            @RequestHeader(value = "X-Username", required = false) String username,
                                             @RequestBody String nuevoActivoId) {
         try {
-            battleEngine.realizarRetirada(matchId, nuevoActivoId);
+            battleEngine.realizarRetirada(matchId, nuevoActivoId, username);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
-            // Si no tiene energías suficientes, acá va a saltar el error
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/{matchId}/debug/draw")
+    public ResponseEntity<?> debugDrawCard(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+        try {
+            String cardId = payload.get("cardId");
+            Partida partidaActualizada = battleEngine.debugRobarCarta(matchId, cardId);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (Robar): " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/debug/status")
+    public ResponseEntity<?> debugForzarEstado(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+        try {
+            String objetivo = payload.get("objetivo");
+            String estado = payload.get("estado");
+
+            Partida partidaActualizada = battleEngine.debugForzarEstado(matchId, objetivo, estado);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (Estado): " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/debug/hp")
+    public ResponseEntity<?> debugSetHp(@PathVariable String matchId, @RequestBody java.util.Map<String, Object> payload) {
+        try {
+            String objetivo = (String) payload.get("objetivo");
+            int hp = Integer.parseInt(payload.get("hp").toString());
+
+            Partida partidaActualizada = battleEngine.debugSetHp(matchId, objetivo, hp);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error en God Mode (HP): " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/debug/catalog")
+    public ResponseEntity<?> getCatalogoDebug() {
+        return ResponseEntity.ok(battleEngine.obtenerCatalogoCartasDebug());
+    }
+
+    private Partida swapPerspective(Partida p) {
+        TableroJugador oldJugador = p.getJugador();
+        TableroJugador oldBot = p.getBot();
+
+        Partida swapped = new Partida(oldBot, oldJugador);
+        swapped.setId(p.getId());
+        swapped.setFaseActual(p.getFaseActual());
+        swapped.setYaSeRetiroEsteTurno(p.isYaSeRetiroEsteTurno());
+        swapped.setMulligansJugador(p.getMulligansBot());
+        swapped.setMulligansBot(p.getMulligansJugador());
+        swapped.setUltimasMonedasLanzadas(p.getUltimasMonedasLanzadas());
+        swapped.setJugadorUsername(p.getBotUsername());
+        swapped.setBotUsername(p.getJugadorUsername());
+        swapped.setCoinFlipped(p.isCoinFlipped());
+        swapped.setCoinFlipWinner(p.getCoinFlipWinner());
+        swapped.setCoinFlipResult(p.getCoinFlipResult());
+
+        if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
+            swapped.setTurnoActual(Partida.Turno.BOT);
+        } else {
+            swapped.setTurnoActual(Partida.Turno.JUGADOR);
+        }
+
+        return swapped;
     }
 }

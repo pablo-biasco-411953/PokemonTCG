@@ -1,0 +1,23 @@
+<div class="language-shell" [class.is-open]="open">
+  <button class="language-trigger" type="button" (click)="open = !open" [attr.aria-label]="'lang.label' | t">
+    <span class="globe">◎</span>
+    <span class="current">{{ i18n.currentLanguage().toUpperCase() }}</span>
+    <span class="chevron">⌄</span>
+  </button>
+
+  <div class="language-menu" *ngIf="open">
+    <button
+      *ngFor="let language of i18n.languages"
+      type="button"
+      class="language-option"
+      [class.active]="i18n.currentLanguage() === language.code"
+      (click)="selectLanguage(language.code)"
+    >
+      <span class="short">{{ language.short }}</span>
+      <span>
+        <strong>{{ language.nativeName }}</strong>
+        <small>{{ language.label }}</small>
+      </span>
+    </button>
+  </div>
+</div>

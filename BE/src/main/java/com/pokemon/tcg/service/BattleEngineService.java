@@ -10,6 +10,7 @@ import com.pokemon.tcg.model.battle.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
@@ -57,10 +58,18 @@ public class BattleEngineService {
         Collections.shuffle(mazoBot);
         tableroBot.setMazo(mazoBot);
 
-        prepararJuegoInicial(tableroJugador);
-        prepararJuegoInicial(tableroBot);
+        int mulligansJugador = prepararManoConMulligan(tableroJugador);
+        int mulligansBot = prepararManoConMulligan(tableroBot);
+
+        robarCartas(tableroJugador, mulligansBot);
+        robarCartas(tableroBot, mulligansJugador);
+
+        prepararPremios(tableroJugador);
+        prepararPremios(tableroBot);
 
         Partida partida = new Partida(tableroJugador, tableroBot);
+        partida.setMulligansJugador(mulligansJugador);
+        partida.setMulligansBot(mulligansBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
 
         partidasEnCurso.put(partida.getId(), partida);
@@ -68,31 +77,76 @@ public class BattleEngineService {
         return partida;
     }
 
-    private void prepararJuegoInicial(TableroJugador tablero) {
-        for (int i = 0; i < 7; i++) {
-            if (!tablero.getMazo().isEmpty())
-                tablero.getMano().add(tablero.getMazo().remove(0));
-        }
+    private int prepararManoConMulligan(TableroJugador tablero) {
+        int mulligans = 0;
+        int intentos = 0;
+
+        do {
+            tablero.getMazo().addAll(tablero.getMano());
+            tablero.getMano().clear();
+            Collections.shuffle(tablero.getMazo());
+            robarCartas(tablero, 7);
+
+            if (tienePokemonBasico(tablero)) return mulligans;
+
+            mulligans++;
+            intentos++;
+        } while (intentos < 20);
+
+        throw new IllegalStateException("El mazo no pudo generar una mano inicial con Pokemon Basico.");
+    }
+
+    private void prepararPremios(TableroJugador tablero) {
         for (int i = 0; i < 6; i++) {
             if (!tablero.getMazo().isEmpty())
                 tablero.getPremios().add(tablero.getMazo().remove(0));
         }
     }
 
-    public boolean lanzarMoneda(String matchId) {
-        Partida partida = getPartidaOThrow(matchId);
-        boolean jugadorGana = random.nextBoolean();
-        partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
-        return jugadorGana;
+    private void robarCartas(TableroJugador tablero, int cantidad) {
+        for (int i = 0; i < cantidad && !tablero.getMazo().isEmpty(); i++) {
+            tablero.getMano().add(tablero.getMazo().remove(0));
+        }
     }
 
-    public void elegirTurno(String matchId, boolean vaPrimero) {
+    public boolean lanzarMoneda(String matchId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        if (vaPrimero) {
-            partida.setTurnoActual(Partida.Turno.JUGADOR);
+        boolean isCara = random.nextBoolean();
+        partida.setCoinFlipped(true);
+        partida.setCoinFlipResult(isCara ? "CARA" : "CRUZ");
+
+        boolean callerWon = random.nextBoolean();
+        partida.setCoinFlipWinner(callerWon ? callerUsername :
+            (callerUsername != null && callerUsername.equals(partida.getJugadorUsername()) ? partida.getBotUsername() : partida.getJugadorUsername()));
+
+        if (partida.getBotUsername() == null) {
+            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
+        }
+        return callerWon;
+    }
+
+    public void elegirTurno(String matchId, boolean vaPrimero, String callerUsername) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getBotUsername() == null) {
+            if (vaPrimero) {
+                partida.setTurnoActual(Partida.Turno.JUGADOR);
+            } else {
+                partida.setTurnoActual(Partida.Turno.BOT);
+                ejecutarTurnoBot(matchId);
+            }
+            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         } else {
-            partida.setTurnoActual(Partida.Turno.BOT);
-            ejecutarTurnoBot(matchId);
+            if (vaPrimero) {
+                partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.JUGADOR : Partida.Turno.BOT);
+            } else {
+                partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.BOT : Partida.Turno.JUGADOR);
+            }
+            if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+                robarCarta(partida.getJugador());
+            } else {
+                robarCarta(partida.getBot());
+            }
+            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         }
     }
 
@@ -100,11 +154,11 @@ public class BattleEngineService {
         return partidasEnCurso.get(matchId);
     }
 
-    public void jugarPokemon(String matchId, String cartaId) {
+    public void jugarPokemon(String matchId, String cartaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         Card carta = encontrarCartaEnMano(tablero, cartaId);
 
         if (carta == null) throw new IllegalArgumentException("La carta no está en tu mano.");
@@ -126,11 +180,11 @@ public class BattleEngineService {
         }
     }
 
-    public void unirEnergia(String matchId, String cartaId, String energiaId) {
+    public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaId);
         Card energia = encontrarCartaEnMano(tablero, energiaId);
 
@@ -141,10 +195,10 @@ public class BattleEngineService {
         tablero.getMano().remove(energia);
     }
 
-    public void realizarRetirada(String matchId, String nuevoActivoId) {
+    public void realizarRetirada(String matchId, String nuevoActivoId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
-        TableroJugador tablero = partida.getJugador();
+        validarTurno(partida, callerUsername);
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
         CartaEnJuego activoViejo = tablero.getActivo();
 
         if (activoViejo == null) throw new IllegalStateException("No hay un Pokémon activo para retirar.");
@@ -185,11 +239,11 @@ public class BattleEngineService {
         System.out.println("🔄 Retirada: " + activoViejo.getCard().getNombre() + " a la banca (Curado). Entra " + suplente.getCard().getNombre());
     }
 
-    public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca) {
+    public void subirAActivoDesdeBanca(String matchId, String cartaIdEnBanca, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
 
         if (tablero.getActivo() != null) {
             throw new IllegalStateException("Ya tenés un Pokémon activo. Debés retirarlo primero.");
@@ -205,24 +259,32 @@ public class BattleEngineService {
         System.out.println("🚀 " + elegido.getCard().getNombre() + " ahora es tu Pokémon activo.");
     }
 
-    public void realizarAtaque(String matchId, String nombreAtaqueElegido) {
+    public void realizarAtaque(String matchId, String nombreAtaqueElegido, String callerUsername) {
         Partida partida = partidasEnCurso.get(matchId);
 
         if (partida == null) return;
-        if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
-            throw new IllegalStateException("No es tu turno para atacar.");
+        validarTurno(partida, callerUsername);
+
+        TableroJugador tableroAtacante = getTableroDeJugador(partida, callerUsername);
+        TableroJugador tableroDefensor = getTableroOponente(partida, callerUsername);
+
+        CartaEnJuego activoJugador = tableroAtacante.getActivo();
+        CartaEnJuego activoBot = tableroDefensor.getActivo();
+
+        if (activoBot == null) throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
+
+        if (activoBot.isInvulnerable()) {
+            System.out.println("🚫 El ataque rebotó: " + activoBot.getCard().getNombre() + " es invulnerable.");
+            this.pasarTurno(matchId, callerUsername); // Pasamos el turno sin hacer daño
+            return;
         }
-
-        CartaEnJuego activoJugador = partida.getJugador().getActivo();
-        CartaEnJuego activoBot = partida.getBot().getActivo();
-
         if (activoJugador == null) throw new IllegalStateException("No tenés un Pokémon activo.");
-        if (activoJugador.getEnergiasUnidas().isEmpty()) throw new IllegalStateException("Necesitás al menos 1 energía unida para atacar.");
         if (activoJugador.getCondicionesEspeciales().contains("Asleep") ||
                 activoJugador.getCondicionesEspeciales().contains("Paralyzed")) {
             throw new IllegalStateException("Tu Pokémon activo no puede atacar porque está " +
                     (activoJugador.getCondicionesEspeciales().contains("Asleep") ? "Dormido 💤" : "Paralizado ⚡"));
         }
+
         if (activoBot != null) {
             Ataque ataqueUsado = null;
 
@@ -237,39 +299,47 @@ public class BattleEngineService {
             }
 
             if (ataqueUsado == null) throw new IllegalStateException("Ataque no encontrado.");
+            if (!puedePagarCostoAtaque(activoJugador, ataqueUsado)) {
+                throw new IllegalStateException("Energias insuficientes para usar " + ataqueUsado.getNombre() + ".");
+            }
 
-            // 🚩 1. CALCULAMOS DAÑO Y MONEDAS CON EL RECORD NUEVO
-            ResultadoAtaque resultado = calcularDanioPorEfectos(ataqueUsado, activoJugador);
-            // 🚩 2. APLICAMOS EL DAÑO
+            // 🚩 1. CREAMOS LA LIBRETA DE ANOTACIONES
+            List<Boolean> historialMonedas = new ArrayList<>();
+
+            // 🚩 2. PASAMOS LA LIBRETA A CALCULAR DAÑO
+            ResultadoAtaque resultado = calcularDanioPorEfectos(ataqueUsado, activoJugador, historialMonedas);
+
+            // 🚩 3. APLICAMOS EL DAÑO
             int nuevaHp = activoBot.getHpActual() - resultado.danioFinal();
             activoBot.setHpActual(Math.max(0, nuevaHp));
 
             System.out.println("⚔️ [BATTLE] " + activoJugador.getCard().getNombre() +
                     " usó [" + nombreAtaqueElegido + "] y atacó a " + activoBot.getCard().getNombre() + " por " + resultado.danioFinal());
 
-            // 🚩 3. LECTOR DE EFECTOS (Le pasamos las caras)
+            // 🚩 4. LECTOR DE EFECTOS (Le pasamos la libreta también)
             if (activoBot.getHpActual() > 0) {
                 if (resultado.danioFinal() > 0 || ataqueUsado.getDanio() == 0) {
-                    aplicarEfectosSecundarios(partida, ataqueUsado, activoJugador, activoBot, resultado.carasSacadas());
+                    aplicarEfectosSecundarios(partida, ataqueUsado, activoJugador, activoBot, resultado.carasSacadas(), historialMonedas);
                 }
             }
 
-            // 🚩 4. VERIFICAMOS KO
+            // 🚩 5. VERIFICAMOS KO
             if (activoBot.getHpActual() <= 0) {
                 resolverKO(partida, activoJugador, activoBot);
             }
 
-            System.out.println("🔄 Ataque finalizado. Pasando turno al BOT...");
-            this.pasarTurno(matchId);
+            // 🚩 6. GUARDAMOS LA VERDAD EN LA PARTIDA
+            partida.setUltimasMonedasLanzadas(historialMonedas);
+
+            System.out.println("🔄 Ataque finalizado. Pasando turno al oponente...");
+            this.pasarTurno(matchId, callerUsername);
 
         } else {
             throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
         }
     }
 
-    // 🪙 EL CEREBRO DE LAS MONEDAS (Devuelve ResultadoAtaque)
-// 🪙 EL CEREBRO DEL CÁLCULO DE DAÑO (Ahora incluye monedas y escalados)
-    private ResultadoAtaque calcularDanioPorEfectos(Ataque ataque, CartaEnJuego atacante) {
+    private ResultadoAtaque calcularDanioPorEfectos(Ataque ataque, CartaEnJuego atacante, List<Boolean> historialMonedas) {
         int danioBase = ataque.getDanio();
         String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
 
@@ -289,6 +359,26 @@ public class BattleEngineService {
             return new ResultadoAtaque(danioBase + danioExtra, 0);
         }
 
+        if (texto.contains("prevent all effects of attacks") && texto.contains("including damage")) {
+            // 🚩 REGLA: ¿Dice que hay que tirar moneda?
+            if (texto.contains("flip a coin")) {
+                System.out.println("🪙 [MONEDA] Tirando para Inmunidad...");
+                boolean esCara = random.nextBoolean();
+                historialMonedas.add(esCara);
+
+                if (esCara) { // CARA ✅
+                    atacante.setInvulnerable(true);
+                    System.out.println("🛡️ ¡Salió CARA! " + atacante.getCard().getNombre() + " activó su escudo de inmunidad.");
+                } else { // CRUZ ❌
+                    atacante.setInvulnerable(false);
+                    System.out.println("💨 Salió CRUZ. " + atacante.getCard().getNombre() + " no logró protegerse.");
+                }
+            } else {
+                // Si la carta NO dice "flip a coin", se activa directo
+                atacante.setInvulnerable(true);
+            }
+        }
+
         // 🔋 DAÑO POR EXCESO DE ENERGÍA
         if (texto.contains("for each energy attached") || texto.contains("for each extra energy")) {
             int energias = atacante.getEnergiasUnidas().size();
@@ -303,7 +393,10 @@ public class BattleEngineService {
 
         // 🪙 MONEDAS (Si sale ceca no hace nada)
         if (texto.contains("tails, this attack does nothing") || texto.contains("tails, that attack does nothing")) {
-            if (!random.nextBoolean()) {
+            boolean esCara = random.nextBoolean();
+            historialMonedas.add(esCara);
+
+            if (!esCara) {
                 System.out.println("🪙 Salió CRUZ. El ataque falló completamente.");
                 return new ResultadoAtaque(0, 0);
             }
@@ -321,7 +414,9 @@ public class BattleEngineService {
 
             int caras = 0;
             for (int i = 0; i < monedas; i++) {
-                if (random.nextBoolean()) caras++;
+                boolean esCara = random.nextBoolean();
+                historialMonedas.add(esCara);
+                if (esCara) caras++;
             }
             int danioFinal = danioBase * caras;
             System.out.println("🪙 Se tiraron " + monedas + " monedas. Caras: " + caras + ". Daño calculado: " + danioFinal);
@@ -330,7 +425,10 @@ public class BattleEngineService {
 
         // 🪙 MONEDAS (Daño extra fijo si sale cara)
         if (texto.contains("if heads") && (texto.contains("more damage") || texto.contains("damage plus"))) {
-            if (random.nextBoolean()) {
+            boolean esCara = random.nextBoolean();
+            historialMonedas.add(esCara);
+
+            if (esCara) {
                 System.out.println("🪙 ¡Salió CARA! Daño extra aplicado.");
                 return new ResultadoAtaque(danioBase + danioBase, 1);
             }
@@ -341,10 +439,7 @@ public class BattleEngineService {
         return new ResultadoAtaque(danioBase, 0);
     }
 
-    // 🚩 EL LECTOR DE TEXTO DE LA CARTA (Actualizado)
-    // 🚩 FIX: Le agregamos 'Partida partida' al principio de los parámetros
-// 🚩 EL LECTOR UNIVERSAL DE EFECTOS SECUNDARIOS
-    private void aplicarEfectosSecundarios(Partida partida, Ataque ataque, CartaEnJuego atacante, CartaEnJuego defensor, int carasSacadas) {
+    private void aplicarEfectosSecundarios(Partida partida, Ataque ataque, CartaEnJuego atacante, CartaEnJuego defensor, int carasSacadas, List<Boolean> historialMonedas) {
         String texto = ataque.getTexto() != null ? ataque.getTexto().toLowerCase() : "";
         if (texto.isEmpty()) return;
 
@@ -435,7 +530,9 @@ public class BattleEngineService {
         // ⚡ 6. PARÁLISIS
         if (texto.contains("is now paralyzed")) {
             if (texto.contains("flip a coin")) {
-                if (random.nextBoolean()) {
+                boolean esCara = random.nextBoolean();
+                historialMonedas.add(esCara);
+                if (esCara) {
                     defensor.agregarCondicion("Paralyzed");
                     System.out.println("⚡ ¡Salió CARA! " + defensor.getCard().getNombre() + " fue Paralizado.");
                 } else {
@@ -452,7 +549,7 @@ public class BattleEngineService {
             if (!texto.contains("attached to this") && !texto.contains("attached to " + atacante.getCard().getNombre().toLowerCase())) {
                 int aRomper = 1;
                 if (texto.contains("for each heads")) {
-                    aRomper = carasSacadas; // ACÁ usamos la variable que viene del front/cálculo
+                    aRomper = carasSacadas;
                 }
 
                 for (int i = 0; i < aRomper; i++) {
@@ -480,7 +577,9 @@ public class BattleEngineService {
         // 💤 10. SUEÑO
         if (texto.contains("is now asleep")) {
             if (texto.contains("flip a coin")) {
-                if (random.nextBoolean()) {
+                boolean esCara = random.nextBoolean();
+                historialMonedas.add(esCara);
+                if (esCara) {
                     defensor.agregarCondicion("Asleep");
                     System.out.println("💤 ¡Salió CARA! " + defensor.getCard().getNombre() + " se quedó Dormido.");
                 }
@@ -499,7 +598,9 @@ public class BattleEngineService {
         // 🌀 12. CONFUSIÓN
         if (texto.contains("is now confused")) {
             if (texto.contains("flip a coin")) {
-                if (random.nextBoolean()) {
+                boolean esCara = random.nextBoolean();
+                historialMonedas.add(esCara);
+                if (esCara) {
                     defensor.agregarCondicion("Confused");
                     System.out.println("🌀 ¡Salió CARA! " + defensor.getCard().getNombre() + " se Confundió.");
                 }
@@ -513,9 +614,7 @@ public class BattleEngineService {
     private void aplicarMantenimientoEntreTurnos(Partida partida) {
         System.out.println("🔄 --- INICIANDO MANTENIMIENTO ENTRE TURNOS ---");
 
-        // Revisamos los estados del Pokémon del Jugador
         procesarEstado(partida.getJugador(), partida.getBot(), partida);
-        // Revisamos los estados del Pokémon del Bot
         procesarEstado(partida.getBot(), partida.getJugador(), partida);
 
         System.out.println("🔄 --- FIN MANTENIMIENTO ---");
@@ -525,13 +624,11 @@ public class BattleEngineService {
         CartaEnJuego activo = dueno.getActivo();
         if (activo == null) return;
 
-        // ☠️ VENENO: Saca 10 de vida fijo
         if (activo.getCondicionesEspeciales().contains("Poisoned")) {
             System.out.println("☠️ Veneno: " + activo.getCard().getNombre() + " recibe 10 de daño.");
             activo.setHpActual(Math.max(0, activo.getHpActual() - 10));
         }
 
-        // 🔥 QUEMADURA: Saca 20 de vida y tira moneda para curarse
         if (activo.getCondicionesEspeciales().contains("Burned")) {
             System.out.println("🔥 Quemadura: " + activo.getCard().getNombre() + " recibe 20 de daño.");
             activo.setHpActual(Math.max(0, activo.getHpActual() - 20));
@@ -544,7 +641,6 @@ public class BattleEngineService {
             }
         }
 
-        // 💤 SUEÑO: Tira moneda para despertar
         if (activo.getCondicionesEspeciales().contains("Asleep")) {
             if (random.nextBoolean()) {
                 System.out.println("💤 ¡Salió CARA! " + activo.getCard().getNombre() + " se despertó.");
@@ -554,107 +650,131 @@ public class BattleEngineService {
             }
         }
 
-        // 💀 VERIFICAR MUERTE POR ESTADOS: Si el veneno/fuego lo mató, el rival roba premio
         if (activo.getHpActual() <= 0) {
             System.out.println("💀 " + activo.getCard().getNombre() + " murió por un estado alterado.");
             resolverKO(partida, rival.getActivo(), activo);
         }
     }
 
-    public void pasarTurno(String matchId) {
+    public void pasarTurno(String matchId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador jugador = partida.getJugador();
+        TableroJugador jugador = getTableroDeJugador(partida, callerUsername);
+        TableroJugador bot = getTableroOponente(partida, callerUsername);
 
-        // REGLA: Obligatorio subir un Pokémon si tu activo murió
         if (jugador.getActivo() == null && !jugador.getBanca().isEmpty()) {
             throw new IllegalStateException("Debés subir un Pokémon de tu banca a la posición Activa antes de terminar tu turno.");
         }
 
-        // LIMPIAMOS TRAMPAS Y PARÁLISIS DEL JUGADOR
+        // LIMPIEZA DE TU POKÉMON (PERO DEJAMOS EL ESCUDO PRENDIDO)
         if (jugador.getActivo() != null) {
             jugador.getActivo().getCondicionesEspeciales().remove("CantRetreat");
             jugador.getActivo().getCondicionesEspeciales().remove("Paralyzed");
             jugador.getActivo().setPuedeAtacar(true);
+            // ❌ ACÁ YA NO SE APAGA TU ESCUDO
+        }
+
+        // 🚩 EL ESCUDO DEL OPONENTE SE APAGA ACÁ (Ya pasó tu turno para atacarlo)
+        if (bot.getActivo() != null) {
+            bot.getActivo().setInvulnerable(false);
         }
 
         aplicarMantenimientoEntreTurnos(partida);
 
         partida.setYaSeRetiroEsteTurno(false);
-        // 🚩 LE PASAMOS LA PELOTA AL BOT, PERO NO LO EJECUTAMOS ACÁ.
-        // Angular se va a encargar de despertarlo.
-        partida.setTurnoActual(Partida.Turno.BOT);
+
+        if (partida.getBotUsername() == null) {
+            partida.setTurnoActual(Partida.Turno.BOT);
+            ejecutarTurnoBot(matchId);
+        } else {
+            if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+                partida.setTurnoActual(Partida.Turno.BOT);
+                robarCarta(partida.getBot());
+            } else {
+                partida.setTurnoActual(Partida.Turno.JUGADOR);
+                robarCarta(partida.getJugador());
+            }
+        }
     }
+
+
+
 
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
 
-        // 1. El bot empieza su turno robando una carta
         robarCarta(partida.getBot());
-
-        // 2. 🧠 ¡DESPERTAMOS AL CEREBRO! (Esta es la línea que faltaba)
         botAIService.ejecutarTurno(partida);
 
-        // 3. LIMPIAMOS TRAMPAS Y PARÁLISIS DEL BOT
+        // LIMPIEZA DEL POKÉMON DEL BOT (PERO DEJAMOS SU ESCUDO PRENDIDO)
         if (partida.getBot().getActivo() != null) {
             partida.getBot().getActivo().setPuedeAtacar(true);
             partida.getBot().getActivo().getCondicionesEspeciales().remove("CantRetreat");
-            partida.getBot().getActivo().getCondicionesEspeciales().remove("Paralyzed"); // <-- SE CURA EL BOT
+            partida.getBot().getActivo().getCondicionesEspeciales().remove("Paralyzed");
+            // ❌ ACÁ YA NO SE APAGA EL ESCUDO DEL BOT
         }
 
-        // 4. APLICAMOS EL VENENO Y EL FUEGO A TODOS (Mantenimiento post-turno del bot)
+        // 🚩 TU ESCUDO SE APAGA ACÁ (El bot ya jugó su turno y te intentó pegar)
+        if (partida.getJugador().getActivo() != null) {
+            partida.getJugador().getActivo().setInvulnerable(false);
+        }
+
         aplicarMantenimientoEntreTurnos(partida);
 
-        // 5. Le devolvemos el turno al jugador y hacemos que robe su carta para arrancar
         partida.setTurnoActual(Partida.Turno.JUGADOR);
         robarCarta(partida.getJugador());
     }
-
     private void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego defensor) {
-        TableroJugador tableroVictima  = encontrarTableroPorCarta(partida, defensor);
-        TableroJugador tableroGanador  = encontrarTableroPorCarta(partida, atacante);
+        TableroVictimaYAtacante res = identificarTableros(partida, defensor, atacante);
+        if (res == null) return;
 
-        if (tableroVictima == null || tableroGanador == null) return;
+        TableroJugador tableroVictima = res.victima;
+        TableroJugador tableroGanador = res.ganador;
 
-        tableroVictima.getPilaDescarte().add(defensor.getCard());
-        if (defensor.equals(tableroVictima.getActivo())) {
+        System.out.println("💀 [SISTEMA] Procesando K.O. de: " + defensor.getCard().getNombre());
+
+        String idADescartar = defensor.getCard().getId();
+
+        if (tableroVictima.getActivo() != null &&
+                tableroVictima.getActivo().getCard().getId().equals(idADescartar)) {
             tableroVictima.setActivo(null);
-        } else {
-            tableroVictima.getBanca().remove(defensor);
         }
+
+        tableroVictima.getBanca().removeIf(c -> c == null || c.getCard() == null || c.getCard().getId().equals(idADescartar));
+        tableroVictima.getPilaDescarte().add(defensor.getCard());
 
         if (!tableroGanador.getPremios().isEmpty()) {
             tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
         }
 
-        System.out.println("💀 K.O.! Premios restantes del ganador: " + tableroGanador.getPremios().size());
-
-        boolean ganadorSinPremios = tableroGanador.getPremios().isEmpty();
-        boolean victimasinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
-
-        if (ganadorSinPremios || victimasinPokemon) {
+        if (tableroGanador.getPremios().isEmpty() || (tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty())) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
-            System.out.println("🏆 ¡Partida terminada!");
-        } else if (tableroVictima.getActivo() == null && !tableroVictima.getBanca().isEmpty()) {
-            if (tableroVictima == partida.getBot()) {
-                CartaEnJuego rivalActivo = partida.getJugador().getActivo();
-
-                CartaEnJuego mejorReemplazo = tableroVictima.getBanca().stream()
-                        .max((c1, c2) -> {
-                            int score1 = calcularPuntajeEstrategico(c1, rivalActivo);
-                            int score2 = calcularPuntajeEstrategico(c2, rivalActivo);
-                            return Integer.compare(score1, score2);
-                        })
-                        .get();
-
-                tableroVictima.getBanca().remove(mejorReemplazo);
-                tableroVictima.setActivo(mejorReemplazo);
-
-                System.out.println("🤖 [BOT] Analizó tipos y subió a " + mejorReemplazo.getCard().getNombre() + " como la mejor respuesta táctica.");
+        } else if (tableroVictima == partida.getBot() && tableroVictima.getActivo() == null) {
+            CartaEnJuego mejor = elegirMejorReemplazoBot(tableroVictima, partida.getJugador().getActivo());
+            if (mejor != null) {
+                tableroVictima.getBanca().remove(mejor);
+                tableroVictima.setActivo(mejor);
             }
         }
+    }
+
+    private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}
+
+    private TableroVictimaYAtacante identificarTableros(Partida p, CartaEnJuego def, CartaEnJuego atk) {
+        TableroJugador v = encontrarTableroPorCarta(p, def);
+        TableroJugador g = encontrarTableroPorCarta(p, atk);
+        if (v == null || g == null) return null;
+        return new TableroVictimaYAtacante(v, g);
+    }
+
+    private CartaEnJuego elegirMejorReemplazoBot(TableroJugador tableroBot, CartaEnJuego activoRival) {
+        return tableroBot.getBanca().stream()
+                .max((c1, c2) -> Integer.compare(
+                        calcularPuntajeEstrategico(c1, activoRival),
+                        calcularPuntajeEstrategico(c2, activoRival)))
+                .orElse(tableroBot.getBanca().get(0));
     }
 
     private int calcularPuntajeEstrategico(CartaEnJuego candidato, CartaEnJuego rival) {
@@ -701,9 +821,51 @@ public class BattleEngineService {
         return p;
     }
 
-    private void validarTurnoJugador(Partida partida) {
-        if (partida.getTurnoActual() != Partida.Turno.JUGADOR)
-            throw new IllegalStateException("No es tu turno.");
+    public void validarTurno(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null) {
+            if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
+                throw new IllegalStateException("No es tu turno.");
+            }
+        } else {
+            if (callerUsername == null) {
+                throw new IllegalStateException("Se requiere usuario para partida online.");
+            }
+            if (callerUsername.equals(partida.getJugadorUsername())) {
+                if (partida.getTurnoActual() != Partida.Turno.JUGADOR) {
+                    throw new IllegalStateException("No es tu turno.");
+                }
+            } else if (callerUsername.equals(partida.getBotUsername())) {
+                if (partida.getTurnoActual() != Partida.Turno.BOT) {
+                    throw new IllegalStateException("No es tu turno.");
+                }
+            } else {
+                throw new IllegalStateException("No eres parte de esta partida.");
+            }
+        }
+    }
+
+    public TableroJugador getTableroDeJugador(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null || callerUsername == null) {
+            return partida.getJugador();
+        }
+        if (callerUsername.equals(partida.getJugadorUsername())) {
+            return partida.getJugador();
+        } else if (callerUsername.equals(partida.getBotUsername())) {
+            return partida.getBot();
+        }
+        throw new IllegalArgumentException("Usuario no válido para esta partida.");
+    }
+
+    public TableroJugador getTableroOponente(Partida partida, String callerUsername) {
+        if (partida.getBotUsername() == null || callerUsername == null) {
+            return partida.getBot();
+        }
+        if (callerUsername.equals(partida.getJugadorUsername())) {
+            return partida.getBot();
+        } else if (callerUsername.equals(partida.getBotUsername())) {
+            return partida.getJugador();
+        }
+        throw new IllegalArgumentException("Usuario no válido para esta partida.");
     }
 
     private Card encontrarCartaEnMano(TableroJugador tablero, String id) {
@@ -713,11 +875,17 @@ public class BattleEngineService {
     }
 
     private CartaEnJuego encontrarCartaEnTablero(TableroJugador tablero, String id) {
-        if (tablero.getActivo() != null && tablero.getActivo().getCard().getId().equals(id))
-            return tablero.getActivo();
+        if (tablero.getActivo() != null && tablero.getActivo().getCard() != null) {
+            if (tablero.getActivo().getCard().getId().equals(id)) {
+                return tablero.getActivo();
+            }
+        }
+
         return tablero.getBanca().stream()
+                .filter(c -> c != null && c.getCard() != null)
                 .filter(c -> c.getCard().getId().equals(id))
-                .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
     }
 
     private TableroJugador encontrarTableroPorCarta(Partida p, CartaEnJuego c) {
@@ -734,7 +902,8 @@ public class BattleEngineService {
             return false;
         }
 
-        boolean esPokemon = "Pokémon".equalsIgnoreCase(c.getSupertype()) || "Pokemon".equalsIgnoreCase(c.getSupertype());
+        String supertype = normalizarTexto(c.getSupertype());
+        boolean esPokemon = "pokemon".equals(supertype);
 
         boolean esBasico = false;
         if (c.getSubtypes() != null) {
@@ -749,31 +918,86 @@ public class BattleEngineService {
         return esPokemon && esBasico;
     }
 
+    private boolean tienePokemonBasico(TableroJugador tablero) {
+        return tablero.getMano().stream().anyMatch(this::esPokemonBasico);
+    }
+
+    private boolean puedePagarCostoAtaque(CartaEnJuego atacante, Ataque ataque) {
+        if (ataque.getCosto() == null || ataque.getCosto().isEmpty()) return true;
+
+        List<String> energiasDisponibles = atacante.getEnergiasUnidas().stream()
+                .map(this::tipoEnergiaDeCarta)
+                .map(this::normalizarTipoEnergia)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        List<String> costoPendiente = ataque.getCosto().stream()
+                .map(this::normalizarTipoEnergia)
+                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
+
+        for (int i = costoPendiente.size() - 1; i >= 0; i--) {
+            String requerido = costoPendiente.get(i);
+            if (!"Colorless".equals(requerido)) {
+                int idx = energiasDisponibles.indexOf(requerido);
+                if (idx < 0) return false;
+                energiasDisponibles.remove(idx);
+                costoPendiente.remove(i);
+            }
+        }
+
+        return energiasDisponibles.size() >= costoPendiente.size();
+    }
+
+    private String tipoEnergiaDeCarta(Card energia) {
+        if (energia.getTipo() != null && !energia.getTipo().isBlank() && !"Energy".equalsIgnoreCase(energia.getTipo())) {
+            return energia.getTipo();
+        }
+        return energia.getNombre();
+    }
+
+    private String normalizarTipoEnergia(String tipo) {
+        String t = normalizarTexto(tipo);
+        if (t.contains("grass") || t.contains("planta")) return "Grass";
+        if (t.contains("fire") || t.contains("fuego")) return "Fire";
+        if (t.contains("water") || t.contains("agua")) return "Water";
+        if (t.contains("lightning") || t.contains("electrica") || t.contains("rayo")) return "Lightning";
+        if (t.contains("psychic") || t.contains("psiquica")) return "Psychic";
+        if (t.contains("fighting") || t.contains("lucha")) return "Fighting";
+        if (t.contains("darkness") || t.contains("siniestra") || t.contains("oscuridad")) return "Darkness";
+        if (t.contains("metal") || t.contains("acero")) return "Metal";
+        if (t.contains("dragon")) return "Dragon";
+        if (t.contains("fairy") || t.contains("hada")) return "Fairy";
+        if (t.contains("colorless") || t.contains("incolora")) return "Colorless";
+        return tipo;
+    }
+
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+        return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase();
+    }
+
     private boolean esEnergia(Card c) {
         if (c == null || c.getSupertype() == null) return false;
         return c.getSupertype().equalsIgnoreCase("Energy");
     }
 
-
-    public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId) {
+    public void evolucionarPokemon(String matchId, String cartaManoId, String cartaTableroId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
-        validarTurnoJugador(partida);
+        validarTurno(partida, callerUsername);
 
-        TableroJugador tablero = partida.getJugador();
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
 
-        // 1. Buscar la carta en la mano (la Evolución)
         Card cartaEvolucion = encontrarCartaEnMano(tablero, cartaManoId);
         if (cartaEvolucion == null) {
             throw new IllegalArgumentException("La carta de evolución no está en tu mano.");
         }
 
-        // 2. Buscar el objetivo en el tablero (El Básico/Fase 1)
         CartaEnJuego objetivo = encontrarCartaEnTablero(tablero, cartaTableroId);
         if (objetivo == null) {
             throw new IllegalArgumentException("El Pokémon objetivo no está en tu tablero.");
         }
 
-        // 3. 🛡️ REGLA OFICIAL: Validar el linaje de evolución
         String evolvesFrom = cartaEvolucion.getEvolvesFrom();
         String nombreObjetivo = objetivo.getCard().getNombre();
 
@@ -784,24 +1008,115 @@ public class BattleEngineService {
 
         System.out.println("✨ ¡Evolución inminente! " + nombreObjetivo + " está evolucionando a " + cartaEvolucion.getNombre() + "...");
 
-        // 4. 🛡️ REGLA OFICIAL: Calcular daño previo para mantenerlo
-        // Si el básico tenía 50 HP y le quedaban 30, tiene 20 de daño acumulado.
         int hpMaximoAnterior = Integer.parseInt(objetivo.getCard().getHp());
         int danioAcumulado = hpMaximoAnterior - objetivo.getHpActual();
 
-        // 5. ¡PISAR LOS DATOS! Transformamos la carta base en la evolución
-        objetivo.setCard(cartaEvolucion); // Actualizamos la referencia de la carta
+        objetivo.setCard(cartaEvolucion);
 
-        // 6. 🛡️ REGLA OFICIAL: Aplicar el nuevo HP restando el daño viejo
         int nuevoHpMaximo = Integer.parseInt(cartaEvolucion.getHp());
         objetivo.setHpActual(Math.max(0, nuevoHpMaximo - danioAcumulado));
 
-        // 7. 🛡️ REGLA OFICIAL: ¡Milagro médico! Curar todos los estados alterados
         objetivo.limpiarCondiciones();
 
-        // 8. Quitar la carta usada de la mano
         tablero.getMano().remove(cartaEvolucion);
 
         System.out.println("✅ Evolución completada con éxito. HP actual: " + objetivo.getHpActual() + "/" + nuevoHpMaximo);
+    }
+
+    public Partida debugRobarCarta(String matchId, String cardId) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        Card cartaMagica = cardRepo.findById(cardId)
+                .orElseThrow(() -> new IllegalArgumentException("Carta no encontrada en DB: " + cardId));
+
+        partida.getJugador().getMano().add(cartaMagica);
+        System.out.println("🛠️ [GOD MODE] Carta inyectada a la mano: " + cartaMagica.getNombre());
+
+        return partida;
+    }
+
+    public Partida debugForzarEstado(String matchId, String objetivo, String estado) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        CartaEnJuego activo = objetivo.equals("BOT") ?
+                partida.getBot().getActivo() :
+                partida.getJugador().getActivo();
+
+        if (activo != null) {
+            activo.limpiarCondiciones();
+            activo.agregarCondicion(estado);
+            System.out.println("🛠️ [GOD MODE] Estado " + estado + " aplicado a " + activo.getCard().getNombre());
+        }
+
+        return partida;
+    }
+
+    public Partida debugSetHp(String matchId, String objetivo, int hp) {
+        Partida partida = getPartidaOThrow(matchId);
+
+        CartaEnJuego activoVictima = objetivo.equals("BOT") ? partida.getBot().getActivo() : partida.getJugador().getActivo();
+        CartaEnJuego rivalAtacante = objetivo.equals("BOT") ? partida.getJugador().getActivo() : partida.getBot().getActivo();
+
+        if (activoVictima != null) {
+            activoVictima.setHpActual(Math.max(0, hp));
+            System.out.println("🛠️ [GOD MODE] HP de " + activoVictima.getCard().getNombre() + " seteado a " + hp);
+
+            if (activoVictima.getHpActual() <= 0 && rivalAtacante != null) {
+                System.out.println("🛠️ [GOD MODE] Ejecutando Muerte Súbita...");
+                resolverKO(partida, rivalAtacante, activoVictima);
+            }
+        }
+
+        return partida;
+    }
+
+    public java.util.List<com.pokemon.tcg.model.Card> obtenerCatalogoCartasDebug() {
+        return cardRepo.findAll();
+    }
+
+    public Partida startBattleOnline(String player1, Long player1MazoId, String player2, Long player2MazoId) {
+        Jugador j1 = jugadorRepo.findByUsername(player1);
+        if (j1 == null) throw new IllegalArgumentException("Jugador no encontrado: " + player1);
+        Jugador j2 = jugadorRepo.findByUsername(player2);
+        if (j2 == null) throw new IllegalArgumentException("Jugador no encontrado: " + player2);
+
+        Mazo mazo1 = mazoRepo.findById(player1MazoId)
+                .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + player1MazoId));
+        Mazo mazo2 = mazoRepo.findById(player2MazoId)
+                .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + player2MazoId));
+
+        if (mazo1.getCartas().size() < 60 || mazo2.getCartas().size() < 60)
+            throw new IllegalStateException("Los mazos deben tener 60 cartas.");
+
+        TableroJugador tableroJugador = new TableroJugador();
+        TableroJugador tableroBot = new TableroJugador();
+
+        List<Card> m1 = new ArrayList<>(mazo1.getCartas());
+        Collections.shuffle(m1);
+        tableroJugador.setMazo(m1);
+
+        List<Card> m2 = new ArrayList<>(mazo2.getCartas());
+        Collections.shuffle(m2);
+        tableroBot.setMazo(m2);
+
+        int mulligansJugador = prepararManoConMulligan(tableroJugador);
+        int mulligansBot = prepararManoConMulligan(tableroBot);
+
+        robarCartas(tableroJugador, mulligansBot);
+        robarCartas(tableroBot, mulligansJugador);
+
+        prepararPremios(tableroJugador);
+        prepararPremios(tableroBot);
+
+        Partida partida = new Partida(tableroJugador, tableroBot);
+        partida.setJugadorUsername(player1);
+        partida.setBotUsername(player2);
+        partida.setMulligansJugador(mulligansJugador);
+        partida.setMulligansBot(mulligansBot);
+        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
+
+        partidasEnCurso.put(partida.getId(), partida);
+        System.out.println("✅ Partida Online creada con ID: " + partida.getId());
+        return partida;
     }
 }

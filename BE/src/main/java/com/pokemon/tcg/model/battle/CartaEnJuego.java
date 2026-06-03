@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Wrapper de la carta original que se encuentra en juego.
+ * Estado en mesa de una carta: HP actual, energías y condiciones.
  */
 public class CartaEnJuego {
     private Set<String> condicionesEspeciales = new HashSet<>();
@@ -17,7 +17,11 @@ public class CartaEnJuego {
     private boolean puedeAtacar = true;
     private int reduccionDanioRecibido = 0;
     private int aumentoDanioCausado = 0;
+    private boolean invulnerable = false;
+    public void setInvulnerable(boolean value) { this.invulnerable = value; }
+    public boolean isInvulnerable() { return invulnerable; }
     public CartaEnJuego(Card card) {
+        // El HP inicial se toma de la carta base al entrar en juego.
         this.card = card;
         try {
             this.hpActual = Integer.parseInt(card.getHp());

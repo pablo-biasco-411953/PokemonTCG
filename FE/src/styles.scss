@@ -1,1 +1,9 @@
-/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tailwind preflight is disabled in tailwind.config.js to preserve the existing game styling. */
+html, body {
+  margin: 0;
+  padding: 0;
+}

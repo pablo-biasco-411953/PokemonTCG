@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 
+// Spec basico del componente raiz.
 describe('App', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
