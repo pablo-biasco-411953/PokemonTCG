@@ -477,6 +477,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private isDraggingCamera = false;
   private lastMouseX = 0;
   private lastMouseY = 0;
+  private cameraHoldTimeout?: ReturnType<typeof setTimeout>;
+  private cameraPointerId: number | null = null;
+  private cameraPointerStartX = 0;
+  private cameraPointerStartY = 0;
   private readonly cycleSeconds = 720;
   private readonly cardTexturePaths = [
     '/images/cards/base1-4.png',
@@ -699,6 +703,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
+    }
+    if (this.cameraHoldTimeout) {
+      clearTimeout(this.cameraHoldTimeout);
+      this.cameraHoldTimeout = undefined;
     }
     if (this.socket) {
       this.socket.close();
@@ -1729,30 +1737,54 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.camera.position.set(0, 5.2, 11.5);
 
     // Eventos de mouse y rueda para rotación (órbita) y zoom de la cámara
-    canvas.addEventListener('mousedown', (event: MouseEvent) => {
-      if (event.button === 0) { // Clic izquierdo
+    canvas.addEventListener('pointerdown', (event: PointerEvent) => {
+      this.cameraPointerId = event.pointerId;
+      this.cameraPointerStartX = event.clientX;
+      this.cameraPointerStartY = event.clientY;
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+
+      if (event.pointerType === 'mouse') {
+        if (event.button !== 0) return;
         this.isDraggingCamera = true;
-        this.lastMouseX = event.clientX;
-        this.lastMouseY = event.clientY;
+        return;
       }
+
+      this.cameraHoldTimeout = setTimeout(() => {
+        if (this.cameraPointerId === event.pointerId) {
+          this.isDraggingCamera = true;
+          canvas.setPointerCapture?.(event.pointerId);
+        }
+      }, 240);
     });
 
-    window.addEventListener('mousemove', (event: MouseEvent) => {
+    window.addEventListener('pointermove', (event: PointerEvent) => {
+      if (event.pointerId !== this.cameraPointerId) return;
+
+      if (!this.isDraggingCamera && event.pointerType !== 'mouse') {
+        const moved = Math.hypot(event.clientX - this.cameraPointerStartX, event.clientY - this.cameraPointerStartY);
+        if (moved > 14 && this.cameraHoldTimeout) {
+          clearTimeout(this.cameraHoldTimeout);
+          this.cameraHoldTimeout = undefined;
+        }
+        return;
+      }
+
       if (this.isDraggingCamera) {
+        event.preventDefault();
         const dx = event.clientX - this.lastMouseX;
         const dy = event.clientY - this.lastMouseY;
-        
+
         this.cameraOrbitYaw -= dx * 0.007;
         this.cameraOrbitPitch = Math.max(-0.4, Math.min(1.2, this.cameraOrbitPitch + dy * 0.005));
-        
+
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
       }
-    });
+    }, { passive: false });
 
-    window.addEventListener('mouseup', () => {
-      this.isDraggingCamera = false;
-    });
+    window.addEventListener('pointerup', (event: PointerEvent) => this.stopCameraPointer(event));
+    window.addEventListener('pointercancel', (event: PointerEvent) => this.stopCameraPointer(event));
 
     canvas.addEventListener('wheel', (event: WheelEvent) => {
       event.preventDefault();
@@ -1843,6 +1875,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   releaseMobileKey(event: PointerEvent, key: string) {
     event.preventDefault();
     this.keys.delete(key);
+  }
+
+  private stopCameraPointer(event: PointerEvent) {
+    if (event.pointerId !== this.cameraPointerId) return;
+    if (this.cameraHoldTimeout) {
+      clearTimeout(this.cameraHoldTimeout);
+      this.cameraHoldTimeout = undefined;
+    }
+    this.isDraggingCamera = false;
+    this.cameraPointerId = null;
   }
 
   startMobileJoystick(event: PointerEvent) {

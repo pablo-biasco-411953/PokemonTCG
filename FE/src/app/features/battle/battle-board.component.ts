@@ -59,6 +59,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // Gesto de moneda
   private yStart = 0;
   private yEnd = 0;
+  private coinPointerId: number | null = null;
   public lanzada = false;
   hoveredCard: Card | BattleActionCard | null = null;
   hoveredCardStatuses: CardGlossaryEntry[] = [];
@@ -369,8 +370,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   // Guarda el punto inicial del gesto de lanzamiento.
-  onMouseDown(event: MouseEvent) {
+  onCoinPointerDown(event: PointerEvent) {
+    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    event.preventDefault();
+    this.coinPointerId = event.pointerId;
     this.yStart = event.clientY;
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+  }
+
+  onCoinPointerCancel(event: PointerEvent) {
+    if (event.pointerId !== this.coinPointerId) return;
+    this.coinPointerId = null;
   }
 
   interTurnOverlay: InterTurnOverlayState | null = null;
@@ -438,14 +448,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  async onMouseUp(event: MouseEvent) {
+  async onCoinPointerUp(event: PointerEvent) {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    if (this.coinPointerId !== null && event.pointerId !== this.coinPointerId) return;
+    event.preventDefault();
+    this.coinPointerId = null;
 
     this.yEnd = event.clientY;
     const diferencia = this.yStart - this.yEnd;
-    const fuerza = Math.min(Math.max(diferencia, 50), 400);
+    const fuerza = Math.min(Math.max(diferencia, 80), 400);
 
-    if (fuerza > 50) {
+    if (fuerza >= 70) {
       this.lanzada = true;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';

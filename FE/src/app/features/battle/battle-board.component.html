@@ -65,8 +65,9 @@
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
-        (mousedown)="onMouseDown($event)"
-        (window:mouseup)="onMouseUp($event)"
+        (pointerdown)="onCoinPointerDown($event)"
+        (pointerup)="onCoinPointerUp($event)"
+        (pointercancel)="onCoinPointerCancel($event)"
         [class.pointer-events-none]="lanzada"
       >
         <p class="swipe-hint" *ngIf="!lanzada">¡Deslizá hacia arriba para lanzar!</p>

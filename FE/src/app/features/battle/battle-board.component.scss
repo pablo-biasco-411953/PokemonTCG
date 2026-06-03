@@ -1076,6 +1076,7 @@ bot-sprite-wrap {
   display: flex; align-items: center; justify-content: center;
   font-family: 'Bebas Neue', sans-serif;
   color: white;
+  touch-action: none;
 
   .panel {
     text-align: center;
@@ -1098,12 +1099,41 @@ bot-sprite-wrap {
   align-items: center;
   justify-content: flex-end; // Arranca desde abajo
   cursor: grab;
+  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   border-radius: 15px;
 
   &:active { cursor: grabbing; }
   &.pointer-events-none { pointer-events: none; }
+}
+
+@media (max-width: 920px) and (orientation: landscape), (max-height: 520px) {
+  .coinflip-overlay .panel {
+    min-width: 0;
+    width: min(520px, calc(100vw - 28px));
+    max-height: calc(100vh - 28px);
+    padding: 22px;
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .throw-zone {
+    height: min(62vh, 300px);
+    justify-content: center;
+  }
+
+  .moneda-scene {
+    width: 128px;
+    height: 128px;
+    margin: 24px auto;
+  }
+
+  .swipe-hint {
+    margin: 0;
+    font-size: 1rem;
+    letter-spacing: 1.6px;
+  }
 }
 
 // --- ESCENA Y MONEDA 3D REAL ---

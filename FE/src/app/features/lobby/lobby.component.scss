@@ -2906,7 +2906,7 @@ kbd {
   .hub-top-hud {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
-    right: max(86px, calc(env(safe-area-inset-right) + 86px));
+    right: max(158px, calc(env(safe-area-inset-right) + 158px));
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
@@ -3043,7 +3043,7 @@ kbd {
   .mobile-chat-toggle {
     position: absolute;
     left: max(14px, env(safe-area-inset-left));
-    bottom: max(122px, calc(env(safe-area-inset-bottom) + 122px));
+    bottom: max(124px, calc(env(safe-area-inset-bottom) + 124px));
     z-index: 16;
     display: block;
     height: 34px;
@@ -3168,12 +3168,89 @@ kbd {
     background: linear-gradient(135deg, #fde047, #22d3ee) !important;
   }
 
+  .deck-preview-strip {
+    left: 50%;
+    right: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    z-index: 7;
+    max-width: min(320px, calc(100vw - 360px));
+    transform: translateX(-50%);
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .deck-preview {
+    min-width: 150px;
+    padding: 9px 11px;
+    border-radius: 12px;
+  }
+
+  .deck-preview span {
+    font-size: 9px;
+  }
+
+  .deck-preview small {
+    margin-top: 2px;
+    font-size: 14px;
+  }
+
   .kiosk-shop-panel,
   .battle-select-panel,
   .player-menu,
   .trade-modal {
     max-width: calc(100vw - 24px);
     max-height: calc(100vh - 24px);
+  }
+
+  .kiosk-shop-panel {
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: min(520px, calc(100vw - 28px));
+    max-height: calc(100vh - 92px);
+    padding: 15px;
+    border-radius: 16px;
+    transform: translateX(-50%);
+    overflow-y: auto;
+  }
+
+  .kiosk-shop-panel h2 {
+    margin: 4px 0 6px;
+    font-size: 17px;
+  }
+
+  .kiosk-shop-panel p {
+    margin-bottom: 10px;
+    font-size: 11px;
+    line-height: 1.35;
+  }
+
+  .pack-bundles {
+    gap: 7px;
+  }
+
+  .pack-bundles button {
+    min-height: 58px;
+    border-radius: 11px;
+  }
+
+  .pack-bundles span {
+    padding-top: 8px;
+    padding-inline: 8px;
+    font-size: 9px;
+  }
+
+  .pack-bundles strong {
+    margin-top: 4px;
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+
+  .kiosk-shop-panel .primary-action {
+    margin-top: 10px;
+    padding: 11px 12px;
+    font-size: 10px;
   }
 
   .deck-builder-overlay {
@@ -3234,7 +3311,7 @@ kbd {
 @media (max-width: 720px) and (orientation: landscape) {
   .hub-top-hud {
     transform: none;
-    right: max(74px, calc(env(safe-area-inset-right) + 74px));
+    right: max(138px, calc(env(safe-area-inset-right) + 138px));
   }
 
   .trainer-chip {
@@ -3293,6 +3370,25 @@ kbd {
   .mobile-interact {
     width: 58px;
     height: 58px !important;
+  }
+
+  .deck-preview-strip {
+    max-width: min(220px, calc(100vw - 300px));
+  }
+
+  .deck-preview {
+    min-width: 128px;
+    padding: 7px 9px;
+  }
+
+  .kiosk-shop-panel {
+    width: min(460px, calc(100vw - 22px));
+    max-height: calc(100vh - 74px);
+    padding: 12px;
+  }
+
+  .pack-bundles button {
+    min-height: 52px;
   }
 }
 
