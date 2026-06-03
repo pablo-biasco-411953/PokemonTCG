@@ -55,10 +55,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   matchId: string | null = null;
   partida: Partida | null = null;
   jugadorNombre = '';
+  landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
 
   // Gesto de moneda
   private yStart = 0;
   private yEnd = 0;
+  private coinPointerId: number | null = null;
   public lanzada = false;
   hoveredCard: Card | BattleActionCard | null = null;
   hoveredCardStatuses: CardGlossaryEntry[] = [];
@@ -181,6 +183,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   // -----------------------------------------------
 
   ngOnInit(): void {
+    this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
     this.jugadorNombre = this.obtenerNombreJugadorLocal();
@@ -215,6 +218,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
+  }
+
+  private requestLandscapeOrientation(): void {
+    // No bloqueamos orientacion en mobile: el aviso es solo una sugerencia descartable.
+  }
+
+  dismissLandscapeHint(): void {
+    this.landscapeHintDismissed = true;
+    localStorage.setItem('battleLandscapeHintDismissed', 'true');
   }
 
   // -----------------------------------------------
@@ -363,8 +375,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   // Guarda el punto inicial del gesto de lanzamiento.
-  onMouseDown(event: MouseEvent) {
+  onCoinPointerDown(event: PointerEvent) {
+    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    event.preventDefault();
+    this.coinPointerId = event.pointerId;
     this.yStart = event.clientY;
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+  }
+
+  onCoinPointerCancel(event: PointerEvent) {
+    if (event.pointerId !== this.coinPointerId) return;
+    this.coinPointerId = null;
   }
 
   interTurnOverlay: InterTurnOverlayState | null = null;
@@ -432,14 +453,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  async onMouseUp(event: MouseEvent) {
+  async onCoinPointerUp(event: PointerEvent) {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    if (this.coinPointerId !== null && event.pointerId !== this.coinPointerId) return;
+    event.preventDefault();
+    this.coinPointerId = null;
 
     this.yEnd = event.clientY;
     const diferencia = this.yStart - this.yEnd;
-    const fuerza = Math.min(Math.max(diferencia, 50), 400);
+    const fuerza = Math.min(Math.max(diferencia, 80), 400);
 
-    if (fuerza > 50) {
+    if (fuerza >= 70) {
       this.lanzada = true;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';

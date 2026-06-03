@@ -6,6 +6,13 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
+  <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+    <div class="phone-tilt-icon"></div>
+    <strong>Gira el celular</strong>
+    <span>El lobby 3D se ve mejor en horizontal, pero podés seguir jugando así.</span>
+  </div>
+
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 
     *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
@@ -46,7 +53,11 @@
   </div>
 
   <!-- CHAT WINDOW (BOTTOM LEFT) -->
-  <div class="lobby-chat-container">
+  <button class="mobile-chat-toggle" type="button" (click)="toggleChat()">
+    CHAT
+  </button>
+
+  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
     <div class="chat-messages">
       <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
         <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
@@ -196,6 +207,18 @@
       <strong>{{ graphicsQualityLabel }}</strong>
     </button>
 
+    <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
+      <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
+        <small>AUDIO</small>
+        <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+      <div class="audio-mini-controls">
+        <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" title="Musica ambiental">MUS</button>
+        <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" title="Pasos y efectos">SFX</button>
+        <button type="button" (click)="cycleLobbyVolume()" title="Volumen">{{ audioVolumeLabel }}</button>
+      </div>
+    </div>
+
     <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
       <small>ACCIONES</small>
       <strong>EMOTES</strong>
@@ -213,6 +236,32 @@
     <div class="help-key"><kbd>Shift</kbd><span>correr</span></div>
     <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
   </aside>
+
+  <div
+    class="mobile-analog-pad"
+    aria-label="Movimiento analogico"
+    (pointerdown)="startMobileJoystick($event)"
+    (pointermove)="moveMobileJoystick($event)"
+    (pointerup)="endMobileJoystick($event)"
+    (pointercancel)="endMobileJoystick($event)"
+  >
+    <div class="analog-ring"></div>
+    <div
+      class="analog-stick"
+      [class.active]="mobileJoystickActive"
+      [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
+    ></div>
+    <span>MOVER</span>
+  </div>
+
+  <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <div class="mobile-camera-zoom" aria-label="Zoom de camara">
+      <button type="button" (click)="mobileCameraZoomStep(-1)">+</button>
+      <button type="button" (click)="mobileCameraZoomStep(1)">-</button>
+    </div>
+    <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
+    <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
+  </div>
 
   <div class="hub-radar">
     <button
