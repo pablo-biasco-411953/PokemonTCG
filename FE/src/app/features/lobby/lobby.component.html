@@ -68,9 +68,30 @@
     </div>
   </div>
 
-  <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
-    <div class="ddp-header">
-      <span>MODO DIOS LOBBY (F3)</span>
+  <div
+    class="developer-debug-panel lobby-debug-panel"
+    *ngIf="showDebugPanel"
+    [style.left.px]="debugPanelX"
+    [style.top.px]="debugPanelY"
+  >
+    <div class="ddp-header" (pointerdown)="startDebugPanelDrag($event)">
+      <span>MODO DEBUG LOBBY (F3)</span>
+      <small>Arrastrar</small>
+    </div>
+
+    <div class="ddp-section">
+      <p class="godmode-title">ESTADÍSTICAS</p>
+      <div class="debug-stats-grid">
+        <div><strong>{{ debugFps }}</strong><span>FPS</span></div>
+        <div><strong>{{ debugFrameMs }}</strong><span>MS</span></div>
+        <div><strong>{{ debugDrawCalls }}</strong><span>CALLS</span></div>
+        <div><strong>{{ debugTriangles }}</strong><span>TRIS</span></div>
+        <div><strong>{{ debugPixelRatio }}</strong><span>DPR</span></div>
+        <div><strong>{{ debugAdaptiveScale }}%</strong><span>SCALE</span></div>
+      </div>
+      <p><span>Geometrías:</span> {{ debugGeometries }} · <span>Texturas:</span> {{ debugTextures }}</p>
+      <p><span>Online:</span> {{ otherPlayersList.length + 1 }} · <span>Remotos:</span> {{ otherPlayersList.length }}</p>
+      <p><span>Calidad:</span> {{ graphicsQualityLabel }} · <span>Ciclo:</span> {{ dayPhaseLabel }}</p>
     </div>
 
     <div class="ddp-section">

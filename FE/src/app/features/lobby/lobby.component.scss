@@ -644,8 +644,6 @@ kbd {
 
 .lobby-debug-panel {
   position: fixed;
-  top: 18px;
-  left: 18px;
   z-index: 20000;
   width: 360px;
   max-height: calc(100vh - 36px);
@@ -660,6 +658,9 @@ kbd {
 }
 
 .lobby-debug-panel .ddp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-family: $font-tech;
   font-size: .82rem;
   font-weight: 700;
@@ -668,6 +669,15 @@ kbd {
   padding-bottom: 8px;
   margin-bottom: 10px;
   border-bottom: 1px solid rgba($cyan, .3);
+  cursor: move;
+  user-select: none;
+
+  small {
+    color: rgba(223, 252, 255, .5);
+    font-size: .65rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
 }
 
 .lobby-debug-panel .ddp-section {
@@ -2266,6 +2276,37 @@ kbd {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
   min-height: 0;
+}
+
+.debug-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 10px;
+}
+
+.debug-stats-grid div {
+  padding: 8px;
+  border-radius: 9px;
+  background: rgba(34, 211, 238, .08);
+  border: 1px solid rgba(34, 211, 238, .18);
+  text-align: center;
+}
+
+.debug-stats-grid strong {
+  display: block;
+  color: #ffffff;
+  font-family: $font-tech;
+  font-size: 1.05rem;
+  line-height: 1.1;
+}
+
+.debug-stats-grid span {
+  display: block;
+  margin-top: 3px;
+  color: rgba(142, 238, 255, .78);
+  font-size: .63rem;
+  letter-spacing: .1em;
 }
 
 .trade-offer-pane {

@@ -22,6 +22,7 @@ public class Partida {
     private boolean coinFlipped = false;
     private String coinFlipWinner;
     private String coinFlipResult;
+    private String coinFlipCallerUsername;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
@@ -89,4 +90,7 @@ public class Partida {
 
     public String getCoinFlipResult() { return coinFlipResult; }
     public void setCoinFlipResult(String coinFlipResult) { this.coinFlipResult = coinFlipResult; }
+
+    public String getCoinFlipCallerUsername() { return coinFlipCallerUsername; }
+    public void setCoinFlipCallerUsername(String coinFlipCallerUsername) { this.coinFlipCallerUsername = coinFlipCallerUsername; }
 }

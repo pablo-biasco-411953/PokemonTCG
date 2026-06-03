@@ -49,6 +49,13 @@
       </div>
     </ng-container>
 
+    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
+      <div class="resultado-panel">
+        <p class="res-ganaste">SORTEO INICIAL</p>
+        <p class="res-sub">{{ nombreRival }} está eligiendo cara o cruz...</p>
+      </div>
+    </ng-container>
+
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
@@ -78,7 +85,7 @@
         <p class="res-ganaste">¡GANASTE EL SORTEO!</p>
         <div class="choice-buttons small">
           <button (click)="seleccionarTurno(true)">YO PRIMERO</button>
-          <button (click)="seleccionarTurno(false)">BOT PRIMERO</button>
+          <button (click)="seleccionarTurno(false)">{{ nombreRival }} PRIMERO</button>
         </div>
       </div>
     </ng-container>
@@ -86,7 +93,7 @@
     <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
       <div class="resultado-panel">
         <p class="res-perdiste">PERDISTE EL SORTEO</p>
-        <p class="res-sub">El Bot decidió ir primero.</p>
+        <p class="res-sub">{{ nombreGanadorSorteo }} elige quién empieza.</p>
       </div>
     </ng-container>
   </div>
