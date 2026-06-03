@@ -14,6 +14,15 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private int mulligansJugador = 0;
+    private int mulligansBot = 0;
+
+    private String jugadorUsername;
+    private String botUsername;
+    private boolean coinFlipped = false;
+    private String coinFlipWinner;
+    private String coinFlipResult;
+    private String coinFlipCallerUsername;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
@@ -52,6 +61,12 @@ public class Partida {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
     }
 
+    public int getMulligansJugador() { return mulligansJugador; }
+    public void setMulligansJugador(int mulligansJugador) { this.mulligansJugador = mulligansJugador; }
+
+    public int getMulligansBot() { return mulligansBot; }
+    public void setMulligansBot(int mulligansBot) { this.mulligansBot = mulligansBot; }
+
     // 🚩 GETTER Y SETTER DE LAS MONEDAS PARA QUE VIAJEN A ANGULAR
     public List<Boolean> getUltimasMonedasLanzadas() {
         return ultimasMonedasLanzadas;
@@ -60,4 +75,22 @@ public class Partida {
     public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
         this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
     }
+
+    public String getJugadorUsername() { return jugadorUsername; }
+    public void setJugadorUsername(String jugadorUsername) { this.jugadorUsername = jugadorUsername; }
+
+    public String getBotUsername() { return botUsername; }
+    public void setBotUsername(String botUsername) { this.botUsername = botUsername; }
+
+    public boolean isCoinFlipped() { return coinFlipped; }
+    public void setCoinFlipped(boolean coinFlipped) { this.coinFlipped = coinFlipped; }
+
+    public String getCoinFlipWinner() { return coinFlipWinner; }
+    public void setCoinFlipWinner(String coinFlipWinner) { this.coinFlipWinner = coinFlipWinner; }
+
+    public String getCoinFlipResult() { return coinFlipResult; }
+    public void setCoinFlipResult(String coinFlipResult) { this.coinFlipResult = coinFlipResult; }
+
+    public String getCoinFlipCallerUsername() { return coinFlipCallerUsername; }
+    public void setCoinFlipCallerUsername(String coinFlipCallerUsername) { this.coinFlipCallerUsername = coinFlipCallerUsername; }
 }
