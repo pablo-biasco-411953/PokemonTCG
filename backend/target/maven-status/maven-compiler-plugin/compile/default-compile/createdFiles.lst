@@ -1,4 +1,5 @@
 com\pokemon\tcg\dto\PersonalizacionRequest.class
+com\pokemon\tcg\dto\SantoroQuestResponse.class
 com\pokemon\tcg\model\battle\Partida.class
 com\pokemon\tcg\service\AuthService.class
 com\pokemon\tcg\controller\BattleController.class
@@ -56,6 +57,7 @@ com\pokemon\tcg\model\Card$2.class
 com\pokemon\tcg\service\BattleAttackService$KoResolver.class
 com\pokemon\tcg\dto\TradeExecutionRequest.class
 com\pokemon\tcg\service\BattleEngineService.class
+com\pokemon\tcg\dto\SantoroTrackingRequest.class
 com\pokemon\tcg\dto\UnirEnergiaRequest.class
 com\pokemon\tcg\config\LobbyWebSocketHandler.class
 com\pokemon\tcg\model\battle\ResultadoAtaque.class

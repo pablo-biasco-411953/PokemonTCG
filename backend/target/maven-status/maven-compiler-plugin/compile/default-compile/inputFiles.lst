@@ -1,4 +1,5 @@
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\MazoRepository.java
+C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\SantoroTrackingRequest.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\AuthService.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleService.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ResetPasswordRequest.java
@@ -11,6 +12,7 @@ C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LoginRequest
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\Ataque.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\SobreService.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\CardController.java
+C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\SantoroQuestResponse.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleTurnService.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\TableroJugador.java
 C:\Users\Pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\CardRepository.java
