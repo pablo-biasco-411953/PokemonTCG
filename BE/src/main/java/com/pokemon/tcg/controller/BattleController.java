@@ -7,6 +7,8 @@ import com.pokemon.tcg.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/battle")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -80,10 +82,15 @@ public class BattleController {
 
     @PostMapping("/{matchId}/coin-flip")
     public ResponseEntity<?> lanzarMoneda(@PathVariable String matchId,
-                                          @RequestHeader(value = "X-Username", required = false) String username) {
+                                          @RequestHeader(value = "X-Username", required = false) String username,
+                                          @RequestBody(required = false) Map<String, String> payload) {
         try {
-            boolean jugadorGana = battleEngine.lanzarMoneda(matchId, username);
-            return ResponseEntity.ok(jugadorGana);
+            String eleccion = payload != null ? payload.get("eleccion") : null;
+            Partida partida = battleEngine.lanzarMoneda(matchId, username, eleccion);
+            if (username != null && username.equals(partida.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partida));
+            }
+            return ResponseEntity.ok(partida);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -230,6 +237,7 @@ public class BattleController {
         swapped.setCoinFlipped(p.isCoinFlipped());
         swapped.setCoinFlipWinner(p.getCoinFlipWinner());
         swapped.setCoinFlipResult(p.getCoinFlipResult());
+        swapped.setCoinFlipCallerUsername(p.getCoinFlipCallerUsername());
 
         if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
             swapped.setTurnoActual(Partida.Turno.BOT);

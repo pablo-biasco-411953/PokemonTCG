@@ -45,6 +45,9 @@ public class Jugador {
     private String eyeColor;
     private double height = 1.0;
     private boolean pikachuCompanion = true;
+    private boolean santoroGiftClaimed = false;
+    private boolean santoroQuestTracking = false;
+    private String santoroQuestState = "AVAILABLE";
 
     // valores base de los juegadores
     public Jugador() {}
@@ -87,4 +90,13 @@ public class Jugador {
 
     public boolean isPikachuCompanion() { return pikachuCompanion; }
     public void setPikachuCompanion(boolean pikachuCompanion) { this.pikachuCompanion = pikachuCompanion; }
+
+    public boolean isSantoroGiftClaimed() { return santoroGiftClaimed; }
+    public void setSantoroGiftClaimed(boolean santoroGiftClaimed) { this.santoroGiftClaimed = santoroGiftClaimed; }
+
+    public boolean isSantoroQuestTracking() { return santoroQuestTracking; }
+    public void setSantoroQuestTracking(boolean santoroQuestTracking) { this.santoroQuestTracking = santoroQuestTracking; }
+
+    public String getSantoroQuestState() { return santoroQuestState; }
+    public void setSantoroQuestState(String santoroQuestState) { this.santoroQuestState = santoroQuestState; }
 }
