@@ -16,6 +16,8 @@ import { Mazo } from '../../shared/models/mazo';
 import { Partida } from '../../shared/models/battle';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 // Datos usados por el zoom flotante de una carta.
@@ -33,7 +35,7 @@ export interface PokemonZoomUI {
 }
 
 interface HubSpot {
-  id: 'deck' | 'battle' | 'packs';
+  id: 'deck' | 'battle' | 'packs' | 'santoro';
   short: string;
   kicker: string;
   label: string;
@@ -64,6 +66,8 @@ interface CampusNpc {
   active?: THREE.AnimationAction;
 }
 
+type SantoroDialogState = 'intro' | 'thanks' | 'forced' | 'gift' | 'afterGift' | 'repeat';
+
 export interface OtherPlayerNPC {
   username: string;
   characterId: string;
@@ -79,9 +83,13 @@ export interface OtherPlayerNPC {
   active?: THREE.AnimationAction;
   isPlayingEmote?: boolean;
   pikachu?: CampusNpc;
+  fallbackGroup?: THREE.Group;
   targetPosition: THREE.Vector3;
   targetRotationY: number;
   currentAnimation: 'idle' | 'walking' | 'running';
+  fullModelLoaded?: boolean;
+  fullModelLoading?: boolean;
+  highDetailActive?: boolean;
   screenX?: number;
   screenY?: number;
   chatBubble?: string;
@@ -166,10 +174,18 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   kioskShopOpen = false;
   vendorCameraFocus = false;
   deckBuilderOpen = false;
+  santoroDialogOpen = false;
+  kiosqueraDialogOpen = false;
+  santoroDialogState: SantoroDialogState = 'intro';
+  santoroGiftModalOpen = false;
+  santoroQuestTracking = false;
+  santoroGiftClaimed = false;
+  santoroQuestState = 'AVAILABLE';
+  santoroRewardLoading = false;
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
-  dayPhaseLabel = 'Mañana';
+  dayPhaseLabel = 'MaÃ±ana';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
   landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
@@ -216,12 +232,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private tradeCollectionLoaded = false;
 
   get graphicsQualityLabel(): string {
-    if (this.graphicsQuality === 'low') return 'BAJO 🔴';
-    if (this.graphicsQuality === 'medium') return 'MEDIO 🟡';
-    return 'ALTO 🟢';
+    if (this.graphicsQuality === 'low') return 'BAJO ðŸ”´';
+    if (this.graphicsQuality === 'medium') return 'MEDIO ðŸŸ¡';
+    return 'ALTO ðŸŸ¢';
   }
 
-  // Propiedades para el modal de personalización y Onboarding
+  // Propiedades para el modal de personalizaciÃ³n y Onboarding
   customizationModalOpen = false;
   showFirstTimeSetup = false;
   
@@ -234,7 +250,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   customizerPikachu = true;
   customizerRotationY = 0;
 
-  // Variables para la escena de previsualización 3D secundaria aislada en el modal
+  // Variables para la escena de previsualizaciÃ³n 3D secundaria aislada en el modal
   private previewRenderer?: THREE.WebGLRenderer;
   private previewScene?: THREE.Scene;
   private previewCamera?: THREE.PerspectiveCamera;
@@ -247,28 +263,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   // Swatches predefinidos premium de rasgos de entrenador
   readonly skinColors = [
     { name: 'Alabastro', value: '#fff1e0' },
-    { name: 'Claro Nórdico', value: '#ffe0bd' },
-    { name: 'Durazno Cálido', value: '#ffcd94' },
+    { name: 'Claro NÃ³rdico', value: '#ffe0bd' },
+    { name: 'Durazno CÃ¡lido', value: '#ffcd94' },
     { name: 'Trigo', value: '#f0c294' },
     { name: 'Bronceado UTN', value: '#e0ac69' },
     { name: 'Oliva Dorado', value: '#c68642' },
     { name: 'Canela', value: '#b0733a' },
-    { name: 'Marrón Oscuro', value: '#8d5524' },
-    { name: 'Ébano Profundo', value: '#5c3412' },
+    { name: 'MarrÃ³n Oscuro', value: '#8d5524' },
+    { name: 'Ã‰bano Profundo', value: '#5c3412' },
     { name: 'Gris Androide', value: '#d1d5db' }
   ];
 
   readonly hairColors = [
-    { name: 'Castaño Oscuro', value: '#3d2314' },
+    { name: 'CastaÃ±o Oscuro', value: '#3d2314' },
     { name: 'Chocolate', value: '#5c4033' },
-    { name: 'Castaño Claro', value: '#a87c55' },
+    { name: 'CastaÃ±o Claro', value: '#a87c55' },
     { name: 'Negro Azabache', value: '#121212' },
     { name: 'Rubio Platino', value: '#fef08a' },
     { name: 'Rubio Dorado', value: '#f59e0b' },
     { name: 'Pelirrojo Fuego', value: '#ea580c' },
-    { name: 'Naranja Neón', value: '#ff7c3b' },
+    { name: 'Naranja NeÃ³n', value: '#ff7c3b' },
     { name: 'Rosa Sakura', value: '#ec4899' },
-    { name: 'Violeta Eléctrico', value: '#8b5cf6' },
+    { name: 'Violeta ElÃ©ctrico', value: '#8b5cf6' },
     { name: 'Azul UTN', value: '#3b82f6' },
     { name: 'Celeste Pastel', value: '#60a5fa' },
     { name: 'Verde Esmeralda', value: '#10b981' },
@@ -276,14 +292,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   readonly eyeColors = [
-    { name: 'Azul Eléctrico', value: '#2563eb' },
+    { name: 'Azul ElÃ©ctrico', value: '#2563eb' },
     { name: 'Celeste Cristal', value: '#38bdf8' },
     { name: 'Verde Esmeralda', value: '#16a34a' },
     { name: 'Verde Menta', value: '#34d399' },
-    { name: 'Marrón Avellana', value: '#854d0e' },
-    { name: 'Rojo Rubí', value: '#dc2626' },
-    { name: 'Violeta Místico', value: '#7c3aed' },
-    { name: 'Dorado Pokémon', value: '#facc15' }
+    { name: 'MarrÃ³n Avellana', value: '#854d0e' },
+    { name: 'Rojo RubÃ­', value: '#dc2626' },
+    { name: 'Violeta MÃ­stico', value: '#7c3aed' },
+    { name: 'Dorado PokÃ©mon', value: '#facc15' }
   ];
 
   get filteredCharacterOptions(): CharacterOption[] {
@@ -295,10 +311,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   readonly characterOptions: CharacterOption[] = [
-    { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models/characters/hilda_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
-    { id: 'lillie', label: 'Lillie', path: '/models/characters/lillie__anniversary_50.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
-    { id: 'ash', label: 'Ash', path: '/models/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, rotationY: Math.PI, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'], runHints: ['walking'] },
-    { id: 'robot', label: 'Robot CC0', path: '/models/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] }
+    { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
+    { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, rotationY: Math.PI, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'], runHints: ['walking'] },
+    { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] }
   ];
   hubSpots: HubSpot[] = [
     {
@@ -306,7 +322,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'DECK',
       kicker: 'DECK LAB',
       label: 'Armar mazo',
-      description: 'Entrá al laboratorio para editar tu estrategia.',
+      description: 'EntrÃ¡ al laboratorio para editar tu estrategia.',
       position: new THREE.Vector3(-15, 0, -5),
       color: 0x3bd6ff
     },
@@ -315,7 +331,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'VS',
       kicker: 'BATTLE GATE',
       label: 'Iniciar batalla',
-      description: 'Elegí un mazo y cruzá el portal de combate.',
+      description: 'ElegÃ­ un mazo y cruzÃ¡ el portal de combate.',
       position: new THREE.Vector3(4, 0, -25),
       color: 0xffd44a
     },
@@ -324,9 +340,18 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'PACK',
       kicker: 'KIOSCO UTN',
       label: 'Comprar sobres',
-      description: 'Activá el altar para revelar nuevas cartas.',
+      description: 'ActivÃ¡ el altar para revelar nuevas cartas.',
       position: new THREE.Vector3(-19.0, 0, -13.5),
       color: 0x7cff9d
+    },
+    {
+      id: 'santoro',
+      short: 'PROFE',
+      kicker: 'MISIÓN UTN',
+      label: 'Hablar con Santoro',
+      description: 'El profe tiene tu primera misión y una ayuda inicial.',
+      position: new THREE.Vector3(0.8, 0, -27.5),
+      color: 0xfacc15
     }
   ];
 
@@ -396,7 +421,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.visualProgressInterval = setInterval(() => {
         if (this.hubVisualProgress < this.hubLoadingProgress) {
           const gap = this.hubLoadingProgress - this.hubVisualProgress;
-          // Si la brecha es grande (ej. carga rápida o caché), el incremento es mayor, pero siempre continuo
+          // Si la brecha es grande (ej. carga rÃ¡pida o cachÃ©), el incremento es mayor, pero siempre continuo
           const step = Math.max(1, Math.min(4, Math.floor(gap * 0.08)));
           this.hubVisualProgress += step;
 
@@ -411,10 +436,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
             setTimeout(() => {
               this.showHubLoadingOverlay = false;
               this.cdr.detectChanges();
-            }, 900); // 900ms para un desvanecimiento estético y suave
+            }, 900); // 900ms para un desvanecimiento estÃ©tico y suave
           });
         }
-      }, 30); // Loop a ~33fps para una transición sedosa de la barra y Pikachu
+      }, 30); // Loop a ~33fps para una transiciÃ³n sedosa de la barra y Pikachu
     });
   }
 
@@ -429,6 +454,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private currentCharacterOption?: CharacterOption;
   private pikachu?: CampusNpc;
   private kioskVendor?: CampusNpc;
+  private santoroNpc?: CampusNpc;
+  private santoroPathGroup?: THREE.Group;
+  private santoroBones: {
+    spine?: THREE.Bone;
+    spine1?: THREE.Bone;
+    spine2?: THREE.Bone;
+    neck?: THREE.Bone;
+    head?: THREE.Bone;
+    leftArm?: THREE.Bone;
+    rightArm?: THREE.Bone;
+    leftForeArm?: THREE.Bone;
+    rightForeArm?: THREE.Bone;
+    leftShoulder?: THREE.Bone;
+    rightShoulder?: THREE.Bone;
+  } = {};
+  private santoroDefaultQuaternions = new Map<THREE.Bone, THREE.Quaternion>();
+  private santoroHeadYaw = 0;
+  private santoroHeadPitch = 0;
+  private santoroTargetHeadYaw = 0;
+  private santoroTargetHeadPitch = 0;
+  private santoroGazeTimer = 0;
+  private ktx2Loader?: KTX2Loader;
   private sceneMixers: THREE.AnimationMixer[] = [];
   private ambientLight?: THREE.AmbientLight;
   private sunLight?: THREE.DirectionalLight;
@@ -437,6 +484,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private moonMesh?: THREE.Mesh;
   private skyDome?: THREE.Mesh;
   private clouds: THREE.Group[] = [];
+  private mountainMaterials: THREE.MeshBasicMaterial[] = [];
   keys = new Set<string>();
   mobileJoystickActive = false;
   mobileJoystickX = 0;
@@ -449,8 +497,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private lastInteractionId: string | null = null;
   private lampLights: THREE.PointLight[] = [];
   private lampEmissiveMaterials: THREE.Material[] = [];
-  private readonly playerAssetPath = '/models/player/RobotExpressive.glb';
+  private readonly playerAssetPath = '/models-optimized/player/RobotExpressive.glb';
   private readonly gltfCache = new Map<string, Promise<any>>();
+  private textureLoader = new THREE.TextureLoader(this.hubLoadingManager);
+  private textureCache = new Map<string, THREE.Texture>();
+  private planeGeometryCache = new Map<string, THREE.PlaneGeometry>();
+  private cardMaterialCache = new Map<string, THREE.MeshStandardMaterial>();
+  private hubEventCleanups: Array<() => void> = [];
+  private lastShadowMode = '';
+  private pageVisible = typeof document === 'undefined' ? true : !document.hidden;
+  private readonly tempVec3 = new THREE.Vector3();
+  private readonly tempVec3b = new THREE.Vector3();
+  private readonly tempLookAt = new THREE.Vector3();
+  private readonly skyDayColor = new THREE.Color(0x86cfff);
+  private readonly skySunsetColor = new THREE.Color(0xfc5a03);
+  private readonly skyNightColor = new THREE.Color(0x030712);
+  private readonly fogBaseColor = new THREE.Color(0x07111f);
+  private readonly sunBaseColor = new THREE.Color(0xfff4c0);
+  private readonly whiteColor = new THREE.Color(0xffffff);
+  private readonly moonAmbientColor = new THREE.Color(0xc7d2fe);
+  private readonly sunMeshDayColor = new THREE.Color(0xfffdb5);
+  private readonly sunMeshSunsetColor = new THREE.Color(0xff3b00);
+  private readonly moonMeshNightColor = new THREE.Color(0xe0e7ff);
+  private readonly moonMeshSunsetColor = new THREE.Color(0xfca5a5);
+  private readonly dynamicSkyColor = new THREE.Color();
+  private readonly dynamicFogColor = new THREE.Color();
+  private readonly dynamicLightColor = new THREE.Color();
+  private readonly dynamicAmbientColor = new THREE.Color();
+  private readonly dynamicSunMeshColor = new THREE.Color();
+  private readonly dynamicMoonMeshColor = new THREE.Color();
   private frameCounter = 0;
   private fpsSampleTime = 0;
   private fpsSampleFrames = 0;
@@ -468,10 +543,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private sfxGain?: GainNode;
   private footstepClock = 0;
   private nextPikachuChirpAt = 2.5;
+  private remoteAudioCheckClock = 0;
   private remotePikachuChirpTimers = new Map<string, number>();
   private readonly groundLift = 0.035;
+  private readonly remoteFullModelDistanceSq = 38 * 38;
+  private readonly remoteCompanionDistanceSq = 28 * 28;
+  private kioskProductPlaceholders?: THREE.Group;
+  private kioskProductsDetailedLoaded = false;
 
-  // Control de cámara con mouse (órbita y zoom)
+  // Control de cÃ¡mara con mouse (Ã³rbita y zoom)
   private cameraOrbitYaw = 0;
   private cameraOrbitPitch = 0.25;
   private cameraZoomDistance = 7.0;
@@ -512,7 +592,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       if (data) {
         this.jugador = JSON.parse(data);
         this.refrescarTodo();
-        // Verificación de Onboarding por primera vez
+        // VerificaciÃ³n de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
         if (!setupCompleted) {
           this.showFirstTimeSetup = true;
@@ -584,6 +664,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('ptcg_graphics_quality', quality);
     if (updateRenderer) {
       this.updateRendererPixelRatio();
+      this.updateCachedTextureQuality();
       this.updateShadowQuality();
       // Force update shadow state immediately
       if (this.scene && this.sunLight && this.moonLight) {
@@ -612,6 +693,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lastAppliedPixelRatio = capped;
     this.renderer.setPixelRatio(capped);
     this.resizeHub();
+  }
+
+  private updateCachedTextureQuality() {
+    const anisotropy = this.getRuntimeAnisotropy();
+    this.textureCache.forEach((texture) => {
+      texture.anisotropy = anisotropy;
+      texture.needsUpdate = true;
+    });
   }
 
   private updateAdaptivePerformance(delta: number) {
@@ -656,6 +745,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const enabled = this.graphicsQuality !== 'low';
     this.renderer.shadowMap.enabled = enabled;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.worldObjects.forEach((object) => {
+      if (object instanceof THREE.Mesh && object.userData['radius']) {
+        object.castShadow = this.graphicsQuality === 'high';
+      }
+    });
 
     const sunSize = this.graphicsQuality === 'high' ? 2048 : 1024;
     const moonSize = this.graphicsQuality === 'high' ? 1024 : 512;
@@ -717,6 +811,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       clearInterval(this.visualProgressInterval);
     }
     cancelAnimationFrame(this.animationId);
+    this.hubEventCleanups.forEach((cleanup) => cleanup());
+    this.hubEventCleanups = [];
     window.removeEventListener('resize', this.resizeHub);
     if (this.playerMixer) {
       this.playerMixer.stopAllAction();
@@ -732,6 +828,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.otherPlayers.clear();
 
     this.disposable.forEach((item) => item.dispose());
+    this.ktx2Loader?.dispose();
     this.shutdownLobbyAudio();
     this.renderer?.dispose();
   }
@@ -859,6 +956,30 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.cargarMazosDeJugador();
     this.precargarColeccionTrade();
+    this.cargarSantoroQuest();
+  }
+
+  private cargarSantoroQuest() {
+    if (!this.jugador?.username) return;
+
+    this.jugadorService.getSantoroQuest(this.jugador.username).subscribe({
+      next: (quest) => {
+        this.applySantoroQuest(quest);
+        this.updateSantoroQuestPath();
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando mision de Santoro', err)
+    });
+  }
+
+  private applySantoroQuest(quest: { giftClaimed: boolean; tracking: boolean; state: string; sobresDisponibles: number }) {
+    this.santoroGiftClaimed = !!quest.giftClaimed;
+    this.santoroQuestTracking = !!quest.tracking && !this.santoroGiftClaimed;
+    this.santoroQuestState = quest.state || (this.santoroGiftClaimed ? 'COMPLETED' : 'AVAILABLE');
+    if (typeof quest.sobresDisponibles === 'number') {
+      this.sobresDisponibles = quest.sobresDisponibles;
+      this.debugSobresCantidad = quest.sobresDisponibles;
+    }
   }
 
   precargarColeccionTrade(force = false) {
@@ -886,7 +1007,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private loadCachedGltf(path: string, manager?: THREE.LoadingManager): Promise<{ scene: THREE.Group; animations: THREE.AnimationClip[] }> {
     if (!this.gltfCache.has(path)) {
-      const loader = new GLTFLoader(manager || this.hubLoadingManager);
+      const loader = this.createGltfLoader(manager || this.hubLoadingManager);
       this.gltfCache.set(path, new Promise((resolve, reject) => {
         loader.load(path, resolve, undefined, reject);
       }));
@@ -896,6 +1017,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       scene: cloneSkeleton(gltf.scene) as THREE.Group,
       animations: gltf.animations || []
     }));
+  }
+
+  private createGltfLoader(manager?: THREE.LoadingManager): GLTFLoader {
+    const loader = new GLTFLoader(manager || this.hubLoadingManager);
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    const ktx2 = this.getKtx2Loader();
+    if (ktx2) {
+      loader.setKTX2Loader(ktx2);
+    }
+    return loader;
+  }
+
+  private getKtx2Loader(): KTX2Loader | undefined {
+    if (!this.ktx2Loader) {
+      this.ktx2Loader = new KTX2Loader()
+        .setTranscoderPath('/basis/');
+      if (this.renderer) {
+        this.ktx2Loader.detectSupport(this.renderer);
+      }
+    }
+    return this.ktx2Loader;
   }
 
   private setTradeCollection(cards: Card[]) {
@@ -951,9 +1093,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       hp: carta.hp || 70,
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
-      hpIcon: '♥',
-      typeIcon: 'ðŸƒ',
-      attacksIcon: '•'
+      hpIcon: 'â™¥',
+      typeIcon: 'Ã°Å¸ÂÆ’',
+      attacksIcon: 'â€¢'
     };
     this.pkmZoom = pkm;
     this.actualizarPosicion(event);
@@ -1061,7 +1203,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.characterMenuOpen = false;
     this.cdr.detectChanges();
 
-    // Inicializar el escenario 3D de previsualización en el modal
+    // Inicializar el escenario 3D de previsualizaciÃ³n en el modal
     this.initPreviewScene();
   }
 
@@ -1069,7 +1211,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.customizerGender = gender;
     this.customizerSelectedId = gender === 'pibe' ? 'ash' : 'hilda-sygna';
     
-    // Vista previa instantánea al cambiar de género en el 3D del modal
+    // Vista previa instantÃ¡nea al cambiar de gÃ©nero en el 3D del modal
     this.onCustomizerModelSelect(this.customizerSelectedId);
     this.cdr.detectChanges();
   }
@@ -1089,14 +1231,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.applyPreviewCustomizationsDirect(model);
     }
     
-    // Actualizar el Pikachu del preview si se des/activó en vivo
+    // Actualizar el Pikachu del preview si se des/activÃ³ en vivo
     this.loadPreviewPikachu();
 
     // Reproducir pose expresiva en el lienzo de vista previa
     this.playPreviewReactAnimation();
   }
 
-  // ================= SCENE DE PREVISUALIZACIÓN 3D AISLADA (MODAL) =================
+  // ================= SCENE DE PREVISUALIZACIÃ“N 3D AISLADA (MODAL) =================
   private initPreviewScene() {
     this.ngZone.runOutsideAngular(() => {
       let attempts = 0;
@@ -1137,7 +1279,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.previewRenderer.setSize(width, height, false);
         this.previewRenderer.shadowMap.enabled = true;
 
-        // Iluminación dedicada del preview
+        // IluminaciÃ³n dedicada del preview
         const ambient = new THREE.AmbientLight(0xffffff, 1.6);
         this.previewScene.add(ambient);
 
@@ -1146,7 +1288,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         dirLight.castShadow = true;
         this.previewScene.add(dirLight);
 
-        // Añadir el grupo de modelo
+        // AÃ±adir el grupo de modelo
         this.previewModelGroup = new THREE.Group();
         this.previewScene.add(this.previewModelGroup);
 
@@ -1154,7 +1296,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadPreviewModel();
         this.loadPreviewPikachu();
 
-        // Iniciar bucle de animación
+        // Iniciar bucle de animaciÃ³n
         this.animatePreview();
       };
 
@@ -1179,7 +1321,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.previewModelGroup.add(fallbackMesh);
 
     const option = this.characterOptions.find((o) => o.id === this.customizerSelectedId) || this.characterOptions[0];
-    const loader = new GLTFLoader();
+    const loader = this.createGltfLoader();
     loader.load(
       option.path,
       (gltf) => {
@@ -1312,9 +1454,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.customizerPikachu) return;
 
-    const loader = new GLTFLoader();
+    const loader = this.createGltfLoader();
     loader.load(
-      '/models/characters/pikachu.glb',
+      '/models-optimized/characters/pikachu.glb',
       (gltf) => {
         const model = gltf.scene;
         model.name = 'PreviewPikachu';
@@ -1406,12 +1548,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.previewReactTimeout = undefined;
       }
 
-      // Si hay otra animación activa que no es esta, desvanecerla
+      // Si hay otra animaciÃ³n activa que no es esta, desvanecerla
       if (this.activePreviewAction && this.activePreviewAction !== reactAction) {
         this.activePreviewAction.fadeOut(0.12);
       }
 
-      // Forzar reinicio y reproducción inmediata de la animación gestual
+      // Forzar reinicio y reproducciÃ³n inmediata de la animaciÃ³n gestual
       reactAction.reset();
       reactAction.setLoop(THREE.LoopOnce, 1);
       reactAction.clampWhenFinished = true;
@@ -1419,7 +1561,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.activePreviewAction = reactAction;
 
       const duration = reactAction.getClip().duration;
-      // Programar la transición suave de regreso al estado Idle
+      // Programar la transiciÃ³n suave de regreso al estado Idle
       this.previewReactTimeout = setTimeout(() => {
         if (this.showFirstTimeSetup || this.customizationModalOpen) {
           const option = this.characterOptions.find((o) => o.id === this.customizerSelectedId) || this.characterOptions[0];
@@ -1516,8 +1658,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         height: this.customizerHeight,
         pikachuCompanion: this.customizerPikachu
       }).subscribe({
-        next: () => console.log('Personalización guardada en base de datos.'),
-        error: (err) => console.error('Error al guardar personalización en DB:', err)
+        next: () => console.log('PersonalizaciÃ³n guardada en base de datos.'),
+        error: (err) => console.error('Error al guardar personalizaciÃ³n en DB:', err)
       });
     }
 
@@ -1542,7 +1684,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroyPreviewScene();
     this.cdr.detectChanges();
 
-    // Notificar a otros de nuestra personalización actualizada
+    // Notificar a otros de nuestra personalizaciÃ³n actualizada
     this.sendJoinMessage();
   }
 
@@ -1594,7 +1736,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.currentInteraction.id === 'packs') {
-      this.openKioskShop();
+      this.openKiosqueraDialog();
+      return;
+    }
+
+    if (this.currentInteraction.id === 'santoro') {
+      this.openSantoroDialog();
       return;
     }
 
@@ -1699,7 +1846,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const requiereReemplazo = (mazo.cartas?.length || 0) >= 60;
     if (requiereReemplazo && !this.debugReplaceCardId) {
-      alert('Elegí la carta del mazo que querés reemplazar.');
+      alert('ElegÃ­ la carta del mazo que querÃ©s reemplazar.');
       return;
     }
 
@@ -1719,8 +1866,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private initHubWorld() {
     const canvas = this.hubCanvas.nativeElement;
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    this.renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: this.graphicsQuality === 'high' && !this.isMobileViewport,
+      alpha: false,
+      powerPreference: 'high-performance'
+    });
     this.updateRendererPixelRatio();
+    this.getKtx2Loader()?.detectSupport(this.renderer);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.setClearColor(0x030712);
@@ -1736,8 +1889,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.camera = new THREE.PerspectiveCamera(56, 1, 0.1, 180);
     this.camera.position.set(0, 5.2, 11.5);
 
-    // Eventos de mouse y rueda para rotación (órbita) y zoom de la cámara
-    canvas.addEventListener('pointerdown', (event: PointerEvent) => {
+    // Eventos de mouse y rueda para rotaciÃ³n (Ã³rbita) y zoom de la cÃ¡mara
+    const onCameraPointerDown = (event: PointerEvent) => {
       this.cameraPointerId = event.pointerId;
       this.cameraPointerStartX = event.clientX;
       this.cameraPointerStartY = event.clientY;
@@ -1756,10 +1909,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           canvas.setPointerCapture?.(event.pointerId);
         }
       }, 240);
-    });
+    };
 
-    window.addEventListener('pointermove', (event: PointerEvent) => {
+    const onCameraPointerMove = (event: PointerEvent) => {
       if (event.pointerId !== this.cameraPointerId) return;
+      if (this.santoroDialogOpen || this.kiosqueraDialogOpen || this.kioskShopOpen) return;
 
       if (!this.isDraggingCamera && event.pointerType !== 'mouse') {
         const moved = Math.hypot(event.clientX - this.cameraPointerStartX, event.clientY - this.cameraPointerStartY);
@@ -1781,20 +1935,42 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.lastMouseX = event.clientX;
         this.lastMouseY = event.clientY;
       }
-    }, { passive: false });
+    };
 
-    window.addEventListener('pointerup', (event: PointerEvent) => this.stopCameraPointer(event));
-    window.addEventListener('pointercancel', (event: PointerEvent) => this.stopCameraPointer(event));
-
-    canvas.addEventListener('wheel', (event: WheelEvent) => {
+    const onCameraPointerUp = (event: PointerEvent) => this.stopCameraPointer(event);
+    const onCameraWheel = (event: WheelEvent) => {
       event.preventDefault();
+      if (this.santoroDialogOpen || this.kiosqueraDialogOpen || this.kioskShopOpen) return;
       this.cameraZoomDistance = Math.max(3.0, Math.min(18.0, this.cameraZoomDistance + event.deltaY * 0.007));
-    }, { passive: false });
+    };
+
+    canvas.addEventListener('pointerdown', onCameraPointerDown);
+    window.addEventListener('pointermove', onCameraPointerMove, { passive: false });
+    window.addEventListener('pointerup', onCameraPointerUp);
+    window.addEventListener('pointercancel', onCameraPointerUp);
+    canvas.addEventListener('wheel', onCameraWheel, { passive: false });
+    const onVisibilityChange = () => {
+      this.pageVisible = !document.hidden;
+      if (this.pageVisible) {
+        this.clock.getDelta();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    this.hubEventCleanups.push(
+      () => canvas.removeEventListener('pointerdown', onCameraPointerDown),
+      () => window.removeEventListener('pointermove', onCameraPointerMove),
+      () => window.removeEventListener('pointerup', onCameraPointerUp),
+      () => window.removeEventListener('pointercancel', onCameraPointerUp),
+      () => canvas.removeEventListener('wheel', onCameraWheel),
+      () => document.removeEventListener('visibilitychange', onVisibilityChange)
+    );
 
     this.createHubLights();
     this.createHubArena();
     this.createTrainerAvatar();
     this.createHubSpots();
+    this.createSantoroNpc();
+    this.updateSantoroQuestPath();
     this.createFloatingCards();
     this.resizeHub();
     window.addEventListener('resize', this.resizeHub);
@@ -1837,21 +2013,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(this.moonLight);
 
     const sunGeometry = new THREE.SphereGeometry(9.5, 32, 24); // Esfera solar majestuosa
-    const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xfff2a3 });
+    const sunMaterial = new THREE.MeshBasicMaterial({ color: 0xfff2a3, fog: false });
     this.sunMesh = new THREE.Mesh(sunGeometry, sunMaterial);
     this.sunMesh.renderOrder = -19; // Domo de cielo trasero
     this.scene.add(this.sunMesh);
     this.disposable.push(sunGeometry, sunMaterial);
 
     const moonGeometry = new THREE.SphereGeometry(4.8, 28, 18); // Esfera lunar majestuosa
-    const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e7ff });
+    const moonMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e7ff, fog: false });
     this.moonMesh = new THREE.Mesh(moonGeometry, moonMaterial);
     this.moonMesh.renderOrder = -19; // Domo de cielo trasero
     this.scene.add(this.moonMesh);
     this.disposable.push(moonGeometry, moonMaterial);
 
     const skyGeometry = new THREE.SphereGeometry(120, 40, 24);
-    const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide });
+    const skyMaterial = new THREE.MeshBasicMaterial({ color: 0x87ceeb, side: THREE.BackSide, fog: false });
     this.skyDome = new THREE.Mesh(skyGeometry, skyMaterial);
     this.skyDome.renderOrder = -20; // Fondo absoluto
     this.scene.add(this.skyDome);
@@ -1942,10 +2118,39 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     localStorage.setItem('lobbyLandscapeHintDismissed', 'true');
   }
 
+  openKiosqueraDialog() {
+    this.stopSantoroTracking();
+    this.kioskShopOpen = false;
+    this.battlePanelOpen = false;
+    this.santoroDialogOpen = false;
+    this.kiosqueraDialogOpen = true;
+    this.vendorCameraFocus = true; // Enfocar cámara en la kiosquera
+    if (this.kioskVendor) {
+      this.setNpcAnimation(this.kioskVendor, ['mouth_01', 'speak_1', 'greeting_1']);
+    }
+    this.cdr.detectChanges();
+  }
+
+  closeKiosqueraDialog() {
+    this.kiosqueraDialogOpen = false;
+    this.vendorCameraFocus = false;
+    if (this.kioskVendor) {
+      this.setNpcAnimation(this.kioskVendor, ['idle']);
+    }
+    this.cdr.detectChanges();
+  }
+
+  kiosqueraVerProductos() {
+    this.kiosqueraDialogOpen = false;
+    this.openKioskShop();
+  }
+
   openKioskShop() {
+    this.kiosqueraDialogOpen = false;
     this.kioskShopOpen = true;
     this.vendorCameraFocus = true;
     this.battlePanelOpen = false;
+    this.ensureDetailedKioskProductsLoaded();
     if (this.kioskVendor) {
       this.setNpcAnimation(this.kioskVendor, ['mouth_01', 'speak_1', 'greeting_1']);
     }
@@ -1989,38 +2194,419 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  get santoroQuestTitle(): string {
+    return this.santoroGiftClaimed ? 'Santoro desbloqueado' : 'Busca a Santoro';
+  }
+
+  get santoroQuestCopy(): string {
+    return this.santoroGiftClaimed
+      ? 'Podés volver a hablar con él para gestionar tu mazo.'
+      : 'El profe te espera en el campus con tu primera ayuda.';
+  }
+
+  get santoroNickname(): string {
+    const female = this.selectedCharacterId === 'hilda-sygna' || this.selectedCharacterId === 'lillie';
+    return female ? 'Cacha' : 'Cacho';
+  }
+
+  toggleSantoroTracking() {
+    if (!this.jugador?.username) return;
+    const nextTracking = !this.santoroQuestTracking;
+    this.jugadorService.setSantoroTracking(this.jugador.username, nextTracking).subscribe({
+      next: (quest) => {
+        this.applySantoroQuest(quest);
+        this.updateSantoroQuestPath();
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error actualizando tracking de Santoro', err)
+    });
+  }
+
+  stopSantoroTracking() {
+    if (!this.jugador?.username) {
+      this.santoroQuestTracking = false;
+      this.updateSantoroQuestPath();
+      return;
+    }
+    this.jugadorService.setSantoroTracking(this.jugador.username, false).subscribe({
+      next: (quest) => {
+        this.applySantoroQuest(quest);
+        this.updateSantoroQuestPath();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error frenando tracking de Santoro', err);
+        this.santoroQuestTracking = false;
+        this.updateSantoroQuestPath();
+      }
+    });
+  }
+
+  openSantoroDialog() {
+    this.stopSantoroTracking();
+    this.kioskShopOpen = false;
+    this.battlePanelOpen = false;
+    this.vendorCameraFocus = false;
+    this.santoroDialogState = this.santoroGiftClaimed ? 'repeat' : 'intro';
+    this.santoroDialogOpen = true;
+    if (this.santoroNpc) this.setNpcAnimation(this.santoroNpc, ['point', 'thumbsUp', 'idle_eyes'], 0.12);
+    this.cdr.detectChanges();
+  }
+
+  closeSantoroDialog() {
+    this.santoroDialogOpen = false;
+    this.santoroGiftModalOpen = false;
+    if (this.santoroNpc) this.setNpcAnimation(this.santoroNpc, ['idle_eyes', 'idle'], 0.16);
+    this.cdr.detectChanges();
+  }
+
+  chooseSantoroAnswer(kind: 'thanks' | 'reject') {
+    this.santoroDialogState = kind === 'thanks' ? 'thanks' : 'forced';
+    if (this.santoroNpc) this.setNpcAnimation(this.santoroNpc, kind === 'thanks' ? ['thumbsUp', 'allOpen'] : ['point', 'thumbDown'], 0.1);
+  }
+
+  acceptSantoroGift() {
+    if (!this.jugador?.username || this.santoroRewardLoading) return;
+    this.santoroRewardLoading = true;
+
+    this.jugadorService.claimSantoroGift(this.jugador.username).subscribe({
+      next: (quest) => {
+        this.applySantoroQuest(quest);
+        this.santoroRewardLoading = false;
+        this.santoroDialogState = 'gift';
+        this.santoroGiftModalOpen = true;
+        if (this.santoroNpc) this.setNpcAnimation(this.santoroNpc, ['thumbsUp', 'allOpen', 'idle_eyes'], 0.1);
+        this.updateSantoroQuestPath();
+        this.refrescarTodo();
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.santoroRewardLoading = false;
+        console.error('Error entregando regalo de Santoro', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  continueSantoroAfterGift() {
+    this.santoroGiftModalOpen = false;
+    this.santoroDialogState = 'afterGift';
+    this.cdr.detectChanges();
+  }
+
+  santoroManageDeck() {
+    this.closeSantoroDialog();
+    this.irAlDeckBuilder();
+  }
+
+  private createSantoroNpc() {
+    if (!this.scene || this.santoroNpc) return;
+    const spot = this.hubSpots.find((item) => item.id === 'santoro');
+    if (!spot) return;
+
+    const root = new THREE.Group();
+    root.position.set(spot.position.x + 0.15, this.getGroundHeightAt(spot.position.x, spot.position.z) + this.groundLift, spot.position.z - 1.05);
+    root.rotation.y = 0; // Por defecto mira hacia el centro/calle
+    this.scene.add(root);
+
+    const npc: CampusNpc = { root, actions: new Map() };
+    this.santoroNpc = npc;
+
+    this.loadSceneAsset('/models-optimized/characters/santoro.glb', (model, animations) => {
+      model.name = 'SantoroNPC';
+      model.scale.setScalar(0.92);
+      this.centerModelPivot(model);
+      this.alignModelBottom(model, 0);
+      model.rotation.y = 0;
+      this.applySantoroBasePose(model);
+
+      // Recopilar huesos de Santoro y guardar su pose original
+      this.santoroBones = {};
+      this.santoroDefaultQuaternions.clear();
+      model.traverse((child) => {
+        if (child instanceof THREE.Bone) {
+          const name = child.name.toLowerCase();
+          const bone = child as THREE.Bone;
+          if (name === 'spine') this.santoroBones.spine = bone;
+          else if (name === 'spine1') this.santoroBones.spine1 = bone;
+          else if (name === 'spine2') this.santoroBones.spine2 = bone;
+          else if (name === 'neck') this.santoroBones.neck = bone;
+          else if (name === 'head') this.santoroBones.head = bone;
+          else if (name === 'leftarm') this.santoroBones.leftArm = bone;
+          else if (name === 'rightarm') this.santoroBones.rightArm = bone;
+          else if (name === 'leftforearm') this.santoroBones.leftForeArm = bone;
+          else if (name === 'rightforearm') this.santoroBones.rightForeArm = bone;
+          else if (name === 'leftshoulder') this.santoroBones.leftShoulder = bone;
+          else if (name === 'rightshoulder') this.santoroBones.rightShoulder = bone;
+
+          this.santoroDefaultQuaternions.set(bone, bone.quaternion.clone());
+        }
+      });
+
+      root.add(model);
+
+      npc.mixer = new THREE.AnimationMixer(model);
+      animations.forEach((clip) => npc.actions.set(clip.name.toLowerCase(), npc.mixer!.clipAction(clip)));
+      this.setNpcAnimation(npc, ['idle_eyes_2', 'idle_eyes', 'idle'], 0);
+    });
+  }
+
+  private applySantoroBasePose(model: THREE.Group) {
+    // Las animaciones nativas de santoro.glb se encargan de posicionar las articulaciones de forma natural.
+  }
+
+  private animateSantoroBones(delta: number) {
+    if (!this.santoroNpc) return;
+    const time = this.clock.elapsedTime;
+    const bones = this.santoroBones;
+    const defaults = this.santoroDefaultQuaternions;
+
+    const resetBone = (bone: THREE.Bone | undefined) => {
+      if (bone && defaults.has(bone)) {
+        bone.quaternion.copy(defaults.get(bone)!);
+      }
+    };
+
+    // Restablecer pose original de Santoro (que ya es una postura relajada con brazos caídos)
+    resetBone(bones.spine);
+    resetBone(bones.spine1);
+    resetBone(bones.spine2);
+    resetBone(bones.neck);
+    resetBone(bones.head);
+    resetBone(bones.leftArm);
+    resetBone(bones.rightArm);
+    resetBone(bones.leftForeArm);
+    resetBone(bones.rightForeArm);
+
+    // Ejes locales del hueso
+    const localX = new THREE.Vector3(1, 0, 0);
+    const localY = new THREE.Vector3(0, 1, 0);
+    const localZ = new THREE.Vector3(0, 0, 1);
+
+    // 1. Respiración (pecho y columna, oscilaciones en eje local X)
+    // Simula inhalar y exhalar a una frecuencia natural tranquila
+    const breath = Math.sin(time * 1.8);
+    if (bones.spine) bones.spine.rotateOnAxis(localX, -breath * 0.015 - 0.005);
+    if (bones.spine1) bones.spine1.rotateOnAxis(localX, -breath * 0.012);
+    if (bones.spine2) bones.spine2.rotateOnAxis(localX, -breath * 0.008);
+
+    // 2. Cabeza y cuello (mirar a los lados / gesticular)
+    if (bones.neck) {
+      if (this.santoroDialogOpen) {
+        bones.neck.rotateOnAxis(localY, Math.cos(time * 2.6) * 0.06);
+        bones.neck.rotateOnAxis(localX, Math.sin(time * 4.2) * 0.05 + 0.02);
+      } else {
+        // Actualizar el temporizador de mirada libre
+        this.santoroGazeTimer -= delta;
+        if (this.santoroGazeTimer <= 0) {
+          // 60% chance de mirar al frente (yaw = 0), 40% de mirar a algún costado
+          if (Math.random() < 0.6) {
+            this.santoroTargetHeadYaw = 0;
+            this.santoroTargetHeadPitch = 0;
+          } else {
+            this.santoroTargetHeadYaw = (Math.random() - 0.5) * 0.7; // +/- 20 grados
+            this.santoroTargetHeadPitch = (Math.random() - 0.5) * 0.12; // +/- 3.5 grados
+          }
+          this.santoroGazeTimer = 3.5 + Math.random() * 4.5; // mantener mirada por 3.5 a 8s
+        }
+
+        // Interpolación fluida hacia la dirección de mirada objetivo
+        this.santoroHeadYaw = THREE.MathUtils.lerp(this.santoroHeadYaw, this.santoroTargetHeadYaw, delta * 3.0);
+        this.santoroHeadPitch = THREE.MathUtils.lerp(this.santoroHeadPitch, this.santoroTargetHeadPitch, delta * 3.0);
+
+        bones.neck.rotateOnAxis(localY, this.santoroHeadYaw * 0.6);
+        bones.neck.rotateOnAxis(localX, this.santoroHeadPitch * 0.6);
+      }
+    }
+
+    if (bones.head) {
+      if (this.santoroDialogOpen) {
+        bones.head.rotateOnAxis(localX, Math.abs(Math.sin(time * 4.2)) * 0.06 - 0.03);
+        bones.head.rotateOnAxis(localZ, Math.cos(time * 0.85) * 0.025);
+      } else {
+        // En reposo, inclinar ligeramente la cabeza acompañando la rotación (roll y yaw natural)
+        bones.head.rotateOnAxis(localY, this.santoroHeadYaw * 0.4);
+        bones.head.rotateOnAxis(localX, this.santoroHeadPitch * 0.4);
+        bones.head.rotateOnAxis(localZ, this.santoroHeadYaw * 0.15); // roll lateral
+      }
+    }
+
+    // 3. Brazos relajados / gestos al hablar
+    if (bones.leftArm && bones.rightArm) {
+      let leftArmPitch = 0; 
+      let rightArmPitch = 0;
+      let leftArmYaw = 0; 
+      let rightArmYaw = 0; 
+      
+      let leftForeArmYaw = 0; // Hinge del codo en eje local Z
+      let rightForeArmYaw = 0; // Hinge del codo en eje local Z
+
+      if (this.santoroDialogOpen) {
+        // Hablando: Gestos de ademanes conversacionales de explicación
+        // Levantar y llevar los brazos hacia adelante (Pitch X y Yaw Z combinados)
+        leftArmPitch = 0.25 + Math.sin(time * 2.8) * 0.05;
+        leftArmYaw = 0.70 + Math.cos(time * 2.4) * 0.08;
+        leftForeArmYaw = 0.85 + Math.sin(time * 2.8) * 0.15; // Codo izquierdo doblado hacia adelante/arriba
+
+        rightArmPitch = 0.27 + Math.cos(time * 2.5) * 0.05;
+        rightArmYaw = -0.68 - Math.sin(time * 2.3) * 0.08;
+        rightForeArmYaw = -0.85 - Math.cos(time * 2.5) * 0.15; // Codo derecho doblado hacia adelante/arriba (mirrored)
+      } else {
+        // Pasivo/Idle: Pose de caída natural cerrada al costado del cuerpo, con sutiles oscilaciones por respiración.
+        // Los ángulos base (0.55 Pitch, +/-0.05 Yaw, -/+0.45 ForeArmYaw) anulan la apertura A-pose y los hacen colgar rectos.
+        leftArmPitch = 0.55 + breath * 0.015;
+        leftArmYaw = 0.05 + breath * 0.02;
+        leftForeArmYaw = -0.45 + breath * 0.008;
+
+        rightArmPitch = 0.55 + breath * 0.015;
+        rightArmYaw = -0.05 - breath * 0.02;
+        rightForeArmYaw = 0.45 - breath * 0.008;
+      }
+
+      // Aplicar las rotaciones sobre los ejes locales de los brazos
+      bones.leftArm.rotateOnAxis(localX, leftArmPitch);
+      bones.leftArm.rotateOnAxis(localZ, leftArmYaw);
+      
+      bones.rightArm.rotateOnAxis(localX, rightArmPitch);
+      bones.rightArm.rotateOnAxis(localZ, rightArmYaw);
+
+      if (bones.leftForeArm) bones.leftForeArm.rotateOnAxis(localZ, leftForeArmYaw);
+      if (bones.rightForeArm) bones.rightForeArm.rotateOnAxis(localZ, rightForeArmYaw);
+    }
+  }
+
+  private updateSantoroNpc(delta: number) {
+    if (!this.santoroNpc) return;
+    this.santoroNpc.mixer?.update(delta);
+
+    // Animación de huesos en cada frame
+    this.animateSantoroBones(delta);
+
+    // Seguimiento del jugador en cada frame
+    const dx = this.player.position.x - this.santoroNpc.root.position.x;
+    const dz = this.player.position.z - this.santoroNpc.root.position.z;
+    const distSq = dx * dx + dz * dz;
+
+    let targetAngle = 0; // Por defecto mira de frente al campus
+    if (distSq < 42) {
+      targetAngle = Math.atan2(dx, dz);
+    }
+
+    this.santoroNpc.root.rotation.y = THREE.MathUtils.lerp(
+      this.santoroNpc.root.rotation.y,
+      targetAngle,
+      0.16
+    );
+  }
+
+  private updateSantoroQuestPath() {
+    if (!this.scene) return;
+    if (this.santoroPathGroup) {
+      this.scene.remove(this.santoroPathGroup);
+      this.santoroPathGroup.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        mesh.geometry?.dispose?.();
+        const mat = mesh.material as THREE.Material | THREE.Material[] | undefined;
+        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+        else mat?.dispose?.();
+      });
+      this.santoroPathGroup = undefined;
+    }
+
+    if (!this.santoroQuestTracking || this.santoroGiftClaimed) return;
+    const spot = this.hubSpots.find((item) => item.id === 'santoro');
+    if (!spot) return;
+
+    const group = new THREE.Group();
+    group.name = 'SantoroQuestPath';
+    const start = this.player.position.clone();
+    const end = spot.position.clone();
+    const direction = end.clone().sub(start);
+    const distance = Math.hypot(direction.x, direction.z);
+    if (distance < 1) return;
+    direction.normalize();
+
+    const arrowGeometry = new THREE.ConeGeometry(0.22, 0.62, 3);
+    const arrowMaterial = new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      transparent: true,
+      opacity: 0.86,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+
+    const count = Math.min(18, Math.max(4, Math.floor(distance / 1.35)));
+    for (let i = 1; i <= count; i++) {
+      const t = i / (count + 1);
+      const x = start.x + (end.x - start.x) * t;
+      const z = start.z + (end.z - start.z) * t;
+      const arrow = new THREE.Mesh(arrowGeometry.clone(), arrowMaterial.clone());
+      arrow.position.set(x, this.getGroundHeightAt(x, z) + 0.08, z);
+      arrow.rotation.x = -Math.PI / 2;
+      arrow.rotation.z = Math.atan2(direction.x, direction.z);
+      arrow.userData = { phase: i * 0.35 };
+      group.add(arrow);
+    }
+
+    this.santoroPathGroup = group;
+    this.scene.add(group);
+  }
+
+  private updateSantoroPathArrows(elapsed: number) {
+    if (!this.santoroPathGroup) return;
+    this.santoroPathGroup.children.forEach((child) => {
+      const arrow = child as THREE.Mesh;
+      const pulse = 0.68 + Math.sin(elapsed * 4 + (arrow.userData['phase'] || 0)) * 0.24;
+      arrow.scale.setScalar(0.82 + pulse * 0.28);
+      const mat = arrow.material as THREE.MeshBasicMaterial;
+      if (mat) mat.opacity = 0.52 + pulse * 0.32;
+    });
+  }
+
   private createClouds() {
     if (!this.scene) return;
 
-    const cloudMaterial = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.95,
-      metalness: 0,
-      transparent: true,
-      opacity: 0.86
-    });
-    this.disposable.push(cloudMaterial);
+    this.loadSceneAsset('/models-optimized/cloud_polygon_opt.glb', (loadedModel) => {
+      // Material básico semi-transparente sin afectación por niebla para visualización en el fondo celeste
+      const cloudMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.86,
+        fog: false
+      });
+      this.disposable.push(cloudMaterial);
 
-    for (let i = 0; i < 12; i++) {
-      const cloud = new THREE.Group();
-      const angle = (i / 12) * Math.PI * 2;
-      const radius = 44 + (i % 4) * 7;
-      cloud.position.set(Math.cos(angle) * radius, 22 + (i % 3) * 3, Math.sin(angle) * radius - 8);
-      cloud.userData = { angle, radius, speed: 0.01 + i * 0.0015, y: cloud.position.y };
+      // Reemplazar material
+      loadedModel.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.material = cloudMaterial;
+          child.castShadow = false;
+          child.receiveShadow = false;
+        }
+      });
 
-      for (let j = 0; j < 5; j++) {
-        const geometry = new THREE.SphereGeometry(1.2 + (j % 3) * 0.45, 16, 10);
-        const puff = new THREE.Mesh(geometry, cloudMaterial);
-        puff.position.set((j - 2) * 1.25, Math.sin(j) * 0.24, Math.cos(j * 1.8) * 0.45);
-        puff.scale.y = 0.48;
-        cloud.add(puff);
-        this.disposable.push(geometry);
+      // Generar 12 nubes tridimensionales optimizadas flotantes clonando el modelo completo para conservar las escalas locales
+      for (let i = 0; i < 12; i++) {
+        const cloud = new THREE.Group();
+        cloud.name = `OptimizedCloud_${i}`;
+        const angle = (i / 12) * Math.PI * 2;
+        const radius = 48 + (i % 4) * 8;
+        cloud.position.set(Math.cos(angle) * radius, 21 + (i % 3) * 3.5, Math.sin(angle) * radius - 8);
+        cloud.userData = { angle, radius, speed: 0.007 + i * 0.0012, y: cloud.position.y };
+
+        const clone = loadedModel.clone();
+        // El tamaño base con la escala interna del modelo de Blender es ~1.5m.
+        // Lo escalamos a un tamaño majestuoso y natural de nube en el cielo
+        const scaleVal = 6.0 + (i % 3) * 2.5; // Escalas de 6x a 11x (tamaño de ~10m a ~17m)
+        clone.scale.set(scaleVal, scaleVal * 0.5, scaleVal * 0.75);
+        clone.rotation.set(Math.random() * 0.1, Math.random() * Math.PI * 2, Math.random() * 0.1);
+        cloud.add(clone);
+
+        this.clouds.push(cloud);
+        this.worldObjects.push(cloud);
+        this.scene!.add(cloud);
       }
-
-      this.clouds.push(cloud);
-      this.worldObjects.push(cloud);
-      this.scene.add(cloud);
-    }
+    });
   }
 
   private updateDayNightCycle(_elapsed: number) {
@@ -2031,87 +2617,111 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const orbit = t * Math.PI * 2 - Math.PI * 0.08;
     const sunHeight = Math.sin(orbit);
     
-    // Optimización de sombras según la calidad gráfica activa
+    // OptimizaciÃ³n de sombras segÃºn la calidad grÃ¡fica activa
     const sunVisible = sunHeight > 0.03;
-    if (this.graphicsQuality === 'low') {
-      this.sunLight.castShadow = false;
-      this.moonLight.castShadow = false;
-    } else if (this.graphicsQuality === 'medium') {
-      this.sunLight.castShadow = sunVisible;
-      this.moonLight.castShadow = !sunVisible;
-    } else {
-      this.sunLight.castShadow = true;
-      this.moonLight.castShadow = true;
+    const shadowMode =
+      this.graphicsQuality === 'low'
+        ? 'none'
+        : this.graphicsQuality === 'medium'
+          ? (sunVisible ? 'sun' : 'moon')
+          : 'both';
+    if (shadowMode !== this.lastShadowMode) {
+      this.sunLight.castShadow = shadowMode === 'sun' || shadowMode === 'both';
+      this.moonLight.castShadow = shadowMode === 'moon' || shadowMode === 'both';
+      this.lastShadowMode = shadowMode;
     }
-    // 1. Posicionamiento original de luces direccionales para mantener dirección de sombras perfecta
+    // 1. Posicionamiento original de luces direccionales para mantener direcciÃ³n de sombras perfecta
     const sunX = Math.cos(orbit) * 58;
     const sunY = Math.max(-12, sunHeight * 42);
     const sunZ = -24 + Math.sin(t * Math.PI * 2 + 0.7) * 16;
     this.sunLight.position.set(sunX, sunY, sunZ);
     this.moonLight.position.set(-sunX, Math.max(8, -sunY), -sunZ);
 
-    // 2. Posicionamiento físico de las mallas visuales (sunMesh y moonMesh) a gran distancia (106)
-    // Esto las sitúa fuera de la caja de montañas (Z/X = 78) pero dentro del domo celeste (radio 120),
-    // resolviendo el problema de oclusión de forma física y matemáticamente perfecta.
+    // 2. Posicionamiento fÃ­sico de las mallas visuales (sunMesh y moonMesh) a gran distancia (106)
+    // Esto las sitÃºa fuera de la caja de montaÃ±as (Z/X = 78) pero dentro del domo celeste (radio 120),
+    // resolviendo el problema de oclusiÃ³n de forma fÃ­sica y matemÃ¡ticamente perfecta.
     const rawX = Math.cos(orbit);
     const rawY = Math.sin(orbit);
-    const rawZ = -0.32 + Math.sin(orbit) * 0.15; // Inclinación celeste diagonal hermosa
-    const dir = new THREE.Vector3(rawX, rawY, rawZ).normalize();
+    const rawZ = -0.32 + Math.sin(orbit) * 0.15; // InclinaciÃ³n celeste diagonal hermosa
+    this.tempVec3.set(rawX, rawY, rawZ).normalize();
+    this.sunMesh.position.copy(this.tempVec3).multiplyScalar(106.0);
+    this.moonMesh.position.copy(this.tempVec3).multiplyScalar(-106.0);
 
-    const sunMeshPos = dir.clone().multiplyScalar(106.0);
-    this.sunMesh.position.copy(sunMeshPos);
+    // 3. Cálculo de factores de fase dinámica mediante un sistema de pesos ponderados
+    // sunrise/sunset: transición suave que evita el solapamiento o descoloramiento.
+    let distToSunrise = Math.abs(t - 0.02);
+    if (distToSunrise > 0.5) distToSunrise = 1.0 - distToSunrise;
+    const sunriseFactor = Math.max(0, 1 - distToSunrise / 0.06);
 
-    const moonMeshPos = dir.clone().multiplyScalar(-106.0);
-    this.moonMesh.position.copy(moonMeshPos);
+    const sunsetFactor = Math.max(0, 1 - Math.abs(t - 0.58) / 0.10);
+    const twilight = Math.max(sunriseFactor, sunsetFactor);
 
-    // 3. Factores de fase dinámica con amanecer (sunrise) y atardecer (sunset) unificados
-    const daylight = THREE.MathUtils.clamp((sunHeight + 0.18) / 1.18, 0, 1);
-    const sunsetFactor = 1 - Math.min(1, Math.abs(t - 0.60) / 0.10);
-    const sunriseFactor = 1 - Math.min(1, Math.abs(t - 0.08) / 0.08);
-    const twilight = THREE.MathUtils.clamp(Math.max(sunsetFactor, sunriseFactor), 0, 1);
-    const night = 1 - daylight;
-
-    // 4. Ajustes de intensidades lumínicas
-    this.sunLight.intensity = 0.25 + daylight * 3.9;
-    this.moonLight.intensity = 0.18 + night * 1.25;
-    this.ambientLight.intensity = 0.22 + daylight * 0.82 + twilight * 0.18;
-
-    // 5. Gradiente dinámico de color del domo del cielo usando twilight (aplica a amaneceres y atardeceres)
-    const skyDay = new THREE.Color(0x86cfff);
-    const skySunset = new THREE.Color(0xfc5a03); // Naranja vibrante y profundo
-    const skyNight = new THREE.Color(0x030712);
-    const skyColor = skyDay.clone().lerp(skySunset, twilight * 0.95).lerp(skyNight, night * 0.88);
-    (this.skyDome.material as THREE.MeshBasicMaterial).color.copy(skyColor);
-    this.scene.fog?.color.copy(skyColor.clone().lerp(new THREE.Color(0x07111f), 0.55));
-    this.renderer?.setClearColor(skyColor);
-
-    // 6. Tinte anaranjado cálido de las luces en el amanecer y atardecer
-    if (twilight > 0.02) {
-      const orangeColor = new THREE.Color(0xfc5a03);
-      this.sunLight.color.copy(new THREE.Color(0xfff4c0).clone().lerp(orangeColor, twilight * 0.92));
-      this.ambientLight.color.copy(new THREE.Color(0xffffff).clone().lerp(orangeColor, twilight * 0.88));
-    } else if (night > 0.05) {
-      this.sunLight.color.setHex(0xffffff);
-      this.ambientLight.color.copy(new THREE.Color(0xffffff).clone().lerp(new THREE.Color(0xc7d2fe), night * 0.5));
-    } else {
-      this.sunLight.color.setHex(0xfff4c0);
-      this.ambientLight.color.setHex(0xffffff);
+    let wDay = 0;
+    if (t >= 0.02 && t < 0.08) {
+      wDay = (t - 0.02) / 0.06;
+    } else if (t >= 0.08 && t < 0.48) {
+      wDay = 1.0;
+    } else if (t >= 0.48 && t < 0.58) {
+      wDay = 1.0 - (t - 0.48) / 0.10;
     }
 
+    let wNight = 0;
+    if (t >= 0.58 && t < 0.68) {
+      wNight = (t - 0.58) / 0.10;
+    } else if (t >= 0.68 && t < 0.96) {
+      wNight = 1.0;
+    } else {
+      let val = t >= 0.96 ? t : t + 1.0;
+      wNight = Math.max(0, 1.0 - (val - 0.96) / 0.06);
+    }
+
+    const wTwilight = twilight;
+    const daylight = wDay + wTwilight;
+    const night = wNight;
+
+    // 4. Ajustes de intensidades lumínicas
+    this.sunLight.intensity = wDay * 3.8 + wTwilight * 1.6;
+    this.moonLight.intensity = wNight * 1.35 + wTwilight * 0.15;
+    this.ambientLight.intensity = wDay * 1.05 + wTwilight * 0.48 + wNight * 0.22;
+
+    // 5. Gradiente dinámico de color del domo del cielo usando pesos
+    this.dynamicSkyColor.setRGB(
+      this.skyDayColor.r * wDay + this.skySunsetColor.r * wTwilight + this.skyNightColor.r * wNight,
+      this.skyDayColor.g * wDay + this.skySunsetColor.g * wTwilight + this.skyNightColor.g * wNight,
+      this.skyDayColor.b * wDay + this.skySunsetColor.b * wTwilight + this.skyNightColor.b * wNight
+    );
+    (this.skyDome.material as THREE.MeshBasicMaterial).color.copy(this.dynamicSkyColor);
+    
+    this.dynamicFogColor.copy(this.dynamicSkyColor).lerp(this.fogBaseColor, 0.55 * wNight);
+    this.scene.fog?.color.copy(this.dynamicFogColor);
+    this.renderer?.setClearColor(this.dynamicSkyColor);
+
+    // Tinte dinámico de las montañas según el ciclo (lerpeado hacia naranja en atardecer/amanecer y oscurecido en noche)
+    this.mountainMaterials.forEach((mat) => {
+      const base = mat.userData['baseColor'] as THREE.Color;
+      if (base) {
+        mat.color.copy(base)
+          .lerp(this.skySunsetColor, wTwilight * 0.65)
+          .lerp(this.skyNightColor, wNight * 0.75);
+      }
+    });
+
+    // 6. Tinte de las luces direccionales y ambientales
+    this.sunLight.color.copy(this.sunBaseColor).lerp(this.skySunsetColor, wTwilight * 0.95);
+    this.ambientLight.color.copy(this.whiteColor)
+      .lerp(this.skySunsetColor, wTwilight * 0.88)
+      .lerp(this.moonAmbientColor, wNight * 0.5);
+
     // 7. Tinte dinámico del Sol majestuoso: de amarillo a rojo-naranja ardiente al atardecer/amanecer
-    const sunColorDay = new THREE.Color(0xfffdb5); // Amarillo blanquecino brillante
-    const sunColorSunset = new THREE.Color(0xff3b00); // Naranja-rojo ardiente y espectacular
-    const sunColor = sunColorDay.clone().lerp(sunColorSunset, twilight * 0.95);
-    (this.sunMesh.material as THREE.MeshBasicMaterial).color.copy(sunColor);
+    this.dynamicSunMeshColor.copy(this.sunMeshDayColor).lerp(this.sunMeshSunsetColor, wTwilight * 0.98);
+    (this.sunMesh.material as THREE.MeshBasicMaterial).color.copy(this.dynamicSunMeshColor);
 
     // 8. Tinte dinámico de la Luna: de índigo plateado a rosáceo suave al cruzarse con el crepúsculo
-    const moonColorNight = new THREE.Color(0xe0e7ff);
-    const moonColorSunset = new THREE.Color(0xfca5a5); // Rosáceo suave
-    const moonColor = moonColorNight.clone().lerp(moonColorSunset, twilight * 0.5);
-    (this.moonMesh.material as THREE.MeshBasicMaterial).color.copy(moonColor);
+    this.dynamicMoonMeshColor.copy(this.moonMeshNightColor).lerp(this.moonMeshSunsetColor, wTwilight * 0.5);
+    (this.moonMesh.material as THREE.MeshBasicMaterial).color.copy(this.dynamicMoonMeshColor);
 
-    this.sunMesh.visible = daylight > 0.03;
-    this.moonMesh.visible = night > 0.18;
+    this.sunMesh.visible = daylight > 0.05;
+    this.moonMesh.visible = (night + wTwilight * 0.5) > 0.15;
 
     // Control dinámico de faroles: encendidos de noche, apagados de día
     this.lampLights.forEach((light) => {
@@ -2127,7 +2737,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    const nextLabel = t < 0.25 ? 'Mañana' : t < 0.5 ? 'Tarde' : t < 0.75 ? 'Atardecer' : 'Noche';
+    let nextLabel = 'Mañana';
+    if (t >= 0.08 && t < 0.48) {
+      nextLabel = 'Tarde';
+    } else if (t >= 0.48 && t < 0.68) {
+      nextLabel = 'Atardecer';
+    } else if (t >= 0.68 && t < 0.96) {
+      nextLabel = 'Noche';
+    }
     if (nextLabel !== this.dayPhaseLabel) {
       this.ngZone.run(() => {
         this.dayPhaseLabel = nextLabel;
@@ -2316,11 +2933,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addBox([9.8, 0.22, 7.8], [-19, 3.8, -19.6], 0xd8c7a8, { roughness: 0.82 });
 
     // Puerta lateral decorativa (no interactuable) en la pared derecha del kiosco
-    // Marco de la puerta (marrón oscuro)
+    // Marco de la puerta (marrÃ³n oscuro)
     this.addBox([0.15, 2.7, 1.3], [-14.1, 1.35, -19.6], 0x3e2723, { roughness: 0.85 });
-    // Panel de la puerta (madera marrón mediana, ligeramente sobresaliente para volumen)
+    // Panel de la puerta (madera marrÃ³n mediana, ligeramente sobresaliente para volumen)
     this.addBox([0.12, 2.58, 1.14], [-14.08, 1.29, -19.6], 0x5a3822, { roughness: 0.75 });
-    // Picaporte/Manija metálica (pequeño cilindro dorado o cromado)
+    // Picaporte/Manija metÃ¡lica (pequeÃ±o cilindro dorado o cromado)
     const handleGeom = new THREE.CylinderGeometry(0.02, 0.02, 0.16, 8);
     handleGeom.rotateX(Math.PI / 2);
     const handleMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.9, roughness: 0.1 });
@@ -2358,19 +2975,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const rightBacking = this.addBox([2.4, 1.8, 0.08], [-16.4, 1.82, -15.65], 0x3e2723, { roughness: 0.85 });
     rightBacking.rotation.y = 0;
 
-    // Estanterías rectas a la izquierda y derecha de Hilda (2.4 de ancho, paralelas al fondo, pegadas contra el mostrador)
+    // EstanterÃ­as rectas a la izquierda y derecha de Hilda (2.4 de ancho, paralelas al fondo, pegadas contra el mostrador)
     const shelfHeights = [1.12, 1.82, 2.52];
     shelfHeights.forEach((y) => {
-      // Estantería izquierda (recta, inclinada hacia abajo de 0.08 rad, z = -15.45)
+      // EstanterÃ­a izquierda (recta, inclinada hacia abajo de 0.08 rad, z = -15.45)
       const leftShelf = this.addBox([2.4, 0.14, 0.55], [-21.6, y, -15.45], 0x5a3822);
       leftShelf.rotation.set(0.08, 0, 0, 'YXZ');
 
-      // Estantería derecha (recta, inclinada hacia abajo de 0.08 rad, z = -15.45)
+      // EstanterÃ­a derecha (recta, inclinada hacia abajo de 0.08 rad, z = -15.45)
       const rightShelf = this.addBox([2.4, 0.14, 0.55], [-16.4, y, -15.45], 0x5a3822);
       rightShelf.rotation.set(0.08, 0, 0, 'YXZ');
     });
 
-    // Tubo de luz fluorescente físico en el cielorraso del kiosco
+    // Tubo de luz fluorescente fÃ­sico en el cielorraso del kiosco
     const lampGeom = new THREE.CylinderGeometry(0.05, 0.05, 2.8, 8);
     lampGeom.rotateZ(Math.PI / 2);
     const lampMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
@@ -2379,94 +2996,29 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene!.add(lamp);
     this.disposable.push(lampGeom, lampMat);
 
-    // Fuente de luz real del techo (cálida, ilumina todo el interior)
+    // Fuente de luz real del techo (cÃ¡lida, ilumina todo el interior)
     const ceilingLight = new THREE.PointLight(0xfff2cc, 4.8, 15);
     ceilingLight.position.set(-19.0, 3.5, -19.0);
-    ceilingLight.castShadow = true;
-    ceilingLight.shadow.bias = -0.002;
+    ceilingLight.castShadow = false;
     this.scene!.add(ceilingLight);
 
     this.addBox([9.8, 0.28, 1.2], [-19, 3.45, -14.9], 0x9b2f27, { roughness: 0.58 });
+
+    this.addCantinaSign();
 
     this.addKioskProducts();
     this.addVendor();
   }
 
   private addKioskProducts() {
-    const products = [
-      { path: '/models/kiosk/coca_cola_bottle.glb', maxDim: 0.30 },
-      { path: '/models/kiosk/lays_classic__hd_textures__free_download.glb', maxDim: 0.35 },
-      { path: '/models/kiosk/cheetos_rasa_keju.glb', maxDim: 0.32 },
-      { path: '/models/kiosk/black_monster_energy_drink.glb', maxDim: 0.20 },
-      { path: '/models/kiosk/monster_energy_drink_mango.glb', maxDim: 0.20 },
-      { path: '/models/kiosk/monster_zero_ultra.glb', maxDim: 0.20 },
-      { path: '/models/kiosk/pringles.glb', maxDim: 0.28 },
-      { path: '/models/kiosk/oreo.glb', maxDim: 0.28 },
-      { path: '/models/kiosk/kitkat_chunky_salted_caramel.glb', maxDim: 0.20 }
-    ];
+    this.createKioskProductPlaceholders();
 
-    const shelfHeights = [1.12, 1.82, 2.52];
+    // Los GLB reales de productos se cargan bajo demanda al acercarse al kiosco.
 
-    shelfHeights.forEach((y, row) => {
-      // 7 productos en la estantería izquierda (recta, inclinada hacia abajo 0.08 rad)
-      for (let col = 0; col < 7; col++) {
-        const item = products[(row * 3 + col) % products.length];
-        this.loadSceneAsset(item.path, (loadedModel) => {
-          const model = loadedModel.clone();
-          this.fitModelToMaxDimension(model, item.maxDim);
-          this.centerModelPivot(model);
-          
-          const offsetLocal = -0.9 + col * 0.3;
-          const px = -21.6 + offsetLocal;
-          const pz = -15.45;
-          
-          model.position.set(px, y + 0.08, pz);
-          // Aplicar la inclinación primero (si es KitKat, de costado; si es Oreo, ligeramente inclinada)
-          if (item.path.includes('kitkat')) {
-            model.rotation.set(0.08, Math.PI / 3, 1.3, 'YXZ');
-          } else if (item.path.includes('oreo')) {
-            model.rotation.set(0.08, 0.2, 0.4, 'YXZ');
-          } else {
-            model.rotation.set(0.08, 0, 0, 'YXZ');
-          }
-          // Alinear el bottom del modelo ya rotado para evitar errores flotantes o de clipping
-          this.alignModelBottom(model, y + 0.08);
-          this.scene!.add(model);
-        }, { castShadow: false, receiveShadow: false });
-      }
-
-      // 7 productos en la estantería derecha (recta, inclinada hacia abajo 0.08 rad)
-      for (let col = 0; col < 7; col++) {
-        const item = products[(row * 3 + col + 2) % products.length];
-        this.loadSceneAsset(item.path, (loadedModel) => {
-          const model = loadedModel.clone();
-          this.fitModelToMaxDimension(model, item.maxDim);
-          this.centerModelPivot(model);
-          
-          const offsetLocal = -0.9 + col * 0.3;
-          const px = -16.4 + offsetLocal;
-          const pz = -15.45;
-          
-          model.position.set(px, y + 0.08, pz);
-          // Aplicar la inclinación primero (si es KitKat, de costado; si es Oreo, ligeramente inclinada)
-          if (item.path.includes('kitkat')) {
-            model.rotation.set(0.08, Math.PI / 3, 1.3, 'YXZ');
-          } else if (item.path.includes('oreo')) {
-            model.rotation.set(0.08, 0.2, 0.4, 'YXZ');
-          } else {
-            model.rotation.set(0.08, 0, 0, 'YXZ');
-          }
-          // Alinear el bottom del modelo ya rotado
-          this.alignModelBottom(model, y + 0.08);
-          this.scene!.add(model);
-        }, { castShadow: false, receiveShadow: false });
-      }
-    });
-
-    // Máquinas expendedoras al fondo (Coca-Cola al centro, PS1 al rincón izquierdo)
+    // MÃ¡quinas expendedoras al fondo (Coca-Cola al centro, PS1 al rincÃ³n izquierdo)
     [
-      { path: '/models/kiosk/vending_machine_-_ps1_low_poly.glb', x: -21.4, z: -21.4, height: 2.25 },
-      { path: '/models/kiosk/vending_machine_coca_cola.glb', x: -19.0, z: -21.4, height: 2.25 }
+      { path: '/models-optimized/kiosk/vending_machine_-_ps1_low_poly.glb', x: -21.4, z: -21.4, height: 2.25 },
+      { path: '/models-optimized/kiosk/vending_machine_coca_cola.glb', x: -19.0, z: -21.4, height: 2.25 }
     ].forEach((vm) => {
       this.loadSceneAsset(vm.path, (model) => {
         this.fitModelToHeight(model, vm.height);
@@ -2479,10 +3031,97 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }, { castShadow: false });
     });
 
-    // Luz focalizada sobre la máquina expendedora de Coca-Cola en el centro del fondo
+    // Luz focalizada sobre la mÃ¡quina expendedora de Coca-Cola en el centro del fondo
     const vmLight = new THREE.PointLight(0xff3333, 4.2, 8);
     vmLight.position.set(-19.0, 2.3, -20.6);
     this.scene!.add(vmLight);
+  }
+
+  private createKioskProductPlaceholders() {
+    if (!this.scene || this.kioskProductPlaceholders) return;
+
+    const group = new THREE.Group();
+    const canGeometry = new THREE.CylinderGeometry(0.045, 0.045, 0.22, 8);
+    const boxGeometry = new THREE.BoxGeometry(0.11, 0.18, 0.055);
+    const bagGeometry = new THREE.BoxGeometry(0.15, 0.2, 0.035);
+    const materials = [
+      new THREE.MeshStandardMaterial({ color: 0xff3344, roughness: 0.55 }),
+      new THREE.MeshStandardMaterial({ color: 0x22d3ee, roughness: 0.55 }),
+      new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.6 }),
+      new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.45 }),
+      new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.55 })
+    ];
+    this.disposable.push(canGeometry, boxGeometry, bagGeometry, ...materials);
+
+    const shelfHeights = [1.12, 1.82, 2.52];
+    shelfHeights.forEach((y, row) => {
+      [-21.6, -16.4].forEach((shelfX, shelfIndex) => {
+        for (let col = 0; col < 7; col++) {
+          const type = (row + col + shelfIndex) % 3;
+          const geometry = type === 0 ? canGeometry : type === 1 ? boxGeometry : bagGeometry;
+          const material = materials[(row * 3 + col + shelfIndex) % materials.length];
+          const item = new THREE.Mesh(geometry, material);
+          item.position.set(shelfX - 0.9 + col * 0.3, y + 0.21, -15.45);
+          item.rotation.set(0.08, 0.12 * ((col % 3) - 1), type === 2 ? 0.16 : 0, 'YXZ');
+          item.castShadow = false;
+          item.receiveShadow = false;
+          group.add(item);
+        }
+      });
+    });
+
+    this.kioskProductPlaceholders = group;
+    this.scene.add(group);
+  }
+
+  private ensureDetailedKioskProductsLoaded() {
+    if (this.kioskProductsDetailedLoaded || !this.scene) return;
+    this.kioskProductsDetailedLoaded = true;
+
+    const products = [
+      { path: '/models-optimized/kiosk/coca_cola_bottle.glb', maxDim: 0.30 },
+      { path: '/models-optimized/kiosk/lays_classic__hd_textures__free_download.glb', maxDim: 0.35 },
+      { path: '/models-optimized/kiosk/cheetos_rasa_keju.glb', maxDim: 0.32 },
+      { path: '/models-optimized/kiosk/black_monster_energy_drink.glb', maxDim: 0.20 },
+      { path: '/models-optimized/kiosk/monster_energy_drink_mango.glb', maxDim: 0.20 },
+      { path: '/models-optimized/kiosk/monster_zero_ultra.glb', maxDim: 0.20 },
+      { path: '/models-optimized/kiosk/pringles.glb', maxDim: 0.28 },
+      { path: '/models-optimized/kiosk/oreo.glb', maxDim: 0.28 },
+      { path: '/models-optimized/kiosk/kitkat_chunky_salted_caramel.glb', maxDim: 0.20 }
+    ];
+
+    const shelfHeights = [1.12, 1.82, 2.52];
+
+    shelfHeights.forEach((y, row) => {
+      [-21.6, -16.4].forEach((shelfX, shelfIndex) => {
+        for (let col = 0; col < 7; col++) {
+          const productOffset = shelfIndex === 0 ? 0 : 2;
+          const item = products[(row * 3 + col + productOffset) % products.length];
+          this.loadSceneAsset(item.path, (loadedModel) => {
+            const model = loadedModel.clone();
+            this.fitModelToMaxDimension(model, item.maxDim);
+            this.centerModelPivot(model);
+
+            model.position.set(shelfX - 0.9 + col * 0.3, y + 0.08, -15.45);
+            if (item.path.includes('kitkat')) {
+              model.rotation.set(0.08, Math.PI / 3, 1.3, 'YXZ');
+            } else if (item.path.includes('oreo')) {
+              model.rotation.set(0.08, 0.2, 0.4, 'YXZ');
+            } else {
+              model.rotation.set(0.08, 0, 0, 'YXZ');
+            }
+            this.alignModelBottom(model, y + 0.08);
+            this.scene!.add(model);
+          }, { castShadow: false, receiveShadow: false });
+        }
+      });
+    });
+
+    setTimeout(() => {
+      if (this.kioskProductPlaceholders) {
+        this.kioskProductPlaceholders.visible = false;
+      }
+    }, 1200);
   }
 
   private fitModelToHeight(model: THREE.Object3D, targetHeight: number) {
@@ -2519,6 +3158,122 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private addCantinaSign() {
+    if (!this.scene) return;
+
+    // Crear un lienzo canvas 2D para pintar las letras y el decorado del cartel
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // 1. Fondo degradado vertical elegante (pizarra/azul acero oscuro)
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, 256);
+    bgGrad.addColorStop(0, '#0f172a');
+    bgGrad.addColorStop(0.5, '#1e293b');
+    bgGrad.addColorStop(1, '#0f172a');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1024, 256);
+
+    // 2. Bordes dorados dobles con grosores diferenciados
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(14, 14, 996, 228);
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(24, 24, 976, 208);
+
+    // 3. Pequeños rombos dorados decorativos en las 4 esquinas internas
+    ctx.fillStyle = '#ffd700';
+    const drawDiamond = (cx: number, cy: number, r: number) => {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - r);
+      ctx.lineTo(cx + r, cy);
+      ctx.lineTo(cx, cy + r);
+      ctx.lineTo(cx - r, cy);
+      ctx.closePath();
+      ctx.fill();
+    };
+    drawDiamond(44, 44, 10);
+    drawDiamond(980, 44, 10);
+    drawDiamond(44, 212, 10);
+    drawDiamond(980, 212, 10);
+
+    // 4. Subtítulo superior: "CANTINA"
+    ctx.font = 'bold 32px "Arial Black", "Montserrat", sans-serif';
+    ctx.fillStyle = '#f8fafc';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+    ctx.shadowBlur = 4;
+    ctx['letterSpacing'] = '14px'; // Evita errores de tipo en TS antiguo
+    ctx.fillText('CANTINA', 512, 75);
+
+    // 5. Título principal: "El Loco Amaya" en tipografía cursiva serif y degradado de oro puro
+    const textGrad = ctx.createLinearGradient(0, 90, 0, 210);
+    textGrad.addColorStop(0, '#fffbeb');
+    textGrad.addColorStop(0.3, '#fde047');
+    textGrad.addColorStop(0.7, '#eab308');
+    textGrad.addColorStop(1, '#a16207');
+
+    ctx.font = 'italic bold 90px "Georgia", "Times New Roman", serif';
+    ctx.fillStyle = textGrad;
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetX = 4;
+    ctx.shadowOffsetY = 6;
+    ctx['letterSpacing'] = '0px';
+    ctx.fillText('“El Loco Amaya”', 512, 185);
+
+    // Instanciar textura a partir del canvas
+    const signTexture = new THREE.CanvasTexture(canvas);
+    signTexture.colorSpace = THREE.SRGBColorSpace;
+    signTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    signTexture.magFilter = THREE.LinearFilter;
+    this.disposable.push(signTexture);
+
+    // Crear grupo contenedor 3D posicionado por encima de la viga roja
+    const signGroup = new THREE.Group();
+    signGroup.name = 'CantinaSignGroup';
+    signGroup.position.set(-19.0, 4.25, -14.28); // 2cm adelante de la viga roja para evitar Z-Fighting
+
+    // 1. Marco de soporte de madera muy oscura
+    const frameGeometry = new THREE.BoxGeometry(4.8, 1.15, 0.08);
+    const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x18120d, roughness: 0.88 });
+    const frameMesh = new THREE.Mesh(frameGeometry, frameMaterial);
+    frameMesh.castShadow = true;
+    signGroup.add(frameMesh);
+    this.disposable.push(frameGeometry, frameMaterial);
+
+    // 2. Placa central
+    const plateGeometry = new THREE.PlaneGeometry(4.68, 1.03);
+    const plateMaterial = new THREE.MeshStandardMaterial({
+      map: signTexture,
+      roughness: 0.20,
+      metalness: 0.15,
+      side: THREE.FrontSide
+    });
+    const plateMesh = new THREE.Mesh(plateGeometry, plateMaterial);
+    plateMesh.position.set(0, 0, 0.045);
+    signGroup.add(plateMesh);
+    this.disposable.push(plateGeometry, plateMaterial);
+
+    // 3. Dos soportes cilíndricos negros simulando anclaje metálico a la viga inferior
+    const supportMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5, metalness: 0.8 });
+    const leftSupportGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8);
+    const leftSupport = new THREE.Mesh(leftSupportGeom, supportMat);
+    leftSupport.position.set(-1.8, -0.65, 0.0);
+    signGroup.add(leftSupport);
+    this.disposable.push(leftSupportGeom);
+
+    const rightSupportGeom = new THREE.CylinderGeometry(0.03, 0.03, 0.35, 8);
+    const rightSupport = new THREE.Mesh(rightSupportGeom, supportMat);
+    rightSupport.position.set(1.8, -0.65, 0.0);
+    signGroup.add(rightSupport);
+    this.disposable.push(rightSupportGeom, supportMat);
+
+    this.scene.add(signGroup);
+  }
+
   private addVendor() {
     const root = new THREE.Group();
     root.position.set(-19.6, 0.4, -17.2);
@@ -2527,14 +3282,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const npc: CampusNpc = { root, actions: new Map() };
     this.kioskVendor = npc;
 
-    this.loadSceneAsset('/models/characters/hilda_regular_00.glb', (model, animations) => {
+    this.loadSceneAsset('/models-optimized/characters/hilda_regular_00.glb', (model, animations) => {
       model.scale.setScalar(1.22);
       model.position.set(0, -0.12, 0);
       root.add(model);
       npc.mixer = new THREE.AnimationMixer(model);
       animations.forEach((clip) => npc.actions.set(clip.name.toLowerCase(), npc.mixer!.clipAction(clip)));
       
-      // Manejar la finalización de pose_03 de reproducción única
+      // Manejar la finalizaciÃ³n de pose_03 de reproducciÃ³n Ãºnica
       npc.mixer.addEventListener('finished', (e) => {
         const poseEntry = Array.from(npc.actions.entries()).find(([name]) => name.includes('pose_03'));
         if (poseEntry && e.action === poseEntry[1]) {
@@ -2551,11 +3306,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private createCampusTrees() {
     const treePositions = [[-7, -8], [-8, 7], [6.8, 13], [29, 10], [28, -19], [-30, -2], [-31, -24]];
     
-    this.loadSceneAsset('/models/environment/pine_tree.glb', (loadedModel) => {
+    this.loadSceneAsset('/models-optimized/environment/pine_tree.glb', (loadedModel) => {
       treePositions.forEach(([x, z]) => {
         const model = loadedModel.clone();
         
-        // Altura aleatoria para lograr variedad de tamaños (unos más grandes, otros más chicos)
+        // Altura aleatoria para lograr variedad de tamaÃ±os (unos mÃ¡s grandes, otros mÃ¡s chicos)
         const targetHeight = 4.2 + Math.random() * 3.6;
         this.fitModelToHeight(model, targetHeight);
         this.centerModelPivot(model);
@@ -2563,7 +3318,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         model.position.set(x, 0, z);
         this.alignModelBottom(model, 0); // Poner al ras del suelo
         
-        // Rotación aleatoria en Y para que luzca súper natural
+        // RotaciÃ³n aleatoria en Y para que luzca sÃºper natural
         model.rotation.y = Math.random() * Math.PI * 2;
         
         this.scene!.add(model);
@@ -2601,31 +3356,32 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.disposable.push(alphaTexture);
 
+      // Inicializar y registrar dinámicamente los materiales para teñirlos según el ciclo día/noche
+      this.mountainMaterials = [];
+      const registerMountainMaterial = (colorHex: number) => {
+        const mat = new THREE.MeshBasicMaterial({
+          map: alphaTexture,
+          transparent: true,
+          color: colorHex,
+          side: THREE.DoubleSide,
+          depthWrite: false
+        });
+        mat.userData['baseColor'] = mat.color.clone();
+        this.mountainMaterials.push(mat);
+        return mat;
+      };
+
       // --- CAPA TRASERA DE MONTAÑAS (Existentes, frente al kiosco) ---
-      // Capa trasera (más lejana, más oscura/azulada)
+      const materialBack = registerMountainMaterial(0x142030);
       const geometryBack = new THREE.PlaneGeometry(160, 32);
-      const materialBack = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x142030, // Azul noche profundo
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsBack = new THREE.Mesh(geometryBack, materialBack);
       mountainsBack.position.set(0, 11.5, -78);
       mountainsBack.renderOrder = -10; // Dibujarse antes que las mallas del escenario (renderOrder 0)
       this.scene!.add(mountainsBack);
       this.disposable.push(geometryBack, materialBack);
 
-      // Capa delantera (más cercana, un poco más iluminada y con desfase horizontal)
+      const materialFront = registerMountainMaterial(0x22354c);
       const geometryFront = new THREE.PlaneGeometry(160, 28);
-      const materialFront = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x22354c, // Tinte azul marino/teal intermedio
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsFront = new THREE.Mesh(geometryFront, materialFront);
       mountainsFront.position.set(18, 9.5, -68);
       mountainsFront.renderOrder = -10;
@@ -2633,15 +3389,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.disposable.push(geometryFront, materialFront);
 
       // --- CAPAS LATERALES DE MONTAÑAS (Para rodear el escenario) ---
-      // Capa Izquierda Trasera (Más altas!)
+      const materialLeftBack = registerMountainMaterial(0x121e2e);
       const geometryLeftBack = new THREE.PlaneGeometry(160, 38);
-      const materialLeftBack = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x121e2e,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsLeftBack = new THREE.Mesh(geometryLeftBack, materialLeftBack);
       mountainsLeftBack.position.set(-78, 16.0, 0);
       mountainsLeftBack.rotation.y = Math.PI / 2; // Orientada hacia el centro
@@ -2649,15 +3398,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(mountainsLeftBack);
       this.disposable.push(geometryLeftBack, materialLeftBack);
 
-      // Capa Izquierda Delantera (Más altas!)
+      const materialLeftFront = registerMountainMaterial(0x1e3046);
       const geometryLeftFront = new THREE.PlaneGeometry(160, 34);
-      const materialLeftFront = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x1e3046,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsLeftFront = new THREE.Mesh(geometryLeftFront, materialLeftFront);
       mountainsLeftFront.position.set(-68, 14.0, 10);
       mountainsLeftFront.rotation.y = Math.PI / 2;
@@ -2665,15 +3407,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(mountainsLeftFront);
       this.disposable.push(geometryLeftFront, materialLeftFront);
 
-      // Capa Derecha Trasera (Más bajas!)
+      const materialRightBack = registerMountainMaterial(0x121e2e);
       const geometryRightBack = new THREE.PlaneGeometry(160, 24);
-      const materialRightBack = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x121e2e,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsRightBack = new THREE.Mesh(geometryRightBack, materialRightBack);
       mountainsRightBack.position.set(78, 9.0, 0);
       mountainsRightBack.rotation.y = -Math.PI / 2; // Orientada hacia el centro
@@ -2681,15 +3416,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(mountainsRightBack);
       this.disposable.push(geometryRightBack, materialRightBack);
 
-      // Capa Derecha Delantera (Más bajas!)
+      const materialRightFront = registerMountainMaterial(0x1e3046);
       const geometryRightFront = new THREE.PlaneGeometry(160, 20);
-      const materialRightFront = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x1e3046,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsRightFront = new THREE.Mesh(geometryRightFront, materialRightFront);
       mountainsRightFront.position.set(68, 7.0, -10);
       mountainsRightFront.rotation.y = -Math.PI / 2;
@@ -2698,15 +3426,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.disposable.push(geometryRightFront, materialRightFront);
 
       // --- CAPAS TRASERAS/REAR DE MONTAÑAS (En la parte de atrás del mapa, Z = 78) ---
-      // Capa Trasera Rear (Back)
+      const materialRearBack = registerMountainMaterial(0x142030);
       const geometryRearBack = new THREE.PlaneGeometry(160, 26);
-      const materialRearBack = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x142030,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsRearBack = new THREE.Mesh(geometryRearBack, materialRearBack);
       mountainsRearBack.position.set(0, 10.0, 78);
       mountainsRearBack.rotation.y = Math.PI; // Orientada hacia el centro
@@ -2714,15 +3435,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.scene!.add(mountainsRearBack);
       this.disposable.push(geometryRearBack, materialRearBack);
 
-      // Capa Trasera Rear (Front)
+      const materialRearFront = registerMountainMaterial(0x22354c);
       const geometryRearFront = new THREE.PlaneGeometry(160, 22);
-      const materialRearFront = new THREE.MeshBasicMaterial({
-        map: alphaTexture,
-        transparent: true,
-        color: 0x22354c,
-        side: THREE.DoubleSide,
-        depthWrite: false
-      });
       const mountainsRearFront = new THREE.Mesh(geometryRearFront, materialRearFront);
       mountainsRearFront.position.set(-15, 8.0, 68);
       mountainsRearFront.rotation.y = Math.PI;
@@ -2739,8 +3453,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.addBox([2.3, 0.8, 0.16], [x, 4.5, -40.8], 0x93a7b7, { opacity: 0.46, metalness: 0.08 });
     }
 
-    // Cargar la antena parabólica 3D real provista por el usuario y colocarla en el pasto
-    this.loadSceneAsset('/models/environment/parabolic_antenna.glb', (model) => {
+    // Cargar la antena parabÃ³lica 3D real provista por el usuario y colocarla en el pasto
+    this.loadSceneAsset('/models-optimized/environment/parabolic_antenna.glb', (model) => {
       this.fitModelToHeight(model, 3.2);
       this.centerModelPivot(model);
       
@@ -2757,7 +3471,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.addLampPost(6.2, z - 4);
     }
 
-    // Colocar faroles estratégicos de alta fidelidad 3D en zonas clave
+    // Colocar faroles estratÃ©gicos de alta fidelidad 3D en zonas clave
     this.addStrategicLantern(-11.0, -13.5, 0);       // Cerca del mostrador del kiosco (Hilda)
     this.addStrategicLantern(5.0, -2.0, Math.PI);      // Cerca del sendero de la plaza UTN
   }
@@ -2785,7 +3499,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     bulb.position.set(x, 3.45, z);
     this.scene!.add(bulb);
 
-    // Luz real del farol (cálida e iluminadora, empieza en 0 y se actualiza dinámicamente)
+    // Luz real del farol (cÃ¡lida e iluminadora, empieza en 0 y se actualiza dinÃ¡micamente)
     const light = new THREE.PointLight(0xfff1a6, 0.0, 15);
     light.position.set(x, 3.45, z);
     light.castShadow = false;
@@ -2795,7 +3509,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private addStrategicLantern(x: number, z: number, rotationY: number) {
-    this.loadSceneAsset('/models/environment/street_lantern.glb', (model) => {
+    this.loadSceneAsset('/models-optimized/environment/street_lantern.glb', (model) => {
       this.fitModelToHeight(model, 3.8);
       this.centerModelPivot(model);
       
@@ -2805,7 +3519,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       
       this.scene!.add(model);
 
-      // Travesía para clonar y guardar los materiales emisivos de la linterna y así hacerlos brillar de noche
+      // TravesÃ­a para clonar y guardar los materiales emisivos de la linterna y asÃ­ hacerlos brillar de noche
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (child.material) {
@@ -2817,10 +3531,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
 
-      // Luz real del farol (cálida e iluminadora, empieza en 0 y se actualiza dinámicamente)
+      // Luz real del farol (cÃ¡lida e iluminadora, empieza en 0 y se actualiza dinÃ¡micamente)
       const light = new THREE.PointLight(0xfff1a6, 0.0, 15);
       light.position.set(x, 3.4, z);
-      light.castShadow = false; // Optimización de rendimiento
+      light.castShadow = false; // OptimizaciÃ³n de rendimiento
       this.scene!.add(light);
       
       this.lampLights.push(light);
@@ -2828,7 +3542,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private createAmbientPokemon() {
-    this.loadSceneAsset('/models/characters/bulbasaur_pokemon_animated.glb', (model, animations) => {
+    this.loadSceneAsset('/models-optimized/characters/bulbasaur_pokemon_animated.glb', (model, animations) => {
       model.position.set(8, 0, 8);
       model.scale.setScalar(0.55);
       model.rotation.y = -0.8;
@@ -2849,7 +3563,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       (gltf) => {
         const model = gltf.scene;
         
-        // Eliminar luces o cámaras del archivo GLTF para no interferir con las bounding boxes de Three.js
+        // Eliminar luces o cÃ¡maras del archivo GLTF para no interferir con las bounding boxes de Three.js
         const toRemove: THREE.Object3D[] = [];
         model.traverse((child) => {
           if (
@@ -2886,7 +3600,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pikachu = companion;
     this.nextPikachuChirpAt = 1.2;
 
-    this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
+    this.loadSceneAsset('/models-optimized/characters/pikachu.glb', (model, animations) => {
       model.scale.setScalar(0.42);
       model.rotation.y = Math.PI;
       this.centerModelPivot(model);
@@ -2899,8 +3613,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setNpcAnimation(npc: CampusNpc, hints: string[], fade = 0.18) {
-    const action = Array.from(npc.actions.entries())
-      .find(([name]) => hints.some((hint) => name.includes(hint.toLowerCase())))?.[1];
+    let action: THREE.AnimationAction | undefined;
+    for (const hint of hints) {
+      const entry = Array.from(npc.actions.entries())
+        .find(([name]) => name.includes(hint.toLowerCase()));
+      if (entry) {
+        action = entry[1];
+        break;
+      }
+    }
 
     if (!action || action === npc.active) return;
     action.reset().fadeIn(fade).play();
@@ -2925,7 +3646,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const distToPlayer = root.position.distanceTo(this.player.position);
     
-    // Teletransportar a Pikachu detrás del jugador si se aleja excesivamente (distToPlayer > 12.0)
+    // Teletransportar a Pikachu detrÃ¡s del jugador si se aleja excesivamente (distToPlayer > 12.0)
     if (distToPlayer > 12.0) {
       const behind = new THREE.Vector3(
         Math.sin(this.player.rotation.y + 0.65),
@@ -2954,11 +3675,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       idleTimer = 1.5 + Math.random() * 2.0; // Esperar antes de merodear
     }
 
-    // Lógica y velocidad según el estado actual
+    // LÃ³gica y velocidad segÃºn el estado actual
     let speed = 0;
 
     if (state === 'following') {
-      // Seguir al jugador colocándose en una posición diagonal/atrás
+      // Seguir al jugador colocÃ¡ndose en una posiciÃ³n diagonal/atrÃ¡s
       const behind = new THREE.Vector3(
         Math.sin(this.player.rotation.y + 0.65),
         0,
@@ -2966,12 +3687,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       target = this.player.position.clone().addScaledVector(behind, 1.85);
       
-      // Correr si el jugador está acelerando (Shift presionado)
+      // Correr si el jugador estÃ¡ acelerando (Shift presionado)
       const isRunning = this.keys.has('shift');
       speed = isRunning ? 7.6 : 4.4;
     } else if (state === 'idle') {
       speed = 0;
-      target = root.position.clone(); // Quedarse en la posición actual
+      target = root.position.clone(); // Quedarse en la posiciÃ³n actual
       
       if (idleTimer > 0) {
         idleTimer -= delta;
@@ -2991,7 +3712,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       
       const distanceToWanderTarget = root.position.distanceTo(target);
       if (distanceToWanderTarget < 0.25 || distToPlayer > 3.4) {
-        // Llegó al punto de merodeo o se alejó mucho del jugador, volver a reposo
+        // LlegÃ³ al punto de merodeo o se alejÃ³ mucho del jugador, volver a reposo
         state = 'idle';
         idleTimer = 2.5 + Math.random() * 3.5;
         target = root.position.clone();
@@ -3004,7 +3725,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     root.userData['targetPos'] = target;
     root.userData['idleTimer'] = idleTimer;
 
-    // Movimiento físico y rotación suave con amortiguador de histeresis para evitar resets de animación
+    // Movimiento fÃ­sico y rotaciÃ³n suave con amortiguador de histeresis para evitar resets de animaciÃ³n
     const distToTarget = root.position.distanceTo(target);
     let isMoving = root.userData['isMoving'] || false;
     if (distToTarget > 0.55) {
@@ -3021,7 +3742,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       moveDir.y = 0;
       moveDir.normalize();
 
-      // Rotar suavemente hacia la dirección de movimiento para que no rote bruscamente (con desfase Math.PI del modelo)
+      // Rotar suavemente hacia la direcciÃ³n de movimiento para que no rote bruscamente (con desfase Math.PI del modelo)
       const targetRotation = Math.atan2(moveDir.x, moveDir.z) + Math.PI;
       
       // Evitar rotaciones bruscas de 360 grados
@@ -3030,7 +3751,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       while (diff > Math.PI) diff -= Math.PI * 2;
       root.rotation.y += diff * (1 - Math.pow(0.0001, delta));
 
-      // Desplazarse suavemente hacia la dirección de movimiento
+      // Desplazarse suavemente hacia la direcciÃ³n de movimiento
       const step = speed * delta;
       if (distToTarget > step) {
         root.position.addScaledVector(moveDir, step);
@@ -3040,10 +3761,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         root.userData['isMoving'] = false;
       }
 
-      // Elegir animación adecuada según velocidad
+      // Elegir animaciÃ³n adecuada segÃºn velocidad
       this.setNpcAnimation(this.pikachu, speed > 4.8 ? ['run', 'running', 'walk', 'walking'] : ['walk', 'walking']);
     } else {
-      // Mirar suavemente hacia el jugador cuando está ocioso
+      // Mirar suavemente hacia el jugador cuando estÃ¡ ocioso
       const lookDir = this.player.position.clone().sub(root.position);
       lookDir.y = 0;
       if (lookDir.lengthSq() > 0.05) {
@@ -3062,13 +3783,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private updateKioskVendor(delta: number) {
     if (!this.kioskVendor) return;
 
-    this.kioskVendor.mixer?.update(delta);
-    const distance = this.player.position.distanceTo(new THREE.Vector3(-18, 0, -18));
-    const lookTarget = this.vendorCameraFocus ? new THREE.Vector3(-10.4, 0, -9.2) : this.player.position;
+    const dx = this.player.position.x + 18;
+    const dz = this.player.position.z + 18;
+    const distanceSq = dx * dx + dz * dz;
+    if (distanceSq < 18 * 18 || this.kioskShopOpen) {
+      this.ensureDetailedKioskProductsLoaded();
+    }
+    const farFromKiosk = distanceSq > 22 * 22;
+    if (!farFromKiosk || this.frameCounter % 4 === 0) {
+      this.kioskVendor.mixer?.update(delta * (farFromKiosk ? 4 : 1));
+    }
+
+    const lookTarget = this.vendorCameraFocus
+      ? this.tempLookAt.set(-10.4, this.kioskVendor.root.position.y, -9.2)
+      : this.player.position;
     this.kioskVendor.root.lookAt(lookTarget.x, this.kioskVendor.root.position.y, lookTarget.z);
     
-    // Si el menú del kiosco está abierto (decidiendo qué comprar)
-    if (this.kioskShopOpen) {
+    // Si el menú del kiosco está abierto o dialogando (decidiendo qué comprar / hablando)
+    if (this.kioskShopOpen || this.kiosqueraDialogOpen) {
       const activeName = this.kioskVendor.active ? 
         Array.from(this.kioskVendor.actions.entries()).find(([_, act]) => act === this.kioskVendor!.active)?.[0] : '';
       
@@ -3077,14 +3809,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         return;
       }
       
-      // De lo contrario, loops speak_1
+      // De lo contrario, loops speak_1 (hablando)
       this.setNpcAnimation(this.kioskVendor, ['speak_1']);
       return;
     }
 
     if (this.currentInteraction?.id === 'packs') {
       this.setNpcAnimation(this.kioskVendor, ['speak_1', 'greeting_1']);
-    } else if (distance < 7) {
+    } else if (distanceSq < 7 * 7) {
       this.setNpcAnimation(this.kioskVendor, ['greeting_1', 'wave_1', 'idle']);
     } else {
       this.setNpcAnimation(this.kioskVendor, ['idle']);
@@ -3254,7 +3986,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.player.clear();
     this.createFallbackTrainerAvatar();
 
-    const loader = new GLTFLoader(this.hubLoadingManager);
+    const loader = this.createGltfLoader(this.hubLoadingManager);
     loader.load(
       option.path,
       (gltf) => {
@@ -3273,7 +4005,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         });
 
-        // Aplicar personalización de rasgos (piel, pelo, ojos, altura)
+        // Aplicar personalizaciÃ³n de rasgos (piel, pelo, ojos, altura)
         this.applyCharacterCustomizations(model);
         this.normalizeVisibleCharacterHeight(model, 1.72 * this.normalizeHeight(parseFloat(localStorage.getItem('lobbyHeight') || '1.0')));
 
@@ -3453,44 +4185,61 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private createTexturedCard(texturePath: string, width = 0.72, height = 1.0): THREE.Mesh {
-    const texture = new THREE.TextureLoader().load(texturePath);
+  private getCachedTexture(path: string): THREE.Texture {
+    const cached = this.textureCache.get(path);
+    if (cached) return cached;
+
+    const texture = this.textureLoader.load(path);
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = this.getRuntimeAnisotropy();
+    texture.generateMipmaps = true;
+    this.textureCache.set(path, texture);
+    this.disposable.push(texture);
+    return texture;
+  }
+
+  private getCachedPlaneGeometry(width: number, height: number): THREE.PlaneGeometry {
+    const key = `${width.toFixed(3)}x${height.toFixed(3)}`;
+    const cached = this.planeGeometryCache.get(key);
+    if (cached) return cached;
 
     const geometry = new THREE.PlaneGeometry(width, height);
+    this.planeGeometryCache.set(key, geometry);
+    this.disposable.push(geometry);
+    return geometry;
+  }
+
+  private getCachedCardMaterial(texturePath: string, emissive = 0x000000, emissiveIntensity = 0): THREE.MeshStandardMaterial {
+    const key = `${texturePath}|${emissive}|${emissiveIntensity}`;
+    const cached = this.cardMaterialCache.get(key);
+    if (cached) return cached;
+
     const material = new THREE.MeshStandardMaterial({
-      map: texture,
+      map: this.getCachedTexture(texturePath),
       color: 0xffffff,
       side: THREE.DoubleSide,
-      roughness: 0.34,
-      metalness: 0.04
+      roughness: emissiveIntensity ? 0.28 : 0.34,
+      metalness: emissiveIntensity ? 0.08 : 0.04,
+      emissive,
+      emissiveIntensity
     });
+    this.cardMaterialCache.set(key, material);
+    this.disposable.push(material);
+    return material;
+  }
 
-    const card = new THREE.Mesh(geometry, material);
-    this.disposable.push(geometry, material, texture);
-    return card;
+  private createTexturedCard(texturePath: string, width = 0.72, height = 1.0): THREE.Mesh {
+    return new THREE.Mesh(
+      this.getCachedPlaneGeometry(width, height),
+      this.getCachedCardMaterial(texturePath)
+    );
   }
 
   private createPackMesh(width = 0.92, height = 1.22): THREE.Mesh {
-    const texture = new THREE.TextureLoader().load('/images/cards/sobre.png');
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = this.getRuntimeAnisotropy();
-
-    const geometry = new THREE.PlaneGeometry(width, height);
-    const material = new THREE.MeshStandardMaterial({
-      map: texture,
-      color: 0xffffff,
-      side: THREE.DoubleSide,
-      roughness: 0.28,
-      metalness: 0.08,
-      emissive: 0x10351e,
-      emissiveIntensity: 0.18
-    });
-
-    const pack = new THREE.Mesh(geometry, material);
-    this.disposable.push(geometry, material, texture);
-    return pack;
+    return new THREE.Mesh(
+      this.getCachedPlaneGeometry(width, height),
+      this.getCachedCardMaterial('/images/cards/sobre.png', 0x10351e, 0.18)
+    );
   }
 
   private decorateSpot(spot: HubSpot, group: THREE.Group) {
@@ -3524,6 +4273,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    if (spot.id === 'santoro') {
+      const deskGeometry = new THREE.BoxGeometry(1.55, 0.28, 0.82);
+      const desk = new THREE.Mesh(deskGeometry, colorMaterial);
+      desk.position.set(0, 0.72, 0.12);
+      desk.castShadow = true;
+      desk.receiveShadow = true;
+      group.add(desk);
+      this.disposable.push(deskGeometry);
+
+      const pack = this.createPackMesh(0.38, 0.52);
+      pack.position.set(-0.38, 0.98, -0.02);
+      pack.rotation.set(-Math.PI / 2, 0.25, 0);
+      group.add(pack);
+      return;
+    }
+
     const tableGeometry = new THREE.BoxGeometry(1.85, 0.25, 1.05);
     const table = new THREE.Mesh(tableGeometry, colorMaterial);
     table.position.y = 0.85;
@@ -3551,7 +4316,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       card.position.set(Math.cos(angle) * radius, 1.6 + (i % 4) * 0.42, Math.sin(angle) * radius - 9);
       card.rotation.set(Math.random(), angle, Math.random() * 0.5);
       card.userData = { angle, radius, speed: 0.06 + (i % 6) * 0.018, y: card.position.y, orbitalOffset: -5 };
-      card.castShadow = true;
+      card.castShadow = this.graphicsQuality === 'high';
       this.worldObjects.push(card);
       this.scene.add(card);
     }
@@ -3560,6 +4325,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private animateHub() {
     this.animationId = requestAnimationFrame(() => this.animateHub());
     if (!this.renderer || !this.scene || !this.camera) return;
+    if (!this.pageVisible) {
+      this.clock.getDelta();
+      return;
+    }
 
     const delta = Math.min(this.clock.getDelta(), 0.05);
     const elapsed = this.clock.elapsedTime;
@@ -3568,6 +4337,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateDebugStats(delta);
     const overlayPressure = this.deckBuilderOpen || this.activeTradeSession || this.kioskShopOpen || this.mostrarAnimacionSobre;
     const reduceDecorativeWork = overlayPressure || this.adaptivePixelRatioScale < 0.9;
+    const renderThisFrame = !reduceDecorativeWork || this.frameCounter % 2 === 0;
 
     this.playerMixer?.update(delta);
     if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
@@ -3576,7 +4346,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePlayer(delta);
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
+    this.updateSantoroNpc(delta);
+    this.updateSantoroPathArrows(elapsed);
     this.updateLobbyAudio(delta);
+    this.updateRemoteDetailBudget();
 
     this.updateDayNightCycle(elapsed);
     if (!reduceDecorativeWork || this.frameCounter % 2 === 0) {
@@ -3594,9 +4367,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updateOtherPlayers(delta);
     this.updateLocalPlayerBubbleProjection();
     this.updateInteractionState();
+    if (this.santoroQuestTracking && !this.santoroGiftClaimed && this.frameCounter % 45 === 0) {
+      this.updateSantoroQuestPath();
+    }
 
     this.checkAndSendMove();
-    this.renderer.render(this.scene, this.camera);
+    if (renderThisFrame) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 
   private updateDebugStats(delta: number) {
@@ -3723,7 +4501,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.audioEnabled || !this.sfxEnabled || !this.audioContext || !this.sfxGain) return;
 
     const speedSq = this.playerVelocity.lengthSq();
-    const isMoving = speedSq > 0.18 && !this.kioskShopOpen && !this.deckBuilderOpen;
+    const isMoving = speedSq > 0.18 && !this.kioskShopOpen && !this.deckBuilderOpen && !this.santoroDialogOpen && !this.kiosqueraDialogOpen;
     if (isMoving) {
       const running = this.localAnimationState === 'running';
       this.footstepClock -= delta;
@@ -3742,9 +4520,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.nextPikachuChirpAt = 4 + Math.random() * 6;
     }
 
+    this.remoteAudioCheckClock -= delta;
+    if (this.remoteAudioCheckClock > 0) return;
+    const remoteDelta = Math.max(delta, 0.5);
+    this.remoteAudioCheckClock = 0.5;
+
     this.otherPlayers.forEach((other) => {
       if (!other.pikachu) return;
-      const current = (this.remotePikachuChirpTimers.get(other.username) ?? (5 + Math.random() * 8)) - delta;
+      const current = (this.remotePikachuChirpTimers.get(other.username) ?? (5 + Math.random() * 8)) - remoteDelta;
       if (current <= 0) {
         const distance = other.pikachu.root.position.distanceTo(this.player.position);
         if (distance < 10) this.playPikachuChirp(other.pikachu.root.position, true);
@@ -3829,7 +4612,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private updatePlayer(delta: number) {
-    if (this.kioskShopOpen || this.deckBuilderOpen) {
+    if (this.kioskShopOpen || this.deckBuilderOpen || this.santoroDialogOpen || this.kiosqueraDialogOpen) {
       this.playerVelocity.set(0, 0, 0);
       this.setPlayerAnimation('idle');
       return;
@@ -3865,14 +4648,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const move = analogMove !== 0 ? analogMove : keyboardMove;
     this.playerVelocity.lerp(direction.multiplyScalar(move * walkSpeed), 0.18);
 
-    // Guardar posición anterior para resolver colisiones
+    // Guardar posiciÃ³n anterior para resolver colisiones
     const oldX = this.player.position.x;
     const oldZ = this.player.position.z;
 
     // Mover temporalmente en X y Z
     this.player.position.addScaledVector(this.playerVelocity, delta);
 
-    // Cajas delimitadoras de colisión para los edificios (UTN, torre de vidrio, kiosco, fondo)
+    // Cajas delimitadoras de colisiÃ³n para los edificios (UTN, torre de vidrio, kiosco, fondo)
     const collisionBoxes = [
       { minX: 11.2, maxX: 31.0, minZ: -36.0, maxZ: 20.0 }, // Edificio Principal UTN
       { minX: 6.5, maxX: 12.3, minZ: -29.0, maxZ: -21.0 }, // Torre de Vidrio
@@ -3933,7 +4716,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateHubObjects(elapsed: number) {
     this.worldObjects.forEach((object) => {
-      if (object instanceof THREE.Mesh && object.userData['radius']) {
+      if (object.name.startsWith('OptimizedCloud_')) {
+        // Viento/Deriva orbital lento: avanzan de forma continua
+        const angle = object.userData['angle'] + elapsed * 0.05 * object.userData['speed'];
+        object.position.x = Math.cos(angle) * object.userData['radius'];
+        object.position.z = Math.sin(angle) * object.userData['radius'] - 8;
+        // Balanceo vertical sutilísimo tipo flotación
+        object.position.y = object.userData['y'] + Math.sin(elapsed * 0.4 + object.userData['angle']) * 0.38;
+        // Rotación local sumamente lenta (sólo cambia de orientación imperceptiblemente)
+        object.rotation.y = angle * 0.08;
+      } else if (object instanceof THREE.Mesh && object.userData['radius']) {
+        const dx = object.position.x - this.player.position.x;
+        const dz = object.position.z - this.player.position.z;
+        const farDecor = dx * dx + dz * dz > 1600;
+        object.visible = !farDecor || this.graphicsQuality === 'high';
+        if (!object.visible) return;
+
         const angle = object.userData['angle'] + elapsed * object.userData['speed'];
         object.position.x = Math.cos(angle) * object.userData['radius'];
         object.position.z = Math.sin(angle) * object.userData['radius'] + (object.userData['orbitalOffset'] ?? -2);
@@ -3943,6 +4741,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       } else if (object.userData['spin']) {
         object.rotation.y += object.userData['spin'] * 0.01;
       } else if (object instanceof THREE.Group) {
+        if (this.adaptivePixelRatioScale < 0.85 && this.frameCounter % 4 !== 0) return;
         object.rotation.y += 0.006;
         object.children.forEach((child, index) => {
           child.position.y += Math.sin(elapsed * 2.2 + index) * 0.0008;
@@ -3958,43 +4757,58 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       // Hermoso plano medio corto de primer plano frente al jugador para personalizarlo en tiempo real!
       const angle = this.player.rotation.y + Math.PI; // Enfocar de frente
       const previewDistance = 1.95;
-      const targetPosition = this.player.position.clone().add(new THREE.Vector3(
-        Math.sin(angle) * previewDistance,
-        1.15,
-        Math.cos(angle) * previewDistance
-      ));
-      const lookAt = this.player.position.clone().add(new THREE.Vector3(0, 0.88, 0));
+      const targetPosition = this.tempVec3.set(
+        this.player.position.x + Math.sin(angle) * previewDistance,
+        this.player.position.y + 1.15,
+        this.player.position.z + Math.cos(angle) * previewDistance
+      );
+      const lookAt = this.tempVec3b.set(this.player.position.x, this.player.position.y + 0.88, this.player.position.z);
       
       this.camera.position.lerp(targetPosition, 1 - Math.pow(0.0005, delta));
       this.camera.lookAt(lookAt);
       return;
     }
 
+    if (this.santoroDialogOpen && this.santoroNpc) {
+      // Zoom cinematográfico dinámico sobre Santoro de cara a su rotación
+      const npcPos = this.santoroNpc.root.position;
+      const angle = this.santoroNpc.root.rotation.y;
+      const camDistance = 1.65; // Distancia media corta premium
+      const targetPosition = this.tempVec3.set(
+        npcPos.x + Math.sin(angle) * camDistance,
+        npcPos.y + 1.54,
+        npcPos.z + Math.cos(angle) * camDistance
+      );
+      const lookAt = this.tempVec3b.set(npcPos.x, npcPos.y + 1.44, npcPos.z);
+
+      this.camera.position.lerp(targetPosition, 1 - Math.pow(0.0005, delta));
+      this.camera.lookAt(lookAt);
+      return;
+    }
+
     if (this.vendorCameraFocus) {
-      // Apuntar al centro de Hilda re-ubicada en X=-19.6 para que no la tape la estantería
-      const targetPosition = new THREE.Vector3(-17.8, 1.8, -14.5);
-      const lookAt = new THREE.Vector3(-19.6, 1.5, -17.2);
+      // Apuntar al centro de Hilda re-ubicada en X=-19.6 para que no la tape la estanterÃ­a
+      const targetPosition = this.tempVec3.set(-17.8, 1.8, -14.5);
+      const lookAt = this.tempVec3b.set(-19.6, 1.5, -17.2);
       this.camera.position.lerp(targetPosition, 1 - Math.pow(0.0008, delta));
       this.camera.lookAt(lookAt);
       return;
     }
 
-    // Calcular órbita de cámara basándose en la rotación del jugador + desvío por arrastre del mouse (Yaw)
+    // Calcular Ã³rbita de cÃ¡mara basÃ¡ndose en la rotaciÃ³n del jugador + desvÃ­o por arrastre del mouse (Yaw)
     const baseAngle = this.player.rotation.y;
     const finalYaw = baseAngle + this.cameraOrbitYaw;
 
-    // Calcular la posición esférica del offset de la cámara según Yaw y Pitch
+    // Calcular la posiciÃ³n esfÃ©rica del offset de la cÃ¡mara segÃºn Yaw y Pitch
     const horizontalDistance = this.cameraZoomDistance * Math.cos(this.cameraOrbitPitch);
     const verticalDistance = this.cameraZoomDistance * Math.sin(this.cameraOrbitPitch);
 
-    const behind = new THREE.Vector3(
-      Math.sin(finalYaw) * horizontalDistance,
-      verticalDistance,
-      Math.cos(finalYaw) * horizontalDistance
+    const targetPosition = this.tempVec3.set(
+      this.player.position.x + Math.sin(finalYaw) * horizontalDistance,
+      this.player.position.y + verticalDistance,
+      this.player.position.z + Math.cos(finalYaw) * horizontalDistance
     );
-
-    const targetPosition = this.player.position.clone().add(behind);
-    const lookAt = this.player.position.clone().add(new THREE.Vector3(0, 1.55, 0));
+    const lookAt = this.tempVec3b.set(this.player.position.x, this.player.position.y + 1.55, this.player.position.z);
 
     this.camera.position.lerp(targetPosition, 1 - Math.pow(0.001, delta));
     this.camera.lookAt(lookAt);
@@ -4005,18 +4819,25 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     let closestId: HubSpot['id'] | null = null;
     let minDistance = Number.POSITIVE_INFINITY;
-    const player2D = new THREE.Vector2(this.player.position.x, this.player.position.z);
+    const playerX = this.player.position.x;
+    const playerZ = this.player.position.z;
 
     this.hubSpots.forEach((spot) => {
-      const dist = player2D.distanceTo(new THREE.Vector2(spot.position.x, spot.position.z));
+      const dx = playerX - spot.position.x;
+      const dz = playerZ - spot.position.z;
+      const dist = Math.hypot(dx, dz);
       if (dist < 3.6 && dist < minDistance) {
         minDistance = dist;
         closestId = spot.id;
       }
 
-      const projected = spot.position.clone().add(new THREE.Vector3(0, 2.3, 0)).project(this.camera!);
-      spot.screenX = (projected.x * 0.5 + 0.5) * 100;
-      spot.screenY = (-projected.y * 0.5 + 0.5) * 100;
+      if (this.frameCounter % 2 === 0 || closestId === spot.id) {
+        this.tempVec3.copy(spot.position);
+        this.tempVec3.y += 2.3;
+        this.tempVec3.project(this.camera!);
+        spot.screenX = (this.tempVec3.x * 0.5 + 0.5) * 100;
+        spot.screenY = (-this.tempVec3.y * 0.5 + 0.5) * 100;
+      }
     });
 
     const closest = closestId ? this.hubSpots.find((spot) => spot.id === closestId) ?? null : null;
@@ -4025,6 +4846,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.lastInteractionId = nextId;
       this.ngZone.run(() => {
         this.currentInteraction = closest;
+        if (nextId === 'santoro' && this.santoroQuestTracking) {
+          this.stopSantoroTracking();
+        }
         this.cdr.detectChanges();
       });
     }
@@ -4047,7 +4871,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.socket = new WebSocket(wsUrl);
 
       this.socket.onopen = () => {
-        console.log('Conexión WebSocket establecida con éxito.');
+        console.log('ConexiÃ³n WebSocket establecida con Ã©xito.');
         if (this.personalizationSynced) {
           this.sendJoinMessage();
         }
@@ -4061,7 +4885,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.socket.onclose = () => {
         if (this.lobbyDestroyed) return;
-        console.warn('Conexión WebSocket cerrada. Reintentando en 5 segundos...');
+        console.warn('ConexiÃ³n WebSocket cerrada. Reintentando en 5 segundos...');
         this.reconnectTimeout = setTimeout(() => this.connectWebSocket(), 5000);
       };
 
@@ -4114,7 +4938,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN || !this.jugador?.username) return;
 
     const now = performance.now();
-    if (now - this.lastMoveSentTime < 45) return;
+    const minMoveInterval = this.isMobileViewport || this.adaptivePixelRatioScale < 0.9 ? 70 : 45;
+    if (now - this.lastMoveSentTime < minMoveInterval) return;
 
     const isMoving = this.playerVelocity.lengthSq() > 0.001 || Math.abs(this.player.rotation.y - this.lastSentRotY) > 0.01;
     if (!isMoving && this.localAnimationState === 'idle' && this.lastSentAnimation === 'idle') {
@@ -4213,23 +5038,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       actions: new Map(),
       targetPosition: new THREE.Vector3(msg.x, this.getGroundHeightAt(Number(msg.x), Number(msg.z)) + this.groundLift, msg.z),
       targetRotationY: msg.rotY,
-      currentAnimation: msg.animation || 'idle'
+      currentAnimation: msg.animation || 'idle',
+      highDetailActive: false
     };
 
     this.createFallbackOtherPlayerAvatar(otherPlayer);
     this.otherPlayers.set(username, otherPlayer);
-    this.loadOtherPlayerModel(otherPlayer);
-
-    if (otherPlayer.pikachuEnabled) {
-      this.createOtherPlayerPikachu(otherPlayer);
-    }
+    this.updateRemoteDetailBudget(true);
   }
 
   private loadOtherPlayerModel(p: OtherPlayerNPC) {
+    if (p.fullModelLoaded || p.fullModelLoading) return;
+    p.fullModelLoading = true;
     p.characterId = this.normalizeCharacterId(p.characterId);
     p.height = this.normalizeHeight(Number(p.height));
     const option = this.characterOptions.find((item) => item.id === p.characterId) || this.characterOptions[0];
-    const loader = new GLTFLoader(this.remoteAvatarLoadingManager);
+    const loader = this.createGltfLoader(this.remoteAvatarLoadingManager);
     loader.load(
       option.path,
       (gltf) => {
@@ -4238,8 +5062,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        // Limpiar fallback/previo
-        p.root.clear();
+        if (p.modelGroup) {
+          p.root.remove(p.modelGroup);
+        }
 
         const model = gltf.scene;
         model.name = 'AnimatedOtherPlayerAsset';
@@ -4260,6 +5085,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         p.root.add(model);
         p.modelGroup = model;
         p.mixer = new THREE.AnimationMixer(model);
+        p.fullModelLoaded = true;
+        p.fullModelLoading = false;
+        p.fallbackGroup && (p.fallbackGroup.visible = false);
+        p.modelGroup.visible = p.highDetailActive !== false;
         p.actions.clear();
 
         gltf.animations.forEach((clip) => {
@@ -4271,6 +5100,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       undefined,
       (error) => {
+        p.fullModelLoading = false;
         console.warn('No se pudo cargar el player GLB de ' + p.username, error);
       }
     );
@@ -4349,6 +5179,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private createFallbackOtherPlayerAvatar(p: OtherPlayerNPC) {
+    if (p.fallbackGroup) {
+      p.fallbackGroup.visible = !p.modelGroup?.visible;
+      return;
+    }
+    const fallback = new THREE.Group();
+    p.fallbackGroup = fallback;
+    p.root.add(fallback);
+
     const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.42, metalness: 0.12 });
     const jacketMaterial = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.38 });
     const capMaterial = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.35 });
@@ -4358,48 +5196,48 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.38, 0.78, 8, 18), bodyMaterial);
     body.position.y = 1.05;
     body.castShadow = true;
-    p.root.add(body);
+    fallback.add(body);
     this.disposable.push(body.geometry);
 
     const chest = new THREE.Mesh(new THREE.BoxGeometry(0.86, 0.5, 0.18), jacketMaterial);
     chest.position.set(0, 1.16, 0.28);
     chest.castShadow = true;
-    p.root.add(chest);
+    fallback.add(chest);
     this.disposable.push(chest.geometry);
 
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 24, 18), new THREE.MeshStandardMaterial({ color: p.skinColor || '#ffd2a6', roughness: 0.52 }));
     head.position.y = 1.78;
     head.castShadow = true;
-    p.root.add(head);
+    fallback.add(head);
     this.disposable.push(head.geometry, head.material as THREE.Material);
 
     const cap = new THREE.Mesh(new THREE.SphereGeometry(0.31, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2), capMaterial);
     cap.position.y = 1.89;
     cap.rotation.x = -0.08;
     cap.castShadow = true;
-    p.root.add(cap);
+    fallback.add(cap);
     this.disposable.push(cap.geometry);
 
     const brim = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.06, 0.28), capMaterial);
     brim.position.set(0, 1.87, 0.24);
     brim.castShadow = true;
-    p.root.add(brim);
+    fallback.add(brim);
     this.disposable.push(brim.geometry);
 
     const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.72, 0.2), darkMaterial);
     backpack.position.set(0, 1.12, -0.35);
     backpack.castShadow = true;
-    p.root.add(backpack);
+    fallback.add(backpack);
     this.disposable.push(backpack.geometry);
 
     const legGeometry = new THREE.CapsuleGeometry(0.12, 0.48, 6, 10);
     const leftLeg = new THREE.Mesh(legGeometry, darkMaterial);
     leftLeg.position.set(-0.17, 0.42, 0);
     leftLeg.castShadow = true;
-    p.root.add(leftLeg);
+    fallback.add(leftLeg);
     const rightLeg = leftLeg.clone();
     rightLeg.position.x = 0.17;
-    p.root.add(rightLeg);
+    fallback.add(rightLeg);
     this.disposable.push(legGeometry);
   }
 
@@ -4412,7 +5250,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const companion: CampusNpc = { root, actions: new Map() };
     p.pikachu = companion;
 
-    this.loadSceneAsset('/models/characters/pikachu.glb', (model, animations) => {
+    this.loadSceneAsset('/models-optimized/characters/pikachu.glb', (model, animations) => {
       if (!this.otherPlayers.has(p.username)) {
         model.clear();
         this.scene?.remove(root);
@@ -4453,12 +5291,23 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       p.hairColor = msg.hairColor || '#5c4033';
       p.eyeColor = msg.eyeColor || '#2563eb';
       p.height = this.normalizeHeight(Number(msg.height));
-      this.loadOtherPlayerModel(p);
+      if (p.modelGroup) {
+        p.root.remove(p.modelGroup);
+        p.modelGroup = undefined;
+      }
+      p.mixer?.stopAllAction();
+      p.mixer = undefined;
+      p.actions.clear();
+      p.active = undefined;
+      p.fullModelLoaded = false;
+      p.fullModelLoading = false;
+      this.createFallbackOtherPlayerAvatar(p);
+      this.updateRemoteDetailBudget(true);
     }
 
     if (p.pikachuEnabled !== msg.pikachuCompanion) {
       p.pikachuEnabled = msg.pikachuCompanion;
-      if (p.pikachuEnabled) {
+      if (p.pikachuEnabled && this.shouldAllowRemoteCompanion(p)) {
         this.createOtherPlayerPikachu(p);
       } else if (p.pikachu) {
         this.scene?.remove(p.pikachu.root);
@@ -4474,6 +5323,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setOtherPlayerAnimation(p: OtherPlayerNPC, preferred: 'idle' | 'walking' | 'running', fade = 0.22) {
+    if (!p.highDetailActive) return;
     if (p.isPlayingEmote) {
       if (preferred === 'idle') {
         return;
@@ -4510,6 +5360,68 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     p.active = action;
   }
 
+  private getRemoteFullModelBudget(): number {
+    if (this.graphicsQuality === 'low') return this.isMobileViewport ? 1 : 3;
+    if (this.adaptivePixelRatioScale < 0.82) return this.isMobileViewport ? 1 : 2;
+    if (this.graphicsQuality === 'medium') return this.isMobileViewport ? 2 : 5;
+    return this.isMobileViewport ? 3 : 8;
+  }
+
+  private getRemoteDistanceSq(p: OtherPlayerNPC): number {
+    const dx = p.root.position.x - this.player.position.x;
+    const dz = p.root.position.z - this.player.position.z;
+    return dx * dx + dz * dz;
+  }
+
+  private shouldAllowRemoteCompanion(p: OtherPlayerNPC): boolean {
+    if (!p.pikachuEnabled) return false;
+    if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.86) return false;
+    if (this.otherPlayers.size > (this.isMobileViewport ? 3 : 6)) return false;
+    return this.getRemoteDistanceSq(p) < this.remoteCompanionDistanceSq;
+  }
+
+  private updateRemoteDetailBudget(force = false) {
+    if (!force && this.frameCounter % 60 !== 0) return;
+
+    const budget = this.getRemoteFullModelBudget();
+    const ranked = Array.from(this.otherPlayers.values())
+      .map((player) => ({ player, distanceSq: this.getRemoteDistanceSq(player) }))
+      .sort((a, b) => a.distanceSq - b.distanceSq);
+
+    const highDetail = new Set(
+      ranked
+        .filter((entry) => entry.distanceSq <= this.remoteFullModelDistanceSq)
+        .slice(0, budget)
+        .map((entry) => entry.player.username)
+    );
+
+    ranked.forEach(({ player }) => {
+      const enabled = highDetail.has(player.username);
+      player.highDetailActive = enabled;
+      if (player.modelGroup) player.modelGroup.visible = enabled;
+      if (player.fallbackGroup) player.fallbackGroup.visible = !enabled;
+
+      if (enabled && !player.fullModelLoaded && !player.fullModelLoading) {
+        this.loadOtherPlayerModel(player);
+      }
+
+      if (!enabled) {
+        player.mixer?.stopAllAction();
+        player.active = undefined;
+      } else if (player.fullModelLoaded) {
+        this.setOtherPlayerAnimation(player, player.currentAnimation, 0.12);
+      }
+
+      if (this.shouldAllowRemoteCompanion(player)) {
+        this.createOtherPlayerPikachu(player);
+      } else if (player.pikachu) {
+        this.scene?.remove(player.pikachu.root);
+        player.pikachu.mixer?.stopAllAction();
+        player.pikachu = undefined;
+      }
+    });
+  }
+
   private removeOtherPlayer(username: string) {
     const p = this.otherPlayers.get(username);
     if (!p) return;
@@ -4530,11 +5442,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.camera) return;
 
     this.otherPlayers.forEach((p) => {
-      const distanceToCamera = p.root.position.distanceTo(this.camera!.position);
-      const farAway = distanceToCamera > 46;
-      const skipAnimationFrame = farAway && this.frameCounter % 3 !== 0;
-      if (!skipAnimationFrame) {
-        p.mixer?.update(delta * (farAway ? 3 : 1));
+      const dx = p.root.position.x - this.camera!.position.x;
+      const dy = p.root.position.y - this.camera!.position.y;
+      const dz = p.root.position.z - this.camera!.position.z;
+      const distanceSqToCamera = dx * dx + dy * dy + dz * dz;
+      const farAway = distanceSqToCamera > 46 * 46;
+      const veryFar = distanceSqToCamera > 70 * 70;
+      const skipAnimationFrame = veryFar ? this.frameCounter % 6 !== 0 : farAway && this.frameCounter % 3 !== 0;
+      if (p.highDetailActive && !skipAnimationFrame) {
+        p.mixer?.update(delta * (veryFar ? 6 : farAway ? 3 : 1));
       }
 
       const lerpFactor = 1 - Math.pow(0.0001, delta);
@@ -4545,12 +5461,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       while (diff > Math.PI) diff -= Math.PI * 2;
       p.root.rotation.y += diff * lerpFactor;
 
-      if (!skipAnimationFrame) {
-        this.updateOtherPlayerPikachuAI(p, delta * (farAway ? 3 : 1));
+      if (p.highDetailActive && !skipAnimationFrame) {
+        this.updateOtherPlayerPikachuAI(p, delta * (veryFar ? 6 : farAway ? 3 : 1));
       }
 
-      const headPos = p.root.position.clone().add(new THREE.Vector3(0, p.height * 2.25, 0));
-      const projected = headPos.project(this.camera!);
+      if ((farAway || this.adaptivePixelRatioScale < 0.9) && this.frameCounter % 2 !== 0) {
+        return;
+      }
+
+      this.tempVec3.copy(p.root.position);
+      this.tempVec3.y += p.height * 2.25;
+      const projected = this.tempVec3.project(this.camera!);
 
       const isBehindCamera = projected.z > 1.0;
       if (isBehindCamera) {
@@ -4744,7 +5665,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ================= MÉTODOS DE CHAT DEL LOBBY =================
+  // ================= MÃ‰TODOS DE CHAT DEL LOBBY =================
 
   toggleChat() {
     this.ngZone.run(() => {
@@ -4873,7 +5794,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ================= MÉTODOS DE EMOTES =================
+  // ================= MÃ‰TODOS DE EMOTES =================
 
   @HostListener('window:mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
@@ -4900,7 +5821,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ngZone.run(() => {
       this.showEmoteMenu = !this.showEmoteMenu;
       if (this.showEmoteMenu) {
-        this.keys.clear(); // Limpiar movimiento al abrir el menú de gestos
+        this.keys.clear(); // Limpiar movimiento al abrir el menÃº de gestos
       }
       this.cdr.detectChanges();
     });
@@ -5009,7 +5930,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   agregarAmigo(username: string) {
     this.selectedPlayerForMenu = null;
-    this.chatLog.push({ sender: 'SISTEMA', text: `Solicitud de amistad enviada a ${username} (función en base de datos pendiente).`, system: true });
+    this.chatLog.push({ sender: 'SISTEMA', text: `Solicitud de amistad enviada a ${username} (funciÃ³n en base de datos pendiente).`, system: true });
     this.cdr.detectChanges();
   }
 
@@ -5028,7 +5949,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.startChallengeTimer(() => {
       this.cancelarRetoDuelo();
-      this.chatLog.push({ sender: 'SISTEMA', text: `El oponente ${username} no respondió el reto a duelo.`, system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: `El oponente ${username} no respondiÃ³ el reto a duelo.`, system: true });
     });
     this.cdr.detectChanges();
   }
@@ -5059,7 +5980,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.stopChallengeTimer();
 
     if (accepted && !this.selectedBattleDeckId) {
-      this.chatLog.push({ sender: 'SISTEMA', text: 'Elegí un mazo sincronizado antes de aceptar el duelo.', system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: 'ElegÃ­ un mazo sincronizado antes de aceptar el duelo.', system: true });
       accepted = false;
     }
 
@@ -5078,7 +5999,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.stopChallengeTimer();
 
     if (msg.accepted) {
-      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} aceptó el combate. Iniciando...`, system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} aceptÃ³ el combate. Iniciando...`, system: true });
       this.cdr.detectChanges();
 
       const p2MazoId = parseInt(msg.details || '0');
@@ -5115,7 +6036,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     } else {
-      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó el duelo o la invitación expiró.`, system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazÃ³ el duelo o la invitaciÃ³n expirÃ³.`, system: true });
       this.cdr.detectChanges();
     }
   }
@@ -5123,7 +6044,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   handleBattleStart(msg: any) {
     const partidaId = msg.details;
     if (!partidaId) {
-      this.chatLog.push({ sender: 'SISTEMA', text: 'Llegó inicio de batalla sin ID de partida.', system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: 'LlegÃ³ inicio de batalla sin ID de partida.', system: true });
       this.cdr.detectChanges();
       return;
     }
@@ -5157,7 +6078,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.selectedPlayerForMenu = null;
     this.waitingForTradeResponse = true;
     this.tradeInvitedUsername = username;
-    this.chatLog.push({ sender: 'SISTEMA', text: `Invitación de intercambio enviada a ${username}.`, system: true });
+    this.chatLog.push({ sender: 'SISTEMA', text: `InvitaciÃ³n de intercambio enviada a ${username}.`, system: true });
 
     this.socket?.send(JSON.stringify({
       type: 'INVITE_TRADE',
@@ -5167,7 +6088,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.startChallengeTimer(() => {
       this.cancelarTradeInvite();
-      this.chatLog.push({ sender: 'SISTEMA', text: `${username} no respondió a la propuesta de intercambio.`, system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: `${username} no respondiÃ³ a la propuesta de intercambio.`, system: true });
     });
     this.cdr.detectChanges();
   }
@@ -5217,7 +6138,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (msg.accepted) {
       this.abrirSalaTrading(msg.username);
     } else {
-      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazó la invitación de intercambio.`, system: true });
+      this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} rechazÃ³ la invitaciÃ³n de intercambio.`, system: true });
       this.cdr.detectChanges();
     }
   }
@@ -5261,7 +6182,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   addCardToTrade(card: Card) {
     if (this.tradeLeftReady) return;
     if (this.tradeLeftCards.length >= 3) {
-      alert('Máximo 3 cartas por intercambio.');
+      alert('MÃ¡ximo 3 cartas por intercambio.');
       return;
     }
     this.tradeLeftCards.push(card);
@@ -5345,7 +6266,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al realizar el trade:', err);
-        alert('Transacción de intercambio fallida: ' + err.message);
+        alert('TransacciÃ³n de intercambio fallida: ' + err.message);
         this.tradeLeftReady = false;
         this.notifyTradeUpdate();
         this.cdr.detectChanges();
@@ -5400,7 +6321,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.activeTradeSession = false;
     this.tradeShowContinuationPrompt = false;
     this.tradeWaitingForContinuation = false;
-    this.chatLog.push({ sender: 'SISTEMA', text: `${this.tradeOpponentUsername} cerró la sala de intercambio.`, system: true });
+    this.chatLog.push({ sender: 'SISTEMA', text: `${this.tradeOpponentUsername} cerrÃ³ la sala de intercambio.`, system: true });
     this.cdr.detectChanges();
   }
 
@@ -5456,18 +6377,20 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getMyOfferFairnessText(): string {
-    if (this.tradeLeftCards.length === 0) return 'Vacío';
+    if (this.tradeLeftCards.length === 0) return 'VacÃ­o';
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (Monólogo)';
+    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
     return 'Oferta Sincronizada';
   }
 
   getOpponentOfferFairnessText(): string {
-    if (this.tradeRightCards.length === 0) return 'Vacío';
+    if (this.tradeRightCards.length === 0) return 'VacÃ­o';
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (Monólogo)';
+    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
     return 'Oferta Sincronizada';
   }
 }
+
+
