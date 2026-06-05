@@ -1,4 +1,5 @@
 <!-- Contenedor de la escena 3D usada para abrir sobres. -->
+<div class="fade-overlay"></div>
 <div class="renderer-container" #rendererContainer (click)="onOverlayClick($event)">
     <div class="instrucciones">
         {{ mensajeGuia }}
@@ -27,6 +28,11 @@
           <img [src]="'/images/cards/' + carta.id + '.png'" [alt]="carta.nombre">
           <span>{{ carta.nombre }}</span>
         </div>
+      </div>
+      
+      <div class="summary-footer">
+        <button class="close-button secondary" (click)="finalizado.emit()">Cerrar y Volver</button>
+        <button class="close-button primary" [disabled]="sobresRestantes <= 0" (click)="abrirOtro.emit()">Abrir Otro (Restantes: {{ sobresRestantes }})</button>
       </div>
     </div>
 </div>

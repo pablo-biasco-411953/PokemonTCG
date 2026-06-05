@@ -1,4 +1,16 @@
 /* Estilos del overlay de apertura de sobre. */
+.fade-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  z-index: 2000;
+  pointer-events: none;
+  animation: fadeTransition 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 .renderer-container {
   width: 100vw;
   height: 100vh;
@@ -6,7 +18,7 @@
   top: 0;
   left: 0;
   z-index: 1000;
-  background: radial-gradient(circle, rgba(20,20,20,0.9) 0%, rgba(0,0,0,1) 100%);
+  background: radial-gradient(circle at 50% 50%, #0d1b2a 0%, #000000 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,10 +156,64 @@
   background: rgba(0, 212, 255, 0.32);
 }
 
+.summary-footer {
+  text-align: center;
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.close-button {
+  padding: 12px 32px;
+  border-radius: 999px;
+  border: none;
+  color: white;
+  font-size: 1.1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+
+.close-button.primary {
+  background: linear-gradient(135deg, #00d4ff, #0055ff);
+  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+}
+
+.close-button.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.close-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.close-button.primary:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+}
+
+.close-button.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.close-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(100%);
+}
+
 @keyframes pulse {
   0% { opacity: 0.4; }
   50% { opacity: 1; }
   100% { opacity: 0.4; }
+}
+
+@keyframes fadeTransition {
+  0% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
 }
 
 @media (max-width: 768px) {
