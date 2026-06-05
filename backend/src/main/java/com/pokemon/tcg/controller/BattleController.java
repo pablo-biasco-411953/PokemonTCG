@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/battle")
-@CrossOrigin(origins = "*")
 public class BattleController {
 
     private final BattleEngineService battleEngine;

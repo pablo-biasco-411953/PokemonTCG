@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mazos")
-@CrossOrigin(origins = "*")
 public class MazoController {
     private final MazoService mazoService;
 
