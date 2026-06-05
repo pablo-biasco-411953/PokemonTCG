@@ -436,7 +436,12 @@
     <div class="speed-lines"></div>
     @if (mostrarAnimacionSobre) {
       <div class="sobre-apertura-wrapper">
-        <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
+        <app-apertura-sobre 
+          [cartas]="cartasNuevas" 
+          [sobresRestantes]="sobresDisponibles"
+          (finalizado)="finalizarApertura()"
+          (abrirOtro)="abrirOtroSobre()">
+        </app-apertura-sobre>
       </div>
     }
   </div>

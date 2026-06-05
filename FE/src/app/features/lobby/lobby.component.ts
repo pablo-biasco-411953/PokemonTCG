@@ -1146,6 +1146,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refrescarTodo();
   }
 
+  // Cierra el actual y abre otro inmediatamente.
+  abrirOtroSobre() {
+    this.mostrarAnimacionSobre = false;
+    this.cdr.detectChanges();
+    
+    // Pequeño timeout para asegurar que Angular destruya y vuelva a crear el componente
+    setTimeout(() => {
+      this.abrirSobres();
+    }, 50);
+  }
+
   // Navega al editor de mazos.
   irAlDeckBuilder() {
     this.deckBuilderOpen = true;
@@ -2314,7 +2325,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.loadSceneAsset('/models-optimized/characters/santoro.glb', (model, animations) => {
       model.name = 'SantoroNPC';
-      model.scale.setScalar(0.92);
+      model.scale.set(1.15, 1.18, 1.15);
       this.centerModelPivot(model);
       this.alignModelBottom(model, 0);
       model.rotation.y = 0;
@@ -2324,6 +2335,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.santoroBones = {};
       this.santoroDefaultQuaternions.clear();
       model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (child.material && (child.material as any).name === 'Streamoji_Outfit_Top') {
+            const mat = child.material as THREE.MeshStandardMaterial;
+            mat.map = null;
+            mat.color.setHex(0xc0c0c0);
+            mat.needsUpdate = true;
+          }
+        }
         if (child instanceof THREE.Bone) {
           const name = child.name.toLowerCase();
           const bone = child as THREE.Bone;
