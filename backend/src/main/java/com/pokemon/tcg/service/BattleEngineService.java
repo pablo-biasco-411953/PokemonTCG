@@ -68,6 +68,8 @@ public class BattleEngineService {
         prepararPremios(tableroBot);
 
         Partida partida = new Partida(tableroJugador, tableroBot);
+        partida.setJugadorUsername(username);
+        partida.setCoinFlipCallerUsername(username);
         partida.setMulligansJugador(mulligansJugador);
         partida.setMulligansBot(mulligansBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
@@ -109,20 +111,59 @@ public class BattleEngineService {
         }
     }
 
-    public boolean lanzarMoneda(String matchId, String callerUsername) {
+    public synchronized Partida lanzarMoneda(String matchId, String callerUsername, String eleccion) {
         Partida partida = getPartidaOThrow(matchId);
-        boolean isCara = random.nextBoolean();
-        partida.setCoinFlipped(true);
-        partida.setCoinFlipResult(isCara ? "CARA" : "CRUZ");
+        if (!partida.isCoinFlipped()) {
+            String callerAutorizado = partida.getCoinFlipCallerUsername();
+            if (partida.getBotUsername() != null && callerAutorizado != null && !callerAutorizado.equals(callerUsername)) {
+                throw new IllegalStateException("El sorteo lo debe lanzar " + callerAutorizado + ".");
+            }
 
-        boolean callerWon = random.nextBoolean();
-        partida.setCoinFlipWinner(callerWon ? callerUsername :
-            (callerUsername != null && callerUsername.equals(partida.getJugadorUsername()) ? partida.getBotUsername() : partida.getJugadorUsername()));
+            String resultado = random.nextBoolean() ? "CARA" : "CRUZ";
+            String eleccionNormalizada = "CRUZ".equalsIgnoreCase(eleccion) ? "CRUZ" : "CARA";
+            boolean callerWon = resultado.equals(eleccionNormalizada);
+            String oponente = callerUsername != null && callerUsername.equals(partida.getJugadorUsername())
+                    ? partida.getBotUsername()
+                    : partida.getJugadorUsername();
+            if (oponente == null || oponente.isBlank()) {
+                oponente = "BOT";
+            }
+
+            partida.setCoinFlipped(true);
+            partida.setCoinFlipResult(resultado);
+            partida.setCoinFlipWinner(callerWon ? callerUsername : oponente);
+
+            if (partida.getBotUsername() == null) {
+                partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
+            }
+        }
+        return partida;
+    }
+
+    public synchronized Partida actualizarHandshakeMoneda(String matchId, String username, boolean holding, int power) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.LANZAMIENTO_MONEDA || partida.isCoinFlipped()) {
+            return partida;
+        }
+
+        int clampedPower = Math.max(0, Math.min(100, power));
+        if (username != null && username.equals(partida.getJugadorUsername())) {
+            partida.setCoinHandshakeJugadorHolding(holding);
+            partida.setCoinHandshakeJugadorPower(clampedPower);
+        } else if (username != null && username.equals(partida.getBotUsername())) {
+            partida.setCoinHandshakeBotHolding(holding);
+            partida.setCoinHandshakeBotPower(clampedPower);
+        }
 
         if (partida.getBotUsername() == null) {
-            partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
+            partida.setCoinHandshakeBotHolding(true);
+            partida.setCoinHandshakeBotPower(100);
         }
-        return callerWon;
+
+        partida.setCoinHandshakeComplete(
+                partida.getCoinHandshakeJugadorPower() >= 100 && partida.getCoinHandshakeBotPower() >= 100
+        );
+        return partida;
     }
 
     public void elegirTurno(String matchId, boolean vaPrimero, String callerUsername) {
@@ -136,6 +177,12 @@ public class BattleEngineService {
             }
             partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
         } else {
+            if (partida.getFaseActual() == Partida.Fase.TURNO_NORMAL) {
+                return;
+            }
+            if (partida.getCoinFlipWinner() != null && !partida.getCoinFlipWinner().equals(callerUsername)) {
+                return;
+            }
             if (vaPrimero) {
                 partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.JUGADOR : Partida.Turno.BOT);
             } else {
@@ -1111,6 +1158,7 @@ public class BattleEngineService {
         Partida partida = new Partida(tableroJugador, tableroBot);
         partida.setJugadorUsername(player1);
         partida.setBotUsername(player2);
+        partida.setCoinFlipCallerUsername(player1);
         partida.setMulligansJugador(mulligansJugador);
         partida.setMulligansBot(mulligansBot);
         partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);

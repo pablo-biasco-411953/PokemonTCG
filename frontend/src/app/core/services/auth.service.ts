@@ -3,9 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Jugador } from '../../shared/models/jugador';
 
+import { getBackendUrl } from './api-config';
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiUrl = `http://${window.location.hostname}:8080/api/auth`;
+  private readonly apiUrl = `${getBackendUrl()}/api/auth`;
 
   constructor(private http: HttpClient) {}
 

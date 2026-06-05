@@ -32,6 +32,10 @@
 
   <div class="workspace">
     <section class="pokedex-section pokedex-screen-inset">
+      <div class="collection-summary dot-matrix">
+        <span>{{ coleccionFiltrada.length }} cartas</span>
+        <span>{{ mazoEnProceso.length }}/60 mazo</span>
+      </div>
       <div class="grid">
         <div *ngFor="let carta of coleccionFiltrada; let i = index" 
              class="card-item card-entry"

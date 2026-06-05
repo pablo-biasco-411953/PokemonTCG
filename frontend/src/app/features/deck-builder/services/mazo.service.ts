@@ -3,12 +3,14 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Mazo } from '../../../shared/models/mazo';
 
+import { getBackendUrl } from '../../../core/services/api-config';
+
 @Injectable({
   providedIn: 'root'
 })
 export class MazoService {
   // Servicio para crear, listar y actualizar mazos.
-  private apiUrl = `http://${window.location.hostname}:8080/api/mazos`;
+  private apiUrl = `${getBackendUrl()}/api/mazos`;
 
   constructor(private http: HttpClient) { }
 

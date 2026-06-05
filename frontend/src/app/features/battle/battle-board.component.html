@@ -1,4 +1,4 @@
-﻿<app-battle-board-debug-panel
+<app-battle-board-debug-panel
   [show]="showDebugPanel"
   [fps]="fps"
   [memoryUsage]="memoryUsage"
@@ -20,6 +20,13 @@
   (setHp)="debugSetHp($event.objetivo, $event.hp)"
 ></app-battle-board-debug-panel>
 
+<div class="battle-landscape-guard" *ngIf="!landscapeHintDismissed">
+  <button class="battle-landscape-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+  <div class="battle-phone-icon"></div>
+  <strong>Gira el celular</strong>
+  <span>La batalla se ve mejor en horizontal, pero podés seguir jugando así.</span>
+</div>
+
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
   <div class="intro-lines">
     <span *ngFor="let l of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" [style.--ln]="l"></span>
@@ -39,26 +46,120 @@
 </div>
 
 <div class="coinflip-overlay" *ngIf="estadoCoinFlip !== 'OCULTO'">
+  <div class="coin-stars" aria-hidden="true">
+    <span *ngFor="let s of [1,2,3,4,5,6,7,8]"></span>
+  </div>
   <div class="panel">
+    <div class="coin-stage-header">
+      <span>Preparativos</span>
+      <strong>Inicio de Partida</strong>
+      <small>{{ jugadorNombre || 'Jugador' }} vs {{ nombreRival }}</small>
+    </div>
+
+    <ng-container *ngIf="estadoCoinFlip === 'DAR_LA_MANO'">
+      <div class="handshake-panel">
+        <p class="sorteo-title">SALUDO DE RIVALES</p>
+        <p class="sorteo-sub">Mantené presionado para chocar los puños. ¡Si alguien suelta, los modelos retroceden!</p>
+        
+        <div
+          class="handshake-stage"
+          [class.holding]="handshakeHolding"
+          [class.opponent-holding]="opponentHandshakeHolding"
+          [class.complete]="handshakeComplete"
+          (pointerdown)="comenzarApretonMano($event)"
+          (pointerup)="soltarApretonMano($event)"
+          (pointerleave)="soltarApretonMano($event)"
+          (pointercancel)="soltarApretonMano($event)"
+        >
+          <!-- 3D Scene Canvas -->
+          <canvas #handshakeCanvas class="handshake-canvas"></canvas>
+          
+          <div class="handshake-glow"></div>
+          
+          <!-- Player profile badge (left) -->
+          <div class="rival-card left-rival">
+            <div class="character-avatar" [ngClass]="localPlayerCharacterId">
+              <svg *ngIf="localPlayerCharacterId === 'hilda-sygna'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#fcd34d" d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
+              <svg *ngIf="localPlayerCharacterId === 'lillie'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#ffffff" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18A2,2 0 0,1 10,16A2,2 0 0,1 12,14A2,2 0 0,1 14,16A2,2 0 0,1 12,18M17,12A2,2 0 0,1 15,14A2,2 0 0,1 13,12A2,2 0 0,1 15,10A2,2 0 0,1 17,12M9,12A2,2 0 0,1 7,14A2,2 0 0,1 5,12A2,2 0 0,1 7,10A2,2 0 0,1 9,12Z"/></svg>
+              <svg *ngIf="localPlayerCharacterId === 'ash'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#fef08a" d="M7,2V13H10V22L17,10H13L17,2H7Z"/></svg>
+              <svg *ngIf="localPlayerCharacterId === 'robot'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#e2e8f0" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
+            </div>
+            <div class="rival-details">
+              <span class="rival-name">{{ jugadorNombre || 'Jugador' }}</span>
+              <span class="rival-character">{{ getCharacterLabel(localPlayerCharacterId) }}</span>
+            </div>
+          </div>
+          
+          <!-- Opponent profile badge (right) -->
+          <div class="rival-card right-rival">
+            <div class="character-avatar" [ngClass]="opponentCharacterId">
+              <svg *ngIf="opponentCharacterId === 'hilda-sygna'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#fcd34d" d="M12,17.27L18.18,21L16.54,13.97L22,9.24L14.81,8.62L12,2L9.19,8.62L2,9.24L7.45,13.97L5.82,21L12,17.27Z"/></svg>
+              <svg *ngIf="opponentCharacterId === 'lillie'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#ffffff" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A2,2 0 0,1 14,6A2,2 0 0,1 12,8A2,2 0 0,1 10,6A2,2 0 0,1 12,4M12,18A2,2 0 0,1 10,16A2,2 0 0,1 12,14A2,2 0 0,1 14,16A2,2 0 0,1 12,18M17,12A2,2 0 0,1 15,14A2,2 0 0,1 13,12A2,2 0 0,1 15,10A2,2 0 0,1 17,12M9,12A2,2 0 0,1 7,14A2,2 0 0,1 5,12A2,2 0 0,1 7,10A2,2 0 0,1 9,12Z"/></svg>
+              <svg *ngIf="opponentCharacterId === 'ash'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#fef08a" d="M7,2V13H10V22L17,10H13L17,2H7Z"/></svg>
+              <svg *ngIf="opponentCharacterId === 'robot'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#e2e8f0" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
+            </div>
+            <div class="rival-details">
+              <span class="rival-name">{{ nombreRival }}</span>
+              <span class="rival-character">{{ getCharacterLabel(opponentCharacterId) }}</span>
+            </div>
+          </div>
+          
+          <div class="handshake-impact">PACTO DE BATALLA</div>
+        </div>
+        
+        <div class="meters-container">
+          <div class="meter-wrapper">
+            <span class="meter-label">{{ jugadorNombre || 'Jugador' }}</span>
+            <div class="handshake-meter">
+              <div [style.width.%]="handshakePower"></div>
+            </div>
+          </div>
+          <div class="meter-wrapper rival-wrapper">
+            <span class="meter-label">{{ nombreRival }}</span>
+            <div class="handshake-meter rival-meter">
+              <div [style.width.%]="opponentHandshakePower"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
     <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
       <h2 class="sorteo-title">SORTEO INICIAL</h2>
-      <p class="sorteo-sub">¿Cara o Cruz?</p>
+      <p class="sorteo-sub">Vos cantás la moneda. {{ nombreRival }} espera el resultado.</p>
       <div class="choice-buttons">
-        <button class="btn-choice heads" (click)="iniciarSorteo('CARA')">CARA</button>
-        <button class="btn-choice tails" (click)="iniciarSorteo('CRUZ')">CRUZ</button>
+        <button class="btn-choice heads" type="button" (click)="iniciarSorteo('CARA')">
+          <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
+          <b>CARA</b>
+          <small>La chispa abre la partida</small>
+        </button>
+        <button class="btn-choice tails" type="button" (click)="iniciarSorteo('CRUZ')">
+          <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
+          <b>CRUZ</b>
+          <small>El metal decide con estilo</small>
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
+      <div class="resultado-panel">
+        <p class="res-ganaste">SORTEO INICIAL</p>
+        <p class="res-sub">{{ nombreRival }} está cantando y lanzando la moneda...</p>
       </div>
     </ng-container>
 
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
-        (mousedown)="onMouseDown($event)"
-        (window:mouseup)="onMouseUp($event)"
+        (pointerdown)="onCoinPointerDown($event)"
+        (pointerup)="onCoinPointerUp($event)"
+        (pointercancel)="onCoinPointerCancel($event)"
         [class.pointer-events-none]="lanzada"
       >
-        <p class="swipe-hint" *ngIf="!lanzada">¡Deslizá hacia arriba para lanzar!</p>
+        <p class="swipe-hint" *ngIf="!lanzada">Arrastrá hacia arriba y soltá con fuerza</p>
 
         <div class="moneda-scene">
+          <div class="moneda-sombra" [class.active]="lanzada"></div>
           <div
             class="moneda-inner"
             [class.animar-vuelo]="lanzada"
@@ -69,7 +170,7 @@
             <div class="cruz back"><img src="/coin-tails.png" draggable="false" /></div>
           </div>
         </div>
-        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">Lanzando moneda...</p>
+        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">La moneda decide el destino...</p>
       </div>
     </ng-container>
 
@@ -78,7 +179,7 @@
         <p class="res-ganaste">¡GANASTE EL SORTEO!</p>
         <div class="choice-buttons small">
           <button (click)="seleccionarTurno(true)">YO PRIMERO</button>
-          <button (click)="seleccionarTurno(false)">BOT PRIMERO</button>
+          <button (click)="seleccionarTurno(false)">{{ nombreRival }} PRIMERO</button>
         </div>
       </div>
     </ng-container>
@@ -86,7 +187,7 @@
     <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
       <div class="resultado-panel">
         <p class="res-perdiste">PERDISTE EL SORTEO</p>
-        <p class="res-sub">El Bot decidió ir primero.</p>
+        <p class="res-sub">{{ nombreGanadorSorteo }} elige quién empieza.</p>
       </div>
     </ng-container>
   </div>
@@ -232,7 +333,7 @@
 
   <aside class="side-col left">
     <div class="prizes-section bot-prizes">
-      <p class="prizes-title">PREMIOS BOT</p>
+      <p class="prizes-title">PREMIOS {{ nombreRival }}</p>
       <div class="prizes-grid">
         <div
           *ngFor="let i of [0, 1, 2, 3, 4, 5]"
@@ -265,20 +366,21 @@
   </aside>
 
   <main class="center-field" cdkDropListGroup>
-    <div class="bot-hand">
-      <div class="bot-hand-row">
-        <div
-          *ngFor="let c of partida.bot.mano; let i = index"
-          class="bot-card card-back"
-          [class.nueva-carta]="cartasNuevasBot.has(c.id)"
-          [style.--bi]="i"
-          [style.--btot]="partida.bot.mano.length"
-        ></div>
+    <div class="board-half-wrapper rival-side">
+      <div class="bot-hand">
+        <div class="bot-hand-row">
+          <div
+            *ngFor="let c of partida.bot.mano; let i = index"
+            class="bot-card card-back"
+            [class.nueva-carta]="cartasNuevasBot.has(c.id)"
+            [style.--bi]="i"
+            [style.--btot]="partida.bot.mano.length"
+          ></div>
+        </div>
+        <span class="bot-hand-tag">{{ partida.bot.mano.length }} cartas</span>
       </div>
-      <span class="bot-hand-tag">{{ partida.bot.mano.length }} cartas</span>
-    </div>
 
-    <div class="bench-row bot-bench">
+      <div class="bench-row bot-bench">
       <div class="bench-label">BANCA RIVAL</div>
       <div class="bench-cards">
         <div
@@ -303,6 +405,7 @@
           class="bench-slot void"
         ></div>
       </div>
+    </div>
     </div>
 
     <div class="arena">
@@ -436,6 +539,10 @@
               >
             </div>
           </div>
+
+          <div class="trainer-3d-wrapper bot-trainer-3d">
+            <canvas #opponentTrainerCanvas class="trainer-canvas"></canvas>
+          </div>
         </div>
       </div>
 
@@ -447,6 +554,9 @@
           [cdkDropListConnectedTo]="playableDropListIds"
           (cdkDropListDropped)="soltarCarta($event, 'activo')"
         >
+          <div class="trainer-3d-wrapper player-trainer-3d">
+            <canvas #playerTrainerCanvas class="trainer-canvas"></canvas>
+          </div>
           <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
             <div
               class="damage-number"
@@ -608,7 +718,8 @@
       </div>
     </div>
 
-    <div class="bench-row player-bench">
+    <div class="board-half-wrapper player-side">
+      <div class="bench-row player-bench">
       <div
         class="bench-cards"
         cdkDropList
@@ -617,7 +728,7 @@
         (cdkDropListDropped)="soltarCarta($event, 'banca')"
       >
         <div
-          *ngFor="let b of partida.jugador.banca"
+          *ngFor="let b of partida.jugador.banca; trackBy: trackByCardId"
           class="bench-slot occupied player-slot"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b)"
@@ -657,7 +768,7 @@
         [cdkDropListSortingDisabled]="true"
       >
         <div
-          *ngFor="let carta of partida.jugador.mano; let i = index"
+          *ngFor="let carta of partida.jugador.mano; let i = index; trackBy: trackByCardId"
           class="hand-card-hitbox"
           [class.nueva-carta]="cartasNuevas.has(carta.id)"
           [class.simulated-hover]="esHoverSobreManoJugador() && hoveredCardIndex === i"
@@ -681,6 +792,7 @@
           </div>
         </div>
       </div>
+    </div>
     </div>
   </main>
 
@@ -713,7 +825,7 @@
       <div
         class="turn-status"
         [class.active]="partida.turnoActual === 'JUGADOR'"
-        [class.critical-text]="tiempoRestante <= 15 && partida.turnoActual === 'JUGADOR'"
+        [class.critical-text]="turnTimerEnabled && tiempoRestante <= 15 && partida.turnoActual === 'JUGADOR'"
       >
         {{ getTextoEstadoTurno() }}
       </div>

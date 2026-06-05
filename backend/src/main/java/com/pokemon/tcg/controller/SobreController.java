@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/sobres")
-@CrossOrigin(origins = "http://localhost:4200")
 public class SobreController {
     private final SobreService sobreService;
 
