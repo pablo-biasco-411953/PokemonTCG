@@ -20,6 +20,13 @@
   (setHp)="debugSetHp($event.objetivo, $event.hp)"
 ></app-battle-board-debug-panel>
 
+<div class="battle-landscape-guard" *ngIf="!landscapeHintDismissed">
+  <button class="battle-landscape-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+  <div class="battle-phone-icon"></div>
+  <strong>Gira el celular</strong>
+  <span>La batalla se ve mejor en horizontal, pero podés seguir jugando así.</span>
+</div>
+
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
   <div class="intro-lines">
     <span *ngFor="let l of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" [style.--ln]="l"></span>
@@ -59,8 +66,9 @@
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
-        (mousedown)="onMouseDown($event)"
-        (window:mouseup)="onMouseUp($event)"
+        (pointerdown)="onCoinPointerDown($event)"
+        (pointerup)="onCoinPointerUp($event)"
+        (pointercancel)="onCoinPointerCancel($event)"
         [class.pointer-events-none]="lanzada"
       >
         <p class="swipe-hint" *ngIf="!lanzada">¡Deslizá hacia arriba para lanzar!</p>

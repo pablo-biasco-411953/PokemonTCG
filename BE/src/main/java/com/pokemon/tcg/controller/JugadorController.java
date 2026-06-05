@@ -5,6 +5,8 @@ import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.dto.JugadorDatosResponse;
 import com.pokemon.tcg.dto.DebugSetSobresRequest;
 import com.pokemon.tcg.dto.PersonalizacionRequest;
+import com.pokemon.tcg.dto.SantoroQuestResponse;
+import com.pokemon.tcg.dto.SantoroTrackingRequest;
 import com.pokemon.tcg.dto.TradeExecutionRequest;
 import com.pokemon.tcg.model.Card;
 import org.springframework.web.bind.annotation.*;
@@ -108,6 +110,69 @@ public class JugadorController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al setear sobres: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/{username}/quests/santoro")
+    public ResponseEntity<?> getSantoroQuest(@PathVariable String username) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+            return ResponseEntity.ok(toSantoroQuestResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al cargar mision de Santoro: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{username}/quests/santoro/tracking")
+    public ResponseEntity<?> setSantoroTracking(@PathVariable String username,
+                                                @RequestBody SantoroTrackingRequest request) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+
+            boolean tracking = request.isTracking() && !jugador.isSantoroGiftClaimed();
+            jugador.setSantoroQuestTracking(tracking);
+            if (tracking && (jugador.getSantoroQuestState() == null || jugador.getSantoroQuestState().isBlank())) {
+                jugador.setSantoroQuestState("AVAILABLE");
+            }
+            jugadorRepo.save(jugador);
+            return ResponseEntity.ok(toSantoroQuestResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al actualizar tracking de Santoro: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{username}/quests/santoro/claim")
+    public ResponseEntity<?> claimSantoroGift(@PathVariable String username) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+
+            if (!jugador.isSantoroGiftClaimed()) {
+                jugador.setSobresDisponibles(jugador.getSobresDisponibles() + 10);
+                jugador.setSantoroGiftClaimed(true);
+                jugador.setSantoroQuestTracking(false);
+                jugador.setSantoroQuestState("COMPLETED");
+                jugadorRepo.save(jugador);
+            }
+
+            return ResponseEntity.ok(toSantoroQuestResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error al reclamar regalo de Santoro: " + e.getMessage());
+        }
+    }
+
+    private SantoroQuestResponse toSantoroQuestResponse(Jugador jugador) {
+        String state = jugador.getSantoroQuestState();
+        if (state == null || state.isBlank()) {
+            state = jugador.isSantoroGiftClaimed() ? "COMPLETED" : "AVAILABLE";
+        }
+        return new SantoroQuestResponse(
+                jugador.isSantoroGiftClaimed(),
+                jugador.isSantoroQuestTracking(),
+                state,
+                jugador.getSobresDisponibles()
+        );
     }
 
     @PostMapping("/trade/execute")

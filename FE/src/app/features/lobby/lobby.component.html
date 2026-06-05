@@ -6,6 +6,13 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
+  <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+    <div class="phone-tilt-icon"></div>
+    <strong>Gira el celular</strong>
+    <span>El lobby 3D se ve mejor en horizontal, pero podés seguir jugando así.</span>
+  </div>
+
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 
     *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
@@ -46,7 +53,11 @@
   </div>
 
   <!-- CHAT WINDOW (BOTTOM LEFT) -->
-  <div class="lobby-chat-container">
+  <button class="mobile-chat-toggle" type="button" (click)="toggleChat()">
+    CHAT
+  </button>
+
+  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
     <div class="chat-messages">
       <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
         <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
@@ -226,6 +237,32 @@
     <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
   </aside>
 
+  <div
+    class="mobile-analog-pad"
+    aria-label="Movimiento analogico"
+    (pointerdown)="startMobileJoystick($event)"
+    (pointermove)="moveMobileJoystick($event)"
+    (pointerup)="endMobileJoystick($event)"
+    (pointercancel)="endMobileJoystick($event)"
+  >
+    <div class="analog-ring"></div>
+    <div
+      class="analog-stick"
+      [class.active]="mobileJoystickActive"
+      [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
+    ></div>
+    <span>MOVER</span>
+  </div>
+
+  <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <div class="mobile-camera-zoom" aria-label="Zoom de camara">
+      <button type="button" (click)="mobileCameraZoomStep(-1)">+</button>
+      <button type="button" (click)="mobileCameraZoomStep(1)">-</button>
+    </div>
+    <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
+    <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
+  </div>
+
   <div class="hub-radar">
     <button
       *ngFor="let spot of hubSpots"
@@ -238,12 +275,22 @@
     </button>
   </div>
 
-  <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen">
+  <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen && !santoroDialogOpen && !kiosqueraDialogOpen">
     <span class="prompt-key">E</span>
     <div>
       <small>{{ currentInteraction.kicker }}</small>
       <strong>{{ currentInteraction.label }}</strong>
       <p>{{ currentInteraction.description }}</p>
+    </div>
+  </div>
+
+  <div class="quest-tracker" *ngIf="!santoroGiftClaimed || santoroQuestTracking">
+    <small>MISION PRINCIPAL</small>
+    <strong>{{ santoroQuestTitle }}</strong>
+    <p>{{ santoroQuestCopy }}</p>
+    <div class="quest-actions">
+      <button type="button" *ngIf="!santoroQuestTracking && !santoroGiftClaimed" (click)="toggleSantoroTracking()">Seguir</button>
+      <button type="button" *ngIf="santoroQuestTracking" (click)="stopSantoroTracking()">Dejar de seguir</button>
     </div>
   </div>
 
@@ -301,6 +348,78 @@
     </button>
   </div>
 
+  <!-- Diálogo con la Kiosquera de la Cantina -->
+  <div class="santoro-dialog-overlay-blocker" *ngIf="kiosqueraDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="kiosqueraDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">KIOSQUERA</small>
+      <h3>¡Hola! ¿Cómo estás? ¿Necesitás comprar algo en la cantina?</h3>
+      <div class="challenge-actions">
+        <button class="btn-accept" type="button" (click)="kiosqueraVerProductos()">Ver productos</button>
+        <button class="btn-reject" type="button" (click)="closeKiosqueraDialog()">No, gracias</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="santoro-dialog-overlay-blocker" *ngIf="santoroDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="santoroDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">PROFE SANTORO</small>
+      <ng-container [ngSwitch]="santoroDialogState">
+        <ng-container *ngSwitchCase="'intro'">
+          <h3>Hola {{ santoroNickname }}, bienvenido a Pokefetch.</h3>
+          <p>Te regalo 10 sobrecitos para que empieces tu aventura como corresponde.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="chooseSantoroAnswer('thanks')">Gracias profe</button>
+            <button class="btn-reject" type="button" (click)="chooseSantoroAnswer('reject')">No, no los quiero</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'thanks'">
+          <h3>Asi me gusta.</h3>
+          <p>Agarralos tranqui, que con esos sobrecitos capaz armas algo mas peligroso que un parcial sorpresa un lunes a las ocho.</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'forced'">
+          <h3>Nadie te pregunto si querias.</h3>
+          <p>Agarralos o te pongo un 2.</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'afterGift'">
+          <h3>Ah, {{ santoroNickname | lowercase }}, me olvide de decirte.</h3>
+          <p>Conmigo vas a poder gestionar tu mazo cuando quieras. Veni, tocame gestionar y tratemos de que esa estrategia no sea puro corazon y cero energia.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Despues</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <h3>Que haces, {{ santoroNickname | lowercase }}?</h3>
+          <p>Si queres ajustar el mazo, te abro la Pokedex. Misiones nuevas todavia no tengo, pero ya se viene algo picante.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Cerrar</button>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="lobby-dialog-overlay santoro-gift-overlay" *ngIf="santoroGiftModalOpen">
+    <div class="lobby-dialog-card challenge-card santoro-gift-card">
+      <div class="gift-pack-3d">
+        <img src="/images/cards/sobre.png" alt="Sobre Pokemon TCG">
+      </div>
+      <small class="challenge-kicker">RECOMPENSA RECIBIDA</small>
+      <h3>Sobres recibidos x10</h3>
+      <p>El inventario fue actualizado. Santoro acaba de salvar tu early game.</p>
+      <button class="btn-accept full-dialog-action" type="button" (click)="continueSantoroAfterGift()">Continuar</button>
+    </div>
+  </div>
+
   <div class="deck-preview-strip" *ngIf="mazos.length">
     <button
       *ngFor="let mazo of mazos"
@@ -317,7 +436,12 @@
     <div class="speed-lines"></div>
     @if (mostrarAnimacionSobre) {
       <div class="sobre-apertura-wrapper">
-        <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
+        <app-apertura-sobre 
+          [cartas]="cartasNuevas" 
+          [sobresRestantes]="sobresDisponibles"
+          (finalizado)="finalizarApertura()"
+          (abrirOtro)="abrirOtroSobre()">
+        </app-apertura-sobre>
       </div>
     }
   </div>
