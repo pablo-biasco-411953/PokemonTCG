@@ -96,6 +96,27 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/coin-handshake")
+    public ResponseEntity<?> actualizarHandshakeMoneda(@PathVariable String matchId,
+                                                       @RequestHeader(value = "X-Username", required = false) String username,
+                                                       @RequestBody(required = false) Map<String, Object> payload) {
+        try {
+            boolean holding = payload != null && Boolean.TRUE.equals(payload.get("holding"));
+            int power = 0;
+            if (payload != null && payload.get("power") instanceof Number number) {
+                power = number.intValue();
+            }
+
+            Partida partida = battleEngine.actualizarHandshakeMoneda(matchId, username, holding, power);
+            if (username != null && username.equals(partida.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partida));
+            }
+            return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/choose-turn")
     public ResponseEntity<?> elegirTurno(@PathVariable String matchId,
                                          @RequestHeader(value = "X-Username", required = false) String username,
@@ -238,6 +259,11 @@ public class BattleController {
         swapped.setCoinFlipWinner(p.getCoinFlipWinner());
         swapped.setCoinFlipResult(p.getCoinFlipResult());
         swapped.setCoinFlipCallerUsername(p.getCoinFlipCallerUsername());
+        swapped.setCoinHandshakeJugadorPower(p.getCoinHandshakeBotPower());
+        swapped.setCoinHandshakeBotPower(p.getCoinHandshakeJugadorPower());
+        swapped.setCoinHandshakeJugadorHolding(p.isCoinHandshakeBotHolding());
+        swapped.setCoinHandshakeBotHolding(p.isCoinHandshakeJugadorHolding());
+        swapped.setCoinHandshakeComplete(p.isCoinHandshakeComplete());
 
         if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
             swapped.setTurnoActual(Partida.Turno.BOT);
