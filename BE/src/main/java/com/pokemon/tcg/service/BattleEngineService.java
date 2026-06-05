@@ -116,7 +116,7 @@ public class BattleEngineService {
         if (!partida.isCoinFlipped()) {
             String callerAutorizado = partida.getCoinFlipCallerUsername();
             if (partida.getBotUsername() != null && callerAutorizado != null && !callerAutorizado.equals(callerUsername)) {
-                return partida;
+                throw new IllegalStateException("El sorteo lo debe lanzar " + callerAutorizado + ".");
             }
 
             String resultado = random.nextBoolean() ? "CARA" : "CRUZ";
@@ -137,6 +137,32 @@ public class BattleEngineService {
                 partida.setFaseActual(Partida.Fase.TURNO_NORMAL);
             }
         }
+        return partida;
+    }
+
+    public synchronized Partida actualizarHandshakeMoneda(String matchId, String username, boolean holding, int power) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.LANZAMIENTO_MONEDA || partida.isCoinFlipped()) {
+            return partida;
+        }
+
+        int clampedPower = Math.max(0, Math.min(100, power));
+        if (username != null && username.equals(partida.getJugadorUsername())) {
+            partida.setCoinHandshakeJugadorHolding(holding);
+            partida.setCoinHandshakeJugadorPower(clampedPower);
+        } else if (username != null && username.equals(partida.getBotUsername())) {
+            partida.setCoinHandshakeBotHolding(holding);
+            partida.setCoinHandshakeBotPower(clampedPower);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setCoinHandshakeBotHolding(true);
+            partida.setCoinHandshakeBotPower(100);
+        }
+
+        partida.setCoinHandshakeComplete(
+                partida.getCoinHandshakeJugadorPower() >= 100 && partida.getCoinHandshakeBotPower() >= 100
+        );
         return partida;
     }
 
