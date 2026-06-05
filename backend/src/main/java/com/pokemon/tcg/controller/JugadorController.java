@@ -18,7 +18,7 @@ import java.util.ArrayList;
 
 @RestController
 @RequestMapping("/api/jugadores")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class JugadorController {
 
     private final JugadorRepository jugadorRepo;
