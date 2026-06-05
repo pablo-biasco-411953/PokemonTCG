@@ -11,12 +11,14 @@ export interface SantoroQuestResponse {
   sobresDisponibles: number;
 }
 
+import { getBackendUrl } from './api-config';
+
 @Injectable({
   providedIn: 'root'
 })
 export class JugadorService {
   // Servicio para consultar resumen y coleccion del jugador.
-  private apiUrl = `http://${window.location.hostname}:8080/api/jugadores`;
+  private apiUrl = `${getBackendUrl()}/api/jugadores`;
 
   constructor(private http: HttpClient) { }
 

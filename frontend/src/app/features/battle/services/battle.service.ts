@@ -3,11 +3,12 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Card } from '../../../shared/models/card';
 import { Partida } from '../../../shared/models/battle';
+import { getBackendUrl } from '../../../core/services/api-config';
 
 @Injectable({ providedIn: 'root' })
 export class BattleService {
   // Punto de entrada para todas las acciones de combate.
-  private base = `http://${window.location.hostname}:8080/api/battle`;
+  private base = `${getBackendUrl()}/api/battle`;
 
   constructor(private http: HttpClient) {}
 
@@ -51,6 +52,15 @@ export class BattleService {
   // Ejecuta el lanzamiento inicial de moneda.
   lanzarMoneda(matchId: string, eleccion: 'CARA' | 'CRUZ'): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/coin-flip`, { eleccion }, this.getHeaders());
+  }
+
+  // Sincroniza el saludo previo al lanzamiento de moneda.
+  actualizarHandshakeMoneda(matchId: string, holding: boolean, power: number): Observable<Partida> {
+    return this.http.post<Partida>(
+      `${this.base}/${matchId}/coin-handshake`,
+      { holding, power },
+      this.getHeaders()
+    );
   }
 
   // Define quien toma el primer turno.

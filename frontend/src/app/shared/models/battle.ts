@@ -35,6 +35,11 @@ export interface Partida {
   coinFlipWinner?: string;
   coinFlipResult?: string;
   coinFlipCallerUsername?: string;
+  coinHandshakeJugadorPower?: number;
+  coinHandshakeBotPower?: number;
+  coinHandshakeJugadorHolding?: boolean;
+  coinHandshakeBotHolding?: boolean;
+  coinHandshakeComplete?: boolean;
 }
 
 export interface StartBattleResponse extends Partida {}

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BattleBoardAbilitiesPanelComponent } from './battle-board-abilities-panel.component';
 import { BattleBoardCardDetailPanelComponent } from './battle-board-card-detail-panel.component';
@@ -20,6 +20,12 @@ import { BattleBoardActionService } from './services/battle-board-action.service
 import { BattleBoardCombatService } from './services/battle-board-combat.service';
 import { BattleBoardStateService } from './services/battle-board-state.service';
 import { BattleBoardTurnService } from './services/battle-board-turn.service';
+import { JugadorService } from '../../core/services/jugador.service';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
+import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import {
   AttackCoinFlipState,
   BattleBoardAttack,
@@ -30,6 +36,16 @@ import {
   InterTurnOverlayState,
   ParticleVisualState,
 } from './battle-board.types';
+
+const CHARACTER_OPTIONS = [
+  { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'] },
+  { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'] }
+];
+
+const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations: THREE.AnimationClip[] }>();
+
 
 @Component({
   selector: 'app-battle-board',
@@ -46,7 +62,6 @@ import {
   ],
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
-  // Pantalla principal de batalla: mezcla estado remoto, animaciones y acciones del jugador.
   public Math = Math;
   readonly handDropListId = 'player-hand-dropzone';
   readonly activeDropListId = 'player-active-dropzone';
@@ -57,20 +72,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   jugadorNombre = '';
   landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
 
-  // Gesto de moneda
   private yStart = 0;
   private yEnd = 0;
   private coinPointerId: number | null = null;
   public lanzada = false;
   hoveredCard: Card | BattleActionCard | null = null;
   hoveredCardStatuses: CardGlossaryEntry[] = [];
-  hoveredCardList: HoveredBattleCard[] = []; // Lista de cartas actual (por ejemplo, la mano).
-  hoveredCardIndex = -1; // Índice de la carta resaltada dentro de la lista actual.
-  // Tracking de cartas nuevas (jugador)
+  hoveredCardList: HoveredBattleCard[] = [];
+  hoveredCardIndex = -1;
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
 
-  // Tracking de cartas nuevas (bot)
   public cartasNuevasBot = new Set<string>();
   private manoAnteriorIdsBot = new Set<string>();
   healedTextPlayer: string | null = null;
@@ -80,7 +92,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   healedTextBot: string | null = null;
   curingParalysisBot = false;
   curingSleepBot = false;
-  // Estado visual
   vibrarBot = false;
   cargandoAccion = false;
   boardVisible = false;
@@ -91,12 +102,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   tiempoRestante = 60;
   porcentajeTimer = 100;
   timerInterval: ReturnType<typeof setInterval> | null = null;
+  turnTimerEnabled = false;
   botPensando = false;
   esperandoMiNuevoTurno = false;
   turnoOverlayTipo: 'jugador' | 'bot' = 'jugador';
   public modoSeleccionRetirada = false;
 
-  // Animaciones y Panel
   animandoAtaque = false;
   public animandoBotAtaque = false;
   showImpactFlash = false;
@@ -114,7 +125,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   public botEstaAtacando = false;
   private datosPendientesBot: Partida | null = null;
   animandoEvolucionId: string | null = null;
-  // Variables internas
   public activoVisualJugador: CartaEnJuego | null = null;
   public hpRenderJugador = 0;
   public bloqueadoPorAnimacion = false;
@@ -130,13 +140,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   cartasParaVerEnDescarte: Card[] = [];
   tituloDescarteActual = '';
 
-  // Verifica si una evolución de la mano tiene un objetivo válido en mesa.
   puedeEvolucionar(cartaMano: BattleActionCard | Card): boolean {
     return this.battleBoardState.puedeEvolucionar(this.partida, cartaMano);
   }
 
-  // CoinFlip
   public estadoCoinFlip:
+    | 'DAR_LA_MANO'
     | 'ELEGIR_LADO'
     | 'ESPERANDO_TIRO'
     | 'GIRANDO'
@@ -148,22 +157,81 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   resultadoMoneda: CoinSide = 'CARA';
   public girando = false;
 
-  // -- Estado de efectos --
   mostrarAuraCuracionBot = false;
   mostrarAuraCuracionPlayer = false;
   mostrarKO = false;
 
-  // Números de daño flotantes.
   damageNumberBot: DamageNumberState | null = null;
   damageNumberPlayer: DamageNumberState | null = null;
 
-  // Partículas y efectos visuales.
   mostrarEfectoBot = false;
   mostrarEfectoJugador = false;
   particulasBot: ParticleVisualState[] = [];
   particulasJugador: ParticleVisualState[] = [];
   animandoBotDanio = false;
   animandoJugadorDanio = false;
+
+  handshakePower = 0;
+  opponentHandshakePower = 0;
+  opponentHandshakeHolding = false;
+  handshakeHits = 0;
+  handshakeComplete = false;
+  handshakeHolding = false;
+  private handshakeInterval: ReturnType<typeof setInterval> | null = null;
+  private handshakePolling: ReturnType<typeof setInterval> | null = null;
+  private lastHandshakeSyncAt = 0;
+
+  localPlayerCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
+  opponentCharacterId = 'robot';
+  opponentSkinColor = '#ffe0bd';
+  opponentHairColor = '#5c4033';
+  opponentEyeColor = '#2563eb';
+  opponentHeight = 1.0;
+  private opponentLoaded = false;
+  isPotato = false;
+
+  private handshakeRenderer?: THREE.WebGLRenderer;
+  private handshakeScene?: THREE.Scene;
+  private handshakeCamera?: THREE.PerspectiveCamera;
+  private handshakeClock = new THREE.Clock();
+  private handshakeAnimationId?: number;
+  private playerMixer?: THREE.AnimationMixer;
+  private opponentMixer?: THREE.AnimationMixer;
+  private playerModel?: THREE.Object3D;
+  private opponentModel?: THREE.Object3D;
+  private playerRightArm?: THREE.Bone;
+  private playerRightForeArm?: THREE.Bone;
+  private opponentRightArm?: THREE.Bone;
+  private opponentRightForeArm?: THREE.Bone;
+  private defaultQuaternions = new Map<THREE.Bone, THREE.Quaternion>();
+  private playerActions = new Map<string, THREE.AnimationAction>();
+  private opponentActions = new Map<string, THREE.AnimationAction>();
+  private currentAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
+
+  // Standalone Board Trainers 3D Scene Properties
+  playerTrainerCanvasInitialized = false;
+  opponentTrainerCanvasInitialized = false;
+  private playerTrainerRenderer?: THREE.WebGLRenderer;
+  private opponentTrainerRenderer?: THREE.WebGLRenderer;
+  private playerTrainerScene?: THREE.Scene;
+  private opponentTrainerScene?: THREE.Scene;
+  private playerTrainerCamera?: THREE.PerspectiveCamera;
+  private opponentTrainerCamera?: THREE.PerspectiveCamera;
+  private playerTrainerModel?: THREE.Object3D;
+  private opponentTrainerModel?: THREE.Object3D;
+  private playerTrainerMixer?: THREE.AnimationMixer;
+  private opponentTrainerMixer?: THREE.AnimationMixer;
+  private playerTrainerActions = new Map<string, THREE.AnimationAction>();
+  private opponentTrainerActions = new Map<string, THREE.AnimationAction>();
+  private currentTrainerAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
+  private trainersClock = new THREE.Clock();
+  private trainersAnimationId?: number;
+  private handshakeParticleGeometry?: THREE.SphereGeometry;
+  private handshakeSpotlight?: THREE.SpotLight;
+  private cameraShakeTime = 0;
+  private handshakeParticles: { mesh: THREE.Mesh; velocity: THREE.Vector3; color: THREE.Color; life: number; maxLife: number; }[] = [];
+  private canvasInitialized = false;
+  private effectsTriggered = false;
 
   constructor(
     private battleService: BattleService,
@@ -176,13 +244,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleBoardCombat: BattleBoardCombatService,
     private battleBoardState: BattleBoardStateService,
     private battleBoardTurn: BattleBoardTurnService,
+    private jugadorService: JugadorService,
   ) {}
 
-  // -----------------------------------------------
-  // LIFECYCLE
-  // -----------------------------------------------
-
   ngOnInit(): void {
+    this.isPotato = (navigator as any).hardwareConcurrency <= 4 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
     this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
@@ -198,14 +264,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.lastAppliedStateSignature = this.crearFirmaPartida(data);
         if (data.faseActual === 'LANZAMIENTO_MONEDA') {
           setTimeout(() => {
-            this.estadoCoinFlip = this.puedeCantarSorteo(data) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
-            if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
-              this.iniciarPollingSorteo();
-            }
+            this.estadoCoinFlip = 'DAR_LA_MANO';
+            this.iniciarPollingHandshake();
+            this.syncHandshakeWithServer(true);
             this.cdr.detectChanges();
           }, 3200);
         } else {
-          // Inicializamos los sets para que en el primer cargarEstado no marquemos todo como "nuevo"
           this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
           this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
           this.finalizarCoinFlip();
@@ -214,34 +278,144 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Limpia polling al salir de la partida.
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
+    this.detenerPollingHandshake();
+    if (this.handshakeInterval) clearInterval(this.handshakeInterval);
+    this.cleanupHandshakeScene();
   }
 
-  private requestLandscapeOrientation(): void {
-    // No bloqueamos orientacion en mobile: el aviso es solo una sugerencia descartable.
-  }
+  private requestLandscapeOrientation(): void {}
 
   dismissLandscapeHint(): void {
     this.landscapeHintDismissed = true;
     localStorage.setItem('battleLandscapeHintDismissed', 'true');
   }
 
-  // -----------------------------------------------
-  // COIN FLIP
-  // -----------------------------------------------
+  comenzarApretonMano(event: PointerEvent): void {
+    if (this.estadoCoinFlip !== 'DAR_LA_MANO' || this.handshakeComplete) return;
+    event.preventDefault();
+    this.handshakeHolding = true;
+    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    this.syncHandshakeWithServer(true);
+    this.startHandshakeLoop(9);
+  }
 
-  // Guarda la eleccion del jugador y habilita el gesto de lanzamiento.
+  soltarApretonMano(event?: PointerEvent): void {
+    if (event) {
+      try {
+        (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
+      } catch {}
+    }
+    if (this.handshakeComplete) return;
+    this.handshakeHolding = false;
+    this.syncHandshakeWithServer(true);
+    this.startHandshakeLoop(-4.5);
+  }
+
+  private startHandshakeLoop(delta: number): void {
+    if (this.handshakeInterval) clearInterval(this.handshakeInterval);
+    this.handshakeInterval = setInterval(() => this.tickHandshake(delta), 55);
+  }
+
+  private tickHandshake(delta: number): void {
+    if (this.estadoCoinFlip !== 'DAR_LA_MANO' || this.handshakeComplete) return;
+    this.handshakePower = Math.max(0, Math.min(100, this.handshakePower + delta));
+    this.handshakeHits = Math.ceil(this.handshakePower / 16.7);
+    let forceSync = false;
+
+    if (this.handshakePower >= 100) {
+      this.handshakePower = 100;
+      forceSync = true;
+      if (this.handshakeInterval) {
+        clearInterval(this.handshakeInterval);
+        this.handshakeInterval = null;
+      }
+    } else if (!this.handshakeHolding && this.handshakePower <= 0 && this.handshakeInterval) {
+      forceSync = true;
+      clearInterval(this.handshakeInterval);
+      this.handshakeInterval = null;
+    }
+    this.syncHandshakeWithServer(forceSync);
+    this.cdr.detectChanges();
+  }
+
+  private iniciarPollingHandshake(): void {
+    if (this.handshakePolling) clearInterval(this.handshakePolling);
+    this.handshakePolling = setInterval(() => {
+      if (!this.matchId || this.estadoCoinFlip !== 'DAR_LA_MANO') return;
+      this.battleService.getState(this.matchId).subscribe({
+        next: (data) => this.applyHandshakeState(data)
+      });
+    }, 250);
+  }
+
+  private detenerPollingHandshake(): void {
+    if (this.handshakePolling) {
+      clearInterval(this.handshakePolling);
+      this.handshakePolling = null;
+    }
+  }
+
+  private syncHandshakeWithServer(force = false): void {
+    if (!this.matchId) return;
+    const now = Date.now();
+    if (!force && now - this.lastHandshakeSyncAt < 120) return;
+    this.lastHandshakeSyncAt = now;
+
+    this.battleService.actualizarHandshakeMoneda(
+      this.matchId,
+      this.handshakeHolding,
+      Math.round(this.handshakePower),
+    ).subscribe({
+      next: (data) => this.applyHandshakeState(data),
+      error: (err) => console.warn('No se pudo sincronizar saludo de moneda', err)
+    });
+  }
+
+  private applyHandshakeState(data: Partida): void {
+    this.partida = data;
+    this.handshakePower = data.coinHandshakeJugadorPower ?? this.handshakePower;
+    this.opponentHandshakePower = data.coinHandshakeBotPower ?? 0;
+    this.opponentHandshakeHolding = !!data.coinHandshakeBotHolding;
+    this.handshakeComplete = !!data.coinHandshakeComplete;
+    
+    this.cargarDatosOponente();
+
+    if (this.handshakeComplete && this.estadoCoinFlip === 'DAR_LA_MANO') {
+      this.detenerPollingHandshake();
+      if (this.handshakeInterval) {
+        clearInterval(this.handshakeInterval);
+        this.handshakeInterval = null;
+      }
+      setTimeout(() => this.finalizarSaludoRival(), 600);
+    }
+    this.cdr.detectChanges();
+  }
+
+  private finalizarSaludoRival(): void {
+    if (this.estadoCoinFlip !== 'DAR_LA_MANO') return;
+    this.detenerPollingHandshake();
+    this.estadoCoinFlip = this.puedeCantarSorteo(this.partida) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
+    if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
+      this.iniciarPollingSorteo();
+    }
+    this.cdr.detectChanges();
+  }
+
   iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
+    if (!this.puedeCantarSorteo(this.partida)) {
+      this.estadoCoinFlip = 'ESPERANDO_RIVAL';
+      this.iniciarPollingSorteo();
+      return;
+    }
     this.eleccionJugador = eleccion;
     this.estadoCoinFlip = 'ESPERANDO_TIRO';
     this.lanzada = false;
     this.cdr.detectChanges();
   }
 
-  // Confirma en backend quien toma el primer turno.
   async seleccionarTurno(yoVoyPrimero: boolean) {
     try {
       await firstValueFrom(this.battleService.elegirTurno(this.matchId!, yoVoyPrimero));
@@ -252,11 +426,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Inicia el temporizador visual del turno del jugador.
   iniciarRelojTurno() {
     this.detenerRelojTurno();
     this.tiempoRestante = this.tiempoTurnoMaximo;
     this.porcentajeTimer = 100;
+    if (!this.turnTimerEnabled) return;
 
     this.timerInterval = setInterval(() => {
       if (
@@ -270,7 +444,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.tiempoRestante--;
       this.porcentajeTimer = (this.tiempoRestante / this.tiempoTurnoMaximo) * 100;
 
-      // Forzamos a Angular a refrescar barra y texto del timer.
       this.cdr.detectChanges();
 
       if (this.tiempoRestante <= 0) {
@@ -279,7 +452,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // Detiene el temporizador cuando cambia el turno o termina una accion.
   detenerRelojTurno() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
@@ -287,14 +459,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Pasa el turno automáticamente si el jugador se queda sin tiempo.
   async ejecutarTimeOut() {
+    if (!this.turnTimerEnabled) return;
     this.detenerRelojTurno();
     console.log('Tiempo agotado. Pasando turno automáticamente...');
     await this.pasarTurno();
   }
 
-  // Oculta la interfaz del sorteo y muestra el tablero principal.
   finalizarCoinFlip() {
     if (this.pollingSorteo) {
       clearInterval(this.pollingSorteo);
@@ -319,7 +490,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   get nombreRival(): string {
-    return this.partida?.botUsername || 'BOT';
+    if (!this.partida) return 'BOT';
+    if (this.partida.botUsername === this.jugadorNombre) {
+      return this.partida.jugadorUsername || 'BOT';
+    }
+    return this.partida.botUsername || 'BOT';
   }
 
   get nombreGanadorSorteo(): string {
@@ -374,7 +549,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
-  // Guarda el punto inicial del gesto de lanzamiento.
   onCoinPointerDown(event: PointerEvent) {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
     event.preventDefault();
@@ -389,8 +563,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   interTurnOverlay: InterTurnOverlayState | null = null;
-
-  // -- Coin flip de ataque --
   coinFlipAtaque: AttackCoinFlipState | null = null;
 
   async mostrarInterTurn(
@@ -407,11 +579,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     await this.delay(duracion);
 
-    // Fade out
     this.interTurnOverlay = null;
     this.cdr.detectChanges();
 
-    // Pequeña pausa de limpieza.
     await this.delay(200);
   }
 
@@ -522,7 +692,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.hoveredCardIndex = -1;
   }
 
-  // Navegación con la rueda del mouse dentro de la mano.
   @HostListener('window:wheel', ['$event'])
   onScrollCard(event: WheelEvent) {
     if (
@@ -534,18 +703,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
       const now = Date.now();
 
-      // Bloqueamos temporalmente el hover físico del mouse.
       this.isScrollingMode = true;
       if (this.scrollTimeout) clearTimeout(this.scrollTimeout);
       this.scrollTimeout = setTimeout(() => {
-        this.isScrollingMode = false; // Se desbloquea 200 ms después de dejar de girar.
+        this.isScrollingMode = false;
       }, 200);
 
-      // Freno de velocidad: solo permite 1 salto de carta cada 120 ms.
       if (now - this.lastScrollTime < 120) return;
       this.lastScrollTime = now;
 
-      // Avanza o retrocede el índice de la carta mostrada.
       if (event.deltaY > 0) {
         this.hoveredCardIndex = (this.hoveredCardIndex + 1) % this.hoveredCardList.length;
       } else if (event.deltaY < 0) {
@@ -553,7 +719,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           (this.hoveredCardIndex - 1 + this.hoveredCardList.length) % this.hoveredCardList.length;
       }
 
-      // Actualizamos el panel de detalle.
       const nextItem = this.hoveredCardList[this.hoveredCardIndex];
       const cartaReal: Card | BattleActionCard = 'card' in nextItem ? nextItem.card : nextItem;
 
@@ -562,19 +727,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Click central para jugar la carta actualmente enfocada.
   @HostListener('window:mousedown', ['$event'])
   onMiddleClick(event: MouseEvent) {
-    // event.button === 1 indica el botón central.
     if (
       event.button === 1 &&
       this.hoveredCard &&
       this.hoveredCardList === this.partida?.jugador?.mano
     ) {
       event.preventDefault();
-
       console.log('Click central: jugando carta', this.hoveredCard.nombre);
-      this.jugarCarta(this.hoveredCard); // Juega la carta que se ve en el panel grande.
+      this.jugarCarta(this.hoveredCard);
     }
   }
 
@@ -586,41 +748,44 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private lastTime = performance.now();
   private animFrameId: number | null = null;
 
-  // ??? DETECTOR DE TECLA F3
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'F3') {
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
 
-      // Prendemos o apagamos el medidor para no gastar recursos si está cerrado
       if (this.showDebugPanel) {
+        this.turnTimerEnabled = true;
+        if (this.partida?.turnoActual === 'JUGADOR') {
+          this.iniciarRelojTurno();
+        }
         this.iniciarMedidorRendimiento();
       } else {
+        this.turnTimerEnabled = false;
+        this.detenerRelojTurno();
+        this.tiempoRestante = this.tiempoTurnoMaximo;
+        this.porcentajeTimer = 100;
         this.detenerMedidorRendimiento();
       }
+      this.cdr.detectChanges();
     }
   }
 
-  // ?? LÓGICA DE RENDIMIENTO (FPS Y MEMORIA)
   iniciarMedidorRendimiento() {
     const loop = () => {
       const now = performance.now();
       this.frameCount++;
 
-      // Actualizamos las métricas cada 1 segundo (1000ms)
       if (now >= this.lastTime + 1000) {
         this.fps = Math.round((this.frameCount * 1000) / (now - this.lastTime));
         this.frameCount = 0;
         this.lastTime = now;
 
-        // Intentar leer memoria (API específica de navegadores basados en Chromium)
         const mem = (performance as any).memory;
         if (mem) {
           this.memoryUsage = (mem.usedJSHeapSize / 1048576).toFixed(2) + ' MB';
         }
 
-        // Forzamos que Angular pinte estos numeritos sin afectar la partida
         this.cdr.detectChanges();
       }
       this.animFrameId = requestAnimationFrame(loop);
@@ -641,11 +806,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       estadoFinal?.jugador?.activo,
     );
 
-    // Caso: el jugador estaba dormido y el server resolvió la moneda.
     if (wakeCheck) {
       console.log('Lanzando moneda de despertar...');
 
-      // Reutilizamos el overlay de monedas con un evento ficticio.
       const configFicticia = {
         descripcion: '¿Se despierta?',
         cantidadMonedas: 1,
@@ -678,7 +841,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   setHoveredCard(item: any, list: any[] = [], index: number = -1) {
-    // ?? FIX: Si estamos girando la ruedita, ignoramos los choques físicos del mouse
     if (this.isScrollingMode) return;
 
     if (!item) {
@@ -700,7 +862,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     danioExtraPorCara: number,
     esSoloEstado: boolean,
   ): Promise<number> {
-    // Inicializamos el estado del coin flip.
     this.coinFlipAtaque = {
       nombreAtaque,
       descripcion,
@@ -717,41 +878,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     };
 
     this.cdr.detectChanges();
-    // Pequeña pausa para que el overlay aparezca.
     await this.delay(600);
 
     let caras = 0;
 
-    // Lanzamos cada moneda con un delay entre ellas
     for (let i = 0; i < cantidadMonedas; i++) {
-      // Progreso de la barra
       this.coinFlipAtaque!.progreso = ((i + 1) / cantidadMonedas) * 100;
       this.cdr.detectChanges();
 
-      // Delay de "giro" antes de revelar
       await this.delay(600 + Math.random() * 400);
 
-      // Resultado aleatorio
       const esCara = Math.random() < 0.5;
       if (esCara) caras++;
 
       this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
       this.cdr.detectChanges();
 
-      // Pausa entre monedas
       await this.delay(300);
     }
 
-    // Calculamos el daño total
     const danioTotal = danioBase + caras * danioExtraPorCara;
     this.coinFlipAtaque!.danioTotal = danioTotal;
     this.coinFlipAtaque!.terminado = true;
     this.cdr.detectChanges();
 
-    // Mostramos el resultado un momento
-    await this.delay(2000);
+    await this.delay(3000);
 
-    // Cerramos el overlay
     this.coinFlipAtaque = null;
     this.cdr.detectChanges();
 
@@ -780,42 +932,36 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async procesarEventosPostEstado(estadoAnterior: any, estadoNuevo: any): Promise<void> {
-    // -- KO del Pokémon del bot --
     const botActivoAntes = estadoAnterior?.bot?.activo;
     const botActivoAhora = estadoNuevo?.bot?.activo;
     if (botActivoAntes && !botActivoAhora) {
       await this.mostrarKOAnim();
     }
 
-    // -- KO del Pokémon del jugador --
     const playerActivoAntes = estadoAnterior?.jugador?.activo;
     const playerActivoAhora = estadoNuevo?.jugador?.activo;
     if (playerActivoAntes && !playerActivoAhora) {
       await this.mostrarKOAnim();
     }
 
-    // -- Daño al bot --
     const hpBotAntes = botActivoAntes?.hpActual ?? 0;
     const hpBotAhora = botActivoAhora?.hpActual ?? 0;
     if (botActivoAntes && botActivoAhora && hpBotAhora < hpBotAntes) {
       this.mostrarDamageNumber('bot', hpBotAntes - hpBotAhora);
     }
 
-    // -- Curación del bot --
     if (botActivoAntes && botActivoAhora && hpBotAhora > hpBotAntes) {
       const curado = hpBotAhora - hpBotAntes;
       this.mostrarDamageNumber('bot', curado, true);
       this.mostrarCuracion('bot');
     }
 
-    // -- Daño al jugador --
     const hpPlayerAntes = playerActivoAntes?.hpActual ?? 0;
     const hpPlayerAhora = playerActivoAhora?.hpActual ?? 0;
     if (playerActivoAntes && playerActivoAhora && hpPlayerAhora < hpPlayerAntes) {
       this.mostrarDamageNumber('jugador', hpPlayerAntes - hpPlayerAhora);
     }
 
-    // -- Curación del jugador --
     if (playerActivoAntes && playerActivoAhora && hpPlayerAhora > hpPlayerAntes) {
       const curado = hpPlayerAhora - hpPlayerAntes;
       this.mostrarDamageNumber('jugador', curado, true);
@@ -826,12 +972,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   debugFullCatalog: Card[] = [];
   debugFilteredCatalog: Card[] = [];
   debugSelectedIndex = 0;
-
-  // Criterios de búsqueda del panel debug.
   debugSearchText = '';
   debugSearchSupertype = '';
 
-  // Carga el catálogo debug usado por las herramientas de prueba.
   cargarCatalogoGodMode() {
     this.battleService.getCardCatalogDebug().subscribe({
       next: (cartas) => {
@@ -844,7 +987,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Actualiza el filtro textual del panel debug.
   actualizarFiltroTexto(value: string | Event) {
     const rawValue =
       typeof value === 'string' ? value : ((value.target as HTMLInputElement | null)?.value ?? '');
@@ -852,25 +994,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.aplicarFiltrosDebug();
   }
 
-  // Actualiza el filtro por supertipo del panel debug.
   actualizarFiltroTipo(value: string | Event) {
     this.debugSearchSupertype =
       typeof value === 'string' ? value : ((value.target as HTMLSelectElement | null)?.value ?? '');
     this.aplicarFiltrosDebug();
   }
 
-  // Aplica filtros y reinicia el carrusel del catalogo debug.
   aplicarFiltrosDebug() {
     this.debugFilteredCatalog = this.debugFullCatalog.filter((c) => {
-      // 1. Filtro por tipo (Pokémon, Trainer, Energy).
       const matchTipo = !this.debugSearchSupertype || c.supertype === this.debugSearchSupertype;
 
-      // 2. Filtro por texto en nombre, ataques o efectos.
       let matchTexto = true;
       if (this.debugSearchText) {
         const nombreMatch = c.nombre?.toLowerCase().includes(this.debugSearchText);
 
-        // Buscamos dentro de los ataques por palabras clave.
         const ataquesMatch = c.ataques?.some(
           (atk: any) =>
             atk.nombre?.toLowerCase().includes(this.debugSearchText) ||
@@ -883,29 +1020,26 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return matchTipo && matchTexto;
     });
 
-    this.debugSelectedIndex = 0; // Reseteamos el carrusel al primer resultado.
+    this.debugSelectedIndex = 0;
   }
 
-  // Devuelve la carta debug actualmente enfocada.
   get debugSelectedCard(): Card | null {
     if (!this.debugFilteredCatalog || this.debugFilteredCatalog.length === 0) return null;
     return this.debugFilteredCatalog[this.debugSelectedIndex];
   }
 
-  // Avanza a la siguiente carta del carrusel debug.
   nextDebugCard() {
     if (this.debugFilteredCatalog.length === 0) return;
     this.debugSelectedIndex = (this.debugSelectedIndex + 1) % this.debugFilteredCatalog.length;
   }
 
-  // Retrocede a la carta anterior del carrusel debug.
   prevDebugCard() {
     if (this.debugFilteredCatalog.length === 0) return;
     this.debugSelectedIndex =
       (this.debugSelectedIndex - 1 + this.debugFilteredCatalog.length) %
       this.debugFilteredCatalog.length;
   }
-  // Traduce el texto técnico del coin flip a una descripción visible.
+
   private traducirEfectoCoinFlip(
     textoOriginal: string,
     monedas: number,
@@ -929,11 +1063,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     return `Lanzá ${numStr}. Hace ${danio} de daño extra por cada CARA.`;
   }
-  // -----------------------------------------------
-  // CARGA DE ESTADO
-  // -----------------------------------------------
 
-  // Sincroniza el estado de batalla con el backend.
   cargarEstado(): void {
     const online = this.esPartidaOnline();
     if (!this.matchId || this.cargandoAccion || (!online && (this.bloqueadoPorAnimacion || this.botEstaAtacando || this.botPensando))) return;
@@ -956,7 +1086,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // --- DETECCIÓN DE CARTAS NUEVAS ---
         if (data.jugador?.mano) {
           this.detectarCartasNuevas(data.jugador.mano);
         }
@@ -964,27 +1093,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.detectarCartasNuevasBot(data.bot.mano);
         }
 
-        this.cdr.detectChanges(); // tick intermedio
+        this.cdr.detectChanges();
 
-        // ?? 1. GUARDAMOS DE QUIÉN ERA EL TURNO ANTES DE ACTUALIZAR
         const turnoAnterior = this.partida?.turnoActual;
 
-        // --- ACTUALIZACIÓN DEL ESTADO ---
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
 
         if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
           this.esperandoMiNuevoTurno = false;
-          this.iniciarRelojTurno(); // ¡Prende la mecha de 60 segundos!
+          this.iniciarRelojTurno();
         } else if (this.partida.turnoActual === 'BOT') {
           this.detenerRelojTurno();
         }
 
-        // ?? 2. CHEQUEAMOS SI ARRANCÓ TU TURNO PARA PRENDER LA MECHA
         if (turnoAnterior !== 'JUGADOR' && this.partida.turnoActual === 'JUGADOR') {
           this.iniciarRelojTurno();
         }
-        // ?? 3. SI EL TURNO ES DEL BOT, APAGAMOS TU RELOJ
         else if (this.partida.turnoActual === 'BOT') {
           this.detenerRelojTurno();
         }
@@ -993,17 +1118,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.hpRenderJugador = hpServidorJugador;
         }
 
-        this.cdr.detectChanges(); // Actualizamos la UI, incluyendo la barra del timer
+        this.cdr.detectChanges();
       },
     });
   }
 
-  // -----------------------------------------------
-  // DETECCIÓN DE CARTAS NUEVAS
-  // -----------------------------------------------
-
   private detectarCartasNuevas(nuevaMano: any[]): void {
-    // Marca visualmente cartas nuevas en la mano del jugador.
     nuevaMano.forEach((carta: any) => {
       if (!this.manoAnteriorIds.has(carta.id)) {
         this.cartasNuevas.add(carta.id);
@@ -1017,7 +1137,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private detectarCartasNuevasBot(nuevaMano: any[]): void {
-    // Marca visualmente cartas nuevas en la mano del bot.
     nuevaMano.forEach((carta: any) => {
       if (!this.manoAnteriorIdsBot.has(carta.id)) {
         this.cartasNuevasBot.add(carta.id);
@@ -1029,10 +1148,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
     this.manoAnteriorIdsBot = new Set(nuevaMano.map((c: any) => c.id));
   }
-
-  // -----------------------------------------------
-  // FAN DE CARTAS (posicionamiento sin bugs)
-  // -----------------------------------------------
 
   getCardFanTransform(index: number, total: number): string {
     const maxAngle = Math.min(4 * total, 35);
@@ -1046,12 +1161,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
   }
 
-  // -----------------------------------------------
-  // POLLING
-  // -----------------------------------------------
-
   iniciarPolling(): void {
-    // En PvP refresca siempre liviano; contra IA solo cuando juega el rival.
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     this.pollingPartida = setInterval(() => {
       if (this.esPartidaOnline()) {
@@ -1065,12 +1175,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }, 1200);
   }
 
-  // -----------------------------------------------
-  // TURNOS Y OVERLAYS
-  // -----------------------------------------------
-
   private mostrarTurnOverlay(turno: 'jugador' | 'bot'): void {
-    // Muestra la transicion visual entre turnos.
     this.turnoOverlayTipo = turno;
     this.showTurnOverlay = true;
     this.cdr.detectChanges();
@@ -1084,7 +1189,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   procesarCambioDeTurnoDramatico(dataServidor: any) {
-    // Orquesta la transicion dramatica hacia el turno del bot.
     this.bloqueadoPorAnimacion = true;
     this.partida = dataServidor;
     this.lastAppliedStateSignature = this.crearFirmaPartida(dataServidor);
@@ -1123,10 +1227,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // -----------------------------------------------
-  // IA ENEMIGA
-  // -----------------------------------------------
-
   ejecutarIAEnemiga() {
     if (this.datosPendientesBot) {
       const data = this.datosPendientesBot;
@@ -1136,7 +1236,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async ejecutarIAEnemigaConData(estadoFinal: any) {
-    // ?? 1. GUARDAMOS LA FOTO ANTES DE QUE EL BOT ACTÚE
     const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
     const analisisBot = this.battleBoardTurn.analizarTurnoBot(
       estadoAntiguo,
@@ -1148,25 +1247,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       estadoFinal?.bot?.activo,
     );
 
-    // ?? 2. FASE DE MANTENIMIENTO DEL BOT (MONEDA DE DESPERTAR)
-    // Lo hacemos ANTES de procesar el ataque
     if (wakeCheckBot) {
       console.log('Checkup del bot. ¿Se despierta?', wakeCheckBot.seDesperto);
       await this.reproducirChequeoDespertar('¿Se despierta el rival?', wakeCheckBot.seDesperto);
     }
 
-    // ?? 3. LÓGICA DE DECISIÓN (¿El bot ataca realmente?)
     const { botAtaco, hpJugadorDespues, danioHecho } = analisisBot;
     const activoBotDespues = estadoFinal?.bot?.activo;
 
-    // ?? 4. ESCANEAMOS CURACIONES/DAÑOS PASIVOS
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
-    // ? 5. SALIDA SIN ATAQUE (si falló la moneda o estaba paralizado)
     if (!botAtaco) {
       this.aplicarEstadoRefrescado(estadoFinal);
 
-      this.limpiarBanderasBot(); // Método auxiliar para no repetir código
+      this.limpiarBanderasBot();
 
       if (this.partida?.turnoActual === 'JUGADOR') {
         this.iniciarRelojTurno();
@@ -1175,9 +1269,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ?? 6. SI ATACÓ, ANIMAMOS EL IMPACTO Y CERRAMOS LA SECUENCIA
     this.botEstaAtacando = true;
     this.animandoBotAtaque = true;
+    this.triggerTrainerAttack('opponent');
     this.cdr.detectChanges();
 
     if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
@@ -1203,7 +1297,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
     }
 
-    // 7. EL MOMENTO DEL IMPACTO
     this.showImpactFlash = true;
     this.aplicarEstadoRefrescado(estadoFinal);
     this.cdr.detectChanges();
@@ -1212,7 +1305,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.showImpactFlash = false;
     this.cdr.detectChanges();
 
-    // ?? 8. FINAL DE LA SECUENCIA
     await this.delay(600);
     this.limpiarBanderasBot();
 
@@ -1223,7 +1315,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  // Método auxiliar para limpiar estados
   private limpiarBanderasBot() {
     this.animandoBotAtaque = false;
     this.botEstaAtacando = false;
@@ -1247,7 +1338,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Herramienta 1: robar carta manualmente.
   async debugRobarCarta(cardId: string) {
     if (!cardId) return;
     try {
@@ -1260,7 +1350,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Herramienta 2: Forzar Estado (Dormir, Paralizar, etc.)
   async debugForzarEstado(objetivo: 'JUGADOR' | 'BOT', estado: string) {
     try {
       console.log(`GOD MODE: forzando estado ${estado} a ${objetivo}...`);
@@ -1271,7 +1360,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Herramienta 3: setear HP.
   async debugSetHp(objetivo: 'JUGADOR' | 'BOT', hp: number) {
     try {
       console.log(`GOD MODE: seteando HP de ${objetivo} a ${hp}...`);
@@ -1308,10 +1396,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     this.cdr.detectChanges();
 
-    // Dejamos la animación por 2 segundos (exactamente lo que pediste)
     await this.delay(2000);
 
-    // Apagamos todo y se disuelve
     if (quien === 'jugador') {
       this.healedTextPlayer = null;
       this.curingParalysisPlayer = false;
@@ -1328,7 +1414,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   async verificarEstadosCurados(estadoAnterior: any, estadoNuevo: any) {
     if (!estadoAnterior || !estadoNuevo) return;
 
-    // --- REVISAMOS AL JUGADOR ---
     const condViejoJugador = estadoAnterior.jugador?.activo?.condicionesEspeciales || [];
     const condNuevoJugador = estadoNuevo.jugador?.activo?.condicionesEspeciales || [];
 
@@ -1341,7 +1426,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.animarCuraEstado('jugador', 'Asleep', '¡Se despertó!');
     }
 
-    // --- REVISAMOS AL BOT ---
     const condViejoBot = estadoAnterior.bot?.activo?.condicionesEspeciales || [];
     const condNuevoBot = estadoNuevo.bot?.activo?.condicionesEspeciales || [];
 
@@ -1392,10 +1476,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // -----------------------------------------------
-  // ACCIONES DE JUEGO
-  // -----------------------------------------------
-
   async ejecutarAtaqueSecuencia(nombreAtaque: string) {
     if (this.cargandoAccion || !nombreAtaque) return;
 
@@ -1436,13 +1516,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       console.error('Error en ataque:', error);
     }
   }
+
   async iniciarTurnoBot(estadoFinal: any) {
     await this.delay(1000);
     this.cargandoAccion = false;
     await this.mostrarOverlayTurnoBot();
 
     if (this.partida?.botUsername) {
-      // PvP match: do not trigger bot AI. Just unblock animation and poll/wait.
       this.bloqueadoPorAnimacion = false;
       this.cdr.detectChanges();
       return;
@@ -1456,10 +1536,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
     }
   }
+
   async pasarTurno(): Promise<void> {
     console.log("?? Botón 'Pasar Turno' presionado.");
 
-    // ??? 1. VALIDACIONES DE SEGURIDAD
     if (this.partida?.turnoActual !== 'JUGADOR') {
       console.warn('? Bloqueado: No es tu turno.');
       return;
@@ -1469,50 +1549,45 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // ? 2. BLOQUEO INMEDIATO Y RESET DE RELOJ
     this.cargandoAccion = true;
     this.bloqueadoPorAnimacion = true;
     this.detenerRelojTurno();
 
-    // Reseteamos visualmente la barra para que no quede a la mitad
     this.tiempoRestante = this.tiempoTurnoMaximo;
     this.porcentajeTimer = 100;
     this.esperandoMiNuevoTurno = true;
     this.cdr.detectChanges();
 
-    // Guardamos "la foto" de la mesa antes del cambio para comparar estados
     const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
 
     try {
       console.log('? Enviando fin de turno al servidor (Java)...');
-      // Avisamos al backend que termine nuestro turno
       const estadoFinal = await this.battleBoardCombat.pasarTurnoYRecargar(this.matchId!);
       console.log('?? Datos de Checkup recibidos del server.');
       await this.procesarPostPassTurn(estadoAntiguo, estadoFinal);
     } catch (error: any) {
-      // En caso de error, liberamos la UI para que no quede trabada
       this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
       console.error('? Error del servidor al pasar turno:', error);
       alert('Error de conexión: ' + (error?.error ?? 'El servidor no responde'));
     }
   }
+
   realizarAccion(habilidad: BattleBoardAttack): void {
     this.showHabilidadesPanel = false;
     if (!this.validarEnergiaAtaque(habilidad)) {
       alert('No tenés suficiente energía para usar ' + habilidad.nombre + '!');
       return;
     }
-    // IMPORTANTE: Ahora pasamos por acá siempre
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
   }
+
   async animarMonedasSincronizadas(
     nombreAtaque: string,
     config: CoinFlipConfig,
     carasForzadas: number,
     esSoloEstado: boolean,
   ): Promise<void> {
-    // 1. Reiniciamos el estado visual
     this.resultadoMoneda = '';
 
     this.coinFlipAtaque = {
@@ -1530,10 +1605,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       esSoloEstado: esSoloEstado,
     };
     this.cdr.detectChanges();
+    await this.delay(120);
 
     let carasAsignadas = 0;
     for (let i = 0; i < config.cantidadMonedas; i++) {
-      // Progreso visual de la barra
       this.coinFlipAtaque!.progreso = ((i + 1) / config.cantidadMonedas) * 100;
 
       await this.delay(600 + Math.random() * 200);
@@ -1547,10 +1622,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
       if (esCara) carasAsignadas++;
 
-      // Seteamos el estado visual de la moneda actual
       this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
 
-      // ?? Actualizamos el flag que usa el HTML para el cartel "LOGRADO/FALLÓ"
       if (config.cantidadMonedas === 1) {
         this.resultadoMoneda = esCara ? 'CARA' : 'CRUZ';
       }
@@ -1559,7 +1632,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.delay(400);
     }
 
-    // Si son varias monedas, definimos el resultado global
     if (config.cantidadMonedas > 1) {
       this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
         config.cantidadMonedas,
@@ -1567,7 +1639,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       );
     }
 
-    // ?? CÁLCULO FINAL: Aseguramos que el daño extra mostrado sea el correcto
     this.coinFlipAtaque!.danioTotal = this.battleBoardTurn.calcularDanioMonedas(
       config,
       carasAsignadas,
@@ -1575,12 +1646,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.coinFlipAtaque!.terminado = true;
     this.cdr.detectChanges();
 
-    // Pausa para que el usuario festeje (o llore) el resultado
-    await this.delay(2000);
+    await this.delay(3000);
 
-    // Limpieza
     this.coinFlipAtaque = null;
-    // (this as any).resultadoMoneda = ""; // Opcional: limpiar para el próximo ataque
     this.cdr.detectChanges();
   }
 
@@ -1631,28 +1699,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cargandoAccion = true;
 
     try {
-      // 1. Avisamos al backend
       const estadoFinal = await this.battleBoardAction.evolucionarYRecargar(
         this.matchId!,
         cartaEvolucion.id,
         target.card.id,
       );
 
-      // 2. Disparamos la luz blanca sobre el Pokémon objetivo
       this.animandoEvolucionId = target.card.id;
       this.cdr.detectChanges();
 
-      // Dejamos que el brillo suba (600ms)
       await this.delay(600);
 
-      // 3. Justo en el pico de la luz, pedimos la foto nueva con el Pokémon ya evolucionado
       this.aplicarEstadoRefrescado(estadoFinal);
       this.cdr.detectChanges();
 
-      // Dejamos que el brillo baje y muestre el nuevo sprite
       await this.delay(600);
 
-      // 4. Limpiamos
       this.animandoEvolucionId = null;
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
@@ -1791,10 +1853,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     );
   }
 
-  // -----------------------------------------------
-  // ENERGÍA DRAG
-  // -----------------------------------------------
-
   onEnergyMouseMove = (event: MouseEvent) => {
     this.mousePos = { x: event.clientX, y: event.clientY };
   };
@@ -1827,10 +1885,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
     }
   }
-
-  // -----------------------------------------------
-  // SPRITES Y UTILIDADES
-  // -----------------------------------------------
 
   getSpriteBack(nombreCarta: string): string {
     return this.battleBoardUi.getSpriteBack(nombreCarta);
@@ -1887,9 +1941,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   getTextoEstadoTurno(): string {
-    return this.partida?.turnoActual === 'JUGADOR'
-      ? `TU TURNO (${this.tiempoRestante}s)`
-      : 'TURNO RIVAL';
+    if (this.partida?.turnoActual !== 'JUGADOR') return 'TURNO RIVAL';
+    return this.turnTimerEnabled ? `TU TURNO (${this.tiempoRestante}s)` : 'TU TURNO (SIN LIMITE)';
   }
 
   getTextoBotonTurno(): string {
@@ -1936,10 +1989,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   getEnergyColor(tipo: string): string {
     return this.battleBoardUi.getEnergyColor(tipo);
   }
-
-  // -----------------------------------------------
-  // VALIDACION DE ENERGIAS
-  // -----------------------------------------------
 
   validarEnergiaAtaque(ataque: any): boolean {
     return this.battleBoardAttack.validarEnergiaAtaque(ataque, this.partida?.jugador?.activo);
@@ -2114,6 +2163,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     estadoFinal: Partida,
   ): Promise<void> {
     this.animandoAtaque = true;
+    this.triggerTrainerAttack('player');
     this.cdr.detectChanges();
 
     await this.delay(400);
@@ -2180,7 +2230,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     await this.mostrarOverlayTurnoBot();
 
     if (this.partida?.botUsername) {
-      // PvP match: do not trigger bot AI. Just unblock animation and poll/wait.
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
       this.cdr.detectChanges();
@@ -2201,12 +2250,980 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  // -----------------------------------------------
-  // NAVEGACION
-  // -----------------------------------------------
-
   volverAlLobby(): void {
     this.router.navigate(['/lobby']);
+  }
+
+  getCharacterLabel(id: string): string {
+    const option = CHARACTER_OPTIONS.find(o => o.id === id);
+    return option ? option.label : 'Trainer';
+  }
+
+  cargarDatosOponente(): void {
+    if (this.opponentLoaded || !this.nombreRival || this.nombreRival === 'BOT') {
+      return;
+    }
+    this.opponentLoaded = true;
+    this.jugadorService.getJugador(this.nombreRival).subscribe({
+      next: (res) => {
+        if (res) {
+          const oldCharId = this.opponentCharacterId;
+          this.opponentCharacterId = res.characterId || 'robot';
+          this.opponentSkinColor = res.skinColor || '#ffe0bd';
+          this.opponentHairColor = res.hairColor || '#5c4033';
+          this.opponentEyeColor = res.eyeColor || '#2563eb';
+          this.opponentHeight = res.height || 1.0;
+          
+          if (this.opponentCharacterId !== oldCharId) {
+            if (this.handshakeScene) {
+              if (this.opponentModel) {
+                this.disposeModelMaterials(this.opponentModel);
+                this.handshakeScene.remove(this.opponentModel);
+                this.opponentModel = undefined;
+              }
+              this.opponentMixer = undefined;
+              this.opponentActions.clear();
+              this.loadOpponentModelInScene();
+            }
+          } else {
+            this.loadOpponent3DModel();
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.warn('No se pudo cargar datos del rival, usando bot por defecto', err);
+      }
+    });
+  }
+
+  loadOpponent3DModel(): void {
+    if (this.opponentModel) {
+      this.applyModelCustomization(
+        this.opponentModel,
+        this.opponentCharacterId,
+        this.opponentSkinColor,
+        this.opponentHairColor,
+        this.opponentEyeColor,
+        this.opponentHeight
+      );
+    }
+  }
+
+  @ViewChild('playerTrainerCanvas') set playerTrainerCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element && !this.playerTrainerCanvasInitialized) {
+      this.playerTrainerCanvasInitialized = true;
+      setTimeout(() => this.initPlayerTrainerScene(element.nativeElement), 0);
+    }
+  }
+
+  @ViewChild('opponentTrainerCanvas') set opponentTrainerCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element && !this.opponentTrainerCanvasInitialized) {
+      this.opponentTrainerCanvasInitialized = true;
+      setTimeout(() => this.initOpponentTrainerScene(element.nativeElement), 0);
+    }
+  }
+
+  @ViewChild('handshakeCanvas') set handshakeCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element && !this.canvasInitialized) {
+      this.canvasInitialized = true;
+      setTimeout(() => this.initHandshakeScene(element.nativeElement), 0);
+    }
+  }
+
+  private initHandshakeScene(canvas: HTMLCanvasElement): void {
+    this.effectsTriggered = false;
+    this.handshakeClock.getDelta();
+
+    const width = canvas.clientWidth || 520;
+    const height = canvas.clientHeight || 156;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: !this.isPotato && window.devicePixelRatio < 2,
+      preserveDrawingBuffer: false,
+      powerPreference: 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false,
+      depth: true
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    this.handshakeRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    this.handshakeScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(30, width / height, 0.1, 100);
+    camera.position.set(0, 0.82, 3.8);
+    camera.lookAt(0, 0.82, 0);
+    this.handshakeCamera = camera;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.76);
+    scene.add(ambientLight);
+
+    const spotLight = new THREE.SpotLight(0xfcd34d, 5.0, 10, Math.PI / 3, 0.5, 1);
+    spotLight.position.set(0, 2.5, 0.5);
+    spotLight.target.position.set(0, 0.82, 0);
+    scene.add(spotLight);
+    scene.add(spotLight.target);
+    this.handshakeSpotlight = spotLight;
+
+    const fillLight = new THREE.PointLight(0x06b6d4, 3.0, 8);
+    fillLight.position.set(0, 0.5, -0.5);
+    scene.add(fillLight);
+
+    this.loadHandshakePlayerInScene();
+    this.loadOpponentModelInScene();
+
+    const animate = () => {
+      if (!this.canvasInitialized) return;
+      this.handshakeAnimationId = requestAnimationFrame(animate);
+
+      const dt = this.handshakeClock.getDelta();
+      
+      if (this.playerMixer) this.playerMixer.update(dt);
+      if (this.opponentMixer) this.opponentMixer.update(dt);
+
+      const playerTargetX = -2.5 + (this.handshakePower / 100) * 2.12;
+      const opponentTargetX = 2.5 - (this.opponentHandshakePower / 100) * 2.12;
+
+      if (this.playerModel) {
+        const prevX = this.playerModel.position.x;
+        this.playerModel.position.x += (playerTargetX - this.playerModel.position.x) * 0.12;
+        const speed = Math.abs(this.playerModel.position.x - prevX) / (dt || 0.016);
+        this.setHandshakeAnimation(this.playerMixer!, this.playerActions, speed > 0.4 ? 'walk' : 'idle');
+      }
+
+      if (this.opponentModel) {
+        const prevX = this.opponentModel.position.x;
+        this.opponentModel.position.x += (opponentTargetX - this.opponentModel.position.x) * 0.12;
+        const speed = Math.abs(this.opponentModel.position.x - prevX) / (dt || 0.016);
+        this.setHandshakeAnimation(this.opponentMixer!, this.opponentActions, speed > 0.4 ? 'walk' : 'idle');
+      }
+
+      if (this.playerModel && this.opponentModel) {
+        const dist = this.opponentModel.position.x - this.playerModel.position.x;
+        const blend = Math.max(0, Math.min(1, (2.2 - dist) / 1.44));
+        
+        this.applyProceduralArm(this.playerRightArm, this.playerRightForeArm, blend, 'player');
+        this.applyProceduralArm(this.opponentRightArm, this.opponentRightForeArm, blend, 'opponent');
+      }
+
+      if (this.handshakeComplete && !this.effectsTriggered) {
+        this.effectsTriggered = true;
+        this.triggerHandshakeImpactEffects();
+      }
+
+      if (this.handshakeSpotlight && this.handshakeSpotlight.intensity > 5.0) {
+        this.handshakeSpotlight.intensity -= 60.0 * dt;
+        if (this.handshakeSpotlight.intensity < 5.0) {
+          this.handshakeSpotlight.intensity = 5.0;
+        }
+      }
+
+      this.updateHandshakeParticles(dt);
+      this.updateCameraShake(dt, camera);
+
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
+    };
+
+    animate();
+  }
+
+  private loadHandshakePlayerInScene(): void {
+    this.loadHandshakeCharacter(this.localPlayerCharacterId, (model, animations) => {
+      this.playerModel = model;
+
+      model.traverse((child: any) => {
+        if (child.isBone) {
+          this.defaultQuaternions.set(child, child.quaternion.clone());
+        }
+      });
+
+      const bones = this.findBones(model);
+      this.playerRightArm = bones.rightArm || undefined;
+      this.playerRightForeArm = bones.rightForeArm || undefined;
+
+      this.playerMixer = new THREE.AnimationMixer(model);
+      animations.forEach(clip => {
+        this.playerActions.set(clip.name.toLowerCase(), this.playerMixer!.clipAction(clip));
+      });
+
+      const localSkin = localStorage.getItem('lobbySkinColor') || '#ffe0bd';
+      const localHair = localStorage.getItem('lobbyHairColor') || '#5c4033';
+      const localEye = localStorage.getItem('lobbyEyeColor') || '#2563eb';
+      const localHeight = parseFloat(localStorage.getItem('lobbyHeight') || '1.0');
+      this.applyModelCustomization(model, this.localPlayerCharacterId, localSkin, localHair, localEye, localHeight);
+
+      model.position.set(-2.5, 0, 0);
+      model.rotation.y = Math.PI / 2;
+      this.handshakeScene?.add(model);
+    });
+  }
+
+  private loadOpponentModelInScene(): void {
+    const loadingId = this.opponentCharacterId;
+    this.loadHandshakeCharacter(loadingId, (model, animations) => {
+      if (loadingId !== this.opponentCharacterId) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+      
+      this.opponentModel = model;
+
+      model.traverse((child: any) => {
+        if (child.isBone) {
+          this.defaultQuaternions.set(child, child.quaternion.clone());
+        }
+      });
+
+      const bones = this.findBones(model);
+      this.opponentRightArm = bones.rightArm || undefined;
+      this.opponentRightForeArm = bones.rightForeArm || undefined;
+
+      this.opponentMixer = new THREE.AnimationMixer(model);
+      animations.forEach(clip => {
+        this.opponentActions.set(clip.name.toLowerCase(), this.opponentMixer!.clipAction(clip));
+      });
+
+      this.applyModelCustomization(
+        model,
+        this.opponentCharacterId,
+        this.opponentSkinColor,
+        this.opponentHairColor,
+        this.opponentEyeColor,
+        this.opponentHeight
+      );
+
+      model.position.set(2.5, 0, 0);
+      model.rotation.y = -Math.PI / 2;
+      this.handshakeScene?.add(model);
+    });
+  }
+
+  private loadHandshakeCharacter(
+    optionId: string,
+    onSuccess: (model: THREE.Object3D, animations: THREE.AnimationClip[]) => void,
+    renderer?: THREE.WebGLRenderer
+  ) {
+    const option = CHARACTER_OPTIONS.find(o => o.id === optionId) || CHARACTER_OPTIONS[0];
+
+    // Check cache first to avoid reload/lag
+    const cached = HANDSHAKE_GLTF_CACHE.get(option.path);
+    if (cached) {
+      const clonedScene = cloneSkeleton(cached.scene);
+      onSuccess(clonedScene, cached.animations);
+      return;
+    }
+
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    const activeRenderer = renderer || this.handshakeRenderer;
+    if (activeRenderer) {
+      const ktx2 = this.getKtx2Loader(activeRenderer);
+      loader.setKTX2Loader(ktx2);
+    }
+
+    loader.load(option.path, (gltf) => {
+      HANDSHAKE_GLTF_CACHE.set(option.path, {
+        scene: gltf.scene,
+        animations: gltf.animations || []
+      });
+      const clonedScene = cloneSkeleton(gltf.scene);
+      onSuccess(clonedScene, gltf.animations || []);
+    }, undefined, (err) => {
+      console.error('Error loading handshake model:', option.path, err);
+    });
+  }
+
+  private getKtx2Loader(renderer: THREE.WebGLRenderer): KTX2Loader {
+    const ktx2 = new KTX2Loader().setTranscoderPath('/basis/');
+    ktx2.detectSupport(renderer);
+    return ktx2;
+  }
+
+  private applyModelCustomization(
+    model: THREE.Object3D,
+    optionId: string,
+    skinColor?: string,
+    hairColor?: string,
+    eyeColor?: string,
+    heightVal?: number
+  ) {
+    this.tintCharacterParts(model, {
+      skinHex: skinColor,
+      hairHex: hairColor,
+      eyeHex: eyeColor
+    });
+
+    const option = CHARACTER_OPTIONS.find(o => o.id === optionId) || CHARACTER_OPTIONS[0];
+    const baseHeight = 1.72 * (heightVal || 1.0) * (option.scale || 1.0);
+
+    model.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(model);
+    const size = box.getSize(new THREE.Vector3());
+    if (Number.isFinite(size.y) && size.y > 0.01) {
+      model.scale.setScalar(baseHeight / size.y);
+      this.alignModelBottom(model, 0);
+    }
+
+    // Disable frustum culling and shadows on handshake characters to boost FPS
+    model.traverse((child: any) => {
+      if (child.isMesh) {
+        child.frustumCulled = false;
+        child.castShadow = false;
+        child.receiveShadow = false;
+      }
+    });
+  }
+
+  private tintCharacterParts(
+    model: THREE.Object3D,
+    colors: { skinHex?: string | null; hairHex?: string | null; eyeHex?: string | null }
+  ): void {
+    const skinTokens = ['skin', 'piel', 'face', 'head', 'cara', 'kao', 'hada', 'hand', 'hands', 'arm', 'leg', 'neck'];
+    const hairTokens = ['hair', 'pelo', 'cabello', 'kami', 'toubu', 'bang', 'ponytail'];
+    const eyeTokens = ['eye', 'eyes', 'ojo', 'iris', 'pupil', 'hitomi', 'eyeball', 'gaigan', 'mayu', 'matsuge'];
+    const clothTokens = [
+      'cloth', 'clothes', 'shirt', 'skirt', 'dress', 'jacket', 'pant', 'shoe', 'boot', 'bag',
+      'hat', 'cap', 'ribbon', 'belt', 'sleeve', 'sock', 'uniform', 'outfit'
+    ];
+
+    model.traverse((child: any) => {
+      if (!child.isMesh || !child.material) return;
+
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map((mat: any) => this.getOptimizedMaterial(mat));
+      } else {
+        child.material = this.getOptimizedMaterial(child.material);
+      }
+
+      const ancestry = this.collectObjectNameTokens(child);
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+      materials.forEach((mat: any) => {
+        const tokens = `${ancestry} ${this.materialTokenString(mat)}`;
+        const isCloth = this.matchesAny(tokens, clothTokens);
+
+        if (colors.eyeHex && this.matchesAny(tokens, eyeTokens)) {
+          this.applyMaterialTint(mat, colors.eyeHex, 0.14);
+          return;
+        }
+
+        if (colors.hairHex && this.matchesAny(tokens, hairTokens)) {
+          this.applyMaterialTint(mat, colors.hairHex, 0.08);
+          return;
+        }
+
+        if (colors.skinHex && this.matchesAny(tokens, skinTokens) && (!isCloth || tokens.includes('skin'))) {
+          this.applyMaterialTint(mat, colors.skinHex, 0.06);
+        }
+      });
+    });
+  }
+
+  private cloneTintableMaterial(mat: any): any {
+    if (!mat || mat.userData?.customTintCloned) return mat;
+    const clone = typeof mat.clone === 'function' ? mat.clone() : mat;
+    if (clone?.userData) clone.userData.customTintCloned = true;
+    return clone;
+  }
+
+  private getOptimizedMaterial(mat: any): any {
+    if (this.isPotato) {
+      return this.convertToPotatoMaterial(mat);
+    }
+    return this.cloneTintableMaterial(mat);
+  }
+
+  private convertToPotatoMaterial(mat: any): any {
+    if (!mat) return mat;
+    if (mat.isMeshBasicMaterial || mat.isMeshLambertMaterial || mat.userData?.isPotatoConverted) {
+      return mat;
+    }
+
+    const lambert = new THREE.MeshLambertMaterial({
+      color: mat.color ? mat.color.clone() : new THREE.Color(0xffffff),
+      map: mat.map || null,
+      alphaMap: mat.alphaMap || null,
+      aoMap: mat.aoMap || null,
+      aoMapIntensity: mat.aoMapIntensity !== undefined ? mat.aoMapIntensity : 1.0,
+      opacity: mat.opacity !== undefined ? mat.opacity : 1.0,
+      transparent: mat.transparent || false,
+      side: mat.side !== undefined ? mat.side : THREE.DoubleSide,
+      alphaTest: mat.alphaTest !== undefined ? mat.alphaTest : 0.0,
+      visible: mat.visible !== undefined ? mat.visible : true,
+    });
+
+    if (mat.emissive && typeof mat.emissive.clone === 'function') {
+      lambert.emissive = mat.emissive.clone();
+      if (mat.emissiveIntensity !== undefined) {
+        lambert.emissive.multiplyScalar(mat.emissiveIntensity);
+      }
+    }
+    if (mat.emissiveMap) {
+      lambert.emissiveMap = mat.emissiveMap;
+    }
+
+    lambert.userData = {
+      ...mat.userData,
+      isPotatoConverted: true,
+      customTintCloned: true
+    };
+
+    if (mat.userData?.customTintCloned) {
+      mat.dispose();
+    }
+
+    return lambert;
+  }
+
+  private disposeModelMaterials(model: THREE.Object3D) {
+    model.traverse((child: any) => {
+      if (child.isMesh && child.material) {
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach((mat: any) => {
+          if (mat.userData?.customTintCloned || mat.userData?.isPotatoConverted) {
+            mat.dispose();
+          }
+        });
+      }
+    });
+  }
+
+  private collectObjectNameTokens(object: THREE.Object3D): string {
+    const names: string[] = [];
+    let current: THREE.Object3D | null = object;
+    while (current && names.length < 6) {
+      if (current.name) names.push(current.name);
+      current = current.parent;
+    }
+    return names.join(' ').toLowerCase();
+  }
+
+  private materialTokenString(mat: any): string {
+    return [
+      mat?.name,
+      mat?.map?.name,
+      mat?.normalMap?.name,
+      mat?.userData?.name,
+      mat?.userData?.gltfExtensions ? JSON.stringify(mat.userData.gltfExtensions) : ''
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  private matchesAny(value: string, tokens: string[]): boolean {
+    return tokens.some((token) => value.includes(token));
+  }
+
+  private applyMaterialTint(mat: any, hex: string, emissiveStrength: number): void {
+    if (!mat?.color || typeof mat.color.set !== 'function') return;
+    mat.color.set(hex);
+    mat.needsUpdate = true;
+    if (mat.emissive && typeof mat.emissive.set === 'function') {
+      mat.emissive.set(hex).multiplyScalar(emissiveStrength);
+    }
+  }
+
+  private alignModelBottom(model: THREE.Object3D, targetY: number) {
+    const box = new THREE.Box3().setFromObject(model);
+    model.position.y += targetY - box.min.y;
+  }
+
+  private findBones(model: THREE.Object3D) {
+    let rightArm: THREE.Bone | null = null;
+    let rightForeArm: THREE.Bone | null = null;
+    let rightHand: THREE.Bone | null = null;
+    let leftArm: THREE.Bone | null = null;
+    let leftForeArm: THREE.Bone | null = null;
+    let leftHand: THREE.Bone | null = null;
+
+    model.traverse((child: any) => {
+      if (child.isBone) {
+        const name = child.name.toLowerCase();
+        if (name.includes('rightarm')) rightArm = child;
+        else if (name.includes('rightforearm')) rightForeArm = child;
+        else if (name.includes('righthand') || name.includes('right_hand')) rightHand = child;
+        else if (name.includes('leftarm')) leftArm = child;
+        else if (name.includes('leftforearm')) leftForeArm = child;
+        else if (name.includes('lefthand') || name.includes('left_hand')) leftHand = child;
+      }
+    });
+    return { rightArm, rightForeArm, rightHand, leftArm, leftForeArm, leftHand };
+  }
+
+  private setHandshakeAnimation(
+    mixer: THREE.AnimationMixer,
+    actions: Map<string, THREE.AnimationAction>,
+    state: 'idle' | 'walk'
+  ) {
+    const active = this.currentAnims.get(mixer);
+    if (active && active.state === state) return;
+
+    const hints = state === 'walk' ? ['walking', 'walk'] : ['idle', 'standing', 'house'];
+    let chosenAction: THREE.AnimationAction | undefined;
+
+    for (const hint of hints) {
+      chosenAction = actions.get(hint);
+      if (chosenAction) break;
+    }
+    if (!chosenAction) {
+      chosenAction = Array.from(actions.values())[0];
+    }
+
+    if (chosenAction) {
+      chosenAction.reset().fadeIn(0.25).play();
+      if (active?.action && active.action !== chosenAction) {
+        active.action.fadeOut(0.25);
+      }
+      this.currentAnims.set(mixer, { state, action: chosenAction });
+    }
+  }
+
+  private applyProceduralArm(
+    arm: THREE.Bone | undefined,
+    forearm: THREE.Bone | undefined,
+    blend: number,
+    side: 'player' | 'opponent'
+  ) {
+    if (!arm) return;
+
+    const targetPitch = 1.15;
+    const targetYaw = -1.25;
+    const targetForearmYaw = -0.35;
+
+    const defaultArmQ = this.defaultQuaternions.get(arm);
+    if (defaultArmQ) {
+      const targetQ = defaultArmQ.clone();
+      const localX = new THREE.Vector3(1, 0, 0);
+      const localZ = new THREE.Vector3(0, 0, 1);
+
+      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(localX, targetPitch));
+      targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(localZ, targetYaw));
+
+      arm.quaternion.slerp(targetQ, blend);
+    }
+
+    if (forearm) {
+      const defaultForearmQ = this.defaultQuaternions.get(forearm);
+      if (defaultForearmQ) {
+        const targetQ = defaultForearmQ.clone();
+        const localZ = new THREE.Vector3(0, 0, 1);
+        targetQ.multiply(new THREE.Quaternion().setFromAxisAngle(localZ, targetForearmYaw));
+
+        forearm.quaternion.slerp(targetQ, blend);
+      }
+    }
+  }
+
+  private triggerHandshakeImpactEffects(): void {
+    if (this.handshakeSpotlight) {
+      this.handshakeSpotlight.intensity = 40.0;
+    }
+
+    this.cameraShakeTime = 0.5;
+
+    if (this.handshakeScene) {
+      if (this.handshakeParticleGeometry) {
+        this.handshakeParticleGeometry.dispose();
+      }
+      this.handshakeParticleGeometry = new THREE.SphereGeometry(0.032, 4, 4);
+
+      const goldMaterial = new THREE.MeshBasicMaterial({
+        color: 0xfcd34d,
+        transparent: true,
+        opacity: 0.95
+      });
+      const cyanMaterial = new THREE.MeshBasicMaterial({
+        color: 0x22d3ee,
+        transparent: true,
+        opacity: 0.95
+      });
+
+      const particleCount = this.isPotato ? 12 : 54;
+      for (let i = 0; i < particleCount; i++) {
+        const isGold = Math.random() > 0.55;
+        const color = isGold ? new THREE.Color(0xfcd34d) : new THREE.Color(0x22d3ee);
+        const material = isGold ? goldMaterial.clone() : cyanMaterial.clone();
+        
+        const mesh = new THREE.Mesh(this.handshakeParticleGeometry, material);
+        mesh.position.set(0, 0.92, 0.05);
+
+        this.handshakeScene.add(mesh);
+
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(Math.random() * 2 - 1);
+        const speed = 0.6 + Math.random() * 1.8;
+        const velocity = new THREE.Vector3(
+          Math.sin(phi) * Math.cos(theta) * speed,
+          Math.sin(phi) * Math.sin(theta) * speed,
+          Math.cos(phi) * speed
+        );
+
+        this.handshakeParticles.push({
+          mesh,
+          velocity,
+          color,
+          life: 0,
+          maxLife: 35 + Math.random() * 35
+        });
+      }
+
+      goldMaterial.dispose();
+      cyanMaterial.dispose();
+    }
+  }
+
+  private updateHandshakeParticles(dt: number): void {
+    for (let i = this.handshakeParticles.length - 1; i >= 0; i--) {
+      const p = this.handshakeParticles[i];
+      p.life++;
+      if (p.life >= p.maxLife) {
+        if (this.handshakeScene) {
+          this.handshakeScene.remove(p.mesh);
+        }
+        if (Array.isArray(p.mesh.material)) {
+          p.mesh.material.forEach(m => m.dispose());
+        } else {
+          p.mesh.material.dispose();
+        }
+        this.handshakeParticles.splice(i, 1);
+      } else {
+        p.mesh.position.addScaledVector(p.velocity, dt);
+        p.velocity.y -= 2.0 * dt; // gravity
+        const mat = p.mesh.material as THREE.MeshBasicMaterial;
+        mat.opacity = 1 - (p.life / p.maxLife);
+      }
+    }
+  }
+
+  private updateCameraShake(dt: number, camera: THREE.PerspectiveCamera): void {
+    if (this.cameraShakeTime > 0) {
+      this.cameraShakeTime -= dt;
+      const intensity = 0.09 * (this.cameraShakeTime / 0.5);
+      camera.position.x = (Math.random() * 2 - 1) * intensity;
+      camera.position.y = 0.82 + (Math.random() * 2 - 1) * intensity;
+    } else {
+      camera.position.set(0, 0.82, 3.8);
+    }
+  }
+
+  private cleanupHandshakeScene(): void {
+    this.canvasInitialized = false;
+    if (this.handshakeAnimationId) {
+      cancelAnimationFrame(this.handshakeAnimationId);
+      this.handshakeAnimationId = undefined;
+    }
+
+    this.handshakeParticles.forEach(p => {
+      this.handshakeScene?.remove(p.mesh);
+      if (Array.isArray(p.mesh.material)) {
+        p.mesh.material.forEach(m => m.dispose());
+      } else {
+        p.mesh.material.dispose();
+      }
+    });
+    this.handshakeParticles = [];
+
+    if (this.handshakeParticleGeometry) {
+      this.handshakeParticleGeometry.dispose();
+      this.handshakeParticleGeometry = undefined;
+    }
+
+    if (this.playerModel) {
+      this.disposeModelMaterials(this.playerModel);
+      if (this.handshakeScene) {
+        this.handshakeScene.remove(this.playerModel);
+      }
+    }
+    if (this.opponentModel) {
+      this.disposeModelMaterials(this.opponentModel);
+      if (this.handshakeScene) {
+        this.handshakeScene.remove(this.opponentModel);
+      }
+    }
+
+    this.playerModel = undefined;
+    this.opponentModel = undefined;
+    this.playerMixer = undefined;
+    this.opponentMixer = undefined;
+    this.playerRightArm = undefined;
+    this.playerRightForeArm = undefined;
+    this.opponentRightArm = undefined;
+    this.opponentRightForeArm = undefined;
+    this.defaultQuaternions.clear();
+    this.playerActions.clear();
+    this.opponentActions.clear();
+    this.currentAnims.clear();
+
+    if (this.trainersAnimationId) {
+      cancelAnimationFrame(this.trainersAnimationId);
+      this.trainersAnimationId = undefined;
+    }
+    if (this.playerTrainerModel) {
+      this.disposeModelMaterials(this.playerTrainerModel);
+      this.playerTrainerScene?.remove(this.playerTrainerModel);
+      this.playerTrainerModel = undefined;
+    }
+    if (this.opponentTrainerModel) {
+      this.disposeModelMaterials(this.opponentTrainerModel);
+      this.opponentTrainerScene?.remove(this.opponentTrainerModel);
+      this.opponentTrainerModel = undefined;
+    }
+    this.playerTrainerMixer = undefined;
+    this.opponentTrainerMixer = undefined;
+    this.playerTrainerActions.clear();
+    this.opponentTrainerActions.clear();
+    this.currentTrainerAnims.clear();
+    if (this.playerTrainerRenderer) {
+      this.playerTrainerRenderer.dispose();
+      this.playerTrainerRenderer = undefined;
+    }
+    if (this.opponentTrainerRenderer) {
+      this.opponentTrainerRenderer.dispose();
+      this.opponentTrainerRenderer = undefined;
+    }
+    this.playerTrainerScene = undefined;
+    this.opponentTrainerScene = undefined;
+    this.playerTrainerCamera = undefined;
+    this.opponentTrainerCamera = undefined;
+
+    if (this.handshakeRenderer) {
+      this.handshakeRenderer.dispose();
+      this.handshakeRenderer = undefined;
+    }
+    this.handshakeScene = undefined;
+    this.handshakeCamera = undefined;
+  }
+
+  private initPlayerTrainerScene(canvas: HTMLCanvasElement): void {
+    const width = canvas.clientWidth || 80;
+    const height = canvas.clientHeight || 110;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: !this.isPotato && window.devicePixelRatio < 2,
+      powerPreference: 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false,
+      depth: true
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    this.playerTrainerRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    this.playerTrainerScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 10);
+    camera.position.set(0, 0.85, 2.5);
+    camera.lookAt(0, 0.85, 0);
+    this.playerTrainerCamera = camera;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(1, 2, 1);
+    scene.add(dirLight);
+
+    let localSkin = localStorage.getItem('lobbySkinColor') || undefined;
+    let localHair = localStorage.getItem('lobbyHairColor') || undefined;
+    let localEye = localStorage.getItem('lobbyEyeColor') || undefined;
+    let localHeight = 1.0;
+    try {
+      const hStr = localStorage.getItem('lobbyHeight');
+      if (hStr) localHeight = parseFloat(hStr);
+    } catch {}
+
+    this.loadHandshakeCharacter(this.localPlayerCharacterId, (model, animations) => {
+      this.playerTrainerModel = model;
+      this.playerTrainerMixer = new THREE.AnimationMixer(model);
+      animations.forEach(clip => {
+        this.playerTrainerActions.set(clip.name.toLowerCase(), this.playerTrainerMixer!.clipAction(clip));
+      });
+
+      this.applyModelCustomization(
+        model,
+        this.localPlayerCharacterId,
+        localSkin,
+        localHair,
+        localEye,
+        localHeight
+      );
+
+      model.rotation.y = Math.PI / 4;
+      scene.add(model);
+
+      this.playTrainerIdle('player');
+    }, renderer);
+
+    this.startTrainersAnimationLoop();
+  }
+
+  private initOpponentTrainerScene(canvas: HTMLCanvasElement): void {
+    const width = canvas.clientWidth || 80;
+    const height = canvas.clientHeight || 110;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: !this.isPotato && window.devicePixelRatio < 2,
+      powerPreference: 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false,
+      depth: true
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    this.opponentTrainerRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    this.opponentTrainerScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 10);
+    camera.position.set(0, 0.85, 2.5);
+    camera.lookAt(0, 0.85, 0);
+    this.opponentTrainerCamera = camera;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
+    scene.add(ambientLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(-1, 2, 1);
+    scene.add(dirLight);
+
+    const oppSkin = this.opponentSkinColor || undefined;
+    const oppHair = this.opponentHairColor || undefined;
+    const oppEye = this.opponentEyeColor || undefined;
+    const oppHeight = this.opponentHeight || 1.0;
+
+    this.loadHandshakeCharacter(this.opponentCharacterId, (model, animations) => {
+      this.opponentTrainerModel = model;
+      this.opponentTrainerMixer = new THREE.AnimationMixer(model);
+      animations.forEach(clip => {
+        this.opponentTrainerActions.set(clip.name.toLowerCase(), this.opponentTrainerMixer!.clipAction(clip));
+      });
+
+      this.applyModelCustomization(
+        model,
+        this.opponentCharacterId,
+        oppSkin,
+        oppHair,
+        oppEye,
+        oppHeight
+      );
+
+      model.rotation.y = Math.PI * 3 / 4;
+      scene.add(model);
+
+      this.playTrainerIdle('opponent');
+    }, renderer);
+
+    this.startTrainersAnimationLoop();
+  }
+
+  private startTrainersAnimationLoop(): void {
+    if (this.trainersAnimationId) return;
+    this.trainersClock.getDelta();
+    
+    const animate = () => {
+      this.trainersAnimationId = requestAnimationFrame(animate);
+      const dt = this.trainersClock.getDelta();
+      
+      if (this.playerTrainerMixer) this.playerTrainerMixer.update(dt);
+      if (this.opponentTrainerMixer) this.opponentTrainerMixer.update(dt);
+      
+      if (this.playerTrainerRenderer && this.playerTrainerScene && this.playerTrainerCamera) {
+        this.playerTrainerRenderer.render(this.playerTrainerScene, this.playerTrainerCamera);
+      }
+      if (this.opponentTrainerRenderer && this.opponentTrainerScene && this.opponentTrainerCamera) {
+        this.opponentTrainerRenderer.render(this.opponentTrainerScene, this.opponentTrainerCamera);
+      }
+    };
+    animate();
+  }
+
+  private getAttackAnimationName(actions: Map<string, THREE.AnimationAction>): string | undefined {
+    const attackHints = ['attack', 'point', 'cheer', 'dance', 'kick', 'punch', 'action', 'wave', 'greeting', 'jump'];
+    for (const hint of attackHints) {
+      for (const key of actions.keys()) {
+        if (key.includes(hint)) {
+          return key;
+        }
+      }
+    }
+    for (const key of actions.keys()) {
+      if (key.includes('walk') || key.includes('run')) {
+        return key;
+      }
+    }
+    return Array.from(actions.keys())[0];
+  }
+
+  triggerTrainerAttack(side: 'player' | 'opponent'): void {
+    const mixer = side === 'player' ? this.playerTrainerMixer : this.opponentTrainerMixer;
+    const actions = side === 'player' ? this.playerTrainerActions : this.opponentTrainerActions;
+    if (!mixer || !actions) return;
+
+    const attackAnimName = this.getAttackAnimationName(actions);
+    if (!attackAnimName) return;
+
+    const action = actions.get(attackAnimName);
+    if (!action) return;
+
+    const current = this.currentTrainerAnims.get(mixer);
+    if (current && current.state === 'attack') return;
+
+    action.reset();
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = false;
+    action.fadeIn(0.15).play();
+
+    if (current && current.action !== action) {
+      current.action.fadeOut(0.15);
+    }
+    this.currentTrainerAnims.set(mixer, { state: 'attack', action });
+
+    const onFinished = (e: any) => {
+      if (e.action === action) {
+        mixer.removeEventListener('finished', onFinished);
+        this.playTrainerIdle(side);
+      }
+    };
+    mixer.addEventListener('finished', onFinished);
+  }
+
+  playTrainerIdle(side: 'player' | 'opponent'): void {
+    const mixer = side === 'player' ? this.playerTrainerMixer : this.opponentTrainerMixer;
+    const actions = side === 'player' ? this.playerTrainerActions : this.opponentTrainerActions;
+    if (!mixer || !actions) return;
+
+    const active = this.currentTrainerAnims.get(mixer);
+    if (active && active.state === 'idle') return;
+
+    const hints = ['idle', 'standing', 'house'];
+    let chosenAction: THREE.AnimationAction | undefined;
+
+    for (const hint of hints) {
+      chosenAction = actions.get(hint);
+      if (chosenAction) break;
+    }
+    if (!chosenAction) {
+      chosenAction = Array.from(actions.values())[0];
+    }
+
+    if (chosenAction) {
+      chosenAction.reset().fadeIn(0.25).play();
+      if (active?.action && active.action !== chosenAction) {
+        active.action.fadeOut(0.25);
+      }
+      this.currentTrainerAnims.set(mixer, { state: 'idle', action: chosenAction });
+    }
   }
 
   private delay(ms: number): Promise<void> {

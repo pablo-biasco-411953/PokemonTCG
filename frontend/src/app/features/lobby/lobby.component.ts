@@ -14,6 +14,8 @@ import { Card } from '../../shared/models/card';
 import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
 import { Mazo } from '../../shared/models/mazo';
 import { Partida } from '../../shared/models/battle';
+import { firstValueFrom } from 'rxjs';
+import { getWsUrl as getApiWsUrl } from '../../core/services/api-config';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
@@ -900,7 +902,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Refresca resumen, sobres y mazos del jugador.
-  refrescarTodo() {
+  refrescarTodo(preferNewestDeck = false) {
     if (!this.jugador?.username || this.lobbyDestroyed) return;
 
     this.jugadorService.getJugador(this.jugador.username).subscribe({
@@ -954,7 +956,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => console.error('Error al obtener datos del jugador', err)
     });
 
-    this.cargarMazosDeJugador();
+    this.cargarMazosDeJugador(preferNewestDeck);
     this.precargarColeccionTrade();
     this.cargarSantoroQuest();
   }
@@ -1063,7 +1065,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Carga los mazos visibles y rellena slots vacios.
-  cargarMazosDeJugador() {
+  cargarMazosDeJugador(preferNewestDeck = false) {
     if (!this.jugador?.username) return;
 
     this.mazoService.getMazosByJugador(this.jugador.username).subscribe({
@@ -1074,13 +1076,55 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!this.debugTargetMazoId && this.mazos.length > 0) {
           this.debugTargetMazoId = this.mazos[0].id;
         }
-        if (!this.selectedBattleDeckId && this.mazos.length > 0) {
-          this.selectedBattleDeckId = this.mazos[0].id;
-        }
+        this.syncSelectedBattleDeck(preferNewestDeck);
         this.sincronizarCartaAReemplazar();
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private getBattleDeckCandidates(): Mazo[] {
+    return this.mazos.filter((mazo) => (mazo.cartas?.length ?? 0) === 60);
+  }
+
+  private syncSelectedBattleDeck(preferNewestDeck = false): number | null {
+    const candidates = this.getBattleDeckCandidates();
+    if (!candidates.length) {
+      this.selectedBattleDeckId = null;
+      return null;
+    }
+
+    const currentStillValid = candidates.some((mazo) => mazo.id === this.selectedBattleDeckId);
+    if (currentStillValid && !preferNewestDeck) {
+      return this.selectedBattleDeckId;
+    }
+
+    const selected = preferNewestDeck ? candidates[candidates.length - 1] : candidates[0];
+    this.selectedBattleDeckId = selected.id;
+    return selected.id;
+  }
+
+  private async ensureBattleDeckSelected(refresh = false): Promise<number | null> {
+    const localSelection = this.syncSelectedBattleDeck(false);
+    if (localSelection && !refresh) return localSelection;
+    if (!this.jugador?.username) return localSelection;
+
+    try {
+      const res = await firstValueFrom(this.mazoService.getMazosByJugador(this.jugador.username));
+      this.mazos = res;
+      const faltantes = 2 - this.mazos.length;
+      this.slotsVacios = faltantes > 0 ? Array(faltantes).fill(0) : [];
+      if (!this.debugTargetMazoId && this.mazos.length > 0) {
+        this.debugTargetMazoId = this.mazos[0].id;
+      }
+      const refreshedSelection = this.syncSelectedBattleDeck(false);
+      this.sincronizarCartaAReemplazar();
+      this.cdr.detectChanges();
+      return refreshedSelection;
+    } catch (err) {
+      console.error('Error asegurando mazo para batalla', err);
+      return localSelection;
+    }
   }
 
   // Arma la tarjeta ampliada para inspeccion rapida.
@@ -1169,7 +1213,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   cerrarDeckBuilder(refresh = false) {
     this.deckBuilderOpen = false;
     if (refresh) {
-      this.refrescarTodo();
+      this.refrescarTodo(true);
     }
     this.cdr.detectChanges();
   }
@@ -1187,13 +1231,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  startSelectedBattle() {
-    if (!this.selectedBattleDeckId) {
+  async startSelectedBattle() {
+    const mazoId = await this.ensureBattleDeckSelected(true);
+    if (!mazoId) {
       this.irAlDeckBuilder();
       return;
     }
 
-    this.buscarPartida(this.selectedBattleDeckId);
+    this.buscarPartida(mazoId);
   }
 
   get selectedCharacterLabel(): string {
@@ -1390,71 +1435,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const heightFactor = this.customizerHeight;
 
     const option = this.characterOptions.find(o => o.id === this.customizerSelectedId) || this.characterOptions[0];
-    
-    // Escala combinada
     model.scale.setScalar(option.scale * heightFactor);
-
-    model.traverse((child: any) => {
-      if (child.isMesh && child.material) {
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material = child.material.map((mat: any) => mat.clone());
-          } else {
-            child.material = child.material.clone();
-          }
-        }
-
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach((mat: any) => {
-          const name = (mat.name || '').toLowerCase();
-          
-          if (skinHex && (
-            name.includes('skin') || 
-            name.includes('piel') || 
-            name.includes('face') || 
-            name.includes('head') || 
-            name.includes('cara') || 
-            name.includes('kao') ||
-            name.includes('hada')
-          )) {
-            mat.color.set(skinHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(skinHex).multiplyScalar(0.06);
-            }
-          }
-
-          if (hairHex && (
-            name.includes('hair') || 
-            name.includes('pelo') || 
-            name.includes('cabello') ||
-            name.includes('kami') ||
-            name.includes('toubu')
-          )) {
-            mat.color.set(hairHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(hairHex).multiplyScalar(0.06);
-            }
-          }
-
-          if (eyeHex && (
-            name.includes('eye') || 
-            name.includes('ojo') ||
-            name.includes('iris') ||
-            name.includes('pupil') ||
-            name.includes('hitomi') ||
-            name.includes('eyeball') ||
-            name.includes('gaigan') ||
-            name.includes('mayu') ||
-            name.includes('matsuge')
-          )) {
-            mat.color.set(eyeHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(eyeHex).multiplyScalar(0.06);
-            }
-          }
-        });
-      }
-    });
+    this.tintCharacterParts(model, { skinHex, hairHex, eyeHex });
   }
 
   private loadPreviewPikachu() {
@@ -2325,7 +2307,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.loadSceneAsset('/models-optimized/characters/santoro.glb', (model, animations) => {
       model.name = 'SantoroNPC';
-      model.scale.set(1.15, 1.18, 1.15);
+      model.scale.set(1.42, 1.18, 1.34);
       this.centerModelPivot(model);
       this.alignModelBottom(model, 0);
       model.rotation.y = 0;
@@ -3106,7 +3088,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       { path: '/models-optimized/kiosk/monster_zero_ultra.glb', maxDim: 0.20 },
       { path: '/models-optimized/kiosk/pringles.glb', maxDim: 0.28 },
       { path: '/models-optimized/kiosk/oreo.glb', maxDim: 0.28 },
-      { path: '/models-optimized/kiosk/kitkat_chunky_salted_caramel.glb', maxDim: 0.20 }
+      { path: '/models-optimized/kiosk/kitkat_chunky_salted_caramel.glb', maxDim: 0.20 },
+      { path: '/models-optimized/kiosk/chocolate_milka.glb', maxDim: 0.22 },
+      { path: '/models-optimized/kiosk/red_dorito.glb', maxDim: 0.30 },
+      { path: '/models-optimized/kiosk/fanta_can.glb', maxDim: 0.19 },
+      { path: '/models-optimized/kiosk/fernet_botella.glb', maxDim: 0.34 },
+      { path: '/models-optimized/kiosk/malboro.glb', maxDim: 0.18 },
+      { path: '/models-optimized/kiosk/mate_argentino.glb', maxDim: 0.26 },
+      { path: '/models-optimized/kiosk/pepsi.glb', maxDim: 0.19 }
     ];
 
     const shelfHeights = [1.12, 1.82, 2.52];
@@ -3122,10 +3111,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
             this.centerModelPivot(model);
 
             model.position.set(shelfX - 0.9 + col * 0.3, y + 0.08, -15.45);
-            if (item.path.includes('kitkat')) {
+            if (item.path.includes('kitkat') || item.path.includes('milka') || item.path.includes('malboro')) {
               model.rotation.set(0.08, Math.PI / 3, 1.3, 'YXZ');
-            } else if (item.path.includes('oreo')) {
-              model.rotation.set(0.08, 0.2, 0.4, 'YXZ');
+            } else if (item.path.includes('oreo') || item.path.includes('mate')) {
+              model.rotation.set(0.08, Math.PI + 0.2, 0.4, 'YXZ');
+            } else if (item.path.includes('dorito')) {
+              model.rotation.set(0.05, -0.15, 0.14, 'YXZ');
+            } else if (item.path.includes('fernet')) {
+              model.rotation.set(0, Math.PI, 0, 'YXZ');
+            } else if (
+              item.path.includes('coca') ||
+              item.path.includes('fanta') ||
+              item.path.includes('pepsi') ||
+              item.path.includes('monster')
+            ) {
+              model.rotation.set(0.02, Math.PI, 0, 'YXZ');
             } else {
               model.rotation.set(0.08, 0, 0, 'YXZ');
             }
@@ -3141,6 +3141,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.kioskProductPlaceholders.visible = false;
       }
     }, 1200);
+
+    this.loadSceneAsset('/models-optimized/kiosk/mate_argentino.glb', (loadedModel) => {
+      const model = loadedModel.clone();
+      this.fitModelToMaxDimension(model, 0.30);
+      this.centerModelPivot(model);
+      model.position.set(-19.78, 1.24, -15.62);
+      model.rotation.set(0.05, Math.PI + 0.38, 0.02, 'YXZ');
+      this.alignModelBottom(model, 1.24);
+      this.scene!.add(model);
+    }, { castShadow: false, receiveShadow: false });
   }
 
   private fitModelToHeight(model: THREE.Object3D, targetHeight: number) {
@@ -4054,75 +4064,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const heightFactor = parseFloat(heightStr);
 
     const option = this.currentCharacterOption || this.characterOptions[0];
-    
-    // Aplicar escala combinada del personaje base y el factor de altura
     model.scale.setScalar(option.scale * heightFactor);
-
-    model.traverse((child: any) => {
-      if (child.isMesh && child.material) {
-        // Clonar materiales para evitar alterar otros NPCs compartidos
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material = child.material.map((mat: any) => mat.clone());
-          } else {
-            child.material = child.material.clone();
-          }
-        }
-
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach((mat: any) => {
-          const name = (mat.name || '').toLowerCase();
-          
-          // 1. Modificar color de Piel
-          if (skinHex && (
-            name.includes('skin') || 
-            name.includes('piel') || 
-            name.includes('face') || 
-            name.includes('head') || 
-            name.includes('cara') || 
-            name.includes('kao') ||
-            name.includes('hada')
-          )) {
-            mat.color.set(skinHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(skinHex).multiplyScalar(0.06);
-            }
-          }
-
-          // 2. Modificar color de Pelo
-          if (hairHex && (
-            name.includes('hair') || 
-            name.includes('pelo') || 
-            name.includes('cabello') ||
-            name.includes('kami') ||
-            name.includes('toubu')
-          )) {
-            mat.color.set(hairHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(hairHex).multiplyScalar(0.06);
-            }
-          }
-
-          // 3. Modificar color de Ojos
-          if (eyeHex && (
-            name.includes('eye') || 
-            name.includes('ojo') ||
-            name.includes('iris') ||
-            name.includes('pupil') ||
-            name.includes('hitomi') ||
-            name.includes('eyeball') ||
-            name.includes('gaigan') ||
-            name.includes('mayu') ||
-            name.includes('matsuge')
-          )) {
-            mat.color.set(eyeHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(eyeHex).multiplyScalar(0.06);
-            }
-          }
-        });
-      }
-    });
+    this.tintCharacterParts(model, { skinHex, hairHex, eyeHex });
   }
 
   private normalizeVisibleCharacterHeight(model: THREE.Group, targetHeight: number) {
@@ -4878,7 +4821,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private getWsUrl(): string {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname || 'localhost';
-    return `${protocol}//${host}:8080/lobby-ws`;
+    return getApiWsUrl() + '/lobby-ws';
   }
 
   private connectWebSocket() {
@@ -5133,68 +5076,92 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const option = this.characterOptions.find(o => o.id === p.characterId) || this.characterOptions[0];
     model.scale.setScalar(option.scale * heightFactor);
+    this.tintCharacterParts(model, { skinHex, hairHex, eyeHex });
+  }
+
+  private tintCharacterParts(
+    model: THREE.Group,
+    colors: { skinHex?: string | null; hairHex?: string | null; eyeHex?: string | null }
+  ): void {
+    const skinTokens = ['skin', 'piel', 'face', 'head', 'cara', 'kao', 'hada', 'hand', 'hands', 'arm', 'leg', 'neck'];
+    const hairTokens = ['hair', 'pelo', 'cabello', 'kami', 'toubu', 'bang', 'ponytail'];
+    const eyeTokens = ['eye', 'eyes', 'ojo', 'iris', 'pupil', 'hitomi', 'eyeball', 'gaigan', 'mayu', 'matsuge'];
+    const clothTokens = [
+      'cloth', 'clothes', 'shirt', 'skirt', 'dress', 'jacket', 'pant', 'shoe', 'boot', 'bag',
+      'hat', 'cap', 'ribbon', 'belt', 'sleeve', 'sock', 'uniform', 'outfit'
+    ];
 
     model.traverse((child: any) => {
-      if (child.isMesh && child.material) {
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material = child.material.map((mat: any) => mat.clone());
-          } else {
-            child.material = child.material.clone();
-          }
+      if (!child.isMesh || !child.material) return;
+
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map((mat: any) => this.cloneTintableMaterial(mat));
+      } else {
+        child.material = this.cloneTintableMaterial(child.material);
+      }
+
+      const ancestry = this.collectObjectNameTokens(child);
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+
+      materials.forEach((mat: any) => {
+        const tokens = `${ancestry} ${this.materialTokenString(mat)}`;
+        const isCloth = this.matchesAny(tokens, clothTokens);
+
+        if (colors.eyeHex && this.matchesAny(tokens, eyeTokens)) {
+          this.applyMaterialTint(mat, colors.eyeHex, 0.14);
+          return;
         }
 
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach((mat: any) => {
-          const name = (mat.name || '').toLowerCase();
-          
-          if (skinHex && (
-            name.includes('skin') || 
-            name.includes('piel') || 
-            name.includes('face') || 
-            name.includes('head') || 
-            name.includes('cara') || 
-            name.includes('kao') ||
-            name.includes('hada')
-          )) {
-            mat.color.set(skinHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(skinHex).multiplyScalar(0.06);
-            }
-          }
+        if (colors.hairHex && this.matchesAny(tokens, hairTokens)) {
+          this.applyMaterialTint(mat, colors.hairHex, 0.08);
+          return;
+        }
 
-          if (hairHex && (
-            name.includes('hair') || 
-            name.includes('pelo') || 
-            name.includes('cabello') ||
-            name.includes('kami') ||
-            name.includes('toubu')
-          )) {
-            mat.color.set(hairHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(hairHex).multiplyScalar(0.06);
-            }
-          }
-
-          if (eyeHex && (
-            name.includes('eye') || 
-            name.includes('ojo') ||
-            name.includes('iris') ||
-            name.includes('pupil') ||
-            name.includes('hitomi') ||
-            name.includes('eyeball') ||
-            name.includes('gaigan') ||
-            name.includes('mayu') ||
-            name.includes('matsuge')
-          )) {
-            mat.color.set(eyeHex);
-            if (mat.emissive && typeof mat.emissive.set === 'function') {
-              mat.emissive.set(eyeHex).multiplyScalar(0.06);
-            }
-          }
-        });
-      }
+        if (colors.skinHex && this.matchesAny(tokens, skinTokens) && (!isCloth || tokens.includes('skin'))) {
+          this.applyMaterialTint(mat, colors.skinHex, 0.06);
+        }
+      });
     });
+  }
+
+  private cloneTintableMaterial(mat: any): any {
+    if (!mat || mat.userData?.customTintCloned) return mat;
+    const clone = typeof mat.clone === 'function' ? mat.clone() : mat;
+    if (clone?.userData) clone.userData.customTintCloned = true;
+    return clone;
+  }
+
+  private collectObjectNameTokens(object: THREE.Object3D): string {
+    const names: string[] = [];
+    let current: THREE.Object3D | null = object;
+    while (current && names.length < 6) {
+      if (current.name) names.push(current.name);
+      current = current.parent;
+    }
+    return names.join(' ').toLowerCase();
+  }
+
+  private materialTokenString(mat: any): string {
+    return [
+      mat?.name,
+      mat?.map?.name,
+      mat?.normalMap?.name,
+      mat?.userData?.name,
+      mat?.userData?.gltfExtensions ? JSON.stringify(mat.userData.gltfExtensions) : ''
+    ].filter(Boolean).join(' ').toLowerCase();
+  }
+
+  private matchesAny(value: string, tokens: string[]): boolean {
+    return tokens.some((token) => value.includes(token));
+  }
+
+  private applyMaterialTint(mat: any, hex: string, emissiveStrength: number): void {
+    if (!mat?.color || typeof mat.color.set !== 'function') return;
+    mat.color.set(hex);
+    mat.needsUpdate = true;
+    if (mat.emissive && typeof mat.emissive.set === 'function') {
+      mat.emissive.set(hex).multiplyScalar(emissiveStrength);
+    }
   }
 
   private createFallbackOtherPlayerAvatar(p: OtherPlayerNPC) {
@@ -5954,8 +5921,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ================= DUEL CHALLENGE SYSTEM =================
-  retarADuelo(username: string) {
+  async retarADuelo(username: string) {
     this.selectedPlayerForMenu = null;
+    const mazoId = await this.ensureBattleDeckSelected(true);
+    if (!mazoId) {
+      this.chatLog.push({ sender: 'SISTEMA', text: 'Primero crea o completa un mazo de 60 cartas para retar a duelo.', system: true });
+      this.irAlDeckBuilder();
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.waitingForChallengeResponse = true;
     this.challengedUsername = username;
     this.chatLog.push({ sender: 'SISTEMA', text: `Has retado a ${username} a un duelo.`, system: true });
@@ -5993,12 +5968,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  responderDuelo(accepted: boolean) {
+  async responderDuelo(accepted: boolean) {
     const challenger = this.incomingChallenge?.username;
     this.incomingChallenge = null;
     this.stopChallengeTimer();
+    const mazoId = accepted ? await this.ensureBattleDeckSelected(true) : null;
 
-    if (accepted && !this.selectedBattleDeckId) {
+    if (accepted && !mazoId) {
       this.chatLog.push({ sender: 'SISTEMA', text: 'ElegÃ­ un mazo sincronizado antes de aceptar el duelo.', system: true });
       accepted = false;
     }
@@ -6008,12 +5984,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       username: this.jugador?.username,
       targetUsername: challenger,
       accepted: accepted,
-      details: this.selectedBattleDeckId ? this.selectedBattleDeckId.toString() : ''
+      details: mazoId ? mazoId.toString() : ''
     }));
     this.cdr.detectChanges();
   }
 
-  handleChallengeResponse(msg: any) {
+  async handleChallengeResponse(msg: any) {
     this.waitingForChallengeResponse = false;
     this.stopChallengeTimer();
 
@@ -6021,8 +5997,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.chatLog.push({ sender: 'SISTEMA', text: `${msg.username} aceptÃ³ el combate. Iniciando...`, system: true });
       this.cdr.detectChanges();
 
+      const myMazoId = await this.ensureBattleDeckSelected(true);
       const p2MazoId = parseInt(msg.details || '0');
-      if (!this.selectedBattleDeckId) {
+      if (!myMazoId) {
         this.chatLog.push({ sender: 'SISTEMA', text: `Error: No tienes mazo seleccionado.`, system: true });
         this.cdr.detectChanges();
         return;
@@ -6035,7 +6012,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
       this.battleService.startBattleOnline(
         this.jugador!.username,
-        this.selectedBattleDeckId,
+        myMazoId,
         msg.username,
         p2MazoId
       ).subscribe({
