@@ -1100,6 +1100,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
 
+        if (!this.opponentLoaded && this.nombreRival) {
+          this.cargarDatosOponente();
+        }
+
         if (this.esperandoMiNuevoTurno && this.partida.turnoActual === 'JUGADOR') {
           this.esperandoMiNuevoTurno = false;
           this.iniciarRelojTurno();
@@ -2260,7 +2264,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   cargarDatosOponente(): void {
-    if (this.opponentLoaded || !this.nombreRival || this.nombreRival === 'BOT') {
+    if (this.opponentLoaded || !this.nombreRival) {
       return;
     }
     this.opponentLoaded = true;
@@ -2285,8 +2289,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
               this.opponentActions.clear();
               this.loadOpponentModelInScene();
             }
+            if (this.opponentTrainerScene) {
+              this.reloadOpponentTrainerModel();
+            }
           } else {
             this.loadOpponent3DModel();
+            if (this.opponentTrainerModel) {
+              this.applyModelCustomization(
+                this.opponentTrainerModel,
+                this.opponentCharacterId,
+                this.opponentSkinColor,
+                this.opponentHairColor,
+                this.opponentEyeColor,
+                this.opponentHeight
+              );
+            }
           }
           this.cdr.detectChanges();
         }
@@ -2308,6 +2325,50 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.opponentHeight
       );
     }
+  }
+
+  reloadOpponentTrainerModel(): void {
+    if (!this.opponentTrainerScene || !this.opponentTrainerRenderer) return;
+
+    if (this.opponentTrainerModel) {
+      this.disposeModelMaterials(this.opponentTrainerModel);
+      this.opponentTrainerScene.remove(this.opponentTrainerModel);
+      this.opponentTrainerModel = undefined;
+    }
+    this.opponentTrainerMixer = undefined;
+    this.opponentTrainerActions.clear();
+
+    const oppSkin = this.opponentSkinColor || undefined;
+    const oppHair = this.opponentHairColor || undefined;
+    const oppEye = this.opponentEyeColor || undefined;
+    const oppHeight = this.opponentHeight || 1.0;
+
+    const loadingId = this.opponentCharacterId;
+    this.loadHandshakeCharacter(loadingId, (model, animations) => {
+      if (loadingId !== this.opponentCharacterId) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+      this.opponentTrainerModel = model;
+      this.opponentTrainerMixer = new THREE.AnimationMixer(model);
+      animations.forEach(clip => {
+        this.opponentTrainerActions.set(clip.name.toLowerCase(), this.opponentTrainerMixer!.clipAction(clip));
+      });
+
+      this.applyModelCustomization(
+        model,
+        this.opponentCharacterId,
+        oppSkin,
+        oppHair,
+        oppEye,
+        oppHeight
+      );
+
+      model.rotation.y = -Math.PI / 5;
+      this.opponentTrainerScene!.add(model);
+
+      this.playTrainerIdle('opponent');
+    }, this.opponentTrainerRenderer);
   }
 
   @ViewChild('playerTrainerCanvas') set playerTrainerCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
@@ -3056,7 +3117,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         localHeight
       );
 
-      model.rotation.y = Math.PI / 4;
+      model.rotation.y = Math.PI * 4 / 5;
       scene.add(model);
 
       this.playTrainerIdle('player');
@@ -3102,7 +3163,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const oppEye = this.opponentEyeColor || undefined;
     const oppHeight = this.opponentHeight || 1.0;
 
-    this.loadHandshakeCharacter(this.opponentCharacterId, (model, animations) => {
+    const loadingId = this.opponentCharacterId;
+    this.loadHandshakeCharacter(loadingId, (model, animations) => {
+      if (loadingId !== this.opponentCharacterId) {
+        this.disposeModelMaterials(model);
+        return;
+      }
       this.opponentTrainerModel = model;
       this.opponentTrainerMixer = new THREE.AnimationMixer(model);
       animations.forEach(clip => {
@@ -3118,7 +3184,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         oppHeight
       );
 
-      model.rotation.y = Math.PI * 3 / 4;
+      model.rotation.y = -Math.PI / 5;
       scene.add(model);
 
       this.playTrainerIdle('opponent');

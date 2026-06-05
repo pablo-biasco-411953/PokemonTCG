@@ -333,7 +333,7 @@
 
   <aside class="side-col left">
     <div class="prizes-section bot-prizes">
-      <p class="prizes-title">PREMIOS BOT</p>
+      <p class="prizes-title">PREMIOS {{ nombreRival }}</p>
       <div class="prizes-grid">
         <div
           *ngFor="let i of [0, 1, 2, 3, 4, 5]"
@@ -415,10 +415,6 @@
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
-          <div class="trainer-3d-wrapper bot-trainer-3d">
-            <canvas #opponentTrainerCanvas class="trainer-canvas"></canvas>
-          </div>
-
           <div
             class="active-card bot-active"
             (mouseenter)="setHoveredCard(partida.bot.activo)"
@@ -542,6 +538,10 @@
                 >{{ partida.bot.activo.hpActual }} / {{ getHpMax(partida.bot.activo) }} HP</span
               >
             </div>
+          </div>
+
+          <div class="trainer-3d-wrapper bot-trainer-3d">
+            <canvas #opponentTrainerCanvas class="trainer-canvas"></canvas>
           </div>
         </div>
       </div>

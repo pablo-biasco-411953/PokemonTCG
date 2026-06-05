@@ -727,7 +727,7 @@ bot-sprite-wrap {
 .card-back { background: linear-gradient(145deg, #0c74d0, #0560b0 50%, #044494); border: 2px solid rgba(255,255,255,.14); border-radius: var(--r); box-shadow: 0 5px 17px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.12); position: relative; overflow: hidden; display: block; flex-shrink: 0; &::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, transparent 26%, rgba(255,255,255,.05) 26%, rgba(255,255,255,.05) 28%, transparent 28%), linear-gradient(0deg, transparent 46%, rgba(255,255,255,.06) 46%, rgba(255,255,255,.06) 54%, transparent 54%); } &.gold { background: linear-gradient(145deg, #8c6212, #6c4a0a, #4c3008); border-color: rgba(242,192,64,.22); } }
 
 @media (max-height: 800px) {
-  .board-half-wrapper.player-side { padding-bottom: 116px; }
+  .board-half-wrapper.player-side { padding-bottom: 86px; }
   .trainer-3d-wrapper {
     width: 75px;
     height: 100px;
@@ -735,10 +735,13 @@ bot-sprite-wrap {
   .active-card { width: 100px; height: 140px; }
   .hp-bar-ext  { width: 100px; }
   .sprite-wrap { width: 75px; height: 66px; }
-  .bench-row.player-bench { margin-bottom: 44px; }
+  .bench-row.player-bench { margin-bottom: 24px; }
   .bench-slot.occupied img { width: 52px; }
+  .bot-combatant { margin-top: 6px; }
+  .player-combatant { margin-bottom: 6px; }
+  .arena { gap: 8px; }
   .hand-zone {
-    bottom: -20px;
+    bottom: -10px;
     width: min(620px, calc(100vw - 280px));
     height: 152px;
   }
@@ -755,10 +758,10 @@ bot-sprite-wrap {
 }
 
 @media (max-height: 720px) {
-  .board-half-wrapper.player-side { padding-bottom: 96px; }
-  .bench-row.player-bench { margin-bottom: 56px; }
+  .board-half-wrapper.player-side { padding-bottom: 70px; }
+  .bench-row.player-bench { margin-bottom: 20px; }
   .hand-zone {
-    bottom: -15px;
+    bottom: -5px;
     height: 142px;
   }
   .hand-card-hitbox {
