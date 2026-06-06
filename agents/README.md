@@ -1,49 +1,103 @@
-# AI Agents — Project Guidelines
+# Agents — Guía Arquitectónica para Desarrolladores
 
-Esta carpeta contiene las reglas, contexto y skills que cualquier agente de IA debe seguir al trabajar en este proyecto.
+Esta carpeta contiene las **reglas, convenciones y documentación arquitectónica** del proyecto. Es el lugar donde el equipo acuerda cómo se construye el código y por qué.
 
-**Es tool-agnóstica**: funciona con Claude, Codex, Antigravity, Cursor, Copilot, o cualquier otro agente.
+## 📖 Qué Encontrar Aquí
 
----
+### [`rules/`](./rules/)
+**Reglas arquitectónicas obligatorias.** Si las violas, code review te lo rechaza.
 
-## Estructura
+- **[patrones-diseño.md](./rules/patrones-diseño.md)** — Los 4 patrones que hacen que todo funcione
+  - Por qué existen
+  - Cómo usarlos
+  - Qué NO hacer
+  - Cómo verificar en code review
 
-```
-agents/
-├── rules/          ← Reglas de comportamiento del agente
-│   ├── general.md      - Reglas transversales a todo el proyecto
-│   ├── backend.md      - Reglas específicas del BE (Java/Spring Boot)
-│   └── frontend.md     - Reglas específicas del FE (Angular/TypeScript)
-├── skills/         ← Conocimiento de dominio del proyecto
-│   ├── battle-engine.md    - Cómo funciona el motor de batalla
-│   ├── deck-builder.md     - Cómo funciona el armado de mazos
-│   └── testing.md          - Patrones de test usados en el proyecto
-└── context/        ← Contexto técnico general
-    ├── architecture.md     - Arquitectura del sistema
-    ├── stack.md            - Stack tecnológico y versiones
-    └── conventions.md      - Convenciones de código y naming
-```
+**Lectura obligatoria** si vas a tocar:
+- `BE/src/main/java/com/pokemon/tcg/service/battle/`
+- `BE/src/main/java/com/pokemon/tcg/model/battle/state/`
 
 ---
 
-## Cómo usar con tu agente
+## 🎯 Para Nuevos Miembros del Equipo
 
-### Claude / Claude Code
-Copiá el contenido relevante al inicio de tu conversación, o referenciá los archivos directamente.
-Claude Code carga automáticamente `CLAUDE.md` si existe en la raíz — podés symlinkearlo a `agents/rules/general.md`.
-
-### GitHub Copilot / Codex
-Adjuntá los archivos como contexto adicional en tu prompt, o usá la funcionalidad de "custom instructions" de tu herramienta.
-
-### Cursor
-Usá `.cursorrules` en la raíz y pegá el contenido de `rules/general.md`. Cursor también soporta adjuntar archivos como contexto.
-
-### Antigravity / otros
-Incluí los archivos de `rules/` y `context/` como system prompt o contexto inicial de la sesión.
+1. Lee [reglas/patrones-diseño.md](./rules/patrones-diseño.md) completo
+2. Mira la [documentación técnica](../BE/PATRONES_DISEÑO.md) para entender cómo se usa cada patrón
+3. Lee el [plan de implementación](https://localhost) para ver cómo se construyeron
+4. Pregunta dudas en el canal #architecture
 
 ---
 
-## Regla de oro
+## 🚀 Flujo de Desarrollo
 
-**Si aprendiste algo nuevo sobre el proyecto que no está documentado aquí, agregalo.**
-Esta carpeta solo es útil si se mantiene actualizada.
+### Agregando un Efecto de Ataque
+→ Usa **Chain of Responsibility**
+→ Nueva clase en `service/battle/chain/`
+→ Registra en `CadenaAtaqueFactory`
+→ Test unitario
+
+Ver: [reglas/patrones-diseño.md#1-chain-of-responsibility](./rules/patrones-diseño.md#1-chain-of-responsibility)
+
+### Agregando una Estrategia de Bot
+→ Usa **Strategy**
+→ Nueva clase en `service/battle/strategy/`
+→ Cambiar una línea en `BotAIService`
+→ Test de estrategia
+
+Ver: [reglas/patrones-diseño.md#2-strategy](./rules/patrones-diseño.md#2-strategy)
+
+### Agregando una Acción de Turno
+→ Usa **Command**
+→ Nueva clase en `service/battle/command/`
+→ Usar `BattleEngineService.ejecutarComando()`
+→ Test unitario
+
+Ver: [reglas/patrones-diseño.md#3-command](./rules/patrones-diseño.md#3-command)
+
+### Agregando una Fase o Cambio de Flujo
+→ Usa **State**
+→ Nueva clase en `model/battle/state/`
+→ Usar `partida.transicionarA()`
+→ **NUNCA** `setFaseActual()`
+
+Ver: [reglas/patrones-diseño.md#4-state](./rules/patrones-diseño.md#4-state)
+
+---
+
+## ⚠️ Red Flags en Code Review
+
+Si ves alguno de estos, rechaza el PR:
+
+- ❌ Cambios en `BattleAttackService` (debe ser nuevo handler)
+- ❌ Cambios en `BotAIService` además de cambiar `estrategia =` (debe ser nueva clase)
+- ❌ Nuevo método público en `BattleEngineService` que ejecuta acciones (debe ser nuevo comando)
+- ❌ Uso de `setFaseActual()` (debe ser `transicionarA()`)
+- ❌ Ejecución de comando sin pasar por `ejecutarComando()` (salta el gate de estado)
+
+---
+
+## 📊 Documentación Técnica
+
+Para entender **por qué** se eligió cada patrón, lee:
+- [BE/PATRONES_DISEÑO.md](../BE/PATRONES_DISEÑO.md) — Explicación completa de cada patrón
+
+---
+
+## 🔄 Próximos Pasos para el Proyecto
+
+- [ ] Frontend — aplicar los mismos patrones en Angular
+- [ ] Testing — agregar cobertura mínima por patrón
+- [ ] Monitoring — agregar logs de transiciones de estado
+- [ ] Performance — profiling de cadena de handlers
+
+---
+
+## Contacto
+
+Si tienes dudas sobre la arquitectura:
+- Abre un issue con tag `[architecture]`
+- Pregunta en `#architecture` del Discord
+- Code review — pregunta en el PR
+
+**Última actualización**: 2026-06-06  
+**Responsable**: Benjamin Polzoni
