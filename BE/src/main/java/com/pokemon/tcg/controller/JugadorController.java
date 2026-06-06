@@ -10,6 +10,7 @@ import com.pokemon.tcg.dto.SantoroTrackingRequest;
 import com.pokemon.tcg.dto.TradeExecutionRequest;
 import com.pokemon.tcg.model.Card;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/jugadores")
+@Tag(name = "Jugadores", description = "Endpoints para consultar y administrar jugadores, monedas y sobres")
 public class JugadorController {
 
     private final JugadorRepository jugadorRepo;
