@@ -71,15 +71,15 @@ En este proyecto gran parte del look and feel vive en los estilos de cada compon
 
 ## 3. Arquitectura del frontend
 
-La app esta organizada en una estructura muy clara:
+La app está organizada en una estructura limpia agrupada bajo carpetas principales:
 
-- `model`: tipos y contratos de datos
-- `services`: comunicacion con backend y logica compartida
-- `login`: pantalla de acceso
-- `lobby`: pantalla principal del jugador
-- `components/deck-builder`: constructor de mazos
-- `components/battle-board`: tablero de batalla
-- `components/apertura-sobre`: animacion 3D de apertura de sobres
+- `core`: contiene servicios de datos globales, configuración de API y sonido (`src/app/core/services/`).
+- `shared`: modelos y tipos de datos reutilizables (`src/app/shared/models/`).
+- `features/login`: pantalla de acceso, registro interactivo y recuperación de contraseña (`src/app/features/login/`).
+- `features/lobby`: panel principal del jugador con control de inventario y acceso a combate (`src/app/features/lobby/`).
+- `features/lobby/components/apertura-sobre`: componente especializado 3D con Three.js para la apertura interactiva de sobres.
+- `features/deck-builder`: constructor y editor de mazos de 60 cartas (`src/app/features/deck-builder/`).
+- `features/battle`: tablero de batalla y paneles accesorios para debug, habilidades y pila de descarte (`src/app/features/battle/`).
 
 El frontend sigue un flujo de UI donde cada pantalla consume un service especifico y traduce respuestas del backend a elementos visuales.
 
@@ -87,7 +87,7 @@ El frontend sigue un flujo de UI donde cada pantalla consume un service especifi
 
 ## 4. Modelos de datos
 
-Los modelos viven en [`src/app/model`](./src/app/model).
+Los modelos viven en [`src/app/shared/models`](./src/app/shared/models).
 
 ### `card.ts`
 
@@ -159,18 +159,19 @@ Los services son el puente entre Angular y la API del backend.
 
 ### `AuthService`
 
-[`src/app/services/auth.service.ts`](./src/app/services/auth.service.ts)
+[`src/app/core/services/auth.service.ts`](./src/app/core/services/auth.service.ts)
 
 Responsabilidad:
 
-- enviar el `username` al endpoint `/api/auth/login`
-- recibir el jugador autenticado o creado
+- enviar credenciales al endpoint `/api/auth/login`
+- enviar los datos de registro a `/api/auth/register`
+- enviar los datos de restablecimiento y recuperación a `/api/auth/forgot-password` y `/api/auth/reset-password`
 
-Este login es simple: no hay password ni token, solo username.
+Este servicio maneja la comunicación completa para autenticación, registro y recuperación de contraseñas.
 
 ### `JugadorService`
 
-[`src/app/services/jugador.service.ts`](./src/app/services/jugador.service.ts)
+[`src/app/core/services/jugador.service.ts`](./src/app/core/services/jugador.service.ts)
 
 Responsabilidad:
 
@@ -184,7 +185,7 @@ Endpoints que consume:
 
 ### `SobreService`
 
-[`src/app/services/sobre.service.ts`](./src/app/services/sobre.service.ts)
+[`src/app/features/lobby/services/sobre.service.ts`](./src/app/features/lobby/services/sobre.service.ts)
 
 Responsabilidad:
 
@@ -196,7 +197,7 @@ Endpoint:
 
 ### `MazoService`
 
-[`src/app/services/mazo.service.ts`](./src/app/services/mazo.service.ts)
+[`src/app/features/deck-builder/services/mazo.service.ts`](./src/app/features/deck-builder/services/mazo.service.ts)
 
 Responsabilidad:
 
@@ -212,7 +213,7 @@ Endpoints:
 
 ### `BattleService`
 
-[`src/app/services/battle.service.ts`](./src/app/services/battle.service.ts)
+[`src/app/features/battle/services/battle.service.ts`](./src/app/features/battle/services/battle.service.ts)
 
 Es el servicio que centraliza todas las acciones de combate.
 
@@ -236,7 +237,7 @@ Este service traduce cada accion de UI a una llamada HTTP concreta.
 
 ### `BattleBoardUiService`
 
-[`src/app/services/battle-board-ui.service.ts`](./src/app/services/battle-board-ui.service.ts)
+[`src/app/features/battle/services/battle-board-ui.service.ts`](./src/app/features/battle/services/battle-board-ui.service.ts)
 
 Es un service puramente visual.
 
@@ -255,7 +256,7 @@ Tambien contiene un gran diccionario `pokedexNum` para mapear nombres de cartas 
 
 ### `BattleBoardAttackService`
 
-[`src/app/services/battle-board-attack.service.ts`](./src/app/services/battle-board-attack.service.ts)
+[`src/app/features/battle/services/battle-board-attack.service.ts`](./src/app/features/battle/services/battle-board-attack.service.ts)
 
 Este servicio no habla con el backend: ayuda a interpretar ataques en el tablero.
 
@@ -275,30 +276,28 @@ Es una capa utilitaria para que la interfaz pueda mostrar mejor el estado de ata
 
 ### `LoginComponent`
 
-Ubicado en [`src/app/login/login.component.ts`](./src/app/login/login.component.ts).
+Ubicado en [`src/app/features/login/login.component.ts`](./src/app/features/login/login.component.ts).
 
-Responsabilidad:
+Responsabilidades y Flujos:
 
-- capturar el `username`
-- llamar a `AuthService.login`
-- guardar el jugador en `localStorage`
-- redirigir al lobby
-
-Flujo:
-
-1. El usuario escribe su nombre.
-2. Se envia al backend.
-3. Si la respuesta es correcta, se guarda en `localStorage`.
-4. Se navega a `/lobby`.
+1. **Inicio de sesión (Login)**:
+   - Captura el nombre de usuario (`username`) y la contraseña (`password`).
+   - Llama a `AuthService.login` y, si la autenticación es exitosa, guarda los datos del jugador en `localStorage` e inicia una secuencia cinemática de acceso antes de redirigir al lobby.
+2. **Registro de nuevos usuarios (Register)**:
+   - Permite cambiar al modo de registro, capturando `screenName` (nombre en pantalla), `email` (correo electrónico), `password`, y `confirmPassword`.
+   - Realiza validaciones interactivas de la fortaleza de la contraseña (utilizando animaciones de Pikachu que reaccionan al estado de la contraseña) y verifica que las contraseñas coincidan y que los términos sean aceptados antes de llamar a `AuthService.register`.
+3. **Recuperación de contraseña (Forgot / Reset Password)**:
+   - Permite ingresar el nombre de usuario o correo para iniciar el flujo de olvido de contraseña (`forgotPassword`).
+   - Una vez enviado el token por correo, el componente permite ingresar el token recibido y la nueva contraseña para consumirlo (`resetPassword`) y actualizar las credenciales.
 
 El HTML y SCSS de esta pantalla viven en:
 
-- [`login.component.html`](./src/app/login/login.component.html)
-- [`login.component.scss`](./src/app/login/login.component.scss)
+- [`login.component.html`](./src/app/features/login/login.component.html)
+- [`login.component.scss`](./src/app/features/login/login.component.scss)
 
 ### `LobbyComponent`
 
-Ubicado en [`src/app/lobby/lobby.component.ts`](./src/app/lobby/lobby.component.ts).
+Ubicado en [`src/app/features/lobby/lobby.component.ts`](./src/app/features/lobby/lobby.component.ts).
 
 Es la pantalla principal del jugador.
 
@@ -333,11 +332,11 @@ Responsabilidades:
 
 El lobby combina una capa de inventario, una vista de mazos y un acceso rapido al combate.
 
-El HTML esta en [`lobby.component.html`](./src/app/lobby/lobby.component.html) y los estilos en [`lobby.component.scss`](./src/app/lobby/lobby.component.scss).
+El HTML esta en [`lobby.component.html`](./src/app/features/lobby/lobby.component.html) y los estilos en [`lobby.component.scss`](./src/app/features/lobby/lobby.component.scss).
 
 ### `DeckBuilderComponent`
 
-Ubicado en [`src/app/components/deck-builder/deck-builder.component.ts`](./src/app/components/deck-builder/deck-builder.component.ts).
+Ubicado en [`src/app/features/deck-builder/deck-builder.component.ts`](./src/app/features/deck-builder/deck-builder.component.ts).
 
 Es el editor de mazos.
 
@@ -366,11 +365,11 @@ Responsabilidades:
 - `agregarAlMazo()` valida stock, limite de 4 y limite total de 60.
 - `guardar()` decide entre crear o actualizar segun exista `idMazoAEditar`.
 
-El HTML esta en [`deck-builder.component.html`](./src/app/components/deck-builder/deck-builder.component.html) y el SCSS en [`deck-builder.component.scss`](./src/app/components/deck-builder/deck-builder.component.scss).
+El HTML esta en [`deck-builder.component.html`](./src/app/features/deck-builder/deck-builder.component.html) y el SCSS en [`deck-builder.component.scss`](./src/app/features/deck-builder/deck-builder.component.scss).
 
 ### `BattleBoardComponent`
 
-Ubicado en [`src/app/components/battle-board/battle-board.component.ts`](./src/app/components/battle-board/battle-board.component.ts).
+Ubicado en [`src/app/features/battle/battle-board.component.ts`](./src/app/features/battle/battle-board.component.ts).
 
 Es la pantalla mas compleja del frontend.
 
@@ -434,12 +433,12 @@ Además mantiene mucho estado de UI:
 
 El HTML y CSS de esta pantalla son los mas grandes del proyecto:
 
-- [`battle-board.component.html`](./src/app/components/battle-board/battle-board.component.html)
-- [`battle-board.component.scss`](./src/app/components/battle-board/battle-board.component.scss)
+- [`battle-board.component.html`](./src/app/features/battle/battle-board.component.html)
+- [`battle-board.component.scss`](./src/app/features/battle/battle-board.component.scss)
 
 ### `AperturaSobreComponent`
 
-Ubicado en [`src/app/components/apertura-sobre/apertura-sobre.ts`](./src/app/components/apertura-sobre/apertura-sobre.ts).
+Ubicado en [`src/app/features/lobby/components/apertura-sobre/apertura-sobre.ts`](./src/app/features/lobby/components/apertura-sobre/apertura-sobre.ts).
 
 Es una experiencia visual 3D para abrir sobres.
 
@@ -467,8 +466,8 @@ Este componente trabaja con `@Input() cartas` y `@Output() onClose`.
 
 Los archivos visuales son:
 
-- [`apertura-sobre.html`](./src/app/components/apertura-sobre/apertura-sobre.html)
-- [`apertura-sobre.scss`](./src/app/components/apertura-sobre/apertura-sobre.scss)
+- [`apertura-sobre.html`](./src/app/features/lobby/components/apertura-sobre/apertura-sobre.html)
+- [`apertura-sobre.scss`](./src/app/features/lobby/components/apertura-sobre/apertura-sobre.scss)
 
 ---
 
@@ -525,7 +524,7 @@ Eso sirve para:
 - recuperar el username en el lobby y el deck builder
 - evitar pedir login en cada cambio de ruta dentro de la misma sesion del navegador
 
-No se usa un sistema de autenticacion complejo en el cliente.
+Se almacena el objeto jugador en `localStorage` con su username y sobres disponibles, pero el backend ahora exige contraseña para el inicio de sesión y valida los tokens de recuperación para asegurar las cuentas.
 
 ---
 
@@ -570,12 +569,12 @@ Si queres entender la app de forma rapida, conviene leer este orden:
 
 1. [`src/main.ts`](./src/main.ts)
 2. [`src/app/app.routes.ts`](./src/app/app.routes.ts)
-3. [`src/app/services/auth.service.ts`](./src/app/services/auth.service.ts)
-4. [`src/app/login/login.component.ts`](./src/app/login/login.component.ts)
-5. [`src/app/lobby/lobby.component.ts`](./src/app/lobby/lobby.component.ts)
-6. [`src/app/components/deck-builder/deck-builder.component.ts`](./src/app/components/deck-builder/deck-builder.component.ts)
-7. [`src/app/components/battle-board/battle-board.component.ts`](./src/app/components/battle-board/battle-board.component.ts)
-8. [`src/app/components/apertura-sobre/apertura-sobre.ts`](./src/app/components/apertura-sobre/apertura-sobre.ts)
+3. [`src/app/core/services/auth.service.ts`](./src/app/core/services/auth.service.ts)
+4. [`src/app/features/login/login.component.ts`](./src/app/features/login/login.component.ts)
+5. [`src/app/features/lobby/lobby.component.ts`](./src/app/features/lobby/lobby.component.ts)
+6. [`src/app/features/deck-builder/deck-builder.component.ts`](./src/app/features/deck-builder/deck-builder.component.ts)
+7. [`src/app/features/battle/battle-board.component.ts`](./src/app/features/battle/battle-board.component.ts)
+8. [`src/app/features/lobby/components/apertura-sobre/apertura-sobre.ts`](./src/app/features/lobby/components/apertura-sobre/apertura-sobre.ts)
 
 Ese recorrido deja ver como la app pasa de acceso, a gestion de coleccion, a armado de mazo y finalmente a combate.
 
