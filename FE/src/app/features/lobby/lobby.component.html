@@ -6,24 +6,103 @@
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
+  <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+    <div class="phone-tilt-icon"></div>
+    <strong>Gira el celular</strong>
+    <span>El lobby 3D se ve mejor en horizontal, pero podés seguir jugando así.</span>
+  </div>
+
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 
-    *ngFor="let other of otherPlayersList" 
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
     class="player-nametag" 
-    [style.left.%]="other.screenX" 
-    [style.top.%]="other.screenY"
-    [class.visible]="other.screenX !== undefined && other.screenY !== undefined"
+    [attr.data-player-tag]="other.username"
   >
-    <div class="nametag-bubble">
+    <div class="nametag-bubble" (click)="openPlayerMenu($event, other)">
       <span class="nametag-dot"></span>
       <span class="nametag-text">{{ other.username }}</span>
       <small *ngIf="other.pikachuEnabled" class="nametag-pikachu">⚡ PK</small>
     </div>
   </div>
 
-  <div class="developer-debug-panel lobby-debug-panel" *ngIf="showDebugPanel">
-    <div class="ddp-header">
-      <span>MODO DIOS LOBBY (F3)</span>
+  <!-- SPEECH BUBBLES FOR MULTIPLAYER -->
+  <!-- Speech bubbles for other players -->
+  <div
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername"
+    class="player-speech-bubble"
+    [attr.data-player-bubble]="other.username"
+  >
+    <div class="speech-content">
+      {{ other.chatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- Speech bubble for local player -->
+  <div
+    class="player-speech-bubble local-speech"
+    [style.left.%]="localBubbleScreenX"
+    [style.top.%]="localBubbleScreenY"
+    [class.visible]="localBubbleScreenX !== undefined && localBubbleScreenY !== undefined && localChatBubble"
+  >
+    <div class="speech-content">
+      {{ localChatBubble }}
+    </div>
+    <div class="speech-arrow"></div>
+  </div>
+
+  <!-- CHAT WINDOW (BOTTOM LEFT) -->
+  <button class="mobile-chat-toggle" type="button" (click)="toggleChat()">
+    CHAT
+  </button>
+
+  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
+    <div class="chat-messages">
+      <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
+        <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
+        <span class="chat-text">{{ msg.text }}</span>
+      </div>
+      <div *ngIf="chatLog.length === 0" class="chat-empty">
+        Presioná ENTER para chatear en el lobby
+      </div>
+    </div>
+    <div class="chat-input-wrapper" [class.active]="chatActive">
+      <input
+        #chatInput
+        type="text"
+        [(ngModel)]="chatText"
+        (keydown.escape)="closeChat()"
+        placeholder="Escribe un mensaje y presiona Enter..."
+        maxlength="100"
+      />
+    </div>
+  </div>
+
+  <div
+    class="developer-debug-panel lobby-debug-panel"
+    *ngIf="showDebugPanel"
+    [style.left.px]="debugPanelX"
+    [style.top.px]="debugPanelY"
+  >
+    <div class="ddp-header" (pointerdown)="startDebugPanelDrag($event)">
+      <span>MODO DEBUG LOBBY (F3)</span>
+      <small>Arrastrar</small>
+    </div>
+
+    <div class="ddp-section">
+      <p class="godmode-title">ESTADÍSTICAS</p>
+      <div class="debug-stats-grid">
+        <div><strong>{{ debugFps }}</strong><span>FPS</span></div>
+        <div><strong>{{ debugFrameMs }}</strong><span>MS</span></div>
+        <div><strong>{{ debugDrawCalls }}</strong><span>CALLS</span></div>
+        <div><strong>{{ debugTriangles }}</strong><span>TRIS</span></div>
+        <div><strong>{{ debugPixelRatio }}</strong><span>DPR</span></div>
+        <div><strong>{{ debugAdaptiveScale }}%</strong><span>SCALE</span></div>
+      </div>
+      <p><span>Geometrías:</span> {{ debugGeometries }} · <span>Texturas:</span> {{ debugTextures }}</p>
+      <p><span>Online:</span> {{ otherPlayersList.length + 1 }} · <span>Remotos:</span> {{ otherPlayersList.length }}</p>
+      <p><span>Calidad:</span> {{ graphicsQualityLabel }} · <span>Ciclo:</span> {{ dayPhaseLabel }}</p>
     </div>
 
     <div class="ddp-section">
@@ -128,6 +207,23 @@
       <strong>{{ graphicsQualityLabel }}</strong>
     </button>
 
+    <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
+      <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
+        <small>AUDIO</small>
+        <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+      <div class="audio-mini-controls">
+        <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" title="Musica ambiental">MUS</button>
+        <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" title="Pasos y efectos">SFX</button>
+        <button type="button" (click)="cycleLobbyVolume()" title="Volumen">{{ audioVolumeLabel }}</button>
+      </div>
+    </div>
+
+    <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
+      <small>ACCIONES</small>
+      <strong>EMOTES</strong>
+    </button>
+
     <div class="resource-chip">
       <small>{{ 'lobby.openPack' | t }}</small>
       <strong>{{ sobresDisponibles }}</strong>
@@ -141,6 +237,32 @@
     <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
   </aside>
 
+  <div
+    class="mobile-analog-pad"
+    aria-label="Movimiento analogico"
+    (pointerdown)="startMobileJoystick($event)"
+    (pointermove)="moveMobileJoystick($event)"
+    (pointerup)="endMobileJoystick($event)"
+    (pointercancel)="endMobileJoystick($event)"
+  >
+    <div class="analog-ring"></div>
+    <div
+      class="analog-stick"
+      [class.active]="mobileJoystickActive"
+      [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
+    ></div>
+    <span>MOVER</span>
+  </div>
+
+  <div class="mobile-action-pad" aria-label="Acciones tactiles">
+    <div class="mobile-camera-zoom" aria-label="Zoom de camara">
+      <button type="button" (click)="mobileCameraZoomStep(-1)">+</button>
+      <button type="button" (click)="mobileCameraZoomStep(1)">-</button>
+    </div>
+    <button type="button" class="mobile-run" [class.active]="keys.has('shift')" (pointerdown)="pressMobileKey($event, 'shift')" (pointerup)="releaseMobileKey($event, 'shift')" (pointercancel)="releaseMobileKey($event, 'shift')">RUN</button>
+    <button type="button" class="mobile-interact" (click)="interactWithCurrentSpot()">E</button>
+  </div>
+
   <div class="hub-radar">
     <button
       *ngFor="let spot of hubSpots"
@@ -153,12 +275,22 @@
     </button>
   </div>
 
-  <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen">
+  <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen && !santoroDialogOpen && !kiosqueraDialogOpen">
     <span class="prompt-key">E</span>
     <div>
       <small>{{ currentInteraction.kicker }}</small>
       <strong>{{ currentInteraction.label }}</strong>
       <p>{{ currentInteraction.description }}</p>
+    </div>
+  </div>
+
+  <div class="quest-tracker" *ngIf="!santoroGiftClaimed || santoroQuestTracking">
+    <small>MISION PRINCIPAL</small>
+    <strong>{{ santoroQuestTitle }}</strong>
+    <p>{{ santoroQuestCopy }}</p>
+    <div class="quest-actions">
+      <button type="button" *ngIf="!santoroQuestTracking && !santoroGiftClaimed" (click)="toggleSantoroTracking()">Seguir</button>
+      <button type="button" *ngIf="santoroQuestTracking" (click)="stopSantoroTracking()">Dejar de seguir</button>
     </div>
   </div>
 
@@ -216,6 +348,78 @@
     </button>
   </div>
 
+  <!-- Diálogo con la Kiosquera de la Cantina -->
+  <div class="santoro-dialog-overlay-blocker" *ngIf="kiosqueraDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="kiosqueraDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">KIOSQUERA</small>
+      <h3>¡Hola! ¿Cómo estás? ¿Necesitás comprar algo en la cantina?</h3>
+      <div class="challenge-actions">
+        <button class="btn-accept" type="button" (click)="kiosqueraVerProductos()">Ver productos</button>
+        <button class="btn-reject" type="button" (click)="closeKiosqueraDialog()">No, gracias</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="santoro-dialog-overlay-blocker" *ngIf="santoroDialogOpen"></div>
+  <div class="santoro-dialog-stage" *ngIf="santoroDialogOpen">
+    <div class="santoro-dialog-card">
+      <small class="challenge-kicker">PROFE SANTORO</small>
+      <ng-container [ngSwitch]="santoroDialogState">
+        <ng-container *ngSwitchCase="'intro'">
+          <h3>Hola {{ santoroNickname }}, bienvenido a Pokefetch.</h3>
+          <p>Te regalo 10 sobrecitos para que empieces tu aventura como corresponde.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="chooseSantoroAnswer('thanks')">Gracias profe</button>
+            <button class="btn-reject" type="button" (click)="chooseSantoroAnswer('reject')">No, no los quiero</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'thanks'">
+          <h3>Asi me gusta.</h3>
+          <p>Agarralos tranqui, que con esos sobrecitos capaz armas algo mas peligroso que un parcial sorpresa un lunes a las ocho.</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'forced'">
+          <h3>Nadie te pregunto si querias.</h3>
+          <p>Agarralos o te pongo un 2.</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'afterGift'">
+          <h3>Ah, {{ santoroNickname | lowercase }}, me olvide de decirte.</h3>
+          <p>Conmigo vas a poder gestionar tu mazo cuando quieras. Veni, tocame gestionar y tratemos de que esa estrategia no sea puro corazon y cero energia.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Despues</button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <h3>Que haces, {{ santoroNickname | lowercase }}?</h3>
+          <p>Si queres ajustar el mazo, te abro la Pokedex. Misiones nuevas todavia no tengo, pero ya se viene algo picante.</p>
+          <div class="challenge-actions">
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Cerrar</button>
+          </div>
+        </ng-container>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="lobby-dialog-overlay santoro-gift-overlay" *ngIf="santoroGiftModalOpen">
+    <div class="lobby-dialog-card challenge-card santoro-gift-card">
+      <div class="gift-pack-3d">
+        <img src="/images/cards/sobre.png" alt="Sobre Pokemon TCG">
+      </div>
+      <small class="challenge-kicker">RECOMPENSA RECIBIDA</small>
+      <h3>Sobres recibidos x10</h3>
+      <p>El inventario fue actualizado. Santoro acaba de salvar tu early game.</p>
+      <button class="btn-accept full-dialog-action" type="button" (click)="continueSantoroAfterGift()">Continuar</button>
+    </div>
+  </div>
+
   <div class="deck-preview-strip" *ngIf="mazos.length">
     <button
       *ngFor="let mazo of mazos"
@@ -232,7 +436,12 @@
     <div class="speed-lines"></div>
     @if (mostrarAnimacionSobre) {
       <div class="sobre-apertura-wrapper">
-        <app-apertura-sobre [cartas]="cartasNuevas" (finalizado)="finalizarApertura()"></app-apertura-sobre>
+        <app-apertura-sobre 
+          [cartas]="cartasNuevas" 
+          [sobresRestantes]="sobresDisponibles"
+          (finalizado)="finalizarApertura()"
+          (abrirOtro)="abrirOtroSobre()">
+        </app-apertura-sobre>
       </div>
     }
   </div>
@@ -260,7 +469,7 @@
             <span>Girar Vista (Rotación 3D)</span>
             <strong>{{ previewRotationDegrees }}°</strong>
           </div>
-          <input 
+          <input
             type="range" 
             min="0" 
             max="6.283" 
@@ -452,5 +661,366 @@
         <span class="loading-percentage">{{ hubLoadingProgress }}%</span>
       </div>
     </div>
+  </div>
+
+  <!-- PLAYER CONTEXT MENU -->
+  <div
+    class="player-context-menu"
+    *ngIf="selectedPlayerForMenu"
+    [style.left.px]="playerMenuX"
+    [style.top.px]="playerMenuY"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="menu-header">
+      <strong>{{ selectedPlayerForMenu.username }}</strong>
+    </div>
+    <button type="button" class="menu-item" (click)="agregarAmigo(selectedPlayerForMenu.username)">
+      Agregar Amigo
+    </button>
+    <button type="button" class="menu-item highlight" (click)="retarADuelo(selectedPlayerForMenu.username)">
+      Retar a Duelo
+    </button>
+    <button type="button" class="menu-item highlight" (click)="invitarIntercambio(selectedPlayerForMenu.username)">
+      Invitar a Intercambiar
+    </button>
+  </div>
+
+  <!-- CHALLENGE MODAL (DUEL) -->
+  <div class="lobby-dialog-overlay" *ngIf="incomingChallenge">
+    <div class="lobby-dialog-card challenge-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">¡PETICIÓN DE DUELO!</span>
+        <h3>{{ incomingChallenge.username }} te ha retado a un duelo</h3>
+        <p>¿Aceptás el desafío online en la arena de combate?</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderDuelo(false)">RECHAZAR</button>
+        <button type="button" class="btn-accept" (click)="responderDuelo(true)">ACEPTAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING CHALLENGE MODAL (DUEL) -->
+  <div class="lobby-dialog-overlay" *ngIf="waitingForChallengeResponse">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">ESPERANDO OPONENTE</span>
+        <h3>Retando a {{ challengedUsername }}</h3>
+        <p>Esperando a que acepte o rechace el duelo...</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject full-width" (click)="cancelarRetoDuelo()">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INCOMING TRADE MODAL -->
+  <div class="lobby-dialog-overlay" *ngIf="incomingTradeInvite">
+    <div class="lobby-dialog-card challenge-card trade-invite-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">PROPUESTA DE INTERCAMBIO</span>
+        <h3>{{ incomingTradeInvite.username }} te invita a intercambiar cartas</h3>
+        <p>¿Deseas abrir la sala de comercio?</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderTrade(false)">RECHAZAR</button>
+        <button type="button" class="btn-accept" (click)="responderTrade(true)">ACEPTAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WAITING TRADE MODAL -->
+  <div class="lobby-dialog-overlay" *ngIf="waitingForTradeResponse">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="circular-timer-wrapper">
+        <svg class="circular-timer" viewBox="0 0 36 36">
+          <path
+            class="circle-bg"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+          <path
+            class="circle"
+            [style.strokeDashoffset]="challengeTimerDashoffset"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+          />
+        </svg>
+        <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
+      </div>
+      <div class="challenge-body">
+        <span class="challenge-kicker">SALA DE COMERCIO</span>
+        <h3>Invitando a {{ tradeInvitedUsername }}</h3>
+        <p>Esperando a que acepte o rechace la invitación de intercambio...</p>
+      </div>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject full-width" (click)="cancelarTradeInvite()">CANCELAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TRADING MODAL ================= -->
+  <div class="trade-modal-overlay" *ngIf="activeTradeSession" (click)="$event.stopPropagation()">
+    <div class="trade-modal-card">
+      <header class="trade-header">
+        <span class="trade-kicker">CENTRO DE INTERCAMBIO UTN</span>
+        <h2>Intercambiar Cartas</h2>
+        <button class="close-trade-btn" (click)="cerrarTradeSala()">×</button>
+      </header>
+
+      <div class="trade-main-area">
+        <!-- PLAYER 1 (ME) OFFER ZONE -->
+        <div class="trade-offer-pane my-offer">
+          <div class="pane-header">
+            <strong>TU OFERTA</strong>
+            <span class="ready-badge" [class.ready]="tradeLeftReady">
+              {{ tradeLeftReady ? 'LISTO' : 'PREPARANDO' }}
+            </span>
+          </div>
+
+          <div class="trade-slots">
+            <div class="trade-slot-card" *ngFor="let card of tradeLeftCards" (click)="removeCardFromTrade(card)">
+              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+              <span class="remove-hint">Quitar</span>
+            </div>
+            <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeLeftCards.length)">
+              <span>Vacío</span>
+            </div>
+          </div>
+
+          <div class="ready-controls">
+            <button
+              type="button"
+              class="btn-trade-ready"
+              [class.ready-confirmed]="tradeLeftReady"
+              [class.empty-error]="tradeLeftCards.length === 0"
+              [disabled]="tradeLeftCards.length === 0"
+              (click)="toggleTradeReady()"
+            >
+              {{ tradeLeftReady ? 'CONFIRMADO' : 'CONFIRMAR OFERTA (O)' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- TRADE FLOW INDICATOR ARROWS -->
+        <div class="trade-arrows-pane">
+          <!-- Left to Right Arrow (My offer to opponent) -->
+          <div class="trade-arrow-container">
+            <div class="trade-arrow left-to-right" [class.fair]="isMyOfferFair()" [class.unfair]="!isMyOfferFair()">
+              <span class="arrow-icon">➔</span>
+            </div>
+            <small [class.fair-text]="isMyOfferFair()" [class.unfair-text]="!isMyOfferFair()">
+              {{ getMyOfferFairnessText() }}
+            </small>
+          </div>
+
+          <!-- Right to Left Arrow (Opponent's offer to me) -->
+          <div class="trade-arrow-container">
+            <div class="trade-arrow right-to-left" [class.fair]="isOpponentOfferFair()" [class.unfair]="!isOpponentOfferFair()">
+              <span class="arrow-icon">➔</span>
+            </div>
+            <small [class.fair-text]="isOpponentOfferFair()" [class.unfair-text]="!isOpponentOfferFair()">
+              {{ getOpponentOfferFairnessText() }}
+            </small>
+          </div>
+        </div>
+
+        <!-- PLAYER 2 (OPPONENT) OFFER ZONE -->
+        <div class="trade-offer-pane opponent-offer">
+          <div class="pane-header">
+            <strong>OFERTA DE {{ tradeOpponentUsername }}</strong>
+            <span class="ready-badge" [class.ready]="tradeRightReady">
+              {{ tradeRightReady ? 'LISTO' : 'PREPARANDO' }}
+            </span>
+          </div>
+
+          <div class="trade-slots">
+            <div class="trade-slot-card" *ngFor="let card of tradeRightCards">
+              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            </div>
+            <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeRightCards.length)">
+              <span>Vacío</span>
+            </div>
+          </div>
+
+          <div class="ready-controls">
+            <div class="opponent-ready-status" [class.ready]="tradeRightReady">
+              <strong>{{ tradeRightReady ? 'OPONENTE CONFIRMÓ' : 'OPONENTE PREPARANDO...' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MY COLLECTION TO CHOOSE CARDS FROM -->
+      <div class="trade-collection-area">
+        <div class="collection-filter-bar">
+          <h3>Tu Colección</h3>
+          <div class="collection-title-block">
+            <h3>Tu ColecciÃ³n</h3>
+            <small>{{ tradeCollectionFiltrada.length }}/{{ userTradeCollection.length }} cartas</small>
+          </div>
+          <input
+            type="text"
+            placeholder="Nombre, ID o ataque..."
+            [(ngModel)]="tradeCollectionSearchText"
+            (input)="filtrarColeccionTrade()"
+          >
+          <select [(ngModel)]="tradeCollectionFilterRarity" (change)="filtrarColeccionTrade()">
+            <option value="">Todas las rarezas</option>
+            <option *ngFor="let rarity of tradeCollectionRarities" [value]="rarity">{{ rarity }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterType" (change)="filtrarColeccionTrade()">
+            <option value="">Todos los tipos</option>
+            <option *ngFor="let type of tradeCollectionTypes" [value]="type">{{ type }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSupertype" (change)="filtrarColeccionTrade()">
+            <option value="">Todas las clases</option>
+            <option *ngFor="let supertype of tradeCollectionSupertypes" [value]="supertype">{{ supertype }}</option>
+          </select>
+          <select [(ngModel)]="tradeCollectionFilterSubtype" (change)="filtrarColeccionTrade()">
+            <option value="">Todos los subtipos</option>
+            <option *ngFor="let subtype of tradeCollectionSubtypes" [value]="subtype">{{ subtype }}</option>
+          </select>
+          <button type="button" class="btn-clear-trade-filters" (click)="limpiarFiltrosTrade()">Limpiar</button>
+        </div>
+
+        <div class="trade-collection-state" *ngIf="tradeCollectionLoading">
+          <span class="trade-loader"></span>
+          Sincronizando colecciÃ³n...
+        </div>
+        <div class="trade-collection-state error" *ngIf="!tradeCollectionLoading && tradeCollectionError">
+          {{ tradeCollectionError }}
+          <button type="button" (click)="precargarColeccionTrade(true)">Reintentar</button>
+        </div>
+
+        <div class="trade-collection-grid" *ngIf="!tradeCollectionLoading && !tradeCollectionError">
+          <div
+            class="trade-collection-item"
+            *ngFor="let card of tradeCollectionFiltrada; trackBy: trackCardById"
+            (click)="addCardToTrade(card)"
+            [class.already-in-trade]="isCardInTrade(card)"
+          >
+            <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            <div class="card-overlay-info">
+              <strong>{{ card.nombre }}</strong>
+              <small>{{ card.rarity || 'Common' }}</small>
+              <small>{{ card.tipo || card.supertype || 'Card' }}</small>
+            </div>
+          </div>
+          <div class="collection-empty" *ngIf="tradeCollectionFiltrada.length === 0">
+            No se encontraron cartas en tu colección.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VALUE WARNING POPUP -->
+  <div class="lobby-dialog-overlay warning-dialog" *ngIf="tradeShowValueWarning">
+    <div class="lobby-dialog-card warning-card">
+      <span class="warning-icon">⚠</span>
+      <h3>¿Estás seguro del intercambio?</h3>
+      <p>La carta o cartas que vas a entregar son significativamente más valiosas (rareza superior) que las que vas a recibir.</p>
+      <div class="warning-actions">
+        <button type="button" class="btn-reject" (click)="confirmarAdvertenciaValor(false)">NO, CANCELAR</button>
+        <button type="button" class="btn-accept" (click)="confirmarAdvertenciaValor(true)">SÍ, ESTOY SEGURO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE ENDED CONTINUATION PROMPT -->
+  <div class="lobby-dialog-overlay" *ngIf="tradeShowContinuationPrompt">
+    <div class="lobby-dialog-card challenge-card continuation-card">
+      <div class="continuation-icon">🤝</div>
+      <h3>¡Intercambio completado con éxito!</h3>
+      <p>Las cartas ya fueron transferidas a las respectivas colecciones. ¿Quieren seguir intercambiando?</p>
+      <div class="challenge-actions">
+        <button type="button" class="btn-reject" (click)="responderSeguirTrading(false)">SALIR</button>
+        <button type="button" class="btn-accept" (click)="responderSeguirTrading(true)">SEGUIR TRADEANDO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE WAITING FOR OPPONENT CONTINUATION RESPONSE -->
+  <div class="lobby-dialog-overlay" *ngIf="tradeWaitingForContinuation">
+    <div class="lobby-dialog-card challenge-card waiting-card">
+      <div class="continuation-icon waiting-icon">⏳</div>
+      <h3>Esperando respuesta...</h3>
+      <p>Esperando a que {{ tradeOpponentUsername }} decida si quiere seguir intercambiando...</p>
+    </div>
+  </div>
+
+  <!-- EMOTE MENU OVERLAY -->
+  <div class="emote-menu-overlay" *ngIf="showEmoteMenu" (click)="closeEmoteMenu()">
+    <div class="emote-menu-card" (click)="$event.stopPropagation()">
+      <button class="close-emote-menu" (click)="closeEmoteMenu()">×</button>
+      <div class="emote-header">
+        <span class="emote-kicker">GESTOS Y ANIMACIONES</span>
+        <h3>Seleccionar Emote</h3>
+        <p class="emote-desc">Hará una acción o pose especial</p>
+      </div>
+      <div class="emote-grid" *ngIf="getAvailableEmotes().length > 0; else noEmotes">
+        <button
+          *ngFor="let emote of getAvailableEmotes()"
+          type="button"
+          class="emote-btn"
+          (click)="triggerEmote(emote)"
+        >
+          <span class="emote-icon">✨</span>
+          <strong>{{ emote | uppercase }}</strong>
+        </button>
+      </div>
+      <ng-template #noEmotes>
+        <div class="no-emotes-wrapper">
+          <span class="no-emotes-icon">⚠️</span>
+          <p class="no-emotes-copy">Este personaje no posee animaciones adicionales para reproducir.</p>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+
+  <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">
+    <button type="button" class="deck-builder-close" (click)="cerrarDeckBuilder()">×</button>
+    <app-deck-builder [embedded]="true" (closed)="cerrarDeckBuilder($event)"></app-deck-builder>
   </div>
 </div>

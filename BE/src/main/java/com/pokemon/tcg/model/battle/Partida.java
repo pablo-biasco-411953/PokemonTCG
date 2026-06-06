@@ -17,6 +17,18 @@ public class Partida {
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
 
+    private String jugadorUsername;
+    private String botUsername;
+    private boolean coinFlipped = false;
+    private String coinFlipWinner;
+    private String coinFlipResult;
+    private String coinFlipCallerUsername;
+    private int coinHandshakeJugadorPower = 0;
+    private int coinHandshakeBotPower = 0;
+    private boolean coinHandshakeJugadorHolding = false;
+    private boolean coinHandshakeBotHolding = false;
+    private boolean coinHandshakeComplete = false;
+
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
 
@@ -68,4 +80,45 @@ public class Partida {
     public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
         this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
     }
+
+    public String getJugadorUsername() { return jugadorUsername; }
+    public void setJugadorUsername(String jugadorUsername) { this.jugadorUsername = jugadorUsername; }
+
+    public String getBotUsername() { return botUsername; }
+    public void setBotUsername(String botUsername) { this.botUsername = botUsername; }
+
+    public boolean isCoinFlipped() { return coinFlipped; }
+    public void setCoinFlipped(boolean coinFlipped) { this.coinFlipped = coinFlipped; }
+
+    public String getCoinFlipWinner() { return coinFlipWinner; }
+    public void setCoinFlipWinner(String coinFlipWinner) { this.coinFlipWinner = coinFlipWinner; }
+
+    public String getCoinFlipResult() { return coinFlipResult; }
+    public void setCoinFlipResult(String coinFlipResult) { this.coinFlipResult = coinFlipResult; }
+
+    public String getCoinFlipCallerUsername() { return coinFlipCallerUsername; }
+    public void setCoinFlipCallerUsername(String coinFlipCallerUsername) { this.coinFlipCallerUsername = coinFlipCallerUsername; }
+
+    public int getCoinHandshakeJugadorPower() { return coinHandshakeJugadorPower; }
+    public void setCoinHandshakeJugadorPower(int coinHandshakeJugadorPower) {
+        this.coinHandshakeJugadorPower = Math.max(0, Math.min(100, coinHandshakeJugadorPower));
+    }
+
+    public int getCoinHandshakeBotPower() { return coinHandshakeBotPower; }
+    public void setCoinHandshakeBotPower(int coinHandshakeBotPower) {
+        this.coinHandshakeBotPower = Math.max(0, Math.min(100, coinHandshakeBotPower));
+    }
+
+    public boolean isCoinHandshakeJugadorHolding() { return coinHandshakeJugadorHolding; }
+    public void setCoinHandshakeJugadorHolding(boolean coinHandshakeJugadorHolding) {
+        this.coinHandshakeJugadorHolding = coinHandshakeJugadorHolding;
+    }
+
+    public boolean isCoinHandshakeBotHolding() { return coinHandshakeBotHolding; }
+    public void setCoinHandshakeBotHolding(boolean coinHandshakeBotHolding) {
+        this.coinHandshakeBotHolding = coinHandshakeBotHolding;
+    }
+
+    public boolean isCoinHandshakeComplete() { return coinHandshakeComplete; }
+    public void setCoinHandshakeComplete(boolean coinHandshakeComplete) { this.coinHandshakeComplete = coinHandshakeComplete; }
 }

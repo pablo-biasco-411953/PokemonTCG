@@ -3,9 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Card } from '../../shared/models/card';
 
+import { getBackendUrl } from './api-config';
+
 @Injectable({ providedIn: 'root' })
 export class CardService {
-  private apiUrl = `http://${window.location.hostname}:8080/api/cards`;
+  private apiUrl = `${getBackendUrl()}/api/cards`;
 
   constructor(private http: HttpClient) {}
 

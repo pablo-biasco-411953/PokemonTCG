@@ -39,6 +39,16 @@ public class Jugador {
     )
     private List<Card> coleccion = new ArrayList<>();
 
+    private String characterId;
+    private String skinColor;
+    private String hairColor;
+    private String eyeColor;
+    private double height = 1.0;
+    private boolean pikachuCompanion = true;
+    private boolean santoroGiftClaimed = false;
+    private boolean santoroQuestTracking = false;
+    private String santoroQuestState = "AVAILABLE";
+
     // valores base de los juegadores
     public Jugador() {}
     public Jugador(String username) {
@@ -62,4 +72,31 @@ public class Jugador {
     public void setSobresDisponibles(int sobresDisponibles) { this.sobresDisponibles = sobresDisponibles; }
     public List<Card> getColeccion() { return coleccion; }
     public void setColeccion(List<Card> coleccion) { this.coleccion = coleccion; }
+
+    public String getCharacterId() { return characterId; }
+    public void setCharacterId(String characterId) { this.characterId = characterId; }
+
+    public String getSkinColor() { return skinColor; }
+    public void setSkinColor(String skinColor) { this.skinColor = skinColor; }
+
+    public String getHairColor() { return hairColor; }
+    public void setHairColor(String hairColor) { this.hairColor = hairColor; }
+
+    public String getEyeColor() { return eyeColor; }
+    public void setEyeColor(String eyeColor) { this.eyeColor = eyeColor; }
+
+    public double getHeight() { return height; }
+    public void setHeight(double height) { this.height = height; }
+
+    public boolean isPikachuCompanion() { return pikachuCompanion; }
+    public void setPikachuCompanion(boolean pikachuCompanion) { this.pikachuCompanion = pikachuCompanion; }
+
+    public boolean isSantoroGiftClaimed() { return santoroGiftClaimed; }
+    public void setSantoroGiftClaimed(boolean santoroGiftClaimed) { this.santoroGiftClaimed = santoroGiftClaimed; }
+
+    public boolean isSantoroQuestTracking() { return santoroQuestTracking; }
+    public void setSantoroQuestTracking(boolean santoroQuestTracking) { this.santoroQuestTracking = santoroQuestTracking; }
+
+    public String getSantoroQuestState() { return santoroQuestState; }
+    public void setSantoroQuestState(String santoroQuestState) { this.santoroQuestState = santoroQuestState; }
 }
