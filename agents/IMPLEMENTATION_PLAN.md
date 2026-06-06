@@ -6,6 +6,83 @@
 
 ---
 
+## Estado actual — 2026-06-06
+
+| Fase | Patrón | Estado |
+|------|--------|--------|
+| 1 | Chain of Responsibility | ✅ Completa |
+| 2 | Strategy | ✅ Completa |
+| 3 | Command | ✅ Completa |
+| 4 | State | ✅ Completa |
+
+### Fase 1 — Chain of Responsibility ✅
+
+- ✅ 18 handlers en `service/battle/chain/`
+- ✅ `CadenaAtaqueFactory` — ensambla pre-daño y efectos secundarios
+- ✅ `resolveAttack()` reemplazado completamente — usa la cadena internamente
+- ✅ `calcularDanioPorEfectos()` y `aplicarEfectosSecundarios()` eliminados
+- ✅ 13/13 tests pasan
+
+### Fase 2 — Strategy ✅
+
+- ✅ `EstrategiaBot` — interfaz
+- ✅ `EstrategiaBasica` — toda la lógica del bot extraída de `BotAIService`
+- ✅ `EstrategiaDificil` — placeholder para dificultad futura
+- ✅ `BotAIService` reducido a coordinador de 12 líneas
+- ✅ 13/13 tests pasan
+
+### Fase 4 — State ✅
+
+- ✅ `EstadoPartida` — interfaz con `permiteAccionesDeJuego()` y `getFase()`
+- ✅ 4 estados en `model/battle/state/`: `EstadoInicio`, `EstadoLanzamientoMoneda`, `EstadoTurnoNormal`, `EstadoFinPartida`
+- ✅ `Partida` — campo `private transient EstadoPartida estado`, lazy-init en `getEstado()` (`@JsonIgnore`), `transicionarA()`
+- ✅ `BattleEngineService.ejecutarComando()` — gate de estado antes de delegar al comando
+- ✅ Todos los `setFaseActual()` reemplazados por `transicionarA()` en `BattleEngineService` y `BattleKoService`
+- ✅ Checks de `getFaseActual()` eliminados de los 6 comandos (responsabilidad movida al estado)
+- ✅ 13/13 tests pasan
+
+---
+
+### Fase 3 — Command ✅
+
+- ✅ `ComandoTurno` — interfaz con `puedeEjecutar`, `ejecutar`, `getNombre`
+- ✅ 6 comandos implementados en `service/battle/command/`:
+  - `ComandoAtacar` — usa `BattleAttackService` (chain) + `BattleKoService`. Elimina tercer clon de lógica de ataque.
+  - `ComandoJugarPokemon`
+  - `ComandoUnirEnergia`
+  - `ComandoRetirarse`
+  - `ComandoSubirActivo`
+  - `ComandoEvolucionar`
+- ✅ `ejecutarComando(Partida, ComandoTurno)` dispatcher en `BattleEngineService`
+- ✅ `BattleAttackService` y `BattleKoService` inyectados en `BattleEngineService`
+- ✅ `calcularDanioPorEfectos`, `aplicarEfectosSecundarios`, `resolverKO`, `identificarTableros`, `elegirMejorReemplazoBot`, `puedePagarCostoAtaque` eliminados de `BattleEngineService`
+- ✅ 13/13 tests pasan
+
+**Handlers creados en** `service/battle/chain/`:
+
+| Archivo | Efecto | Fase |
+|---------|--------|------|
+| `EfectoContadoresDanio` | Daño extra por contadores propios | Pre-daño |
+| `EfectoInmunidad` | Activa escudo del atacante | Pre-daño |
+| `EfectoEscalaPorEnergias` | Daño extra por energías unidas | Pre-daño |
+| `EfectoMonedaFalla` | Anula ataque si sale cruz | Pre-daño |
+| `EfectoMultiMoneda` | Multiplica daño por caras | Pre-daño |
+| `EfectoMonedaExtraDanio` | Duplica daño si sale cara | Pre-daño |
+| `EfectoCuracion` | Cura HP del atacante | Post-daño |
+| `EfectoDanioBanca` | Daño colateral a banca rival | Post-daño |
+| `EfectoRobarCartas` | Roba cartas del mazo | Post-daño |
+| `EfectoDanioPropio` | El atacante se daña a sí mismo | Post-daño |
+| `EfectoDescartarEnergiaPropia` | Descarta energías propias | Post-daño |
+| `EfectoDescartarEnergiaRival` | Destruye energías del rival | Post-daño |
+| `EfectoParalisis` | Paraliza al defensor | Post-daño |
+| `EfectoAtrapar` | Impide retirarse al defensor | Post-daño |
+| `EfectoVeneno` | Envenena al defensor | Post-daño |
+| `EfectoSueno` | Duerme al defensor | Post-daño |
+| `EfectoQuemadura` | Quema al defensor | Post-daño |
+| `EfectoConfusion` | Confunde al defensor | Post-daño |
+
+---
+
 ## Orden de implementación
 
 ```

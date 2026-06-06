@@ -3,6 +3,7 @@ package com.pokemon.tcg.service;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.model.battle.state.EstadoFinPartida;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -42,7 +43,7 @@ public class BattleKoService {
         boolean sinPremios = tableroGanador.getPremios().isEmpty();
         boolean sinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
         if (sinPremios || sinPokemon) {
-            partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+            partida.transicionarA(new EstadoFinPartida());
             return;
         }
 

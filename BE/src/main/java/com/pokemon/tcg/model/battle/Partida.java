@@ -1,5 +1,7 @@
 package com.pokemon.tcg.model.battle;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.pokemon.tcg.model.battle.state.*;
 import java.util.UUID;
 import java.util.List;
 import java.util.ArrayList;
@@ -28,6 +30,8 @@ public class Partida {
     private boolean coinHandshakeJugadorHolding = false;
     private boolean coinHandshakeBotHolding = false;
     private boolean coinHandshakeComplete = false;
+
+    private transient EstadoPartida estado;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
@@ -60,6 +64,24 @@ public class Partida {
 
     public Fase getFaseActual() { return faseActual; }
     public void setFaseActual(Fase faseActual) { this.faseActual = faseActual; }
+
+    @JsonIgnore
+    public EstadoPartida getEstado() {
+        if (estado == null) {
+            estado = switch (faseActual) {
+                case INICIO -> new EstadoInicio();
+                case LANZAMIENTO_MONEDA -> new EstadoLanzamientoMoneda();
+                case TURNO_NORMAL -> new EstadoTurnoNormal();
+                case FIN_PARTIDA -> new EstadoFinPartida();
+            };
+        }
+        return estado;
+    }
+
+    public void transicionarA(EstadoPartida nuevoEstado) {
+        this.estado = nuevoEstado;
+        this.faseActual = nuevoEstado.getFase();
+    }
 
     public boolean isYaSeRetiroEsteTurno() { return yaSeRetiroEsteTurno; }
     public void setYaSeRetiroEsteTurno(boolean yaSeRetiroEsteTurno) {
