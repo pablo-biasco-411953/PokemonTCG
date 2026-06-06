@@ -121,6 +121,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private ataqueRealizado = false;
   private pollingPartida: ReturnType<typeof setInterval> | null = null;
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
+  private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
   showEndGameOverlay = false;
   isVictory = false;
   coinsEarned = 0;
@@ -259,42 +260,111 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
     this.jugadorNombre = this.obtenerNombreJugadorLocal();
+    this.iniciarPresenciaBatalla();
     this.cargarCatalogoGodMode();
     this.showIntro = true;
     setTimeout(() => (this.introFadingOut = true), 2000);
     setTimeout(() => (this.showIntro = false), 3000);
 
     this.battleService.getState(this.matchId).subscribe({
-      next: (data) => {
-        this.partida = data;
-        this.lastAppliedStateSignature = this.crearFirmaPartida(data);
-        if (data.faseActual === 'FIN_PARTIDA') {
-          this.handleGameEnd(data);
-        } else if (data.faseActual === 'LANZAMIENTO_MONEDA') {
-          setTimeout(() => {
-            this.estadoCoinFlip = 'DAR_LA_MANO';
-            this.iniciarPollingHandshake();
-            this.syncHandshakeWithServer(true);
-            this.cdr.detectChanges();
-          }, 3200);
-        } else {
-          this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
-          this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
-          this.finalizarCoinFlip();
-        }
-      },
+      next: (data) => this.hidratarEstadoInicial(data),
+      error: (err) => {
+        console.error('No se pudo recuperar la partida al recargar', err);
+        alert('La partida ya no esta disponible. Volviendo al lobby.');
+        this.router.navigate(['/lobby']);
+      }
     });
   }
 
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
+    if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
     this.cleanupHandshakeScene();
   }
 
   private requestLandscapeOrientation(): void {}
+
+  private iniciarPresenciaBatalla(): void {
+    if (!this.matchId) return;
+    if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
+
+    this.battleService.heartbeat(this.matchId).subscribe({
+      next: (data) => {
+        if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+      },
+      error: (err) => console.warn('No se pudo enviar heartbeat inicial de batalla', err)
+    });
+
+    this.battlePresenceInterval = setInterval(() => {
+      if (!this.matchId || this.showEndGameOverlay) return;
+      this.battleService.heartbeat(this.matchId).subscribe({
+        next: (data) => {
+          if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+        },
+        error: (err) => console.warn('No se pudo enviar heartbeat de batalla', err)
+      });
+    }, 10000);
+  }
+
+  private hidratarEstadoInicial(data: Partida): void {
+    if (!data) return;
+    this.partida = data;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+    this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
+    this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
+    if (!this.opponentLoaded && this.nombreRival) {
+      this.cargarDatosOponente();
+    }
+
+    if (data.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(data);
+      return;
+    }
+
+    if (data.faseActual === 'LANZAMIENTO_MONEDA') {
+      this.boardVisible = false;
+      this.hidratarPreparativosIniciales(data);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.finalizarCoinFlip();
+  }
+
+  private hidratarPreparativosIniciales(data: Partida): void {
+    this.handshakePower = data.coinHandshakeJugadorPower ?? 0;
+    this.opponentHandshakePower = data.coinHandshakeBotPower ?? 0;
+    this.opponentHandshakeHolding = !!data.coinHandshakeBotHolding;
+    this.handshakeComplete = !!data.coinHandshakeComplete;
+
+    if (data.coinFlipped) {
+      this.detenerPollingHandshake();
+      this.estadoCoinFlip = data.coinFlipWinner === this.jugadorNombre ? 'ELEGIR_TURNO' : 'RESULTADO_BOT';
+      if (this.estadoCoinFlip === 'RESULTADO_BOT') {
+        this.iniciarPollingSorteo();
+      }
+      return;
+    }
+
+    if (data.coinHandshakeComplete) {
+      this.estadoCoinFlip = this.puedeCantarSorteo(data) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
+      if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
+        this.iniciarPollingSorteo();
+      }
+      return;
+    }
+
+    this.estadoCoinFlip = 'DAR_LA_MANO';
+    this.iniciarPollingHandshake();
+    setTimeout(() => {
+      if (this.estadoCoinFlip === 'DAR_LA_MANO') {
+        this.syncHandshakeWithServer(true);
+      }
+    }, 120);
+  }
 
   dismissLandscapeHint(): void {
     this.landscapeHintDismissed = true;
@@ -535,6 +605,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         next: async (data) => {
           this.partida = data;
           this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+
+          if (data.faseActual === 'FIN_PARTIDA') {
+            this.handleGameEnd(data);
+            return;
+          }
 
           if (data.faseActual === 'TURNO_NORMAL') {
             this.finalizarCoinFlip();

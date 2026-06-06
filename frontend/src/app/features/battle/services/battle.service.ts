@@ -49,6 +49,10 @@ export class BattleService {
     return this.http.get<Partida>(`${this.base}/state/${matchId}`, this.getHeaders());
   }
 
+  heartbeat(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/heartbeat`, {}, this.getHeaders());
+  }
+
   // Ejecuta el lanzamiento inicial de moneda.
   lanzarMoneda(matchId: string, eleccion: 'CARA' | 'CRUZ'): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/coin-flip`, { eleccion }, this.getHeaders());

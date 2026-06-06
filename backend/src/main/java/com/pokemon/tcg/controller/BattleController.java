@@ -46,9 +46,20 @@ public class BattleController {
     @GetMapping("/state/{matchId}")
     public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId,
                                              @RequestHeader(value = "X-Username", required = false) String username) {
-        Partida partida = battleEngine.getEstadoPartida(matchId);
+        Partida partida = battleEngine.getEstadoPartida(matchId, username);
         if (partida == null) return ResponseEntity.notFound().build();
 
+        if (username != null && username.equals(partida.getBotUsername())) {
+            return ResponseEntity.ok(swapPerspective(partida));
+        }
+        return ResponseEntity.ok(partida);
+    }
+
+    @PostMapping("/{matchId}/heartbeat")
+    public ResponseEntity<?> heartbeat(@PathVariable String matchId,
+                                       @RequestHeader(value = "X-Username", required = false) String username) {
+        Partida partida = battleEngine.registrarHeartbeat(matchId, username);
+        if (partida == null) return ResponseEntity.notFound().build();
         if (username != null && username.equals(partida.getBotUsername())) {
             return ResponseEntity.ok(swapPerspective(partida));
         }
