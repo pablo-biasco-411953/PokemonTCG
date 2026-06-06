@@ -874,6 +874,15 @@
         <span>{{ getTextoBotonTurno() }}</span>
       </button>
 
+      <button
+        class="btn-surrender"
+        type="button"
+        [disabled]="cargandoAccion || showEndGameOverlay"
+        (click)="surrenderBattle()"
+      >
+        <span>RENDIRSE</span>
+      </button>
+
       <div class="turn-dots">
         <span [class.on]="partida.turnoActual === 'JUGADOR'"></span>
         <span [class.on]="partida.turnoActual === 'BOT'"></span>

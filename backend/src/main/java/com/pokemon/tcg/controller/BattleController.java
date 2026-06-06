@@ -66,6 +66,20 @@ public class BattleController {
         return ResponseEntity.ok(partida);
     }
 
+    @PostMapping("/{matchId}/surrender")
+    public ResponseEntity<?> rendirse(@PathVariable String matchId,
+                                      @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            Partida partida = battleEngine.rendirse(matchId, username);
+            if (username != null && username.equals(partida.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partida));
+            }
+            return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/evolve")
     public ResponseEntity<?> evolucionarPokemon(@PathVariable String matchId,
                                                 @RequestHeader(value = "X-Username", required = false) String username,

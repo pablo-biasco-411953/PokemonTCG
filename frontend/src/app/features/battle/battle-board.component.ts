@@ -1242,6 +1242,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  surrenderBattle(): void {
+    if (!this.matchId || this.showEndGameOverlay || this.cargandoAccion) return;
+
+    const confirmar = window.confirm('¿Rendirte y conceder la victoria al rival?');
+    if (!confirmar) return;
+
+    this.cargandoAccion = true;
+    this.battleService.surrender(this.matchId).subscribe({
+      next: (partida) => {
+        if (partida?.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(partida);
+          return;
+        }
+        this.partida = partida;
+        this.cargandoAccion = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al rendirse', err);
+        this.cargandoAccion = false;
+        window.alert(err?.error || 'No se pudo rendir la partida.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   private buildFallbackEndGameReason(): string {
     return this.isVictory
       ? 'Ganaste por condicion de victoria del tablero.'

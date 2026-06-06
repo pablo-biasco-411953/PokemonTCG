@@ -255,6 +255,30 @@ public class BattleEngineService {
         partida.setRazonFinPartida("El rival se ha desconectado");
     }
 
+    public synchronized Partida rendirse(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            return partida;
+        }
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Jugador no identificado.");
+        }
+
+        String ganador;
+        if (username.equals(partida.getJugadorUsername())) {
+            ganador = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
+        } else if (username.equals(partida.getBotUsername())) {
+            ganador = partida.getJugadorUsername();
+        } else {
+            throw new IllegalArgumentException("El jugador no pertenece a esta partida.");
+        }
+
+        partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+        partida.setGanador(ganador);
+        partida.setRazonFinPartida("El jugador se ha rendido");
+        return partida;
+    }
+
     public void jugarPokemon(String matchId, String cartaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurno(partida, callerUsername);

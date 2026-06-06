@@ -331,6 +331,37 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   &.off, &:disabled { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); color: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); cursor: not-allowed; animation: none; }
 }
 
+.btn-surrender {
+  width: 124px;
+  height: 34px;
+  border: 1px solid rgba(255, 92, 92, .58);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(80, 12, 20, .92), rgba(12, 14, 27, .92)),
+    radial-gradient(circle at 20% 20%, rgba(255, 116, 116, .42), transparent 48%);
+  color: #ffd7d7;
+  cursor: pointer;
+  font-family: var(--fd);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  box-shadow: 0 0 18px rgba(255, 38, 78, .22), inset 0 1px 10px rgba(255,255,255,.07);
+  transition: transform .18s ease, filter .18s ease, border-color .18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+    border-color: rgba(255, 175, 175, .86);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+    filter: grayscale(.35);
+  }
+}
+
 .turn-dots { display: flex; gap: 6px; span { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.15); transition:background .4s, box-shadow .4s; &.on { background:var(--gold); box-shadow:0 0 8px var(--glow); } } }
 
 /* ══════════════════════════════════════════════════════════════
@@ -893,6 +924,13 @@ bot-sprite-wrap {
     margin-right: 0;
     font-size: 12px;
     border-radius: 9px;
+  }
+
+  .btn-surrender {
+    width: 76px;
+    height: 25px;
+    font-size: 8px;
+    letter-spacing: .7px;
   }
 
   .board-half-wrapper.player-side {
