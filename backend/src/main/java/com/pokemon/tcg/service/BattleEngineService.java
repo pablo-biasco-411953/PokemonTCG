@@ -798,6 +798,9 @@ public class BattleEngineService {
 
         if (tableroGanador.getPremios().isEmpty() || (tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty())) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+            partida.setGanador(tableroGanador == partida.getJugador()
+                    ? partida.getJugadorUsername()
+                    : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT"));
         } else if (tableroVictima == partida.getBot() && tableroVictima.getActivo() == null) {
             CartaEnJuego mejor = elegirMejorReemplazoBot(tableroVictima, partida.getJugador().getActivo());
             if (mejor != null) {

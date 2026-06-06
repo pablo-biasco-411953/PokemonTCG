@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/jugadores")
@@ -38,6 +39,7 @@ public class JugadorController {
                 j.getUsername(), 
                 j.getSobresDisponibles(), 
                 highlightCardCount(j),
+                j.getSantoCoins(),
                 j.getCharacterId(),
                 j.getSkinColor(),
                 j.getHairColor(),
@@ -102,13 +104,109 @@ public class JugadorController {
             JugadorDatosResponse response = new JugadorDatosResponse(
                     jugador.getUsername(),
                     jugador.getSobresDisponibles(),
-                    jugador.getColeccion() != null ? jugador.getColeccion().size() : 0
+                    jugador.getColeccion() != null ? jugador.getColeccion().size() : 0,
+                    jugador.getSantoCoins(),
+                    jugador.getCharacterId(),
+                    jugador.getSkinColor(),
+                    jugador.getHairColor(),
+                    jugador.getEyeColor(),
+                    jugador.getHeight(),
+                    jugador.isPikachuCompanion()
             );
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al setear sobres: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/{username}/coins/reward")
+    public ResponseEntity<?> rewardCoins(@PathVariable String username,
+                                         @RequestBody(required = false) Map<String, Object> payload) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+
+            int amount = readPositiveAmount(payload);
+            jugador.setSantoCoins(jugador.getSantoCoins() + amount);
+            jugadorRepo.save(jugador);
+            return ResponseEntity.ok(toDatosResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al acreditar SantoCoins: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{username}/coins/spend")
+    public ResponseEntity<?> spendCoins(@PathVariable String username,
+                                        @RequestBody(required = false) Map<String, Object> payload) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+
+            int amount = readPositiveAmount(payload);
+            if (jugador.getSantoCoins() < amount) {
+                return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+            }
+            jugador.setSantoCoins(jugador.getSantoCoins() - amount);
+            jugadorRepo.save(jugador);
+            return ResponseEntity.ok(toDatosResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al gastar SantoCoins: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{username}/packs/buy")
+    public ResponseEntity<?> buyPacks(@PathVariable String username,
+                                      @RequestBody(required = false) Map<String, Object> payload) {
+        try {
+            Jugador jugador = jugadorRepo.findByUsername(username);
+            if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
+
+            int amount = readPositiveAmount(payload);
+            int cost = switch (amount) {
+                case 1 -> 80;
+                case 3 -> 200;
+                case 5 -> 300;
+                default -> throw new IllegalArgumentException("Bundle no disponible");
+            };
+
+            if (jugador.getSantoCoins() < cost) {
+                return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+            }
+
+            jugador.setSantoCoins(jugador.getSantoCoins() - cost);
+            jugador.setSobresDisponibles(jugador.getSobresDisponibles() + amount);
+            jugadorRepo.save(jugador);
+            return ResponseEntity.ok(toDatosResponse(jugador));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error comprando sobres: " + e.getMessage());
+        }
+    }
+
+    private int readPositiveAmount(Map<String, Object> payload) {
+        if (payload == null || !(payload.get("amount") instanceof Number number)) {
+            throw new IllegalArgumentException("Amount invalido");
+        }
+        int amount = number.intValue();
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount debe ser positivo");
+        }
+        return amount;
+    }
+
+    private JugadorDatosResponse toDatosResponse(Jugador jugador) {
+        return new JugadorDatosResponse(
+                jugador.getUsername(),
+                jugador.getSobresDisponibles(),
+                jugador.getColeccion() != null ? jugador.getColeccion().size() : 0,
+                jugador.getSantoCoins(),
+                jugador.getCharacterId(),
+                jugador.getSkinColor(),
+                jugador.getHairColor(),
+                jugador.getEyeColor(),
+                jugador.getHeight(),
+                jugador.isPikachuCompanion()
+        );
     }
 
     @GetMapping("/{username}/quests/santoro")

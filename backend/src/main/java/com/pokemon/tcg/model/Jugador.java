@@ -30,6 +30,8 @@ public class Jugador {
     private Long passwordResetTokenExpiresAt;
     
     private int sobresDisponibles;
+    @Column(nullable = false)
+    private int santoCoins = 200;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -70,6 +72,8 @@ public class Jugador {
     public void setPasswordResetTokenExpiresAt(Long passwordResetTokenExpiresAt) { this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt; }
     public int getSobresDisponibles() { return sobresDisponibles; }
     public void setSobresDisponibles(int sobresDisponibles) { this.sobresDisponibles = sobresDisponibles; }
+    public int getSantoCoins() { return santoCoins; }
+    public void setSantoCoins(int santoCoins) { this.santoCoins = Math.max(0, santoCoins); }
     public List<Card> getColeccion() { return coleccion; }
     public void setColeccion(List<Card> coleccion) { this.coleccion = coleccion; }
 

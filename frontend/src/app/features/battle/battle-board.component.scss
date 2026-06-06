@@ -3268,3 +3268,214 @@ bot-sprite-wrap {
      esto ayuda a mantener los bordes pixelados nítidos */
   image-rendering: pixelated; 
 }
+
+.endgame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  font-family: var(--fu);
+  color: #fff;
+  isolation: isolate;
+  animation: endgameFadeIn .32s ease both;
+}
+
+.endgame-overlay.victory {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 235, 128, .42), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(242, 192, 64, .22), transparent 46%),
+    linear-gradient(135deg, rgba(27, 16, 3, .96), rgba(3, 13, 24, .98));
+}
+
+.endgame-overlay.defeat {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(255, 43, 91, .24), transparent 28%),
+    linear-gradient(135deg, rgba(7, 4, 15, .98), rgba(35, 3, 16, .97));
+}
+
+.endgame-rays {
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,.12), transparent 9%, transparent 18%);
+  opacity: .85;
+  animation: endgameRays 7s linear infinite;
+}
+
+.endgame-overlay.defeat .endgame-rays {
+  background: conic-gradient(from 0deg, transparent, rgba(255, 48, 88, .12), transparent 8%, transparent 18%);
+  animation-duration: 12s;
+}
+
+.endgame-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.endgame-particles span {
+  --p: 1;
+  position: absolute;
+  left: calc(var(--p) * 5.8%);
+  width: 8px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff8bf, #f2c040);
+  box-shadow: 0 0 18px rgba(242, 192, 64, .55);
+  animation: confettiFall calc(2.6s + var(--p) * .12s) linear infinite;
+  animation-delay: calc(var(--p) * -.18s);
+}
+
+.endgame-overlay.defeat .endgame-particles span {
+  width: 5px;
+  height: 5px;
+  background: #ff315a;
+  box-shadow: 0 0 16px rgba(255, 49, 90, .6);
+  animation-name: emberRise;
+}
+
+.endgame-card {
+  position: relative;
+  z-index: 2;
+  width: min(720px, 88vw);
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 44px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(5, 12, 25, .78), rgba(2, 6, 14, .58));
+  box-shadow: 0 34px 100px rgba(0,0,0,.58), inset 0 0 70px rgba(255,255,255,.05);
+  backdrop-filter: blur(16px) saturate(1.2);
+  text-align: center;
+  animation: scaleInBounce .7s cubic-bezier(.2, .9, .2, 1.18) both;
+}
+
+.endgame-card small {
+  color: #ffe66d;
+  font-size: 14px;
+  font-weight: 1000;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+}
+
+.endgame-card h1 {
+  margin: 0;
+  font-size: clamp(72px, 13vw, 160px);
+  font-weight: 1000;
+  letter-spacing: .06em;
+  line-height: .82;
+}
+
+.endgame-overlay.victory .endgame-card h1 {
+  color: #fff8c7;
+  text-shadow: 0 0 20px rgba(255,255,255,.72), 0 0 55px rgba(242,192,64,.8);
+  animation: victoryGlow 1.6s ease-in-out infinite, victoryShake .9s ease .5s both;
+}
+
+.endgame-overlay.defeat .endgame-card h1 {
+  color: #ff496e;
+  text-shadow: 0 0 18px rgba(255,49,90,.58), 3px 0 0 rgba(74,184,248,.28);
+  animation: defeatGlitch 1.2s steps(2, end) infinite;
+}
+
+.endgame-card p {
+  margin: 0;
+  max-width: 520px;
+  color: rgba(226,232,240,.84);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.santocoin-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 230, 109, .42);
+  background: linear-gradient(90deg, rgba(255,230,109,.24), rgba(98,232,209,.14));
+  box-shadow: 0 0 34px rgba(242,192,64,.26);
+}
+
+.santocoin-reward b {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbd1, #f2c040 52%, #92620b);
+  box-shadow: inset 0 0 9px rgba(255,255,255,.5), 0 0 22px rgba(242,192,64,.55);
+  animation: coinSpin 1.2s linear infinite;
+}
+
+.santocoin-reward strong {
+  color: #fff8bf;
+  font-size: 24px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+}
+
+.endgame-card em {
+  margin-top: 8px;
+  color: rgba(226,232,240,.58);
+  font-style: normal;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+@keyframes endgameFadeIn {
+  from { opacity: 0; filter: blur(8px); }
+  to { opacity: 1; filter: none; }
+}
+
+@keyframes endgameRays {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes confettiFall {
+  from { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: translate3d(70px, 112vh, 0) rotate(540deg); opacity: 0; }
+}
+
+@keyframes emberRise {
+  from { transform: translate3d(0, 108vh, 0) scale(.65); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translate3d(-35px, -10vh, 0) scale(1.4); opacity: 0; }
+}
+
+@keyframes scaleInBounce {
+  from { transform: scale(.72) translateY(28px); opacity: 0; }
+  70% { transform: scale(1.04) translateY(0); opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes victoryGlow {
+  50% { filter: brightness(1.18); text-shadow: 0 0 28px rgba(255,255,255,.9), 0 0 80px rgba(242,192,64,1); }
+}
+
+@keyframes victoryShake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-4px); }
+  36% { transform: translateX(4px); }
+  54% { transform: translateX(-2px); }
+  72% { transform: translateX(2px); }
+}
+
+@keyframes defeatGlitch {
+  0%, 100% { transform: translate(0); opacity: 1; }
+  20% { transform: translate(-3px, 2px); opacity: .88; }
+  40% { transform: translate(3px, -1px); opacity: 1; }
+  60% { transform: translate(-1px, -2px); opacity: .82; }
+  80% { transform: translate(2px, 1px); opacity: 1; }
+}
+
+@keyframes coinSpin {
+  to { transform: rotateY(360deg); }
+}

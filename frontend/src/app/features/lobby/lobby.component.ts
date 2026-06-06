@@ -143,6 +143,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   mazos: Mazo[] = [];
   slotsVacios: number[] = [];
   sobresDisponibles: number = 0;
+  santoCoins: number = 0;
   cantidadCartas: number = 0;
   cantidadCartasUnicas: number = 0;
   mostrarAnimacionSobre: boolean = false;
@@ -191,6 +192,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
   landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
+  readonly packBundlePrices: Record<number, number> = { 1: 80, 3: 200, 5: 300 };
 
   // Interaction & Context Menu State
   selectedPlayerForMenu: OtherPlayerNPC | null = null;
@@ -908,6 +910,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
         this.sobresDisponibles = res.sobresDisponibles ?? 0;
+        this.santoCoins = res.santoCoins ?? 0;
         this.debugSobresCantidad = this.sobresDisponibles;
 
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
@@ -2174,17 +2177,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   buyPackBundle(amount: number) {
     if (!this.jugador?.username) return;
+    const cost = this.getPackBundlePrice(amount);
+    if (this.santoCoins < cost) return;
 
-    const nextAmount = this.sobresDisponibles + amount;
-    this.sobresDisponibles = nextAmount;
-    this.debugSobresCantidad = nextAmount;
-
-    this.playVendorPurchaseAnimation();
-
-    this.jugadorService.debugSetSobres(this.jugador.username, nextAmount).subscribe({
-      next: () => this.refrescarTodo(),
+    this.jugadorService.buyPacks(this.jugador.username, amount).subscribe({
+      next: (res) => {
+        this.sobresDisponibles = res.sobresDisponibles ?? this.sobresDisponibles;
+        this.santoCoins = res.santoCoins ?? this.santoCoins;
+        this.debugSobresCantidad = this.sobresDisponibles;
+        this.jugador = { ...this.jugador!, ...res };
+        this.playVendorPurchaseAnimation();
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Error comprando sobres en kiosco', err)
     });
+  }
+
+  getPackBundlePrice(amount: number): number {
+    return this.packBundlePrices[amount] ?? 999999;
+  }
+
+  canBuyPackBundle(amount: number): boolean {
+    return this.santoCoins >= this.getPackBundlePrice(amount);
   }
 
   get santoroQuestTitle(): string {

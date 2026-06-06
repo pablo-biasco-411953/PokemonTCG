@@ -121,6 +121,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private ataqueRealizado = false;
   private pollingPartida: ReturnType<typeof setInterval> | null = null;
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
+  showEndGameOverlay = false;
+  isVictory = false;
+  coinsEarned = 0;
+  endGameWinner = '';
+  private endGameRewardSent = false;
+  private endGameRedirectTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastAppliedStateSignature = '';
   public botEstaAtacando = false;
   private datosPendientesBot: Partida | null = null;
@@ -262,7 +268,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => {
         this.partida = data;
         this.lastAppliedStateSignature = this.crearFirmaPartida(data);
-        if (data.faseActual === 'LANZAMIENTO_MONEDA') {
+        if (data.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(data);
+        } else if (data.faseActual === 'LANZAMIENTO_MONEDA') {
           setTimeout(() => {
             this.estadoCoinFlip = 'DAR_LA_MANO';
             this.iniciarPollingHandshake();
@@ -283,6 +291,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
+    if (this.endGameRedirectTimeout) clearTimeout(this.endGameRedirectTimeout);
     this.cleanupHandshakeScene();
   }
 
@@ -1070,6 +1079,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => {
         const dataOnline = this.esPartidaOnline(data);
+        if (data?.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(data);
+          return;
+        }
         if (!dataOnline && (this.bloqueadoPorAnimacion || this.botEstaAtacando)) {
           console.log('??? Polling interceptado.');
           return;
@@ -1124,6 +1137,42 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  private handleGameEnd(partida: Partida): void {
+    if (this.showEndGameOverlay) return;
+
+    this.partida = partida;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(partida);
+    this.endGameWinner = partida.ganador || 'BOT';
+    this.isVictory = this.endGameWinner === this.jugadorNombre;
+    const online = this.esPartidaOnline(partida);
+    this.coinsEarned = this.isVictory ? (online ? 100 : 50) : (online ? 20 : 10);
+    this.showEndGameOverlay = true;
+    this.boardVisible = true;
+    this.estadoCoinFlip = 'OCULTO';
+    this.cargandoAccion = false;
+    this.bloqueadoPorAnimacion = false;
+    this.botPensando = false;
+    this.botEstaAtacando = false;
+
+    if (this.pollingPartida) {
+      clearInterval(this.pollingPartida);
+      this.pollingPartida = null;
+    }
+    this.detenerRelojTurno();
+
+    this.awardEndGameCoins();
+    this.endGameRedirectTimeout = setTimeout(() => this.volverAlLobby(), this.isVictory ? 6000 : 5000);
+    this.cdr.detectChanges();
+  }
+
+  private awardEndGameCoins(): void {
+    if (this.endGameRewardSent || !this.jugadorNombre || this.coinsEarned <= 0) return;
+    this.endGameRewardSent = true;
+    this.jugadorService.rewardCoins(this.jugadorNombre, this.coinsEarned).subscribe({
+      error: (err) => console.error('Error acreditando SantoCoins', err)
     });
   }
 
@@ -1263,6 +1312,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (!botAtaco) {
       this.aplicarEstadoRefrescado(estadoFinal);
+      if (this.showEndGameOverlay) return;
 
       this.limpiarBanderasBot();
 
@@ -1303,6 +1353,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     this.showImpactFlash = true;
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     await this.delay(150);
@@ -1447,6 +1498,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.getState(this.matchId!).subscribe({
       next: async (data) => {
         if (!data) return;
+        if (data.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(data);
+          return;
+        }
         if (this.partida?.turnoActual === 'JUGADOR' && data.turnoActual === 'BOT') {
           this.bloqueadoPorAnimacion = true;
           const miHp = this.hpRenderJugador;
@@ -2047,6 +2102,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
     if (!estado) return;
+    if (estado.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(estado);
+      return;
+    }
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
@@ -2175,6 +2234,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.showImpactFlash = true;
 
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     await this.delay(200);
@@ -2187,6 +2247,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private async finalizarSecuenciaAtaque(estadoFinal: Partida): Promise<void> {
+    if (estadoFinal.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(estadoFinal);
+      return;
+    }
     if (estadoFinal.turnoActual === 'BOT') {
       await this.iniciarTurnoBot(estadoFinal);
       return;
@@ -2220,6 +2284,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     if (estadoFinal.turnoActual !== 'BOT') {
@@ -2255,6 +2320,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   volverAlLobby(): void {
+    if (this.endGameRedirectTimeout) {
+      clearTimeout(this.endGameRedirectTimeout);
+      this.endGameRedirectTimeout = null;
+    }
     this.router.navigate(['/lobby']);
   }
 

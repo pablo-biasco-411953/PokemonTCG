@@ -23,6 +23,7 @@ public class Partida {
     private String coinFlipWinner;
     private String coinFlipResult;
     private String coinFlipCallerUsername;
+    private String ganador;
     private int coinHandshakeJugadorPower = 0;
     private int coinHandshakeBotPower = 0;
     private boolean coinHandshakeJugadorHolding = false;
@@ -98,6 +99,9 @@ public class Partida {
 
     public String getCoinFlipCallerUsername() { return coinFlipCallerUsername; }
     public void setCoinFlipCallerUsername(String coinFlipCallerUsername) { this.coinFlipCallerUsername = coinFlipCallerUsername; }
+
+    public String getGanador() { return ganador; }
+    public void setGanador(String ganador) { this.ganador = ganador; }
 
     public int getCoinHandshakeJugadorPower() { return coinHandshakeJugadorPower; }
     public void setCoinHandshakeJugadorPower(int coinHandshakeJugadorPower) {

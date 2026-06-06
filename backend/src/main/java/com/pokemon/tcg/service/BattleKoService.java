@@ -43,6 +43,9 @@ public class BattleKoService {
         boolean sinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
         if (sinPremios || sinPokemon) {
             partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+            partida.setGanador(tableroGanador == partida.getJugador()
+                    ? partida.getJugadorUsername()
+                    : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT"));
             return;
         }
 

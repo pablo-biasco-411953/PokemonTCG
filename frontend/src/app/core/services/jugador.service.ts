@@ -50,6 +50,18 @@ export class JugadorService {
   }
 
   // Guarda la personalización de estilo en base de datos.
+  rewardCoins(username: string, amount: number): Observable<JugadorDatosResponse> {
+    return this.http.post<JugadorDatosResponse>(`${this.apiUrl}/${username}/coins/reward`, { amount });
+  }
+
+  spendCoins(username: string, amount: number): Observable<JugadorDatosResponse> {
+    return this.http.post<JugadorDatosResponse>(`${this.apiUrl}/${username}/coins/spend`, { amount });
+  }
+
+  buyPacks(username: string, amount: number): Observable<JugadorDatosResponse> {
+    return this.http.post<JugadorDatosResponse>(`${this.apiUrl}/${username}/packs/buy`, { amount });
+  }
+
   guardarPersonalizacion(username: string, config: any): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${username}/personalizacion`, config);
   }

@@ -31,6 +31,7 @@ export interface Partida {
   ultimasMonedasLanzadas: boolean[];
   jugadorUsername?: string;
   botUsername?: string;
+  ganador?: string;
   coinFlipped?: boolean;
   coinFlipWinner?: string;
   coinFlipResult?: string;

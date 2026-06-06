@@ -3,6 +3,7 @@ package com.pokemon.tcg.dto;
 public class JugadorDatosResponse {
     private String username;
     private int sobresDisponibles;
+    private int santoCoins;
     private int cantidadCartas;
     
     private String characterId;
@@ -15,14 +16,17 @@ public class JugadorDatosResponse {
     public JugadorDatosResponse(String username, int sobresDisponibles, int cantidadCartas) {
         this.username = username;
         this.sobresDisponibles = sobresDisponibles;
+        this.santoCoins = 200;
         this.cantidadCartas = cantidadCartas;
     }
 
     public JugadorDatosResponse(String username, int sobresDisponibles, int cantidadCartas,
+                                int santoCoins,
                                 String characterId, String skinColor, String hairColor,
                                 String eyeColor, double height, boolean pikachuCompanion) {
         this.username = username;
         this.sobresDisponibles = sobresDisponibles;
+        this.santoCoins = santoCoins;
         this.cantidadCartas = cantidadCartas;
         this.characterId = characterId;
         this.skinColor = skinColor;
@@ -35,6 +39,7 @@ public class JugadorDatosResponse {
     // Getters
     public String getUsername() { return username; }
     public int getSobresDisponibles() { return sobresDisponibles; }
+    public int getSantoCoins() { return santoCoins; }
     public int getCantidadCartas() { return cantidadCartas; }
 
     public String getCharacterId() { return characterId; }
