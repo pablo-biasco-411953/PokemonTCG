@@ -8,8 +8,10 @@ import com.pokemon.tcg.dto.ResetPasswordRequest;
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.service.AuthService;
 import com.pokemon.tcg.service.PasswordRecoveryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticación", description = "Endpoints para registro, login y recuperación de contraseña")
 public class AuthController {
 
     private final AuthService authService;
@@ -28,43 +31,38 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            Jugador jugador = authService.login(request.getUsername(), request.getPassword());
-            if (jugador == null) return ResponseEntity.status(401).body("Usuario no valido");
-            return ResponseEntity.ok(toAuthResponse(jugador));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error en login: " + e.getMessage());
+    @Operation(summary = "Iniciar sesión", description = "Autentica un jugador con sus credenciales y retorna sus datos básicos")
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+        Jugador jugador = authService.login(request.getUsername(), request.getPassword());
+        if (jugador == null) {
+            return ResponseEntity.status(401).body("Usuario no válido");
         }
+        return ResponseEntity.ok(toAuthResponse(jugador));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            Jugador jugador = authService.register(request.getScreenName(), request.getEmail(), request.getPassword(), request.getConfirmPassword());
-            return ResponseEntity.ok(toAuthResponse(jugador));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error en registro: " + e.getMessage());
-        }
+    @Operation(summary = "Registrar nuevo usuario", description = "Crea un nuevo jugador en el sistema")
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
+        Jugador jugador = authService.register(
+                request.getScreenName(),
+                request.getEmail(),
+                request.getPassword(),
+                request.getConfirmPassword()
+        );
+        return ResponseEntity.ok(toAuthResponse(jugador));
     }
 
     @PostMapping("/forgot-password")
+    @Operation(summary = "Solicitar recuperación de contraseña", description = "Envía un token de recuperación al email del jugador")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        try {
-            return ResponseEntity.ok(passwordRecoveryService.requestReset(request.getUsername(), request.getEmail()));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error recuperando password: " + e.getMessage());
-        }
+        return ResponseEntity.ok(passwordRecoveryService.requestReset(request.getUsername(), request.getEmail()));
     }
 
     @PostMapping("/reset-password")
+    @Operation(summary = "Restablecer contraseña", description = "Cambia la contraseña utilizando el token de recuperación recibido")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
-        try {
-            passwordRecoveryService.resetPassword(request.getToken(), request.getPassword(), request.getConfirmPassword());
-            return ResponseEntity.ok("Password actualizado. Ya podes iniciar sesion.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error cambiando password: " + e.getMessage());
-        }
+        passwordRecoveryService.resetPassword(request.getToken(), request.getPassword(), request.getConfirmPassword());
+        return ResponseEntity.ok("Password actualizado. Ya podés iniciar sesión.");
     }
 
     private JugadorDTO toAuthResponse(Jugador jugador) {
