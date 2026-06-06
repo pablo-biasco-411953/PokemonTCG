@@ -331,6 +331,37 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   &.off, &:disabled { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); color: rgba(255, 255, 255, 0.15); border: 2px solid rgba(255, 255, 255, 0.05); box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); cursor: not-allowed; animation: none; }
 }
 
+.btn-surrender {
+  width: 124px;
+  height: 34px;
+  border: 1px solid rgba(255, 92, 92, .58);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(80, 12, 20, .92), rgba(12, 14, 27, .92)),
+    radial-gradient(circle at 20% 20%, rgba(255, 116, 116, .42), transparent 48%);
+  color: #ffd7d7;
+  cursor: pointer;
+  font-family: var(--fd);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  box-shadow: 0 0 18px rgba(255, 38, 78, .22), inset 0 1px 10px rgba(255,255,255,.07);
+  transition: transform .18s ease, filter .18s ease, border-color .18s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.15);
+    border-color: rgba(255, 175, 175, .86);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+    filter: grayscale(.35);
+  }
+}
+
 .turn-dots { display: flex; gap: 6px; span { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.15); transition:background .4s, box-shadow .4s; &.on { background:var(--gold); box-shadow:0 0 8px var(--glow); } } }
 
 /* ══════════════════════════════════════════════════════════════
@@ -893,6 +924,13 @@ bot-sprite-wrap {
     margin-right: 0;
     font-size: 12px;
     border-radius: 9px;
+  }
+
+  .btn-surrender {
+    width: 76px;
+    height: 25px;
+    font-size: 8px;
+    letter-spacing: .7px;
   }
 
   .board-half-wrapper.player-side {
@@ -3267,4 +3305,446 @@ bot-sprite-wrap {
   /* Opcional: Si se ve un poco borroso al agrandarlo, 
      esto ayuda a mantener los bordes pixelados nítidos */
   image-rendering: pixelated; 
+}
+
+.endgame-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 160000;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  font-family: var(--fu);
+  color: #fff;
+  isolation: isolate;
+  animation: endgameFadeIn .32s ease both;
+}
+
+.endgame-overlay.victory {
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 235, 128, .42), transparent 24%),
+    radial-gradient(circle at 50% 50%, rgba(242, 192, 64, .22), transparent 46%),
+    linear-gradient(135deg, rgba(27, 16, 3, .96), rgba(3, 13, 24, .98));
+}
+
+.endgame-overlay.defeat {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, .05), transparent 13%),
+    radial-gradient(circle at 50% 46%, rgba(255, 43, 91, .24), transparent 28%),
+    linear-gradient(135deg, rgba(7, 4, 15, .98), rgba(35, 3, 16, .97));
+  perspective: 900px;
+}
+
+.endgame-rays {
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 0deg, transparent, rgba(255,255,255,.12), transparent 9%, transparent 18%);
+  opacity: .85;
+  animation: endgameRays 7s linear infinite;
+}
+
+.endgame-crystals {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.endgame-crystals span {
+  --c: 1;
+  position: absolute;
+  left: calc(50% + (var(--c) - 5.5) * 8.8%);
+  top: calc(50% + (var(--c) - 5.5) * 3.4%);
+  width: calc(34px + var(--c) * 4px);
+  height: calc(118px + var(--c) * 9px);
+  clip-path: polygon(50% 0, 94% 22%, 78% 100%, 18% 100%, 6% 22%);
+  opacity: .9;
+  transform-origin: 50% 50%;
+  transform:
+    translate3d(calc((var(--c) - 5.5) * 90px), calc((var(--c) - 5.5) * -22px), calc(var(--c) * -18px))
+    rotateX(58deg)
+    rotateY(calc(var(--c) * 19deg))
+    rotateZ(calc(var(--c) * 31deg))
+    scale(.55);
+  animation: crystalAssemble calc(1.4s + var(--c) * .05s) cubic-bezier(.18,.84,.2,1.08) both,
+             crystalFloat calc(3.2s + var(--c) * .12s) ease-in-out infinite 1.3s;
+}
+
+.endgame-overlay.victory .endgame-crystals span {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.88), rgba(98,232,209,.62) 42%, rgba(242,192,64,.72));
+  box-shadow: 0 0 26px rgba(98,232,209,.55), inset 0 0 18px rgba(255,255,255,.32);
+}
+
+.endgame-overlay.defeat .endgame-crystals span {
+  background:
+    linear-gradient(135deg, rgba(255,180,195,.82), rgba(255,49,90,.62) 45%, rgba(80,36,120,.72));
+  box-shadow: 0 0 26px rgba(255,49,90,.48), inset 0 0 18px rgba(255,255,255,.22);
+  animation-name: crystalAssemble, crystalFloatDefeat;
+}
+
+.endgame-overlay.defeat .endgame-rays {
+  background: conic-gradient(from 0deg, transparent, rgba(255, 48, 88, .12), transparent 8%, transparent 18%);
+  animation-duration: 12s;
+}
+
+.endgame-depth {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform-style: preserve-3d;
+}
+
+.endgame-depth span {
+  --d: 1;
+  position: absolute;
+  left: calc(var(--d) * 13%);
+  top: calc(10% + var(--d) * 10%);
+  width: calc(110px + var(--d) * 18px);
+  height: calc(34px + var(--d) * 5px);
+  clip-path: polygon(0 18%, 78% 0, 100% 52%, 34% 100%);
+  opacity: 0;
+  transform: translateZ(calc(var(--d) * -42px)) rotateX(62deg) rotateZ(calc(var(--d) * 17deg));
+}
+
+.endgame-overlay.defeat .endgame-depth span {
+  opacity: .5;
+  background: linear-gradient(90deg, rgba(255, 49, 90, .42), rgba(74, 184, 248, .06));
+  box-shadow: 0 0 34px rgba(255, 49, 90, .18);
+  animation: defeatShardFloat calc(4s + var(--d) * .35s) ease-in-out infinite;
+}
+
+.endgame-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.endgame-particles span {
+  --p: 1;
+  position: absolute;
+  left: calc(var(--p) * 5.8%);
+  width: 8px;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #fff8bf, #f2c040);
+  box-shadow: 0 0 18px rgba(242, 192, 64, .55);
+  animation: confettiFall calc(2.6s + var(--p) * .12s) linear infinite;
+  animation-delay: calc(var(--p) * -.18s);
+}
+
+.endgame-overlay.defeat .endgame-particles span {
+  width: 5px;
+  height: 5px;
+  background: #ff315a;
+  box-shadow: 0 0 16px rgba(255, 49, 90, .6);
+  animation-name: emberRise;
+}
+
+.endgame-card {
+  position: relative;
+  z-index: 2;
+  width: min(720px, 88vw);
+  min-height: 390px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 16px;
+  padding: 44px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(5, 12, 25, .78), rgba(2, 6, 14, .58));
+  box-shadow: 0 34px 100px rgba(0,0,0,.58), inset 0 0 70px rgba(255,255,255,.05);
+  backdrop-filter: blur(16px) saturate(1.2);
+  text-align: center;
+  animation: scaleInBounce .7s cubic-bezier(.2, .9, .2, 1.18) both;
+  transform-style: preserve-3d;
+}
+
+.endgame-overlay.defeat .endgame-card {
+  border-color: rgba(255, 49, 90, .34);
+  background:
+    linear-gradient(115deg, transparent 0 44%, rgba(255, 49, 90, .18) 45% 46%, transparent 47%),
+    linear-gradient(72deg, transparent 0 57%, rgba(255, 255, 255, .09) 58% 59%, transparent 60%),
+    radial-gradient(circle at 50% 12%, rgba(255, 49, 90, .17), transparent 38%),
+    linear-gradient(180deg, rgba(13, 10, 24, .9), rgba(4, 2, 11, .72));
+  box-shadow:
+    0 38px 120px rgba(0,0,0,.72),
+    0 0 90px rgba(255,49,90,.18),
+    inset 0 0 80px rgba(255,49,90,.08);
+  animation: defeatCard3d .82s cubic-bezier(.2, .9, .2, 1.12) both;
+}
+
+.endgame-overlay.defeat .endgame-card::before,
+.endgame-overlay.defeat .endgame-card::after {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  pointer-events: none;
+  border-radius: 22px;
+}
+
+.endgame-overlay.defeat .endgame-card::before {
+  background:
+    linear-gradient(122deg, transparent 0 47%, rgba(255, 49, 90, .62) 48%, transparent 49%),
+    linear-gradient(38deg, transparent 0 61%, rgba(255, 255, 255, .25) 62%, transparent 63%);
+  opacity: .8;
+  transform: translateZ(38px);
+  filter: drop-shadow(0 0 14px rgba(255, 49, 90, .55));
+}
+
+.endgame-overlay.defeat .endgame-card::after {
+  border: 1px solid rgba(255, 49, 90, .22);
+  transform: translateZ(18px);
+}
+
+.endgame-card small {
+  color: #ffe66d;
+  font-size: 14px;
+  font-weight: 1000;
+  letter-spacing: .28em;
+  text-transform: uppercase;
+}
+
+.endgame-card h1 {
+  margin: 0;
+  font-size: clamp(72px, 13vw, 160px);
+  font-weight: 1000;
+  letter-spacing: .06em;
+  line-height: .82;
+}
+
+.endgame-overlay.victory .endgame-card h1 {
+  color: #fff8c7;
+  text-shadow: 0 0 20px rgba(255,255,255,.72), 0 0 55px rgba(242,192,64,.8);
+  animation: victoryGlow 1.6s ease-in-out infinite, victoryShake .9s ease .5s both;
+}
+
+.endgame-overlay.defeat .endgame-card h1 {
+  color: #ff496e;
+  text-shadow:
+    0 0 18px rgba(255,49,90,.58),
+    8px 10px 0 rgba(0,0,0,.46),
+    3px 0 0 rgba(74,184,248,.28);
+  animation: defeatGlitch 1.2s steps(2, end) infinite;
+  transform: translateZ(70px) rotateX(4deg);
+}
+
+.endgame-card p {
+  margin: 0;
+  max-width: 520px;
+  color: rgba(226,232,240,.84);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.endgame-reason {
+  width: min(520px, 88%);
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(2, 6, 14, .42);
+  box-shadow: inset 0 0 20px rgba(255,255,255,.04);
+}
+
+.endgame-reason span,
+.endgame-reason strong {
+  display: block;
+}
+
+.endgame-reason span {
+  color: rgba(255,230,109,.84);
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.endgame-reason strong {
+  margin-top: 5px;
+  color: rgba(240,249,255,.9);
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.santocoin-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 10px;
+  padding: 14px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 230, 109, .42);
+  background: linear-gradient(90deg, rgba(255,230,109,.24), rgba(98,232,209,.14));
+  box-shadow: 0 0 34px rgba(242,192,64,.26);
+}
+
+.santocoin-reward b {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffbd1, #f2c040 52%, #92620b);
+  box-shadow: inset 0 0 9px rgba(255,255,255,.5), 0 0 22px rgba(242,192,64,.55);
+  animation: coinSpin 1.2s linear infinite;
+}
+
+.santocoin-reward strong {
+  color: #fff8bf;
+  font-size: 24px;
+  font-weight: 1000;
+  letter-spacing: .06em;
+}
+
+.endgame-accept {
+  margin-top: 8px;
+  min-width: 230px;
+  min-height: 48px;
+  border: 1px solid rgba(255, 230, 109, .42);
+  border-radius: 999px;
+  cursor: pointer;
+  color: #07111f;
+  background: linear-gradient(90deg, #ffe66d, #62e8d1);
+  box-shadow: 0 0 28px rgba(98, 232, 209, .28);
+  font-family: var(--fu);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+
+.endgame-accept:hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: brightness(1.08);
+  box-shadow: 0 0 38px rgba(98, 232, 209, .44);
+}
+
+.endgame-overlay.defeat .endgame-accept {
+  color: white;
+  border-color: rgba(255, 49, 90, .42);
+  background: linear-gradient(90deg, #4b1021, #ff315a);
+  box-shadow: 0 0 32px rgba(255, 49, 90, .32);
+}
+
+@keyframes endgameFadeIn {
+  from { opacity: 0; filter: blur(8px); }
+  to { opacity: 1; filter: none; }
+}
+
+@keyframes endgameRays {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes crystalAssemble {
+  from {
+    opacity: 0;
+    transform:
+      translate3d(calc((var(--c) - 5.5) * 190px), calc((var(--c) - 5.5) * -72px), -260px)
+      rotateX(82deg)
+      rotateY(calc(var(--c) * 48deg))
+      rotateZ(calc(var(--c) * 70deg))
+      scale(.2);
+    filter: blur(10px);
+  }
+  72% {
+    opacity: 1;
+    filter: none;
+  }
+  to {
+    opacity: .92;
+    transform:
+      translate3d(calc((var(--c) - 5.5) * 90px), calc((var(--c) - 5.5) * -22px), calc(var(--c) * -18px))
+      rotateX(58deg)
+      rotateY(calc(var(--c) * 19deg))
+      rotateZ(calc(var(--c) * 31deg))
+      scale(.55);
+    filter: none;
+  }
+}
+
+@keyframes crystalFloat {
+  50% {
+    transform:
+      translate3d(calc((var(--c) - 5.5) * 84px), calc((var(--c) - 5.5) * -18px), calc(var(--c) * -12px))
+      rotateX(52deg)
+      rotateY(calc(var(--c) * 22deg))
+      rotateZ(calc(var(--c) * 34deg))
+      scale(.6);
+  }
+}
+
+@keyframes crystalFloatDefeat {
+  50% {
+    transform:
+      translate3d(calc((var(--c) - 5.5) * 96px), calc((var(--c) - 5.5) * -30px), calc(var(--c) * -10px))
+      rotateX(64deg)
+      rotateY(calc(var(--c) * 26deg))
+      rotateZ(calc(var(--c) * 24deg))
+      scale(.58);
+  }
+}
+
+@keyframes confettiFall {
+  from { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: translate3d(70px, 112vh, 0) rotate(540deg); opacity: 0; }
+}
+
+@keyframes emberRise {
+  from { transform: translate3d(0, 108vh, 0) scale(.65); opacity: 0; }
+  20% { opacity: 1; }
+  to { transform: translate3d(-35px, -10vh, 0) scale(1.4); opacity: 0; }
+}
+
+@keyframes scaleInBounce {
+  from { transform: scale(.72) translateY(28px); opacity: 0; }
+  70% { transform: scale(1.04) translateY(0); opacity: 1; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes defeatCard3d {
+  from {
+    opacity: 0;
+    transform: rotateX(64deg) rotateZ(-8deg) translateY(70px) scale(.72);
+    filter: blur(8px);
+  }
+  72% {
+    opacity: 1;
+    transform: rotateX(8deg) rotateZ(1deg) translateY(0) scale(1.04);
+    filter: none;
+  }
+  to {
+    opacity: 1;
+    transform: rotateX(0deg) rotateZ(0deg) translateY(0) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes defeatShardFloat {
+  0%, 100% { transform: translate3d(0, 0, calc(var(--d) * -42px)) rotateX(62deg) rotateZ(calc(var(--d) * 17deg)); }
+  50% { transform: translate3d(-16px, -28px, calc(var(--d) * -18px)) rotateX(54deg) rotateZ(calc(var(--d) * 23deg)); }
+}
+
+@keyframes victoryGlow {
+  50% { filter: brightness(1.18); text-shadow: 0 0 28px rgba(255,255,255,.9), 0 0 80px rgba(242,192,64,1); }
+}
+
+@keyframes victoryShake {
+  0%, 100% { transform: translateX(0); }
+  18% { transform: translateX(-4px); }
+  36% { transform: translateX(4px); }
+  54% { transform: translateX(-2px); }
+  72% { transform: translateX(2px); }
+}
+
+@keyframes defeatGlitch {
+  0%, 100% { transform: translate(0); opacity: 1; }
+  20% { transform: translate(-3px, 2px); opacity: .88; }
+  40% { transform: translate(3px, -1px); opacity: 1; }
+  60% { transform: translate(-1px, -2px); opacity: .82; }
+  80% { transform: translate(2px, 1px); opacity: 1; }
+}
+
+@keyframes coinSpin {
+  to { transform: rotateY(360deg); }
 }

@@ -228,6 +228,11 @@
       <small>{{ 'lobby.openPack' | t }}</small>
       <strong>{{ sobresDisponibles }}</strong>
     </div>
+
+    <div class="resource-chip santocoins-chip">
+      <small>SANTOCOINS</small>
+      <strong>{{ santoCoins }}</strong>
+    </div>
   </header>
 
   <aside class="hub-help-panel">
@@ -329,17 +334,17 @@
     <p>La vendedora tiene una tanda recién llegada. Comprá sobres o abrí uno de los que ya tenés.</p>
 
     <div class="pack-bundles">
-      <button type="button" (click)="buyPackBundle(1)">
+      <button type="button" [disabled]="!canBuyPackBundle(1)" (click)="buyPackBundle(1)">
         <span>1 sobre</span>
-        <strong>Gratis demo</strong>
+        <strong>{{ getPackBundlePrice(1) }} SC</strong>
       </button>
-      <button type="button" (click)="buyPackBundle(3)">
+      <button type="button" [disabled]="!canBuyPackBundle(3)" (click)="buyPackBundle(3)">
         <span>3 sobres</span>
-        <strong>Combo recreo</strong>
+        <strong>{{ getPackBundlePrice(3) }} SC</strong>
       </button>
-      <button type="button" (click)="buyPackBundle(6)">
-        <span>6 sobres</span>
-        <strong>Full kiosco</strong>
+      <button type="button" [disabled]="!canBuyPackBundle(5)" (click)="buyPackBundle(5)">
+        <span>5 sobres</span>
+        <strong>{{ getPackBundlePrice(5) }} SC</strong>
       </button>
     </div>
 

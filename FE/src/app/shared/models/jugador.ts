@@ -5,6 +5,7 @@ export interface Jugador {
   id?: number;
   username: string;
   sobresDisponibles: number;
+  santoCoins?: number;
   cantidadCartas?: number;
   nivel?: number;
   coleccion?: Card[];
@@ -21,6 +22,7 @@ export interface Jugador {
 export interface JugadorDatosResponse {
   username: string;
   sobresDisponibles: number;
+  santoCoins?: number;
   cantidadCartas: number;
   cartasObtenidas?: Card[];
   characterId?: string;

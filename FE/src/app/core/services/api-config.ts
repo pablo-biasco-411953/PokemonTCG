@@ -17,7 +17,7 @@ export function getBackendUrl(): string {
   
   // URL DE PRODUCCIÓN: Reemplaza esta URL con la que te provea Koyeb o Render para tu backend
   // Por ejemplo: 'https://pokeutn-backend-tuusuario.koyeb.app'
-  return 'https://TU-APP-BACKEND.koyeb.app';
+  return 'https://pokemontcg-gi68.onrender.com';
 }
 
 export function getWsUrl(): string {

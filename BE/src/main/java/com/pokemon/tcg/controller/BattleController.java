@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/battle")
-@CrossOrigin(origins = "http://localhost:4200")
 public class BattleController {
 
     private final BattleEngineService battleEngine;
@@ -47,13 +46,38 @@ public class BattleController {
     @GetMapping("/state/{matchId}")
     public ResponseEntity<?> getEstadoPartida(@PathVariable String matchId,
                                              @RequestHeader(value = "X-Username", required = false) String username) {
-        Partida partida = battleEngine.getEstadoPartida(matchId);
+        Partida partida = battleEngine.getEstadoPartida(matchId, username);
         if (partida == null) return ResponseEntity.notFound().build();
 
         if (username != null && username.equals(partida.getBotUsername())) {
             return ResponseEntity.ok(swapPerspective(partida));
         }
         return ResponseEntity.ok(partida);
+    }
+
+    @PostMapping("/{matchId}/heartbeat")
+    public ResponseEntity<?> heartbeat(@PathVariable String matchId,
+                                       @RequestHeader(value = "X-Username", required = false) String username) {
+        Partida partida = battleEngine.registrarHeartbeat(matchId, username);
+        if (partida == null) return ResponseEntity.notFound().build();
+        if (username != null && username.equals(partida.getBotUsername())) {
+            return ResponseEntity.ok(swapPerspective(partida));
+        }
+        return ResponseEntity.ok(partida);
+    }
+
+    @PostMapping("/{matchId}/surrender")
+    public ResponseEntity<?> rendirse(@PathVariable String matchId,
+                                      @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            Partida partida = battleEngine.rendirse(matchId, username);
+            if (username != null && username.equals(partida.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partida));
+            }
+            return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PostMapping("/{matchId}/evolve")
@@ -259,6 +283,8 @@ public class BattleController {
         swapped.setCoinFlipWinner(p.getCoinFlipWinner());
         swapped.setCoinFlipResult(p.getCoinFlipResult());
         swapped.setCoinFlipCallerUsername(p.getCoinFlipCallerUsername());
+        swapped.setGanador(p.getGanador());
+        swapped.setRazonFinPartida(p.getRazonFinPartida());
         swapped.setCoinHandshakeJugadorPower(p.getCoinHandshakeBotPower());
         swapped.setCoinHandshakeBotPower(p.getCoinHandshakeJugadorPower());
         swapped.setCoinHandshakeJugadorHolding(p.isCoinHandshakeBotHolding());

@@ -515,6 +515,20 @@ kbd {
   background: rgba($gold, .16);
 }
 
+.pack-bundles button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+  filter: grayscale(.45);
+}
+
+.pack-bundles button:disabled:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, .14);
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)),
+    rgba(2, 6, 23, .55);
+}
+
 .pack-bundles span,
 .pack-bundles strong {
   display: block;
@@ -536,6 +550,21 @@ kbd {
   font-family: $font-pixel;
   font-size: 18px;
   font-weight: 400;
+}
+
+.santocoins-chip {
+  border-color: rgba($gold, .55);
+  background:
+    radial-gradient(circle at 16% 50%, rgba($gold, .32), transparent 34%),
+    linear-gradient(135deg, rgba(255, 236, 160, .12), rgba(2, 8, 23, .76));
+
+  strong::before {
+    content: '◉';
+    display: inline-block;
+    margin-right: 7px;
+    color: $gold;
+    text-shadow: 0 0 14px rgba($gold, .8);
+  }
 }
 
 .panel-glow {
