@@ -272,6 +272,10 @@ public class BattleEngineService {
                 battleAttackService, battleKoService
         ));
 
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            System.out.println("🏆 Partida terminada por ataque.");
+            return;
+        }
         System.out.println("🔄 Ataque finalizado. Pasando turno al oponente...");
         this.pasarTurno(matchId, callerUsername);
     }
@@ -347,6 +351,11 @@ public class BattleEngineService {
 
         aplicarMantenimientoEntreTurnos(partida);
 
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            System.out.println("🏆 Partida terminada durante mantenimiento.");
+            return;
+        }
+
         partida.setYaSeRetiroEsteTurno(false);
 
         if (partida.getBotUsername() == null) {
@@ -372,6 +381,11 @@ public class BattleEngineService {
 
         robarCarta(partida.getBot());
         botAIService.ejecutarTurno(partida);
+
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            System.out.println("🏆 Partida terminada durante turno del bot.");
+            return;
+        }
 
         // LIMPIEZA DEL POKÉMON DEL BOT (PERO DEJAMOS SU ESCUDO PRENDIDO)
         if (partida.getBot().getActivo() != null) {

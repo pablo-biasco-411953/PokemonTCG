@@ -41,7 +41,9 @@ public class BattleKoService {
         }
 
         boolean sinPremios = tableroGanador.getPremios().isEmpty();
-        boolean sinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
+        boolean sinPokemon = tableroVictima.getActivo() == null
+                && tableroVictima.getBanca().isEmpty()
+                && !tienePokemonBasicoEnMano(tableroVictima);
         if (sinPremios || sinPokemon) {
             partida.transicionarA(new EstadoFinPartida());
             return;
@@ -140,6 +142,19 @@ public class BattleKoService {
         }
 
         return puntaje;
+    }
+
+    private boolean tienePokemonBasicoEnMano(TableroJugador tablero) {
+        return tablero.getMano().stream().anyMatch(this::esPokemonBasico);
+    }
+
+    private boolean esPokemonBasico(com.pokemon.tcg.model.Card c) {
+        if (c == null || c.getSupertype() == null) return false;
+        String supertype = java.text.Normalizer.normalize(c.getSupertype(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase();
+        if (!"pokemon".equals(supertype)) return false;
+        return c.getSubtypes() != null && c.getSubtypes().stream()
+                .anyMatch(s -> "Basic".equalsIgnoreCase(s));
     }
 
     private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}
