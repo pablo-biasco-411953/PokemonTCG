@@ -259,6 +259,7 @@ public class BattleController {
         swapped.setCoinFlipResult(p.getCoinFlipResult());
         swapped.setCoinFlipCallerUsername(p.getCoinFlipCallerUsername());
         swapped.setGanador(p.getGanador());
+        swapped.setRazonFinPartida(p.getRazonFinPartida());
         swapped.setCoinHandshakeJugadorPower(p.getCoinHandshakeBotPower());
         swapped.setCoinHandshakeBotPower(p.getCoinHandshakeJugadorPower());
         swapped.setCoinHandshakeJugadorHolding(p.isCoinHandshakeBotHolding());

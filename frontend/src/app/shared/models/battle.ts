@@ -32,6 +32,7 @@ export interface Partida {
   jugadorUsername?: string;
   botUsername?: string;
   ganador?: string;
+  razonFinPartida?: string;
   coinFlipped?: boolean;
   coinFlipWinner?: string;
   coinFlipResult?: string;

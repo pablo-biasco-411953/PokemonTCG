@@ -125,8 +125,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   isVictory = false;
   coinsEarned = 0;
   endGameWinner = '';
+  endGameReason = '';
   private endGameRewardSent = false;
-  private endGameRedirectTimeout: ReturnType<typeof setTimeout> | null = null;
   private lastAppliedStateSignature = '';
   public botEstaAtacando = false;
   private datosPendientesBot: Partida | null = null;
@@ -291,7 +291,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
-    if (this.endGameRedirectTimeout) clearTimeout(this.endGameRedirectTimeout);
     this.cleanupHandshakeScene();
   }
 
@@ -1147,6 +1146,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.lastAppliedStateSignature = this.crearFirmaPartida(partida);
     this.endGameWinner = partida.ganador || 'BOT';
     this.isVictory = this.endGameWinner === this.jugadorNombre;
+    this.endGameReason = partida.razonFinPartida || this.buildFallbackEndGameReason();
     const online = this.esPartidaOnline(partida);
     this.coinsEarned = this.isVictory ? (online ? 100 : 50) : (online ? 20 : 10);
     this.showEndGameOverlay = true;
@@ -1164,8 +1164,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.detenerRelojTurno();
 
     this.awardEndGameCoins();
-    this.endGameRedirectTimeout = setTimeout(() => this.volverAlLobby(), this.isVictory ? 6000 : 5000);
     this.cdr.detectChanges();
+  }
+
+  private buildFallbackEndGameReason(): string {
+    return this.isVictory
+      ? 'Ganaste por condicion de victoria del tablero.'
+      : 'Perdiste por condicion de victoria del rival.';
   }
 
   private awardEndGameCoins(): void {
@@ -2320,10 +2325,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   volverAlLobby(): void {
-    if (this.endGameRedirectTimeout) {
-      clearTimeout(this.endGameRedirectTimeout);
-      this.endGameRedirectTimeout = null;
-    }
     this.router.navigate(['/lobby']);
   }
 

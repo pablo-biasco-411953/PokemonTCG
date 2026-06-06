@@ -50,9 +50,14 @@
   [class.victory]="isVictory"
   [class.defeat]="!isVictory"
   *ngIf="showEndGameOverlay"
-  (click)="volverAlLobby()"
 >
   <div class="endgame-rays"></div>
+  <div class="endgame-crystals" aria-hidden="true">
+    <span *ngFor="let c of [1,2,3,4,5,6,7,8,9,10]" [style.--c]="c"></span>
+  </div>
+  <div class="endgame-depth" aria-hidden="true">
+    <span *ngFor="let d of [1,2,3,4,5,6]" [style.--d]="d"></span>
+  </div>
   <div class="endgame-particles">
     <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]" [style.--p]="p"></span>
   </div>
@@ -60,11 +65,17 @@
     <small>{{ isVictory ? 'Partida completada' : 'Combate finalizado' }}</small>
     <h1>{{ isVictory ? 'VICTORY' : 'DEFEAT' }}</h1>
     <p>{{ isVictory ? 'Dominaste el tablero y te llevaste la gloria.' : 'Better luck next time...' }}</p>
+    <div class="endgame-reason">
+      <span>Razon del final</span>
+      <strong>{{ endGameReason }}</strong>
+    </div>
     <div class="santocoin-reward">
       <b></b>
       <strong>+{{ coinsEarned }} SantoCoins</strong>
     </div>
-    <em>Click para volver al lobby</em>
+    <button class="endgame-accept" type="button" (click)="volverAlLobby()">
+      Aceptar recompensa
+    </button>
   </div>
 </div>
 

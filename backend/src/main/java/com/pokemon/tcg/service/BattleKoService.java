@@ -46,6 +46,9 @@ public class BattleKoService {
             partida.setGanador(tableroGanador == partida.getJugador()
                     ? partida.getJugadorUsername()
                     : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT"));
+            partida.setRazonFinPartida(sinPremios
+                    ? "El ganador tomo todos sus premios."
+                    : "El rival se quedo sin Pokemon en juego.");
             return;
         }
 
