@@ -44,7 +44,7 @@ public class SobreService {
                 .toList();
 
         List<Card> pokemones = todasLasCartas.stream()
-                .filter(c -> "Pokémon".equalsIgnoreCase(c.getSupertype()))
+                .filter(c -> "Pokemon".equalsIgnoreCase(c.getSupertype()) || "Pokémon".equalsIgnoreCase(c.getSupertype()))
                 .toList();
 
         if (energias.isEmpty() || pokemones.isEmpty()) {
