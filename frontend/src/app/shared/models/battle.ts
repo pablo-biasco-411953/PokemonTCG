@@ -42,6 +42,7 @@ export interface Partida {
   coinHandshakeJugadorHolding?: boolean;
   coinHandshakeBotHolding?: boolean;
   coinHandshakeComplete?: boolean;
+  turnLogs?: string[];
 }
 
 export interface StartBattleResponse extends Partida {}

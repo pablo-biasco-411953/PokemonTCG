@@ -1,0 +1,16 @@
+<div class="toast-container">
+  <div *ngFor="let notification of notifications" 
+       class="toast-notification" 
+       [ngClass]="'toast-' + notification.type"
+       (click)="remove(notification.id)">
+    <div class="toast-icon">
+      <span *ngIf="notification.type === 'info'">ℹ️</span>
+      <span *ngIf="notification.type === 'success'">✅</span>
+      <span *ngIf="notification.type === 'warning'">⚠️</span>
+      <span *ngIf="notification.type === 'error'">❌</span>
+    </div>
+    <div class="toast-content">
+      {{ notification.message }}
+    </div>
+  </div>
+</div>
