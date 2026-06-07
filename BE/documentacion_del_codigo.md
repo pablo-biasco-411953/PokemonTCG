@@ -27,16 +27,26 @@ El backend corre en `http://localhost:8080`.
 El archivo [`application.properties`](./src/main/resources/application.properties) define:
 
 - `server.port=8080`
-- Base de datos H2 en memoria
-- Consola H2 habilitada en `/h2-console`
+- Base de datos MySQL 8.0
+- Configuración de conexión (URL, driver, usuario y contraseña de la base de datos)
 - Hibernate con `ddl-auto=update`
 - `spring.jpa.show-sql=true` para ver consultas
+- Configuración de SMTP/Mail para la recuperación de contraseñas por correo electrónico (Gmail)
 
 Esto significa que:
 
-1. La base vive en memoria mientras corre la aplicacion.
-2. Las tablas se actualizan automaticamente segun las entidades.
-3. La consola H2 puede usarse para inspeccionar datos durante desarrollo.
+1. El proyecto requiere un servidor MySQL corriendo (típicamente levantado mediante Docker Compose).
+2. Las tablas se actualizan automáticamente según las entidades JPA.
+3. Se incluye soporte para envío de tokens de reinicio de contraseña por correo.
+
+### Docker Compose
+
+El archivo [`docker-compose.yml`](../docker-compose.yml) en la raíz del proyecto define un servicio de base de datos MySQL 8.0 (`pokefetch-db`):
+- Imagen: `mysql:8.0`
+- Puerto expuesto: `3306:3306`
+- Base de datos: `pokemon_tcg`
+- Contraseña de root: `1234`
+- Persistencia mediante volumen de Docker `db_data`
 
 ### `CorsConfig`
 
@@ -292,18 +302,12 @@ Sirve para listar los mazos de un usuario especifico.
 
 Ruta base: `/api/auth`
 
-Endpoint:
+Endpoints:
 
-- `POST /login`
-
-Flujo:
-
-1. Recibe `LoginRequest`.
-2. Llama a `AuthService.login(username)`.
-3. Si el jugador no existe, se crea.
-4. Devuelve el `Jugador`.
-
-Esta autenticacion es simple por username, sin password ni tokens.
+- `POST /login`: Recibe `LoginRequest` (con `username` y `password`). Verifica las credenciales a través de `AuthService.login` y devuelve el jugador autenticado.
+- `POST /register`: Recibe `RegisterRequest` (con `screenName`, `email`, `password`, y `confirmPassword`). Registra un nuevo usuario validando que las contraseñas coincidan y que los datos sean correctos.
+- `POST /forgot-password`: Recibe `ForgotPasswordRequest` (con `username` y `email`). Genera un token de reinicio enviado por correo (si el envío de mails está configurado) para la recuperación de contraseña.
+- `POST /reset-password`: Recibe `ResetPasswordRequest` (con `token`, `password`, y `confirmPassword`). Consume el token temporal y actualiza la contraseña del usuario.
 
 ### `JugadorController`
 
@@ -401,11 +405,15 @@ Tambien incluye endpoints de debug:
 
 ### `AuthService`
 
-[`AuthService`](./src/main/java/com/pokemon/tcg/service/AuthService.java) hace login simple por username.
+[`AuthService`](./src/main/java/com/pokemon/tcg/service/AuthService.java) gestiona el flujo de autenticación y registro de usuarios.
 
-Si el usuario no existe, lo crea y lo guarda.
+Ofrece métodos para:
+- `login(username, password)`: Busca al usuario en la base de datos y compara la contraseña.
+- `register(screenName, email, password, confirmPassword)`: Valida la unicidad del nombre de pantalla (`screenName`) y correo (`email`), comprueba la fortaleza de la contraseña, que ambas coincidan, y crea un nuevo `Jugador` en la base de datos con una colección inicial y sobres disponibles.
 
-No hay password, JWT ni sesiones.
+### `PasswordRecoveryService`
+
+[`PasswordRecoveryService`](./src/main/java/com/pokemon/tcg/service/PasswordRecoveryService.java) gestiona la generación, envío y consumo de tokens de recuperación de contraseñas de manera segura a través de correos electrónicos.
 
 ### `SobreService`
 
@@ -688,13 +696,25 @@ El bot usa heuristicas simples, pero suficientes para que la partida tenga compo
 
 ## 9. Flujo completo de informacion
 
-### Login
+### Registro y Autenticación (Login)
 
-1. El frontend manda `username`.
-2. `AuthController` recibe la request.
-3. `AuthService` busca el jugador.
-4. Si no existe, lo crea.
-5. Se devuelve el jugador.
+#### Flujo de Registro:
+1. El frontend envía `screenName`, `email`, `password`, y `confirmPassword`.
+2. `AuthController` recibe la petición en `/register` y delega en `AuthService.register(...)`.
+3. Se verifica si el usuario o email ya existen.
+4. Se comprueba que coincidan las contraseñas.
+5. Se crea el `Jugador`, asignándole cartas iniciales y sobres disponibles, y se persiste en la base de datos.
+
+#### Flujo de Login:
+1. El frontend manda `username` y `password`.
+2. `AuthController` recibe la petición en `/login` y llama a `AuthService.login(...)`.
+3. Si el usuario y contraseña son correctos, se devuelve el objeto `Jugador` con sus detalles básicos.
+
+#### Flujo de Recuperación de Contraseña:
+1. El usuario solicita recuperar su clave enviando `username` y `email` a `/forgot-password`.
+2. `PasswordRecoveryService` genera un token único y lo envía al correo del usuario (si está habilitado el servicio de mail en `application.properties`).
+3. El usuario ingresa la nueva contraseña junto con el token recibido en la petición `/reset-password`.
+4. El token se valida, se consume y se actualiza la contraseña del usuario.
 
 ### Consulta de datos del jugador
 
