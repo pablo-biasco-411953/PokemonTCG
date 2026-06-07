@@ -57,15 +57,44 @@ $font-pixel: 'VT323', monospace;
 
 .hub-top-hud {
   position: absolute;
-  top: 22px;
-  left: 28px;
+  top: 20px;
+  left: 24px;
   right: 24px;
   z-index: 8;
-  display: grid;
-  grid-template-columns: minmax(160px, 1fr) auto auto auto auto auto auto minmax(96px, auto);
-  align-items: start;
-  gap: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
   pointer-events: none;
+
+  @media (max-width: 1100px) {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+.hud-left,
+.hud-center,
+.hud-right {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: auto;
+}
+
+.hud-left {
+  flex-wrap: wrap;
+}
+
+.hud-center {
+  flex-grow: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hud-right {
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .trainer-chip,
@@ -75,15 +104,14 @@ $font-pixel: 'VT323', monospace;
 .battle-select-panel,
 .deck-preview,
 .interaction-prompt {
-  border: 1px solid rgba(125, 211, 252, .28);
-  background:
-    linear-gradient(135deg, rgba(5, 11, 27, .78), rgba(15, 23, 42, .62)),
-    radial-gradient(circle at 0 0, rgba(250, 204, 21, .18), transparent 38%),
-    radial-gradient(circle at 100% 100%, rgba(34, 211, 238, .16), transparent 44%);
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, .45),
-    inset 0 1px 0 rgba(255, 255, 255, .16);
-  backdrop-filter: blur(18px) saturate(1.25);
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  background: linear-gradient(135deg, rgba(8, 18, 44, 0.72), rgba(15, 23, 42, 0.58));
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    0 0 15px rgba(34, 211, 238, 0.04);
+  backdrop-filter: blur(20px) saturate(1.4);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .trainer-chip,
@@ -93,8 +121,8 @@ $font-pixel: 'VT323', monospace;
   gap: 12px;
   width: max-content;
   max-width: 100%;
-  padding: 11px 14px;
-  border-radius: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
 }
 
 .trainer-chip-button,
@@ -102,12 +130,10 @@ $font-pixel: 'VT323', monospace;
 .graphics-chip,
 .audio-chip,
 .emote-chip-hud {
-  border: 1px solid rgba(125, 211, 252, .28);
   cursor: pointer;
   color: inherit;
   text-align: left;
   pointer-events: auto;
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
 
 .trainer-chip-button:hover,
@@ -116,15 +142,45 @@ $font-pixel: 'VT323', monospace;
 .audio-chip:hover,
 .emote-chip-hud:hover {
   transform: translateY(-2px);
-  border-color: rgba($gold, .65);
-  box-shadow: 0 20px 52px rgba(250, 204, 21, .18);
+  border-color: rgba($cyan, 0.6);
+  box-shadow: 
+    0 16px 36px rgba(34, 211, 238, 0.18),
+    0 0 20px rgba(34, 211, 238, 0.1);
+}
+
+.santocoins-chip {
+  border-color: rgba($gold, 0.35);
+  background: linear-gradient(135deg, rgba(8, 18, 44, 0.76), rgba(42, 36, 12, 0.58));
+  animation: coinGlowPulse 3s infinite ease-in-out;
+
+  strong {
+    color: $gold !important;
+    text-shadow: 0 0 12px rgba($gold, 0.65) !important;
+  }
+}
+
+.santocoins-chip:hover {
+  border-color: rgba($gold, 0.75);
+  box-shadow: 
+    0 16px 36px rgba(250, 204, 21, 0.2),
+    0 0 20px rgba(250, 204, 21, 0.12);
+  transform: translateY(-2px);
+}
+
+@keyframes coinGlowPulse {
+  0%, 100% {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 0 8px rgba($gold, 0.06);
+  }
+  50% {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.08), 0 0 18px rgba($gold, 0.2);
+  }
 }
 
 .audio-chip {
   display: grid;
   gap: 6px;
   min-width: 128px;
-  padding: 9px 10px;
+  padding: 8px 10px;
 }
 
 .audio-chip > button,
@@ -162,6 +218,12 @@ $font-pixel: 'VT323', monospace;
   font-size: 9px;
   font-weight: 900;
   letter-spacing: .08em;
+  transition: all 0.18s ease;
+}
+
+.audio-mini-controls button:hover {
+  background: rgba(125, 211, 252, 0.12);
+  color: white;
 }
 
 .audio-mini-controls button.enabled {
@@ -249,20 +311,16 @@ $font-pixel: 'VT323', monospace;
   margin-top: 2px;
   color: white;
   font-family: $font-tech;
-  font-size: 15px;
+  font-size: 14px;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 
-.resource-chip {
-  justify-self: end;
-}
-
 .resource-chip strong {
   color: $green;
-  font-size: 28px;
+  font-size: 24px;
   line-height: 1;
-  text-shadow: 0 0 18px rgba($green, .75);
+  text-shadow: 0 0 14px rgba($green, 0.5);
 }
 
 .cycle-chip strong,
@@ -270,20 +328,35 @@ $font-pixel: 'VT323', monospace;
 .graphics-chip strong,
 .emote-chip-hud strong {
   color: #fff7ad;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.1;
 }
 
 .companion-chip.enabled strong {
   color: $green;
+  text-shadow: 0 0 8px rgba($green, 0.4);
 }
 
 .hub-title {
-  justify-self: center;
-  min-width: 260px;
-  padding: 14px 22px;
-  border-radius: 999px;
+  min-width: 240px;
+  padding: 10px 20px;
+  border-radius: 30px;
   text-align: center;
+  border-color: rgba($cyan, 0.45);
+  background: linear-gradient(135deg, rgba(8, 28, 54, 0.8), rgba(15, 23, 42, 0.65));
+  box-shadow: 
+    0 12px 32px rgba(0, 0, 0, 0.35),
+    0 0 25px rgba($cyan, 0.25);
+  animation: titleGlow 4s infinite alternate ease-in-out;
+}
+
+@keyframes titleGlow {
+  0% {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 15px rgba($cyan, 0.15);
+  }
+  100% {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 28px rgba($cyan, 0.35);
+  }
 }
 
 .hub-title strong {
@@ -291,7 +364,7 @@ $font-pixel: 'VT323', monospace;
   margin-top: 2px;
   color: #fff7ad;
   font-family: $font-tech;
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
