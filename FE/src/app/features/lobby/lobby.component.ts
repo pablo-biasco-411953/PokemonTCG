@@ -3539,6 +3539,64 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addStrategicLantern(5.0, -2.0, Math.PI);      // Cerca del sendero de la plaza UTN
   }
 
+  private addStudentGroup(x: number, z: number, count: number) {
+    const shirtColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x10b981, 0x8b5cf6, 0xf97316];
+    const bodyGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.52, 8);
+    const headGeom = new THREE.SphereGeometry(0.09, 8, 8);
+    const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.6 });
+    this.disposable.push(bodyGeom, headGeom, headMat);
+
+    const radius = 0.55;
+    for (let i = 0; i < count; i++) {
+      const angle = (i * Math.PI * 2) / count;
+      const px = x + Math.cos(angle) * radius;
+      const pz = z + Math.sin(angle) * radius;
+
+      const studentGroup = new THREE.Group();
+      studentGroup.position.set(px, 0.26, pz);
+
+      const color = shirtColors[Math.floor(Math.random() * shirtColors.length)];
+      const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
+      const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
+      bodyMesh.castShadow = true;
+      bodyMesh.receiveShadow = true;
+      studentGroup.add(bodyMesh);
+      this.disposable.push(bodyMat);
+
+      const headMesh = new THREE.Mesh(headGeom, headMat);
+      headMesh.position.set(0, 0.35, 0);
+      headMesh.castShadow = true;
+      studentGroup.add(headMesh);
+
+      studentGroup.rotation.z = (Math.random() - 0.5) * 0.18;
+      studentGroup.rotation.x = (Math.random() - 0.5) * 0.18;
+
+      this.scene!.add(studentGroup);
+    }
+  }
+
+  private addBelgranoRailway() {
+    const gravel = this.addBox([100, 0.03, 2.2], [0, 0.015, 29.1], 0x64748b, { roughness: 0.95 });
+    gravel.receiveShadow = true;
+
+    const tieGeom = new THREE.BoxGeometry(0.12, 0.06, 1.3);
+    const tieMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
+    this.disposable.push(tieGeom, tieMat);
+
+    for (let x = -50; x <= 50; x += 1.25) {
+      const tie = new THREE.Mesh(tieGeom, tieMat);
+      tie.position.set(x, 0.06, 29.1);
+      tie.castShadow = true;
+      tie.receiveShadow = true;
+      this.scene!.add(tie);
+    }
+
+    const railLeft = this.addBox([100, 0.06, 0.05], [0, 0.12, 28.7], 0x94a3b8, { roughness: 0.3, metalness: 0.8 });
+    const railRight = this.addBox([100, 0.06, 0.05], [0, 0.12, 29.5], 0x94a3b8, { roughness: 0.3, metalness: 0.8 });
+    railLeft.castShadow = true;
+    railRight.castShadow = true;
+  }
+
   private createUtnFrcCampusAdditions() {
     // 1. BENCHES AND TRASH CANS
     const benchPositions = [
@@ -3592,31 +3650,205 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addGoalPost(27, 20, Math.PI / 2);
     this.addGoalPost(49, 20, -Math.PI / 2);
 
-    // 4. PARKING LOT AND PROCEDURAL CARS
-    this.addBox([15, 0.02, 10], [-25, 0.01, 36], 0x334155, { roughness: 0.88 });
-    for (let x = -31; x <= -19; x += 3.5) {
+    // 4. PARKING LOTS AND PROCEDURAL CARS
+    // Row 1 (South facing)
+    this.addBox([22, 0.02, 10], [-21.5, 0.01, 36], 0x334155, { roughness: 0.88 });
+    for (let x = -31; x <= -12; x += 3.5) {
       this.addBox([0.1, 0.022, 8.5], [x, 0.02, 36], 0xeab308);
     }
     this.addProceduralCar(-29.5, 36, 0xef4444);
     this.addProceduralCar(-26.0, 36, 0x3b82f6);
     this.addProceduralCar(-22.5, 36, 0x94a3b8);
+    this.addProceduralCar(-19.0, 36, 0xffffff);
+    this.addProceduralCar(-15.5, 36, 0xfacc15);
 
-    // 5. ENTRANCE ARCHWAY / SIGN
-    this.addBox([0.4, 4.2, 0.4], [-4.2, 2.1, 22], 0x1e293b, { roughness: 0.6 });
-    this.addBox([0.4, 4.2, 0.4], [4.2, 2.1, 22], 0x1e293b, { roughness: 0.6 });
-    this.addBox([8.8, 0.6, 0.4], [0, 4.2, 22], 0x1e3a8a, { roughness: 0.5 });
+    // Row 2 (North facing)
+    this.addBox([22, 0.02, 10], [-21.5, 0.01, 32], 0x334155, { roughness: 0.88 });
+    for (let x = -31; x <= -12; x += 3.5) {
+      this.addBox([0.1, 0.022, 8.5], [x, 0.02, 32], 0xeab308);
+    }
+    this.addProceduralCar(-29.5, 32, 0x10b981);
+    this.addProceduralCar(-26.0, 32, 0x8b5cf6);
+    this.addProceduralCar(-22.5, 32, 0x111827);
+    this.addProceduralCar(-19.0, 32, 0xf97316);
 
-    const signGeom = new THREE.PlaneGeometry(5.2, 0.45);
+    // 5. ENTRANCE ARCHWAY / SIGN (Matches Photo 1)
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
+    this.disposable.push(steelMat);
+    const colGeom = new THREE.CylinderGeometry(0.08, 0.08, 4.3, 8);
+    this.disposable.push(colGeom);
+
+    [-0.2, 0, 0.2].forEach((offset) => {
+      const col = new THREE.Mesh(colGeom, steelMat);
+      col.position.set(-5.8, 2.15, 22 + offset);
+      col.castShadow = true;
+      this.scene!.add(col);
+    });
+
+    this.addBox([1.4, 4.3, 0.8], [5.8, 2.15, 22], 0xb5ae9e, { roughness: 0.88 });
+    this.addBox([14, 0.95, 0.4], [0, 4.3, 22], 0xffffff, { roughness: 0.3 });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1024, 128);
+
+    const drawLogo = (x: number, y: number) => {
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(x - 5, y - 25, 10, 50);
+      ctx.fillRect(x - 25, y - 18, 50, 6);
+      ctx.fillRect(x - 25, y - 3, 50, 6);
+      ctx.fillRect(x - 25, y + 12, 50, 6);
+      ctx.fillRect(x - 25, y - 18, 6, 36);
+      ctx.fillRect(x + 19, y - 18, 6, 36);
+    };
+    drawLogo(80, 64);
+    drawLogo(944, 64);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 36px "Arial Black", "Montserrat", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('UNIVERSIDAD TECNOLOGICA NACIONAL', 512, 64);
+
+    const signTexture = new THREE.CanvasTexture(canvas);
+    signTexture.colorSpace = THREE.SRGBColorSpace;
+    this.disposable.push(signTexture);
+
+    const signGeom = new THREE.PlaneGeometry(13.8, 0.82);
     const signMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      emissive: 0x38bdf8,
-      emissiveIntensity: 1.2,
-      roughness: 0.1
+      map: signTexture,
+      roughness: 0.2,
+      side: THREE.FrontSide
     });
     const signMesh = new THREE.Mesh(signGeom, signMat);
-    signMesh.position.set(0, 4.2, 21.78);
+    signMesh.position.set(0, 4.3, 22.21);
     this.scene!.add(signMesh);
     this.disposable.push(signGeom, signMat);
+
+    this.addBox([2.2, 2.5, 2.0], [-8.8, 1.25, 21.0], 0xd1c7bd, { roughness: 0.8 });
+    this.addBox([2.3, 0.2, 2.1], [-8.8, 2.6, 21.0], 0x334155);
+    this.addBox([1.2, 1.0, 0.12], [-8.8, 1.6, 22.02], 0x1e293b, { opacity: 0.7 });
+
+    // 6. MAIN BUILDING FACADE LETTERS "U T N" (Matches Photo 2)
+    this.addBox([0.22, 8.5, 4.5], [11.24, 5.1, 4.0], 0x9ca3af, { roughness: 0.8 });
+    this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 3.55], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 4.45], 0xffffff);
+    this.addBox([0.08, 0.12, 0.92], [11.02, 7.26, 4.0], 0xffffff);
+
+    this.addBox([0.08, 0.12, 0.92], [11.02, 6.1, 4.0], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 5.5, 4.0], 0xffffff);
+
+    this.addBox([0.08, 1.2, 0.12], [11.02, 3.8, 3.55], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 3.8, 4.45], 0xffffff);
+    const diagGeom = new THREE.BoxGeometry(0.08, 1.35, 0.12);
+    const diagMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const diag = new THREE.Mesh(diagGeom, diagMat);
+    diag.position.set(11.02, 3.8, 4.0);
+    diag.rotation.x = 0.55;
+    this.scene!.add(diag);
+    this.disposable.push(diagGeom, diagMat);
+
+    // 7. GLASS ELEVATOR TOWER (Matches Photo 4)
+    const towerGroup = new THREE.Group();
+    towerGroup.position.set(11.0, 0, -4.0);
+
+    const steelFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
+    this.disposable.push(steelFrameMat);
+    const vertColGeom = new THREE.BoxGeometry(0.12, 11.2, 0.12);
+    this.disposable.push(vertColGeom);
+
+    const steelOffsets = [
+      [-1.3, -1.3],
+      [-1.3, 1.3],
+      [1.3, -1.3],
+      [1.3, 1.3]
+    ];
+    steelOffsets.forEach(([ox, oz]) => {
+      const col = new THREE.Mesh(vertColGeom, steelFrameMat);
+      col.position.set(ox, 5.6, oz);
+      col.castShadow = true;
+      towerGroup.add(col);
+    });
+
+    const horizFrameGeomX = new THREE.BoxGeometry(2.6, 0.12, 0.12);
+    const horizFrameGeomZ = new THREE.BoxGeometry(0.12, 0.12, 2.6);
+    this.disposable.push(horizFrameGeomX, horizFrameGeomZ);
+
+    [2.8, 5.6, 8.4, 11.2].forEach((h) => {
+      const beamX1 = new THREE.Mesh(horizFrameGeomX, steelFrameMat);
+      beamX1.position.set(0, h, -1.3);
+      towerGroup.add(beamX1);
+      const beamX2 = new THREE.Mesh(horizFrameGeomX, steelFrameMat);
+      beamX2.position.set(0, h, 1.3);
+      towerGroup.add(beamX2);
+
+      const beamZ1 = new THREE.Mesh(horizFrameGeomZ, steelFrameMat);
+      beamZ1.position.set(-1.3, h, 0);
+      towerGroup.add(beamZ1);
+      const beamZ2 = new THREE.Mesh(horizFrameGeomZ, steelFrameMat);
+      beamZ2.position.set(1.3, h, 0);
+      towerGroup.add(beamZ2);
+    });
+
+    const towerGlassMat = new THREE.MeshStandardMaterial({
+      color: 0x8ecae6,
+      roughness: 0.1,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.35
+    });
+    this.disposable.push(towerGlassMat);
+
+    const glassPaneFrontGeom = new THREE.PlaneGeometry(2.5, 11.0);
+    this.disposable.push(glassPaneFrontGeom);
+
+    const glassPaneFront = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneFront.position.set(-1.3, 5.6, 0);
+    glassPaneFront.rotation.y = -Math.PI / 2;
+    towerGroup.add(glassPaneFront);
+
+    const glassPaneLeft = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneLeft.position.set(0, 5.6, -1.3);
+    towerGroup.add(glassPaneLeft);
+
+    const glassPaneRight = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneRight.position.set(0, 5.6, 1.3);
+    towerGroup.add(glassPaneRight);
+
+    const liftShaftMat = new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.8 });
+    const liftShaftGeom = new THREE.BoxGeometry(0.8, 11.2, 0.8);
+    const liftShaft = new THREE.Mesh(liftShaftGeom, liftShaftMat);
+    liftShaft.position.set(0.6, 5.6, 0);
+    liftShaft.castShadow = true;
+    towerGroup.add(liftShaft);
+    this.disposable.push(liftShaftGeom, liftShaftMat);
+
+    const cabinGroup = new THREE.Group();
+    cabinGroup.position.set(-0.25, 4.2, 0);
+    const cabinBodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.8 });
+    const cabinBodyGeom = new THREE.BoxGeometry(1.2, 2.0, 1.2);
+    const cabinBody = new THREE.Mesh(cabinBodyGeom, cabinBodyMat);
+    cabinBody.castShadow = true;
+    cabinGroup.add(cabinBody);
+
+    const cabinLight = new THREE.PointLight(0xfff7ad, 1.5, 3);
+    cabinLight.position.set(0, 0.8, 0);
+    cabinGroup.add(cabinLight);
+
+    towerGroup.add(cabinGroup);
+    this.disposable.push(cabinBodyGeom, cabinBodyMat);
+    this.scene!.add(towerGroup);
+
+    // 8. RAILROAD TRACKS (Belgrano Railway, Matches Photo 2)
+    this.addBelgranoRailway();
+
+    // 9. STUDENT LIFE GROUPS (Matches Photo 4)
+    this.addStudentGroup(-8.2, -5.0, 5);
+    this.addStudentGroup(8.5, -9.5, 4);
+    this.addStudentGroup(-7.8, 11.0, 6);
   }
 
   private addGoalPost(x: number, z: number, rotationY: number) {
