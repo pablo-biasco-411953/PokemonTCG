@@ -3539,64 +3539,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addStrategicLantern(5.0, -2.0, Math.PI);      // Cerca del sendero de la plaza UTN
   }
 
-  private addStudentGroup(x: number, z: number, count: number) {
-    const shirtColors = [0xef4444, 0x3b82f6, 0xfacc15, 0x10b981, 0x8b5cf6, 0xf97316];
-    const bodyGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.52, 8);
-    const headGeom = new THREE.SphereGeometry(0.09, 8, 8);
-    const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.6 });
-    this.disposable.push(bodyGeom, headGeom, headMat);
-
-    const radius = 0.55;
-    for (let i = 0; i < count; i++) {
-      const angle = (i * Math.PI * 2) / count;
-      const px = x + Math.cos(angle) * radius;
-      const pz = z + Math.sin(angle) * radius;
-
-      const studentGroup = new THREE.Group();
-      studentGroup.position.set(px, 0.26, pz);
-
-      const color = shirtColors[Math.floor(Math.random() * shirtColors.length)];
-      const bodyMat = new THREE.MeshStandardMaterial({ color, roughness: 0.7 });
-      const bodyMesh = new THREE.Mesh(bodyGeom, bodyMat);
-      bodyMesh.castShadow = true;
-      bodyMesh.receiveShadow = true;
-      studentGroup.add(bodyMesh);
-      this.disposable.push(bodyMat);
-
-      const headMesh = new THREE.Mesh(headGeom, headMat);
-      headMesh.position.set(0, 0.35, 0);
-      headMesh.castShadow = true;
-      studentGroup.add(headMesh);
-
-      studentGroup.rotation.z = (Math.random() - 0.5) * 0.18;
-      studentGroup.rotation.x = (Math.random() - 0.5) * 0.18;
-
-      this.scene!.add(studentGroup);
-    }
-  }
-
-  private addBelgranoRailway() {
-    const gravel = this.addBox([100, 0.03, 2.2], [0, 0.015, 29.1], 0x64748b, { roughness: 0.95 });
-    gravel.receiveShadow = true;
-
-    const tieGeom = new THREE.BoxGeometry(0.12, 0.06, 1.3);
-    const tieMat = new THREE.MeshStandardMaterial({ color: 0x451a03, roughness: 0.9 });
-    this.disposable.push(tieGeom, tieMat);
-
-    for (let x = -50; x <= 50; x += 1.25) {
-      const tie = new THREE.Mesh(tieGeom, tieMat);
-      tie.position.set(x, 0.06, 29.1);
-      tie.castShadow = true;
-      tie.receiveShadow = true;
-      this.scene!.add(tie);
-    }
-
-    const railLeft = this.addBox([100, 0.06, 0.05], [0, 0.12, 28.7], 0x94a3b8, { roughness: 0.3, metalness: 0.8 });
-    const railRight = this.addBox([100, 0.06, 0.05], [0, 0.12, 29.5], 0x94a3b8, { roughness: 0.3, metalness: 0.8 });
-    railLeft.castShadow = true;
-    railRight.castShadow = true;
-  }
-
   private createUtnFrcCampusAdditions() {
     // 1. BENCHES AND TRASH CANS
     const benchPositions = [
@@ -3618,28 +3560,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.addProceduralTrashCan(pos.x, pos.z);
     });
 
-    // 2. ACADEMIC PAVILION B (Out of bounds)
-    this.addBox([25, 8.5, 12], [-38, 4.25, 5], 0xa8a29e, { roughness: 0.85 }); // Concrete block
-    this.addBox([25.4, 0.6, 12.4], [-38, 8.8, 5], 0x7c2d12); // Terracotta roof line
-
-    const glassMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      roughness: 0.2,
-      metalness: 0.8
-    });
-    this.disposable.push(glassMaterial);
-
-    for (let z = -4; z <= 14; z += 4.5) {
-      for (let y = 2.2; y <= 6.5; y += 3.8) {
-        const windowGeom = new THREE.BoxGeometry(0.12, 1.6, 2.2);
-        const win = new THREE.Mesh(windowGeom, glassMaterial);
-        win.position.set(-31.9, y, z);
-        this.scene!.add(win);
-        this.disposable.push(windowGeom);
-      }
-    }
-
-    // 3. SPORTS COURT (Football field, Out of bounds)
+    // 2. SPORTS COURT (Football field, Out of bounds)
     this.addBox([22, 0.02, 14], [38, 0.01, 20], 0x3f6212, { roughness: 0.95 }); // Grass court
     this.addBox([22.2, 0.022, 0.12], [38, 0.02, 27], 0xffffff); // Top line
     this.addBox([22.2, 0.022, 0.12], [38, 0.02, 13], 0xffffff); // Bottom line
@@ -3650,7 +3571,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addGoalPost(27, 20, Math.PI / 2);
     this.addGoalPost(49, 20, -Math.PI / 2);
 
-    // 4. PARKING LOTS AND PROCEDURAL CARS
+    // 3. PARKING LOTS AND PROCEDURAL CARS
     // Row 1 (South facing)
     this.addBox([22, 0.02, 10], [-21.5, 0.01, 36], 0x334155, { roughness: 0.88 });
     for (let x = -31; x <= -12; x += 3.5) {
@@ -3672,7 +3593,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.addProceduralCar(-22.5, 32, 0x111827);
     this.addProceduralCar(-19.0, 32, 0xf97316);
 
-    // 5. ENTRANCE ARCHWAY / SIGN (Matches Photo 1)
+    // 4. ENTRANCE ARCHWAY / SIGN (Matches Photo 1)
     const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
     this.disposable.push(steelMat);
     const colGeom = new THREE.CylinderGeometry(0.08, 0.08, 4.3, 8);
@@ -3695,18 +3616,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, 1024, 128);
 
-    const drawLogo = (x: number, y: number) => {
-      ctx.fillStyle = '#1e3a8a';
-      ctx.fillRect(x - 5, y - 25, 10, 50);
-      ctx.fillRect(x - 25, y - 18, 50, 6);
-      ctx.fillRect(x - 25, y - 3, 50, 6);
-      ctx.fillRect(x - 25, y + 12, 50, 6);
-      ctx.fillRect(x - 25, y - 18, 6, 36);
-      ctx.fillRect(x + 19, y - 18, 6, 36);
-    };
-    drawLogo(80, 64);
-    drawLogo(944, 64);
-
     ctx.fillStyle = '#1e293b';
     ctx.font = 'bold 36px "Arial Black", "Montserrat", sans-serif';
     ctx.textAlign = 'center';
@@ -3728,11 +3637,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene!.add(signMesh);
     this.disposable.push(signGeom, signMat);
 
+    // Load actual UTN logo image texture
+    const textureLoader = new THREE.TextureLoader();
+    const logoTexture = textureLoader.load('/images/utn-logo.png');
+    logoTexture.colorSpace = THREE.SRGBColorSpace;
+    this.disposable.push(logoTexture);
+
+    const logoMat = new THREE.MeshStandardMaterial({
+      map: logoTexture,
+      roughness: 0.2,
+      transparent: true,
+      side: THREE.FrontSide
+    });
+    this.disposable.push(logoMat);
+
+    const logoGeom = new THREE.PlaneGeometry(0.72, 0.72);
+    this.disposable.push(logoGeom);
+
+    const leftLogo = new THREE.Mesh(logoGeom, logoMat);
+    leftLogo.position.set(-5.1, 4.3, 22.23);
+    this.scene!.add(leftLogo);
+
+    const rightLogo = new THREE.Mesh(logoGeom, logoMat);
+    rightLogo.position.set(5.1, 4.3, 22.23);
+    this.scene!.add(rightLogo);
+
     this.addBox([2.2, 2.5, 2.0], [-8.8, 1.25, 21.0], 0xd1c7bd, { roughness: 0.8 });
     this.addBox([2.3, 0.2, 2.1], [-8.8, 2.6, 21.0], 0x334155);
     this.addBox([1.2, 1.0, 0.12], [-8.8, 1.6, 22.02], 0x1e293b, { opacity: 0.7 });
 
-    // 6. MAIN BUILDING FACADE LETTERS "U T N" (Matches Photo 2)
+    // 5. MAIN BUILDING FACADE LETTERS "U T N" (Matches Photo 2)
     this.addBox([0.22, 8.5, 4.5], [11.24, 5.1, 4.0], 0x9ca3af, { roughness: 0.8 });
     this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 3.55], 0xffffff);
     this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 4.45], 0xffffff);
@@ -3751,7 +3685,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene!.add(diag);
     this.disposable.push(diagGeom, diagMat);
 
-    // 7. GLASS ELEVATOR TOWER (Matches Photo 4)
+    // 6. GLASS ELEVATOR TOWER (Matches Photo 4)
     const towerGroup = new THREE.Group();
     towerGroup.position.set(11.0, 0, -4.0);
 
@@ -3841,14 +3775,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     towerGroup.add(cabinGroup);
     this.disposable.push(cabinBodyGeom, cabinBodyMat);
     this.scene!.add(towerGroup);
-
-    // 8. RAILROAD TRACKS (Belgrano Railway, Matches Photo 2)
-    this.addBelgranoRailway();
-
-    // 9. STUDENT LIFE GROUPS (Matches Photo 4)
-    this.addStudentGroup(-8.2, -5.0, 5);
-    this.addStudentGroup(8.5, -9.5, 4);
-    this.addStudentGroup(-7.8, 11.0, 6);
   }
 
   private addGoalPost(x: number, z: number, rotationY: number) {
