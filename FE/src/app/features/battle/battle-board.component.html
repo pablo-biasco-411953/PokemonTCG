@@ -533,7 +533,7 @@
                   <img
                     class="poke-sprite sprite-front"
                     [src]="getSpriteFront(partida.bot.activo.card.nombre)"
-                    (error)="onSpriteError($event)"
+                    (error)="onSpriteError($event, partida.bot.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>
                   <div class="cure-paralysis-fx" *ngIf="curingParalysisBot"></div>
@@ -576,6 +576,11 @@
 
           <div class="trainer-3d-wrapper bot-trainer-3d">
             <canvas #opponentTrainerCanvas class="trainer-canvas"></canvas>
+            <div class="bot-thinking-bubble" *ngIf="botPensando">
+              <span class="dot"></span>
+              <span class="dot"></span>
+              <span class="dot"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -666,7 +671,7 @@
                   <img
                     class="poke-sprite sprite-back"
                     [src]="getSpriteBack(partida.jugador.activo.card.nombre)"
-                    (error)="onSpriteError($event)"
+                    (error)="onSpriteError($event, partida.jugador.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>
                   <div
@@ -949,3 +954,6 @@
     (close)="mostrarModalDescarte = false"
   ></app-battle-board-discard-modal>
 </div>
+
+<app-battle-notification></app-battle-notification>
+

@@ -1440,7 +1440,7 @@
       {
         "nombre": "Poisonous Nest",
         "tipo": "Ability",
-        "texto": "Once during your turn (before your attack), you may use this Ability. Both Active Pok��mon (except for Grass Pokémon) are now Poisoned."
+        "texto": "Once during your turn (before your attack), you may use this Ability. Both Active Pokémon (except for Grass Pokémon) are now Poisoned."
       }
     ],
     "ataques": [
@@ -7089,13 +7089,13 @@
     "imagen": "/images/cards/xy2-19.png"
   },
   {
-    "id": "pop5-4",
-    "nombre": "Double Rainbow Energy",
+    "id": "col1-88",
+    "nombre": "Grass Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Grass",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7103,19 +7103,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Double Rainbow Energy can be attached only to an Evolved Pokémon (excluding Pokémon-ex). While in play, Double Rainbow Energy provides every type of Energy but provides 2 Energy at a time. (Has no effect other than providing Energy.) Damage done to your opponent's Pokémon by the Pokémon Double Rainbow Energy is attached to is reduced by 10 (before applying Weakness and Resistance). When the Pokémon Double Rainbow Energy is attached to is no longer an Evolved Pokémon, discard Double Rainbow Energy."
-    ],
-    "imagen": "/images/cards/pop5-4.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-88.png"
   },
   {
-    "id": "pop4-8",
-    "nombre": "Heal Energy",
+    "id": "col1-89",
+    "nombre": "Fire Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fire",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7123,19 +7121,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Heal Energy provides Colorless Energy. When you attach this card from your hand to 1 of your Pokémon, remove 1 damage counter and all Special Conditions from that Pokémon. If Heal Energy is attached to Pokémon-ex, Heal Energy has no effect other than providing Energy."
-    ],
-    "imagen": "/images/cards/pop4-8.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-89.png"
   },
   {
-    "id": "pop4-10",
-    "nombre": "Scramble Energy",
+    "id": "g1-75",
+    "nombre": "Grass Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Grass",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7143,19 +7139,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Scramble Energy can be attached only to an Evolved Pokémon (excluding Pokémon-ex). Scramble Energy provides Colorless Energy. While in play, if you have more Prize cards left than your opponent, Scramble Energy provides every type of Energy but provides only 3 in any combination at a time. If the Pokémon Scramble Energy is attached to isn't an Evolved Pokémon (or evolves into Pokémon-ex), discard Scramble Energy."
-    ],
-    "imagen": "/images/cards/pop4-10.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-75.png"
   },
   {
-    "id": "pop5-8",
-    "nombre": "Boost Energy",
+    "id": "g1-76",
+    "nombre": "Fire Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fire",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7163,19 +7157,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Boost Energy can be attached only to an Evolved Pokémon. Discard Boost Energy at the end of the turn it was attached. Boost Energy provides ColorlessColorlessColorless Energy. The Pokémon Boost Energy is attached to can't retreat. If the Pokémon Boost Energy is attached to isn't an Evolved Pokémon, discard Boost Energy."
-    ],
-    "imagen": "/images/cards/pop5-8.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-76.png"
   },
   {
-    "id": "pop5-9",
-    "nombre": "δ Rainbow Energy",
+    "id": "col1-90",
+    "nombre": "Water Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Water",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7183,19 +7175,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "δ Rainbow Energy provides Colorless Energy. While attached to a Pokémon that has δ on its card, δ Rainbow Energy provides every type of Energy but provides only 1 Energy at a time. (Has no effect other than providing Energy.)"
-    ],
-    "imagen": "/images/cards/pop5-9.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-90.png"
   },
   {
-    "id": "neo4-16",
-    "nombre": "Miracle Energy",
+    "id": "col1-91",
+    "nombre": "Lightning Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Lightning",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7203,19 +7193,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "You can't have more than 1 Miracle Energy in your deck. Attach Miracle Energy to 1 of your Shining or Light Pokémon. At the end of your turn, discard Miracle Energy.\nWhile in play, Miracle Energy counts as every type of Energy but provides only 2 Energy at a time."
-    ],
-    "imagen": "/images/cards/neo4-16.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-91.png"
   },
   {
-    "id": "base5-17",
-    "nombre": "Rainbow Energy",
+    "id": "g1-77",
+    "nombre": "Water Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Water",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7223,19 +7211,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy counts as every type of basic Energy but only provides 1 Energy at a time. (Doesn't count as a basic Energy card when not in play.) When you attach this card from your hand to 1 of your Pokémon, it does 10 damage to that Pokémon. (Don't apply Weakness and Resistance.)"
-    ],
-    "imagen": "/images/cards/base5-17.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-77.png"
   },
   {
-    "id": "neo1-19",
-    "nombre": "Metal Energy",
+    "id": "g1-78",
+    "nombre": "Lightning Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Lightning",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7243,19 +7229,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Damage done to the Pokémon Metal Energy is attached to is reduced by 10 (after applying Weakness and Resistance). If the Pokémon Metal Energy is attached to isn't Metal, whenever it damages a Pokémon, reduce that damage by 10 (before applying Weakness and Resistance).\nMetal Energy provides Metal Energy. (Doesn't count as a basic Energy card.)"
-    ],
-    "imagen": "/images/cards/neo1-19.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-78.png"
   },
   {
-    "id": "dc1-33",
-    "nombre": "Double Aqua Energy",
+    "id": "col1-92",
+    "nombre": "Psychic Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Psychic",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7263,21 +7247,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "This card can only be attached to Team Aqua Pokémon. Discard this card at the end of the turn you attached it.",
-      "This card provides WaterWater Energy only while it is attached to a Team Aqua Pokémon.",
-      "(If this card is attached to anything other than a Team Aqua Pokémon, discard this card.)"
-    ],
-    "imagen": "/images/cards/dc1-33.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-92.png"
   },
   {
-    "id": "dc1-34",
-    "nombre": "Double Magma Energy",
+    "id": "g1-79",
+    "nombre": "Psychic Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Psychic",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7285,21 +7265,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "This card can only be attached to Team Magma Pokémon. Discard this card at the end of the turn you attached it.",
-      "This card provides FightingFighting Energy only while it is attached to a Team Magma Pokémon.",
-      "(If this card is attached to anything other than a Team Magma Pokémon, discard this card.)"
-    ],
-    "imagen": "/images/cards/dc1-34.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-79.png"
   },
   {
-    "id": "ex12-81",
-    "nombre": "Rainbow Energy",
+    "id": "g1-80",
+    "nombre": "Fighting Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fighting",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7307,19 +7283,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy provides every type of Energy but provides only 1 Energy at a time. (Has no effect other than providing Energy.) When you attach this card from your hand to 1 of your Pokémon, put 1 damage counter on that Pokémon."
-    ],
-    "imagen": "/images/cards/ex12-81.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-80.png"
   },
   {
-    "id": "ex12-82",
-    "nombre": "React Energy",
+    "id": "col1-93",
+    "nombre": "Fighting Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fighting",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7327,82 +7301,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "React Energy provides Colorless Energy."
-    ],
-    "imagen": "/images/cards/ex12-82.png"
+    "reglas": [],
+    "imagen": "/images/cards/col1-93.png"
   },
   {
-    "id": "sm35-69",
-    "nombre": "Double Colorless Energy",
-    "supertype": "Energy",
-    "subtypes": [
-      "Special"
-    ],
-    "tipo": "Colorless",
-    "hp": "0",
-    "costoRetirada": 0,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [],
-    "debilidades": [],
-    "resistencias": [],
-    "reglas": [
-      "Double Colorless Energy provides ColorlessColorless Energy."
-    ],
-    "imagen": "/images/cards/sm35-69.png"
-  },
-  {
-    "id": "sm35-70",
-    "nombre": "Warp Energy",
-    "supertype": "Energy",
-    "subtypes": [
-      "Special"
-    ],
-    "tipo": "Colorless",
-    "hp": "0",
-    "costoRetirada": 0,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [],
-    "debilidades": [],
-    "resistencias": [],
-    "reglas": [
-      "This card provides Colorless Energy.",
-      "When you attach this card from your hand to your Active Pokémon, switch that Pokémon with 1 of your Benched Pokémon."
-    ],
-    "imagen": "/images/cards/sm35-70.png"
-  },
-  {
-    "id": "xy7-82",
-    "nombre": "Dangerous Energy",
-    "supertype": "Energy",
-    "subtypes": [
-      "Special"
-    ],
-    "tipo": "Colorless",
-    "hp": "0",
-    "costoRetirada": 0,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [],
-    "debilidades": [],
-    "resistencias": [],
-    "reglas": [
-      "This card can only be attached to Darkness Pokémon. This card provides Darkness Energy only while this card is attached to a Darkness Pokémon.",
-      "Whenever the Darkness Pokémon this card is attached to is your Active Pokémon and is damaged by an attack from your opponent's Pokémon-EX (even if that Pokémon is Knocked Out), put 2 damage counters on the Attacking Pokémon-EX.",
-      "(If this card is attached to anything other than a Darkness Pokémon, discard this card.)"
-    ],
-    "imagen": "/images/cards/xy7-82.png"
-  },
-  {
-    "id": "hgss3-79",
+    "id": "g1-81",
     "nombre": "Darkness Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Darkness",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7410,19 +7319,71 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "If the Pokémon Darkness Energy is attached to attacks, the attack does 10 more damage to the Active Pokémon (before applying Weakness and Resistance). Ignore this effect if the Pokémon that Darkness Energy is attached to isn't Darkness. Darkness Energy provides Darkness Energy. (Doesn't count as a basic Energy card.)"
-    ],
-    "imagen": "/images/cards/hgss3-79.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-81.png"
   },
   {
-    "id": "hgss3-80",
+    "id": "xy12-91",
+    "nombre": "Grass Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Grass",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-91.png"
+  },
+  {
+    "id": "col1-94",
+    "nombre": "Darkness Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/col1-94.png"
+  },
+  {
+    "id": "base1-97",
+    "nombre": "Fighting Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/base1-97.png"
+  },
+  {
+    "id": "g1-82",
     "nombre": "Metal Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Metal",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7430,19 +7391,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Damage done by attacks to the Pokémon that Metal Energy is attached to is reduced by 10 (after applying Weakness and Resistance). Ignore this effect if the Pokémon that Metal Energy is attached to isn't Metal Metal Energy provides Metal Energy. (Doesn't count as a basic Energy card.)"
-    ],
-    "imagen": "/images/cards/hgss3-80.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-82.png"
   },
   {
-    "id": "xy7-83",
-    "nombre": "Flash Energy",
+    "id": "base1-98",
+    "nombre": "Fire Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fire",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7450,21 +7409,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "This card can only be attached to Lightning Pokémon. This card provides Lightning Energy only while this card is attached to a Lightning Pokémon.",
-      "The Lightning Pokémon this card is attached to has no Weakness.",
-      "(If this card is attached to anything other than a Lightning Pokémon, discard this card.)"
-    ],
-    "imagen": "/images/cards/xy7-83.png"
+    "reglas": [],
+    "imagen": "/images/cards/base1-98.png"
   },
   {
-    "id": "base5-80",
-    "nombre": "Rainbow Energy",
+    "id": "g1-83",
+    "nombre": "Fairy Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fairy",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7472,19 +7427,17 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy counts as every type of basic Energy but only provides 1 Energy at a time. (Doesn't count as a basic Energy card when not in play.) When you attach this card from your hand to 1 of your Pokémon, it does 10 damage to that Pokémon. (Don't apply Weakness and Resistance.)"
-    ],
-    "imagen": "/images/cards/base5-80.png"
+    "reglas": [],
+    "imagen": "/images/cards/g1-83.png"
   },
   {
-    "id": "base5-81",
-    "nombre": "Full Heal Energy",
+    "id": "col1-95",
+    "nombre": "Metal Energy",
     "supertype": "Energy",
     "subtypes": [
-      "Special"
+      "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Metal",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -7492,10 +7445,187 @@
     "ataques": [],
     "debilidades": [],
     "resistencias": [],
-    "reglas": [
-      "If you play this card from your hand, the Pokémon you attach it to is no longer Asleep, Confused, Paralyzed, or Poisoned.",
-      "Full Heal Energy provides Colorless energy. (Doesn't count as a basic Energy card.)"
+    "reglas": [],
+    "imagen": "/images/cards/col1-95.png"
+  },
+  {
+    "id": "xy12-92",
+    "nombre": "Fire Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
     ],
-    "imagen": "/images/cards/base5-81.png"
+    "tipo": "Fire",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-92.png"
+  },
+  {
+    "id": "xy12-93",
+    "nombre": "Water Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-93.png"
+  },
+  {
+    "id": "base1-99",
+    "nombre": "Grass Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Grass",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/base1-99.png"
+  },
+  {
+    "id": "xy12-94",
+    "nombre": "Lightning Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Lightning",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-94.png"
+  },
+  {
+    "id": "xy12-95",
+    "nombre": "Psychic Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-95.png"
+  },
+  {
+    "id": "base1-100",
+    "nombre": "Lightning Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Lightning",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/base1-100.png"
+  },
+  {
+    "id": "xy12-96",
+    "nombre": "Fighting Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-96.png"
+  },
+  {
+    "id": "base1-101",
+    "nombre": "Psychic Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/base1-101.png"
+  },
+  {
+    "id": "base1-102",
+    "nombre": "Water Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/base1-102.png"
+  },
+  {
+    "id": "xy12-97",
+    "nombre": "Darkness Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-97.png"
   }
 ]
