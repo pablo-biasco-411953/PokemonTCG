@@ -178,60 +178,66 @@
   </div>
 
   <header class="hub-top-hud">
-    <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
-      <span class="avatar-dot"></span>
-      <div>
-        <small>{{ 'lobby.trainer' | t | uppercase }}</small>
-        <strong>{{ jugador?.username || 'PLAYER' }}</strong>
-        <em>{{ selectedCharacterLabel }}</em>
-      </div>
-    </button>
-
-    <div class="hub-title">
-      <span>POKÉFETCH HUB</span>
-      <strong>Third Person Arena</strong>
-    </div>
-
-    <div class="resource-chip cycle-chip">
-      <small>{{ 'lobby.cycle' | t | uppercase }}</small>
-      <strong>{{ dayPhaseLabel | t | uppercase }}</strong>
-    </div>
-
-    <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
-      <small>PIKACHU</small>
-      <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
-    </button>
-
-    <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
-      <small>{{ 'lobby.graphics' | t | uppercase }}</small>
-      <strong>{{ graphicsQualityLabel }}</strong>
-    </button>
-
-    <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
-      <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
-        <small>{{ 'lobby.audio' | t | uppercase }}</small>
-        <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+    <div class="hud-left">
+      <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
+        <span class="avatar-dot"></span>
+        <div>
+          <small>{{ 'lobby.trainer' | t | uppercase }}</small>
+          <strong>{{ jugador?.username || 'PLAYER' }}</strong>
+          <em>{{ selectedCharacterLabel }}</em>
+        </div>
       </button>
-      <div class="audio-mini-controls">
-        <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" [title]="'lobby.music' | t">MUS</button>
-        <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" [title]="'lobby.sfx' | t">SFX</button>
-        <button type="button" (click)="cycleLobbyVolume()" [title]="'lobby.volume' | t">{{ audioVolumeLabel }}</button>
+
+      <div class="resource-chip santocoins-chip">
+        <small>SANTOCOINS</small>
+        <strong>{{ santoCoins }}</strong>
+      </div>
+
+      <div class="resource-chip packs-available-chip">
+        <small>{{ 'lobby.openPack' | t }}</small>
+        <strong>{{ sobresDisponibles }}</strong>
       </div>
     </div>
 
-    <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
-      <small>{{ 'lobby.actions' | t | uppercase }}</small>
-      <strong>{{ 'lobby.emotes' | t | uppercase }}</strong>
-    </button>
+    <div class="hud-center">
+      <div class="hub-title">
+        <span>POKÉFETCH HUB</span>
+        <strong>Third Person Arena</strong>
+      </div>
 
-    <div class="resource-chip">
-      <small>{{ 'lobby.openPack' | t }}</small>
-      <strong>{{ sobresDisponibles }}</strong>
+      <div class="resource-chip cycle-chip">
+        <small>{{ 'lobby.cycle' | t | uppercase }}</small>
+        <strong>{{ dayPhaseLabel | t | uppercase }}</strong>
+      </div>
+
+      <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
+        <small>PIKACHU</small>
+        <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+
+      <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
+        <small>{{ 'lobby.graphics' | t | uppercase }}</small>
+        <strong>{{ graphicsQualityLabel }}</strong>
+      </button>
     </div>
 
-    <div class="resource-chip santocoins-chip">
-      <small>SANTOCOINS</small>
-      <strong>{{ santoCoins }}</strong>
+    <div class="hud-right">
+      <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
+        <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
+          <small>{{ 'lobby.audio' | t | uppercase }}</small>
+          <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+        </button>
+        <div class="audio-mini-controls">
+          <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" [title]="'lobby.music' | t">MUS</button>
+          <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" [title]="'lobby.sfx' | t">SFX</button>
+          <button type="button" (click)="cycleLobbyVolume()" [title]="'lobby.volume' | t">{{ audioVolumeLabel }}</button>
+        </div>
+      </div>
+
+      <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
+        <small>{{ 'lobby.actions' | t | uppercase }}</small>
+        <strong>{{ 'lobby.emotes' | t | uppercase }}</strong>
+      </button>
     </div>
   </header>
 

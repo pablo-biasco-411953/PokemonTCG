@@ -491,6 +491,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private skyDome?: THREE.Mesh;
   private clouds: THREE.Group[] = [];
   private mountainMaterials: THREE.MeshBasicMaterial[] = [];
+  private boundaryMesh?: THREE.Mesh;
   keys = new Set<string>();
   mobileJoystickActive = false;
   mobileJoystickX = 0;
@@ -2794,6 +2795,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.createMountains();
     this.createCampusBackgroundDetails();
     this.createAmbientPokemon();
+    this.createUtnFrcCampusAdditions();
+
+    // Map boundary visual forcefield
+    const boundaryGeom = new THREE.CylinderGeometry(30.5, 30.5, 3.5, 32, 4, true);
+    const boundaryMat = new THREE.MeshBasicMaterial({
+      color: 0x22d3ee, // cyan
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide,
+      wireframe: true
+    });
+    this.boundaryMesh = new THREE.Mesh(boundaryGeom, boundaryMat);
+    this.boundaryMesh.position.set(0, 1.75, 0);
+    this.scene.add(this.boundaryMesh);
+    this.disposable.push(boundaryGeom, boundaryMat);
   }
 
   private createGrassTexture(): THREE.CanvasTexture {
@@ -3521,6 +3537,196 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     // Colocar faroles estratÃ©gicos de alta fidelidad 3D en zonas clave
     this.addStrategicLantern(-11.0, -13.5, 0);       // Cerca del mostrador del kiosco (Hilda)
     this.addStrategicLantern(5.0, -2.0, Math.PI);      // Cerca del sendero de la plaza UTN
+  }
+
+  private createUtnFrcCampusAdditions() {
+    // 1. BENCHES AND TRASH CANS
+    const benchPositions = [
+      { x: -3.5, z: 10, rot: Math.PI / 2 },
+      { x: -3.5, z: -10, rot: Math.PI / 2 },
+      { x: 3.5, z: 5, rot: -Math.PI / 2 },
+      { x: 3.5, z: -15, rot: -Math.PI / 2 }
+    ];
+
+    benchPositions.forEach((pos) => {
+      this.addProceduralBench(pos.x, pos.z, pos.rot);
+    });
+
+    const trashPositions = [
+      { x: -3.6, z: 8 },
+      { x: 3.6, z: -12 }
+    ];
+    trashPositions.forEach((pos) => {
+      this.addProceduralTrashCan(pos.x, pos.z);
+    });
+
+    // 2. ACADEMIC PAVILION B (Out of bounds)
+    this.addBox([25, 8.5, 12], [-38, 4.25, 5], 0xa8a29e, { roughness: 0.85 }); // Concrete block
+    this.addBox([25.4, 0.6, 12.4], [-38, 8.8, 5], 0x7c2d12); // Terracotta roof line
+
+    const glassMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.2,
+      metalness: 0.8
+    });
+    this.disposable.push(glassMaterial);
+
+    for (let z = -4; z <= 14; z += 4.5) {
+      for (let y = 2.2; y <= 6.5; y += 3.8) {
+        const windowGeom = new THREE.BoxGeometry(0.12, 1.6, 2.2);
+        const win = new THREE.Mesh(windowGeom, glassMaterial);
+        win.position.set(-31.9, y, z);
+        this.scene!.add(win);
+        this.disposable.push(windowGeom);
+      }
+    }
+
+    // 3. SPORTS COURT (Football field, Out of bounds)
+    this.addBox([22, 0.02, 14], [38, 0.01, 20], 0x3f6212, { roughness: 0.95 }); // Grass court
+    this.addBox([22.2, 0.022, 0.12], [38, 0.02, 27], 0xffffff); // Top line
+    this.addBox([22.2, 0.022, 0.12], [38, 0.02, 13], 0xffffff); // Bottom line
+    this.addBox([0.12, 0.022, 14.2], [27, 0.02, 20], 0xffffff); // Left line
+    this.addBox([0.12, 0.022, 14.2], [49, 0.02, 20], 0xffffff); // Right line
+    this.addBox([0.12, 0.022, 14.2], [38, 0.02, 20], 0xffffff); // Center line
+
+    this.addGoalPost(27, 20, Math.PI / 2);
+    this.addGoalPost(49, 20, -Math.PI / 2);
+
+    // 4. PARKING LOT AND PROCEDURAL CARS
+    this.addBox([15, 0.02, 10], [-25, 0.01, 36], 0x334155, { roughness: 0.88 });
+    for (let x = -31; x <= -19; x += 3.5) {
+      this.addBox([0.1, 0.022, 8.5], [x, 0.02, 36], 0xeab308);
+    }
+    this.addProceduralCar(-29.5, 36, 0xef4444);
+    this.addProceduralCar(-26.0, 36, 0x3b82f6);
+    this.addProceduralCar(-22.5, 36, 0x94a3b8);
+
+    // 5. ENTRANCE ARCHWAY / SIGN
+    this.addBox([0.4, 4.2, 0.4], [-4.2, 2.1, 22], 0x1e293b, { roughness: 0.6 });
+    this.addBox([0.4, 4.2, 0.4], [4.2, 2.1, 22], 0x1e293b, { roughness: 0.6 });
+    this.addBox([8.8, 0.6, 0.4], [0, 4.2, 22], 0x1e3a8a, { roughness: 0.5 });
+
+    const signGeom = new THREE.PlaneGeometry(5.2, 0.45);
+    const signMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0x38bdf8,
+      emissiveIntensity: 1.2,
+      roughness: 0.1
+    });
+    const signMesh = new THREE.Mesh(signGeom, signMat);
+    signMesh.position.set(0, 4.2, 21.78);
+    this.scene!.add(signMesh);
+    this.disposable.push(signGeom, signMat);
+  }
+
+  private addGoalPost(x: number, z: number, rotationY: number) {
+    const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const postGroup = new THREE.Group();
+    postGroup.position.set(x, 0, z);
+    postGroup.rotation.y = rotationY;
+
+    const barLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), postMat);
+    barLeft.position.set(0, 0.8, -1.4);
+    barLeft.castShadow = true;
+    postGroup.add(barLeft);
+
+    const barRight = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), postMat);
+    barRight.position.set(0, 0.8, 1.4);
+    barRight.castShadow = true;
+    postGroup.add(barRight);
+
+    const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8), postMat);
+    crossbar.rotation.x = Math.PI / 2;
+    crossbar.position.set(0, 1.6, 0);
+    crossbar.castShadow = true;
+    postGroup.add(crossbar);
+
+    this.scene!.add(postGroup);
+    this.disposable.push(postMat);
+  }
+
+  private addProceduralCar(x: number, z: number, color: number) {
+    const carGroup = new THREE.Group();
+    carGroup.position.set(x, 0, z);
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.2, metalness: 0.5 });
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.48, 0.95), bodyMat);
+    body.position.set(0, 0.34, 0);
+    body.castShadow = true;
+    carGroup.add(body);
+
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.34, 0.82), cabinMat);
+    cabin.position.set(-0.1, 0.75, 0);
+    cabin.castShadow = true;
+    carGroup.add(cabin);
+
+    const wheelGeom = new THREE.CylinderGeometry(0.18, 0.18, 0.15, 12);
+    wheelGeom.rotateX(Math.PI / 2);
+
+    const wheelFL = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelFL.position.set(0.5, 0.18, 0.42);
+    carGroup.add(wheelFL);
+
+    const wheelFR = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelFR.position.set(0.5, 0.18, -0.42);
+    carGroup.add(wheelFR);
+
+    const wheelBL = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelBL.position.set(-0.5, 0.18, 0.42);
+    carGroup.add(wheelBL);
+
+    const wheelBR = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelBR.position.set(-0.5, 0.18, -0.42);
+    carGroup.add(wheelBR);
+
+    this.scene!.add(carGroup);
+    this.disposable.push(bodyMat, cabinMat, wheelMat, wheelGeom);
+  }
+
+  private addProceduralBench(x: number, z: number, rotationY: number) {
+    const seatMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.4 });
+
+    const bench = new THREE.Group();
+    bench.position.set(x, 0, z);
+    bench.rotation.y = rotationY;
+
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.48), seatMat);
+    seat.position.set(0, 0.45, 0);
+    seat.castShadow = true;
+    bench.add(seat);
+
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.32, 0.08), seatMat);
+    back.position.set(0, 0.82, -0.2);
+    back.rotation.x = -0.15;
+    back.castShadow = true;
+    bench.add(back);
+
+    const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.48), metalMat);
+    legLeft.position.set(-0.65, 0.4, 0);
+    legLeft.castShadow = true;
+    bench.add(legLeft);
+
+    const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.48), metalMat);
+    legRight.position.set(0.65, 0.4, 0);
+    legRight.castShadow = true;
+    bench.add(legRight);
+
+    this.scene!.add(bench);
+    this.disposable.push(seatMat, metalMat);
+  }
+
+  private addProceduralTrashCan(x: number, z: number) {
+    const binMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const binGeom = new THREE.CylinderGeometry(0.22, 0.18, 0.65, 12);
+    const bin = new THREE.Mesh(binGeom, binMat);
+    bin.position.set(x, 0.325, z);
+    bin.castShadow = true;
+    this.scene!.add(bin);
+    this.disposable.push(binMat, binGeom);
   }
 
   private addLampPost(x: number, z: number) {
@@ -4684,6 +4890,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const dist = Math.hypot(this.player.position.x, this.player.position.z);
     if (dist > maxRadius) {
       this.player.position.multiplyScalar(maxRadius / dist);
+    }
+    if (this.boundaryMesh) {
+      const boundaryOpacity = Math.max(0, Math.min(0.48, (dist - 19.5) / (30.5 - 19.5)));
+      (this.boundaryMesh.material as THREE.MeshBasicMaterial).opacity = boundaryOpacity;
     }
 
     if (!this.playerMixer) {
