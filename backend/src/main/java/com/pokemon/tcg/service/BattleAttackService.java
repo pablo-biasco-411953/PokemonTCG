@@ -26,6 +26,11 @@ public class BattleAttackService {
         this.effectParserService = effectParserService;
     }
 
+    public BattleAttackService() {
+        // Instantiate a simple parser that returns an empty command list
+        this.effectParserService = new com.pokemon.tcg.service.battle.command.AttackEffectParserService();
+    }
+
     public AttackResolution resolveAttack(
             Partida partida,
             Ataque ataque,
