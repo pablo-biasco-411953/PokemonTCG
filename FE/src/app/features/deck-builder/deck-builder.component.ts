@@ -6,6 +6,7 @@ import { JugadorService } from '../../core/services/jugador.service';
 import { MazoService } from './services/mazo.service';
 import { Card } from '../../shared/models/card';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { I18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-deck-builder',
@@ -47,9 +48,10 @@ export class DeckBuilderComponent implements OnInit {
     private jugadorService: JugadorService,
     private mazoService: MazoService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private i18n: I18nService
   ) {}
-idMazoAEditar: number | null = null; // Para saber si estamos editando
+  idMazoAEditar: number | null = null; // Para saber si estamos editando
 ngOnInit(): void {
   const data = localStorage.getItem('jugador');
   if (data) {
@@ -127,7 +129,7 @@ getImagenReal(id: string): string {
     this.cardFocus = null;
   }
 
-agregarAlMazo(carta: Card) {
+  agregarAlMazo(carta: Card) {
     const copiasEnMazo = this.mazoEnProceso.filter(c => c.id === carta.id).length;
     const totalPoseidas = this.cantidadesPoseidas[carta.id] || 0;
 
@@ -135,7 +137,7 @@ agregarAlMazo(carta: Card) {
     if (copiasEnMazo < totalPoseidas && copiasEnMazo < 4 && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);
     } else if (copiasEnMazo >= totalPoseidas) {
-      alert(`¡No tenés más copias de ${carta.nombre}! Abrí más sobres.`);
+      alert(this.i18n.translate('alert.noMoreCopies', { card: carta.nombre }));
     }
   }
 
@@ -153,13 +155,13 @@ guardar() {
   if (this.idMazoAEditar) {
     // Lógica para actualizar (necesitás este método en tu mazoService)
     this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
-      alert('¡Mazo actualizado!');
+      alert(this.i18n.translate('alert.deckUpdated'));
       this.cerrar(true);
     });
   } else {
     // Lógica original de guardado
     this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
-      alert('¡Mazo creado!');
+      alert(this.i18n.translate('alert.deckCreated'));
       this.cerrar(true);
     });
   }
