@@ -10,6 +10,7 @@ import { CardService } from '../../core/services/card.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { I18nService } from '../../i18n/i18n.service';
 import { Card } from '../../shared/models/card';
 import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
 import { Mazo } from '../../shared/models/mazo';
@@ -188,7 +189,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
-  dayPhaseLabel = 'MaÃ±ana';
+  dayPhaseLabel = 'lobby.phase.morning';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
   landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
@@ -236,9 +237,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private tradeCollectionLoaded = false;
 
   get graphicsQualityLabel(): string {
-    if (this.graphicsQuality === 'low') return 'BAJO ðŸ”´';
-    if (this.graphicsQuality === 'medium') return 'MEDIO ðŸŸ¡';
-    return 'ALTO ðŸŸ¢';
+    if (this.graphicsQuality === 'low') return this.i18n.translate('lobby.low') + ' 🔴';
+    if (this.graphicsQuality === 'medium') return this.i18n.translate('lobby.medium') + ' 🟡';
+    return this.i18n.translate('lobby.high') + ' 🟢';
   }
 
   // Propiedades para el modal de personalizaciÃ³n y Onboarding
@@ -380,7 +381,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private cardService: CardService,
     private router: Router,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public i18n: I18nService
   ) {
     this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
       if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
@@ -1829,7 +1831,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => {
         this.debugAccionEnCurso = false;
         console.error('Error seteando sobres en God Mode', err);
-        alert(err.error || 'No se pudo setear la cantidad de sobres.');
+        alert(err.error || this.i18n.translate('alert.setPacksError'));
       }
     });
   }
@@ -1842,7 +1844,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const requiereReemplazo = (mazo.cartas?.length || 0) >= 60;
     if (requiereReemplazo && !this.debugReplaceCardId) {
-      alert('ElegÃ­ la carta del mazo que querÃ©s reemplazar.');
+      alert(this.i18n.translate('alert.chooseCardToReplace'));
       return;
     }
 
@@ -1855,7 +1857,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => {
         this.debugAccionEnCurso = false;
         console.error('Error inyectando carta en el mazo', err);
-        alert(err.error || 'No se pudo modificar el mazo.');
+        alert(err.error || this.i18n.translate('alert.modifyDeckError'));
       }
     });
   }
@@ -2202,13 +2204,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   get santoroQuestTitle(): string {
-    return this.santoroGiftClaimed ? 'Santoro desbloqueado' : 'Busca a Santoro';
+    return this.santoroGiftClaimed
+      ? this.i18n.translate('lobby.quest.santoroUnlocked')
+      : this.i18n.translate('lobby.quest.findSantoro');
   }
 
   get santoroQuestCopy(): string {
     return this.santoroGiftClaimed
-      ? 'Podés volver a hablar con él para gestionar tu mazo.'
-      : 'El profe te espera en el campus con tu primera ayuda.';
+      ? this.i18n.translate('lobby.quest.santoroUnlockedDesc')
+      : this.i18n.translate('lobby.quest.findSantoroDesc');
   }
 
   get santoroNickname(): string {
@@ -2752,13 +2756,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    let nextLabel = 'Mañana';
+    let nextLabel = 'lobby.phase.morning';
     if (t >= 0.08 && t < 0.48) {
-      nextLabel = 'Tarde';
+      nextLabel = 'lobby.phase.afternoon';
     } else if (t >= 0.48 && t < 0.68) {
-      nextLabel = 'Atardecer';
+      nextLabel = 'lobby.phase.sunset';
     } else if (t >= 0.68 && t < 0.96) {
-      nextLabel = 'Noche';
+      nextLabel = 'lobby.phase.night';
     }
     if (nextLabel !== this.dayPhaseLabel) {
       this.ngZone.run(() => {
@@ -6042,7 +6046,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         error: (err) => {
           console.error('Error al arrancar batalla online:', err);
           const backendMessage = typeof err.error === 'string' ? err.error : err.message;
-          alert('Error al iniciar combate online: ' + backendMessage);
+          alert(this.i18n.translate('alert.startOnlineBattleError', { error: backendMessage }));
         }
       });
     } else {
@@ -6192,7 +6196,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   addCardToTrade(card: Card) {
     if (this.tradeLeftReady) return;
     if (this.tradeLeftCards.length >= 3) {
-      alert('MÃ¡ximo 3 cartas por intercambio.');
+      alert(this.i18n.translate('alert.maxExchangeCards'));
       return;
     }
     this.tradeLeftCards.push(card);
@@ -6276,7 +6280,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al realizar el trade:', err);
-        alert('TransacciÃ³n de intercambio fallida: ' + err.message);
+        alert(this.i18n.translate('alert.exchangeFailed', { error: err.message }));
         this.tradeLeftReady = false;
         this.notifyTradeUpdate();
         this.cdr.detectChanges();
@@ -6387,19 +6391,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getMyOfferFairnessText(): string {
-    if (this.tradeLeftCards.length === 0) return 'VacÃ­o';
+    if (this.tradeLeftCards.length === 0) return this.i18n.translate('lobby.vacas');
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
-    return 'Oferta Sincronizada';
+    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
+    return this.i18n.translate('lobby.fairOffer');
   }
 
   getOpponentOfferFairnessText(): string {
-    if (this.tradeRightCards.length === 0) return 'VacÃ­o';
+    if (this.tradeRightCards.length === 0) return this.i18n.translate('lobby.vacas');
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
-    return 'Oferta Sincronizada';
+    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
+    return this.i18n.translate('lobby.fairOffer');
   }
 }
 

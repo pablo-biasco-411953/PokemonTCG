@@ -4,6 +4,8 @@ import { BattleBoardAbilitiesPanelComponent } from './battle-board-abilities-pan
 import { BattleBoardCardDetailPanelComponent } from './battle-board-card-detail-panel.component';
 import { BattleBoardDebugPanelComponent } from './battle-board-debug-panel.component';
 import { BattleBoardDiscardModalComponent } from './battle-board-discard-modal.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { I18nService } from '../../i18n/i18n.service';
 import { BattleService } from './services/battle.service';
 import { BattleBoardUiService } from './services/battle-board-ui.service';
 import {
@@ -59,6 +61,7 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
     BattleBoardCardDetailPanelComponent,
     BattleBoardDebugPanelComponent,
     BattleBoardDiscardModalComponent,
+    TranslatePipe,
   ],
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
@@ -252,6 +255,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleBoardState: BattleBoardStateService,
     private battleBoardTurn: BattleBoardTurnService,
     private jugadorService: JugadorService,
+    public i18n: I18nService,
   ) {}
 
   ngOnInit(): void {
@@ -270,7 +274,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => this.hidratarEstadoInicial(data),
       error: (err) => {
         console.error('No se pudo recuperar la partida al recargar', err);
-        alert('La partida ya no esta disponible. Volviendo al lobby.');
+        alert(this.i18n.translate('alert.battleNotAvailable'));
         this.router.navigate(['/lobby']);
       }
     });
@@ -1245,7 +1249,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   surrenderBattle(): void {
     if (!this.matchId || this.showEndGameOverlay || this.cargandoAccion) return;
 
-    const confirmar = window.confirm('¿Rendirte y conceder la victoria al rival?');
+    const confirmar = window.confirm(this.i18n.translate('confirm.surrender'));
     if (!confirmar) return;
 
     this.cargandoAccion = true;
@@ -1262,7 +1266,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error al rendirse', err);
         this.cargandoAccion = false;
-        window.alert(err?.error || 'No se pudo rendir la partida.');
+        window.alert(err?.error || this.i18n.translate('alert.cannotSurrender'));
         this.cdr.detectChanges();
       }
     });
@@ -1507,7 +1511,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.refrescarTableroDebug();
     } catch (err) {
       console.error('Error en God Mode (Robar Carta):', err);
-      alert('Falla en God Mode. ¿Ya creaste el endpoint en Java?');
+      alert(this.i18n.translate('alert.godModeFail'));
     }
   }
 
@@ -1658,7 +1662,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
       this.ataqueRealizado = false;
-      alert('No se encontró el ataque seleccionado.');
+      alert(this.i18n.translate('alert.attackNotFound'));
       return;
     }
 
@@ -1734,14 +1738,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
       console.error('? Error del servidor al pasar turno:', error);
-      alert('Error de conexión: ' + (error?.error ?? 'El servidor no responde'));
+      alert(this.i18n.translate('alert.connectionError', { error: error?.error ?? (this.i18n.currentLanguage() === 'es' ? 'El servidor no responde' : 'The server does not respond') }));
     }
   }
 
   realizarAccion(habilidad: BattleBoardAttack): void {
     this.showHabilidadesPanel = false;
     if (!this.validarEnergiaAtaque(habilidad)) {
-      alert('No tenés suficiente energía para usar ' + habilidad.nombre + '!');
+      alert(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }));
       return;
     }
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
@@ -1887,7 +1891,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
-      alert('Error al evolucionar: ' + (error.error || error.message));
+      alert(this.i18n.translate('alert.evolutionError', { error: error.error || error.message }));
     }
   }
 
@@ -1906,7 +1910,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } catch (err: any) {
         this.modoSeleccionRetirada = false;
         this.cargandoAccion = false;
-        alert(err.error || 'No se pudo realizar la retirada.');
+        alert(err.error || this.i18n.translate('alert.retreatError'));
       }
     } else if (!this.partida?.jugador?.activo) {
       this.cargandoAccion = true;
@@ -1921,7 +1925,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } catch (err) {
         this.cargandoAccion = false;
         console.error(err);
-        alert('No se pudo subir el Pokémon al puesto activo.');
+        alert(this.i18n.translate('alert.activeError'));
       }
     }
   }
@@ -1946,7 +1950,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       } catch (err: any) {
         this.cargandoAccion = false;
-        alert(err.error || 'No tenés suficiente energía para retirarte.');
+        alert(err.error || this.i18n.translate('alert.notEnoughEnergyForRetreat'));
       }
     }
   }
@@ -1957,7 +1961,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const cartaArrastrada = event.item.data;
     if (this.esEnergia(cartaArrastrada)) {
       if (zona !== 'activo') {
-        alert('Las energias se unen al Pokemon activo.');
+        alert(this.i18n.translate('alert.energyAttachActiveOnly'));
         return;
       }
       this.gestionarUnionEnergia(cartaArrastrada);
@@ -1979,14 +1983,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert(err.error || 'No se pudo bajar el Pokémon.');
+        alert(err.error || this.i18n.translate('alert.cannotPlayPokemon'));
       });
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) {
-      alert('Necesitás un Pokémon activo!');
+      alert(this.i18n.translate('alert.needActivePokemon'));
       return;
     }
     this.cargandoAccion = true;
@@ -2000,7 +2004,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err: any) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert('No se pudo unir la energía.');
+        alert(this.i18n.translate('alert.cannotAttachEnergy'));
       });
   }
 
@@ -2106,14 +2110,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   getTextoEstadoTurno(): string {
-    if (this.partida?.turnoActual !== 'JUGADOR') return 'TURNO RIVAL';
-    return this.turnTimerEnabled ? `TU TURNO (${this.tiempoRestante}s)` : 'TU TURNO (SIN LIMITE)';
+    if (this.partida?.turnoActual !== 'JUGADOR') {
+      return this.i18n.translate('battle.rivalTurn');
+    }
+    return this.turnTimerEnabled
+      ? this.i18n.translate('battle.turnTime', { time: this.tiempoRestante.toString() })
+      : this.i18n.translate('battle.turnNoLimit');
   }
 
   getTextoBotonTurno(): string {
     return this.partida?.turnoActual === 'JUGADOR' && !this.cargandoAccion
-      ? 'TERMINAR TURNO'
-      : 'ESPERANDO...';
+      ? this.i18n.translate('battle.endTurn')
+      : this.i18n.translate('battle.waiting');
   }
 
   getIconoBotonTurno(): string {

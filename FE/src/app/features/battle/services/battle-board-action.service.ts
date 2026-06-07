@@ -4,6 +4,7 @@ import { BattleService } from './battle.service';
 import { BattleBoardStateService } from './battle-board-state.service';
 import { BattleActionCard, CartaEnJuego, Partida } from '../../../shared/models/battle';
 import { Card } from '../../../shared/models/card';
+import { I18nService } from '../../../i18n/i18n.service';
 
 export type CardActionType =
   | 'unir-energia'
@@ -23,6 +24,7 @@ export class BattleBoardActionService {
   constructor(
     private battleService: BattleService,
     private battleBoardState: BattleBoardStateService,
+    private i18n: I18nService,
   ) {}
 
   // Decide qué acción debería ejecutar el jugador al intentar usar una carta desde la mano.
@@ -47,7 +49,7 @@ export class BattleBoardActionService {
       if (!partida.jugador.activo && partida.jugador.banca.length > 0) {
         return {
           tipo: 'requiere-promocion',
-          mensaje: 'Primero tenés que subir un Pokémon de tu banca al puesto activo!',
+          mensaje: this.i18n.translate('alert.promoteFirst'),
         };
       }
 
@@ -66,7 +68,7 @@ export class BattleBoardActionService {
   // Construye el texto de confirmación al retirar un Pokémon activo.
   construirMensajeRetirada(activo: CartaEnJuego): string {
     const costo = activo.card.costoRetirada ?? 0;
-    return `Querés retirar a ${activo.card.nombre}? Costará ${costo} energía(s).`;
+    return this.i18n.translate('confirm.retreat', { name: activo.card.nombre, cost: costo.toString() });
   }
 
   // Ejecuta la evolución y devuelve un estado fresco de backend.
