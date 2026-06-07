@@ -21,10 +21,10 @@
 ></app-battle-board-debug-panel>
 
 <div class="battle-landscape-guard" *ngIf="!landscapeHintDismissed">
-  <button class="battle-landscape-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+  <button class="battle-landscape-close" type="button" (click)="dismissLandscapeHint()" [attr.aria-label]="'battle.closeWarning' | t">×</button>
   <div class="battle-phone-icon"></div>
-  <strong>Gira el celular</strong>
-  <span>La batalla se ve mejor en horizontal, pero podés seguir jugando así.</span>
+  <strong>{{ 'battle.rotatePhone' | t }}</strong>
+  <span>{{ 'battle.rotateHint' | t }}</span>
 </div>
 
 <div class="intro-overlay" [class.fade-out]="introFadingOut" *ngIf="showIntro">
@@ -39,8 +39,8 @@
     <div class="intro-sparks">
       <span *ngFor="let s of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]" [style.--n]="s"></span>
     </div>
-    <p class="intro-eyebrow">¡Batalla iniciada!</p>
-    <h1 class="intro-title">BATTLE<br /><em>START</em></h1>
+    <p class="intro-eyebrow">{{ 'battle.started' | t }}</p>
+    <h1 class="intro-title" [innerHTML]="'battle.startTitle' | t"></h1>
     <div class="intro-bar-wrap"><div class="intro-bar"></div></div>
   </div>
 </div>
@@ -62,11 +62,11 @@
     <span *ngFor="let p of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]" [style.--p]="p"></span>
   </div>
   <div class="endgame-card">
-    <small>{{ isVictory ? 'Partida completada' : 'Combate finalizado' }}</small>
+    <small>{{ isVictory ? ('battle.gameCompleted' | t) : ('battle.combatFinished' | t) }}</small>
     <h1>{{ isVictory ? 'VICTORY' : 'DEFEAT' }}</h1>
-    <p>{{ isVictory ? 'Dominaste el tablero y te llevaste la gloria.' : 'Better luck next time...' }}</p>
+    <p>{{ isVictory ? ('battle.victoryText' | t) : ('battle.defeatText' | t) }}</p>
     <div class="endgame-reason">
-      <span>Razon del final</span>
+      <span>{{ 'battle.endReasonLabel' | t }}</span>
       <strong>{{ endGameReason }}</strong>
     </div>
     <div class="santocoin-reward">
@@ -74,7 +74,7 @@
       <strong>+{{ coinsEarned }} SantoCoins</strong>
     </div>
     <button class="endgame-accept" type="button" (click)="volverAlLobby()">
-      Aceptar recompensa
+      {{ 'battle.acceptReward' | t }}
     </button>
   </div>
 </div>
@@ -85,15 +85,15 @@
   </div>
   <div class="panel">
     <div class="coin-stage-header">
-      <span>Preparativos</span>
-      <strong>Inicio de Partida</strong>
-      <small>{{ jugadorNombre || 'Jugador' }} vs {{ nombreRival }}</small>
+      <span>{{ 'battle.preparations' | t }}</span>
+      <strong>{{ 'battle.gameStartTitle' | t }}</strong>
+      <small>{{ jugadorNombre || ('battle.unknown' | t) }} vs {{ nombreRival }}</small>
     </div>
 
     <ng-container *ngIf="estadoCoinFlip === 'DAR_LA_MANO'">
       <div class="handshake-panel">
-        <p class="sorteo-title">SALUDO DE RIVALES</p>
-        <p class="sorteo-sub">Mantené presionado para chocar los puños. ¡Si alguien suelta, los modelos retroceden!</p>
+        <p class="sorteo-title">{{ 'battle.handshakeTitle' | t }}</p>
+        <p class="sorteo-sub">{{ 'battle.handshakeHint' | t }}</p>
         
         <div
           class="handshake-stage"
@@ -119,7 +119,7 @@
               <svg *ngIf="localPlayerCharacterId === 'robot'" viewBox="0 0 24 24" class="avatar-svg"><path fill="#e2e8f0" d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
             </div>
             <div class="rival-details">
-              <span class="rival-name">{{ jugadorNombre || 'Jugador' }}</span>
+              <span class="rival-name">{{ jugadorNombre || ('battle.unknown' | t) }}</span>
               <span class="rival-character">{{ getCharacterLabel(localPlayerCharacterId) }}</span>
             </div>
           </div>
@@ -138,12 +138,12 @@
             </div>
           </div>
           
-          <div class="handshake-impact">PACTO DE BATALLA</div>
+          <div class="handshake-impact">{{ 'battle.battlePact' | t }}</div>
         </div>
         
         <div class="meters-container">
           <div class="meter-wrapper">
-            <span class="meter-label">{{ jugadorNombre || 'Jugador' }}</span>
+            <span class="meter-label">{{ jugadorNombre || ('battle.unknown' | t) }}</span>
             <div class="handshake-meter">
               <div [style.width.%]="handshakePower"></div>
             </div>
@@ -159,26 +159,26 @@
     </ng-container>
 
     <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
-      <h2 class="sorteo-title">SORTEO INICIAL</h2>
-      <p class="sorteo-sub">Vos cantás la moneda. {{ nombreRival }} espera el resultado.</p>
+      <h2 class="sorteo-title">{{ 'battle.initialDraw' | t }}</h2>
+      <p class="sorteo-sub">{{ 'battle.youCallCoin' | t:{rival: nombreRival} }}</p>
       <div class="choice-buttons">
         <button class="btn-choice heads" type="button" (click)="iniciarSorteo('CARA')">
           <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
-          <b>CARA</b>
-          <small>La chispa abre la partida</small>
+          <b>{{ 'battle.heads' | t }}</b>
+          <small>{{ 'battle.headsHint' | t }}</small>
         </button>
         <button class="btn-choice tails" type="button" (click)="iniciarSorteo('CRUZ')">
           <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
-          <b>CRUZ</b>
-          <small>El metal decide con estilo</small>
+          <b>{{ 'battle.tails' | t }}</b>
+          <small>{{ 'battle.tailsHint' | t }}</small>
         </button>
       </div>
     </ng-container>
 
     <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
       <div class="resultado-panel">
-        <p class="res-ganaste">SORTEO INICIAL</p>
-        <p class="res-sub">{{ nombreRival }} está cantando y lanzando la moneda...</p>
+        <p class="res-ganaste">{{ 'battle.initialDraw' | t }}</p>
+        <p class="res-sub">{{ 'battle.rivalCallingCoin' | t:{rival: nombreRival} }}</p>
       </div>
     </ng-container>
 
@@ -190,7 +190,7 @@
         (pointercancel)="onCoinPointerCancel($event)"
         [class.pointer-events-none]="lanzada"
       >
-        <p class="swipe-hint" *ngIf="!lanzada">Arrastrá hacia arriba y soltá con fuerza</p>
+        <p class="swipe-hint" *ngIf="!lanzada">{{ 'battle.swipeHint' | t }}</p>
 
         <div class="moneda-scene">
           <div class="moneda-sombra" [class.active]="lanzada"></div>
@@ -204,24 +204,24 @@
             <div class="cruz back"><img src="/coin-tails.png" draggable="false" /></div>
           </div>
         </div>
-        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">La moneda decide el destino...</p>
+        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">{{ 'battle.coinDecides' | t }}</p>
       </div>
     </ng-container>
 
     <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
       <div class="resultado-panel">
-        <p class="res-ganaste">¡GANASTE EL SORTEO!</p>
+        <p class="res-ganaste">{{ 'battle.wonDraw' | t }}</p>
         <div class="choice-buttons small">
-          <button (click)="seleccionarTurno(true)">YO PRIMERO</button>
-          <button (click)="seleccionarTurno(false)">{{ nombreRival }} PRIMERO</button>
+          <button (click)="seleccionarTurno(true)">{{ 'battle.youFirst' | t }}</button>
+          <button (click)="seleccionarTurno(false)">{{ 'battle.rivalFirst' | t:{rival: nombreRival} }}</button>
         </div>
       </div>
     </ng-container>
 
     <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
       <div class="resultado-panel">
-        <p class="res-perdiste">PERDISTE EL SORTEO</p>
-        <p class="res-sub">{{ nombreGanadorSorteo }} elige quién empieza.</p>
+        <p class="res-perdiste">{{ 'battle.lostDraw' | t }}</p>
+        <p class="res-sub">{{ 'battle.winnerChose' | t:{winner: nombreGanadorSorteo} }}</p>
       </div>
     </ng-container>
   </div>
@@ -236,10 +236,10 @@
   <div class="to-body">
     <div class="to-lines"><span></span></div>
     <p class="to-text">
-      {{ turnoOverlayTipo === 'jugador' ? '¡TU TURNO!' : '¡TURNO DEL RIVAL!' }}
+      {{ turnoOverlayTipo === 'jugador' ? ('battle.yourTurn' | t) : ('battle.rivalTurn' | t) }}
     </p>
     <small class="to-sub">
-      {{ turnoOverlayTipo === 'jugador' ? '¡Elegí tu estrategia!' : '¡Prepárate para defender!' }}
+      {{ turnoOverlayTipo === 'jugador' ? ('battle.chooseStrategy' | t) : ('battle.prepareDefense' | t) }}
     </small>
   </div>
 </div>
@@ -280,7 +280,7 @@
         [class.cruz]="moneda.estado === 'cruz'"
         [class.pending]="moneda.estado === 'girando'"
       >
-        {{ moneda.estado === 'cara' ? 'CARA' : moneda.estado === 'cruz' ? 'CRUZ' : '...' }}
+        {{ moneda.estado === 'cara' ? ('battle.heads' | t) : moneda.estado === 'cruz' ? ('battle.tails' | t) : '...' }}
       </div>
     </div>
 
@@ -290,7 +290,7 @@
         coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0
       "
     >
-      <span>+{{ coinFlipAtaque.danioTotal }}</span> de daño extra
+      <span>+{{ coinFlipAtaque.danioTotal }}</span> {{ 'battle.extraDamage' | t }}
     </div>
 
     <div
@@ -299,12 +299,12 @@
         coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0
       "
     >
-      ¡Sin daño extra!
+      {{ 'battle.noExtraDamage' | t }}
     </div>
 
     <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
       <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
-        {{ resultadoMoneda === 'CARA' ? '¡EFECTO LOGRADO!' : '¡EL EFECTO FALLÓ!' }}
+        {{ resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t) }}
       </span>
     </div>
   </div>
@@ -367,7 +367,7 @@
 
   <aside class="side-col left">
     <div class="prizes-section bot-prizes">
-      <p class="prizes-title">PREMIOS {{ nombreRival }}</p>
+      <p class="prizes-title">{{ 'battle.rivalPrizesLabel' | t:{rival: nombreRival} }}</p>
       <div class="prizes-grid">
         <div
           *ngFor="let i of [0, 1, 2, 3, 4, 5]"
@@ -395,7 +395,7 @@
           <div class="prize-empty-cell" *ngIf="i >= partida.jugador.premios.length"></div>
         </div>
       </div>
-      <p class="prizes-title gold">TUS PREMIOS</p>
+      <p class="prizes-title gold">{{ 'battle.yourPrizes' | t }}</p>
     </div>
   </aside>
 
@@ -411,11 +411,11 @@
             [style.--btot]="partida.bot.mano.length"
           ></div>
         </div>
-        <span class="bot-hand-tag">{{ partida.bot.mano.length }} cartas</span>
+        <span class="bot-hand-tag">{{ 'battle.cardsCount' | t:{cantidad: partida.bot.mano.length.toString()} }}</span>
       </div>
 
       <div class="bench-row bot-bench">
-      <div class="bench-label">BANCA RIVAL</div>
+      <div class="bench-label">{{ 'battle.rivalBench' | t }}</div>
       <div class="bench-cards">
         <div
           *ngFor="let b of partida.bot.banca"
@@ -500,7 +500,7 @@
                   <div
                     class="fx-confusion"
                     *ngIf="partida.bot.activo.condicionesEspeciales.includes('Confused')"
-                    title="CONFUNDIDO: 50% de probabilidad de golpearse a sí mismo (30 daño)"
+                    [attr.title]="'battle.statusConfusedHint' | t"
                   >
                     <span class="star s1">⭐</span><span class="star s2">⭐</span
                     ><span class="star s3">⭐</span>
@@ -508,7 +508,7 @@
                   <div
                     class="fx-sleep"
                     *ngIf="partida.bot.activo.condicionesEspeciales.includes('Asleep')"
-                    title="DORMIDO: No puede atacar ni retirar. Lanza moneda entre turnos."
+                    [attr.title]="'battle.statusAsleepHint' | t"
                   >
                     <span class="z z1">z</span><span class="z z2">Z</span
                     ><span class="z z3">z</span>
@@ -516,14 +516,14 @@
                   <div
                     class="fx-paralysis"
                     *ngIf="partida.bot.activo.condicionesEspeciales.includes('Paralyzed')"
-                    title="PARALIZADO: No puede atacar ni retirar por este turno."
+                    [attr.title]="'battle.statusParalyzedHint' | t"
                   >
                     <span class="bolt b1">⚡</span><span class="bolt b2">⚡</span>
                   </div>
                   <div
                     class="fx-poison"
                     *ngIf="partida.bot.activo.condicionesEspeciales.includes('Poisoned')"
-                    title="ENVENENADO: Recibe 10 de daño entre turnos."
+                    [attr.title]="'battle.statusPoisonedHint' | t"
                   >
                     <span class="bubble p1"></span><span class="bubble p2"></span>
                   </div>
@@ -633,7 +633,7 @@
                   <div
                     class="fx-confusion"
                     *ngIf="partida.jugador.activo.condicionesEspeciales.includes('Confused')"
-                    title="CONFUNDIDO: 50% de probabilidad de golpearte a vos mismo (30 daño)"
+                    [attr.title]="'battle.statusConfusedHintPlayer' | t"
                   >
                     <span class="star s1">⭐</span><span class="star s2">⭐</span
                     ><span class="star s3">⭐</span>
@@ -641,7 +641,7 @@
                   <div
                     class="fx-sleep"
                     *ngIf="partida.jugador.activo.condicionesEspeciales.includes('Asleep')"
-                    title="DORMIDO: No podés atacar ni retirar. Lanzás moneda entre turnos."
+                    [attr.title]="'battle.statusAsleepHintPlayer' | t"
                   >
                     <span class="z z1">z</span><span class="z z2">Z</span
                     ><span class="z z3">z</span>
@@ -649,14 +649,14 @@
                   <div
                     class="fx-paralysis"
                     *ngIf="partida.jugador.activo.condicionesEspeciales.includes('Paralyzed')"
-                    title="PARALIZADO: No podés atacar ni retirar por este turno."
+                    [attr.title]="'battle.statusParalyzedHintPlayer' | t"
                   >
                     <span class="bolt b1">⚡</span><span class="bolt b2">⚡</span>
                   </div>
                   <div
                     class="fx-poison"
                     *ngIf="partida.jugador.activo.condicionesEspeciales.includes('Poisoned')"
-                    title="ENVENENADO: Recibís 10 de daño entre turnos."
+                    [attr.title]="'battle.statusPoisonedHintPlayer' | t"
                   >
                     <span class="bubble p1"></span><span class="bubble p2"></span>
                   </div>
@@ -789,7 +789,7 @@
           class="bench-slot void"
         ></div>
       </div>
-      <div class="bench-label player">MI BANCA</div>
+      <div class="bench-label player">{{ 'battle.myBench' | t }}</div>
     </div>
 
     <div class="hand-zone">
@@ -818,7 +818,7 @@
             (mouseenter)="setHoveredCard(carta, partida.jugador.mano, i)"
             (mouseleave)="clearHoveredCard()"
           >
-            <div class="evolve-badge" *ngIf="puedeEvolucionar(carta)">✨ EVOLUCIONAR</div>
+            <div class="evolve-badge" *ngIf="puedeEvolucionar(carta)">{{ 'battle.evolve' | t }}</div>
             <div *cdkDragPreview class="custom-drag-preview">
               <img [src]="getImagenCarta(carta.id)" />
             </div>
@@ -840,7 +840,7 @@
         <div class="discard-slot">
           <div class="discard-empty" *ngIf="!partida.bot.pilaDescarte.length">
             <span>⊘</span>
-            <small>DESCARTE</small>
+            <small>{{ 'battle.discard' | t }}</small>
           </div>
 
           <div class="discard-stack" *ngIf="tieneCartasDescarte('BOT')">
@@ -880,7 +880,7 @@
         [disabled]="cargandoAccion || showEndGameOverlay"
         (click)="surrenderBattle()"
       >
-        <span>RENDIRSE</span>
+        <span>{{ 'battle.surrender' | t }}</span>
       </button>
 
       <div class="turn-dots">
@@ -891,7 +891,7 @@
 
     <div class="side-deck-block">
       <div class="discard-pile-wrapper" (click)="abrirModalDescarte('JUGADOR')">
-        <div class="discard-label">DESCARTE</div>
+        <div class="discard-label">{{ 'battle.discard' | t }}</div>
 
         <div class="discard-slot">
           <div class="discard-empty" *ngIf="!partida.jugador.pilaDescarte.length">
