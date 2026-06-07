@@ -1440,7 +1440,7 @@
       {
         "nombre": "Poisonous Nest",
         "tipo": "Ability",
-        "texto": "Once during your turn (before your attack), you may use this Ability. Both Active Pokémon (except for Grass Pokémon) are now Poisoned."
+        "texto": "Once during your turn (before your attack), you may use this Ability. Both Active Pok��mon (except for Grass Pokémon) are now Poisoned."
       }
     ],
     "ataques": [
@@ -7089,809 +7089,413 @@
     "imagen": "/images/cards/xy2-19.png"
   },
   {
-    "id": "xy1-15",
-    "nombre": "Scatterbug",
-    "supertype": "Pokemon",
+    "id": "pop5-4",
+    "nombre": "Double Rainbow Energy",
+    "supertype": "Energy",
     "subtypes": [
-      "Basic"
+      "Special"
     ],
-    "tipo": "Grass",
-    "hp": "40",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Bug Bite",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 10,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy1-15.png"
-  },
-  {
-    "id": "xy10-16",
-    "nombre": "Dewgong",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Water",
-    "hp": "120",
-    "costoRetirada": 3,
-    "evolvesFrom": "Seel",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Freezing Breath",
-        "costo": [
-          "Water"
-        ],
-        "dano": 20,
-        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed. If tails, your opponent's Active Pokémon is now Asleep."
-      },
-      {
-        "nombre": "Aurora Beam",
-        "costo": [
-          "Water",
-          "Colorless",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 100,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Metal",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy10-16.png"
-  },
-  {
-    "id": "dc1-7",
-    "nombre": "Team Aqua's Grimer",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Psychic",
-    "hp": "70",
-    "costoRetirada": 2,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Pound",
-        "costo": [
-          "Psychic"
-        ],
-        "dano": 10,
-        "texto": ""
-      },
-      {
-        "nombre": "Mud-Slap",
-        "costo": [
-          "Psychic",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Psychic",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/dc1-7.png"
-  },
-  {
-    "id": "xy9-7",
-    "nombre": "Petilil",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Grass",
-    "hp": "50",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Aromatherapy",
-        "costo": [
-          "Grass"
-        ],
-        "dano": 0,
-        "texto": "Heal 10 damage from each of your Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy9-7.png"
-  },
-  {
-    "id": "xy4-14",
-    "nombre": "Kingler",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Water",
-    "hp": "100",
-    "costoRetirada": 3,
-    "evolvesFrom": "Krabby",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Guard Claw",
-        "costo": [
-          "Water"
-        ],
-        "dano": 20,
-        "texto": "During your opponent's next turn, any damage done to this Pokémon by attacks is reduced by 20 (after applying Weakness and Resistance)."
-      },
-      {
-        "nombre": "Crabhammer",
-        "costo": [
-          "Water",
-          "Water",
-          "Water",
-          "Water"
-        ],
-        "dano": 100,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Grass",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy4-14.png"
-  },
-  {
-    "id": "xy11-18",
-    "nombre": "Chimchar",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Fire",
-    "hp": "60",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Scratch",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 10,
-        "texto": ""
-      },
-      {
-        "nombre": "Ember",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": "Flip a coin. If tails, discard a Fire Energy attached to this Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy11-18.png"
-  },
-  {
-    "id": "xy0-10",
-    "nombre": "Delphox",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 2"
-    ],
-    "tipo": "Fire",
-    "hp": "140",
-    "costoRetirada": 2,
-    "evolvesFrom": "Braixen",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Will-O-Wisp",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": ""
-      },
-      {
-        "nombre": "Fire Blast",
-        "costo": [
-          "Fire",
-          "Colorless",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 120,
-        "texto": "Discard an Energy attached to this Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy0-10.png"
-  },
-  {
-    "id": "xy5-16",
-    "nombre": "Breloom",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Grass",
-    "hp": "100",
-    "costoRetirada": 2,
-    "evolvesFrom": "Shroomish",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Dynamic Punch",
-        "costo": [
-          "Fighting",
-          "Colorless"
-        ],
-        "dano": 40,
-        "texto": "Flip a coin. If heads, this attack does 20 more damage and your opponent's Active Pokémon is now Confused."
-      },
-      {
-        "nombre": "Mega Kick",
-        "costo": [
-          "Fighting",
-          "Fighting",
-          "Colorless"
-        ],
-        "dano": 80,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy5-16.png"
-  },
-  {
-    "id": "xy2-20",
-    "nombre": "Pyroar",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Fire",
-    "hp": "110",
-    "costoRetirada": 2,
-    "evolvesFrom": "Litleo",
-    "habilidades": [
-      {
-        "nombre": "Intimidating Mane",
-        "tipo": "Ability",
-        "texto": "Prevent all damage done to this Pokémon by attacks from your opponent's Basic Pokémon."
-      }
-    ],
-    "ataques": [
-      {
-        "nombre": "Scorching Fang",
-        "costo": [
-          "Fire",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 60,
-        "texto": "You may discard a Fire Energy attached to this Pokémon. If you do, this attack does 30 more damage."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy2-20.png"
-  },
-  {
-    "id": "xy1-16",
-    "nombre": "Spewpa",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Grass",
-    "hp": "80",
-    "costoRetirada": 3,
-    "evolvesFrom": "Scatterbug",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Bug Bite",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 10,
-        "texto": ""
-      },
-      {
-        "nombre": "Stun Spore",
-        "costo": [
-          "Grass",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 40,
-        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy1-16.png"
-  },
-  {
-    "id": "xy3-7",
-    "nombre": "Leafeon",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Grass",
-    "hp": "90",
-    "costoRetirada": 1,
-    "evolvesFrom": "Eevee",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Soothing Scent",
-        "costo": [
-          "Grass"
-        ],
-        "dano": 30,
-        "texto": "Your opponent's Active Pokémon is now Asleep."
-      },
-      {
-        "nombre": "Magical Leaf",
-        "costo": [
-          "Grass",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 50,
-        "texto": "Flip a coin. If heads, this attack does 30 more damage and heal 30 damage from this Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy3-7.png"
-  },
-  {
-    "id": "xy6-13",
-    "nombre": "Victini",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Fire",
-    "hp": "70",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Me First",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 0,
-        "texto": "Draw a card."
-      },
-      {
-        "nombre": "Psy Bolt",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 20,
-        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy6-13.png"
-  },
-  {
-    "id": "xy4-15",
-    "nombre": "Totodile",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Water",
-    "hp": "60",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Fury Strikes",
-        "costo": [
-          "Water"
-        ],
-        "dano": 10,
-        "texto": "Flip 3 coins. This attack does 10 damage times the number of heads."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Grass",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy4-15.png"
-  },
-  {
-    "id": "xy7-17",
-    "nombre": "Volcarona",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Fire",
-    "hp": "100",
-    "costoRetirada": 1,
-    "evolvesFrom": "Larvesta",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Solar Birth",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 0,
-        "texto": "Search your deck for a Basic Pokémon and put it onto your Bench. Then, search your deck for up to 2 basic Energy cards and attach them to that Pokémon. Shuffle your deck afterward."
-      },
-      {
-        "nombre": "Flamethrower",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 60,
-        "texto": "Discard an Energy attached to this Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy7-17.png"
-  },
-  {
-    "id": "xyp-XY07",
-    "nombre": "Xerneas-EX",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic",
-      "EX"
-    ],
-    "tipo": "Fairy",
-    "hp": "170",
-    "costoRetirada": 2,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Break Through",
-        "costo": [
-          "Fairy",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 60,
-        "texto": "This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
-      },
-      {
-        "nombre": "X Blast",
-        "costo": [
-          "Fairy",
-          "Fairy",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 140,
-        "texto": "This Pokémon can't use X Blast during your next turn."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Metal",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [
-      {
-        "tipo": "Darkness",
-        "valor": "-20"
-      }
-    ],
-    "reglas": [
-      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
-    ],
-    "imagen": "/images/cards/xyp-XY07.png"
-  },
-  {
-    "id": "xy12-9",
-    "nombre": "Charmander",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Basic"
-    ],
-    "tipo": "Fire",
-    "hp": "60",
-    "costoRetirada": 1,
-    "evolvesFrom": null,
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Scratch",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 10,
-        "texto": ""
-      },
-      {
-        "nombre": "Ember",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": "Discard a Fire Energy attached to this Pokémon."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy12-9.png"
-  },
-  {
-    "id": "xy11-19",
-    "nombre": "Monferno",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Fire",
-    "hp": "80",
-    "costoRetirada": 1,
-    "evolvesFrom": "Chimchar",
-    "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Scratch",
-        "costo": [
-          "Colorless"
-        ],
-        "dano": 20,
-        "texto": ""
-      },
-      {
-        "nombre": "Flare",
-        "costo": [
-          "Fire",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": ""
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Water",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy11-19.png"
-  },
-  {
-    "id": "dc1-8",
-    "nombre": "Team Aqua's Muk",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "Stage 1"
-    ],
-    "tipo": "Psychic",
-    "hp": "110",
-    "costoRetirada": 3,
-    "evolvesFrom": "Team Aqua's Grimer",
-    "habilidades": [
-      {
-        "nombre": "Sludge Festival",
-        "tipo": "Ability",
-        "texto": "The Retreat Cost of each Pokémon in play (except for Team Aqua Pokémon) is Colorless more."
-      }
-    ],
-    "ataques": [
-      {
-        "nombre": "Pester",
-        "costo": [
-          "Psychic",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 60,
-        "texto": "If your opponent's Active Pokémon is affected by a Special Condition, this attack does 60 more damage."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Psychic",
-        "valor": "×2"
-      }
-    ],
-    "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/dc1-8.png"
-  },
-  {
-    "id": "xy8-12",
-    "nombre": "Chesnaught BREAK",
-    "supertype": "Pokemon",
-    "subtypes": [
-      "BREAK"
-    ],
-    "tipo": "Grass",
-    "hp": "190",
+    "tipo": "Colorless",
+    "hp": "0",
     "costoRetirada": 0,
-    "evolvesFrom": "Chesnaught",
+    "evolvesFrom": null,
     "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Tough Hammer",
-        "costo": [
-          "Grass",
-          "Grass",
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 160,
-        "texto": "This Pokémon does 30 damage to itself. This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
-      }
-    ],
+    "ataques": [],
     "debilidades": [],
     "resistencias": [],
     "reglas": [
-      "BREAK Evolution Rule: Chesnaught BREAK retains the attacks, Abilities, Weakness, Resistance, and Retreat Cost of its previous Evolution."
+      "Double Rainbow Energy can be attached only to an Evolved Pokémon (excluding Pokémon-ex). While in play, Double Rainbow Energy provides every type of Energy but provides 2 Energy at a time. (Has no effect other than providing Energy.) Damage done to your opponent's Pokémon by the Pokémon Double Rainbow Energy is attached to is reduced by 10 (before applying Weakness and Resistance). When the Pokémon Double Rainbow Energy is attached to is no longer an Evolved Pokémon, discard Double Rainbow Energy."
     ],
-    "imagen": "/images/cards/xy8-12.png"
+    "imagen": "/images/cards/pop5-4.png"
   },
   {
-    "id": "xy9-8",
-    "nombre": "Lilligant",
-    "supertype": "Pokemon",
+    "id": "pop4-8",
+    "nombre": "Heal Energy",
+    "supertype": "Energy",
     "subtypes": [
-      "Stage 1"
+      "Special"
     ],
-    "tipo": "Grass",
-    "hp": "80",
-    "costoRetirada": 1,
-    "evolvesFrom": "Petilil",
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
     "habilidades": [],
-    "ataques": [
-      {
-        "nombre": "Boo-Hoo",
-        "costo": [
-          "Grass"
-        ],
-        "dano": 20,
-        "texto": "If your opponent attaches an Energy card from his or her hand to the Defending Pokémon during his or her next turn, that Pokémon will be Asleep."
-      },
-      {
-        "nombre": "Leaf Slice",
-        "costo": [
-          "Colorless",
-          "Colorless"
-        ],
-        "dano": 30,
-        "texto": "Flip 2 coins. This attack does 30 damage times the number of heads."
-      }
-    ],
-    "debilidades": [
-      {
-        "tipo": "Fire",
-        "valor": "×2"
-      }
-    ],
+    "ataques": [],
+    "debilidades": [],
     "resistencias": [],
-    "reglas": [],
-    "imagen": "/images/cards/xy9-8.png"
+    "reglas": [
+      "Heal Energy provides Colorless Energy. When you attach this card from your hand to 1 of your Pokémon, remove 1 damage counter and all Special Conditions from that Pokémon. If Heal Energy is attached to Pokémon-ex, Heal Energy has no effect other than providing Energy."
+    ],
+    "imagen": "/images/cards/pop4-8.png"
+  },
+  {
+    "id": "pop4-10",
+    "nombre": "Scramble Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Scramble Energy can be attached only to an Evolved Pokémon (excluding Pokémon-ex). Scramble Energy provides Colorless Energy. While in play, if you have more Prize cards left than your opponent, Scramble Energy provides every type of Energy but provides only 3 in any combination at a time. If the Pokémon Scramble Energy is attached to isn't an Evolved Pokémon (or evolves into Pokémon-ex), discard Scramble Energy."
+    ],
+    "imagen": "/images/cards/pop4-10.png"
+  },
+  {
+    "id": "pop5-8",
+    "nombre": "Boost Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Boost Energy can be attached only to an Evolved Pokémon. Discard Boost Energy at the end of the turn it was attached. Boost Energy provides ColorlessColorlessColorless Energy. The Pokémon Boost Energy is attached to can't retreat. If the Pokémon Boost Energy is attached to isn't an Evolved Pokémon, discard Boost Energy."
+    ],
+    "imagen": "/images/cards/pop5-8.png"
+  },
+  {
+    "id": "pop5-9",
+    "nombre": "δ Rainbow Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "δ Rainbow Energy provides Colorless Energy. While attached to a Pokémon that has δ on its card, δ Rainbow Energy provides every type of Energy but provides only 1 Energy at a time. (Has no effect other than providing Energy.)"
+    ],
+    "imagen": "/images/cards/pop5-9.png"
+  },
+  {
+    "id": "neo4-16",
+    "nombre": "Miracle Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "You can't have more than 1 Miracle Energy in your deck. Attach Miracle Energy to 1 of your Shining or Light Pokémon. At the end of your turn, discard Miracle Energy.\nWhile in play, Miracle Energy counts as every type of Energy but provides only 2 Energy at a time."
+    ],
+    "imagen": "/images/cards/neo4-16.png"
+  },
+  {
+    "id": "base5-17",
+    "nombre": "Rainbow Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy counts as every type of basic Energy but only provides 1 Energy at a time. (Doesn't count as a basic Energy card when not in play.) When you attach this card from your hand to 1 of your Pokémon, it does 10 damage to that Pokémon. (Don't apply Weakness and Resistance.)"
+    ],
+    "imagen": "/images/cards/base5-17.png"
+  },
+  {
+    "id": "neo1-19",
+    "nombre": "Metal Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Damage done to the Pokémon Metal Energy is attached to is reduced by 10 (after applying Weakness and Resistance). If the Pokémon Metal Energy is attached to isn't Metal, whenever it damages a Pokémon, reduce that damage by 10 (before applying Weakness and Resistance).\nMetal Energy provides Metal Energy. (Doesn't count as a basic Energy card.)"
+    ],
+    "imagen": "/images/cards/neo1-19.png"
+  },
+  {
+    "id": "dc1-33",
+    "nombre": "Double Aqua Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Team Aqua Pokémon. Discard this card at the end of the turn you attached it.",
+      "This card provides WaterWater Energy only while it is attached to a Team Aqua Pokémon.",
+      "(If this card is attached to anything other than a Team Aqua Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/dc1-33.png"
+  },
+  {
+    "id": "dc1-34",
+    "nombre": "Double Magma Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Team Magma Pokémon. Discard this card at the end of the turn you attached it.",
+      "This card provides FightingFighting Energy only while it is attached to a Team Magma Pokémon.",
+      "(If this card is attached to anything other than a Team Magma Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/dc1-34.png"
+  },
+  {
+    "id": "ex12-81",
+    "nombre": "Rainbow Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy provides every type of Energy but provides only 1 Energy at a time. (Has no effect other than providing Energy.) When you attach this card from your hand to 1 of your Pokémon, put 1 damage counter on that Pokémon."
+    ],
+    "imagen": "/images/cards/ex12-81.png"
+  },
+  {
+    "id": "ex12-82",
+    "nombre": "React Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "React Energy provides Colorless Energy."
+    ],
+    "imagen": "/images/cards/ex12-82.png"
+  },
+  {
+    "id": "sm35-69",
+    "nombre": "Double Colorless Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Double Colorless Energy provides ColorlessColorless Energy."
+    ],
+    "imagen": "/images/cards/sm35-69.png"
+  },
+  {
+    "id": "sm35-70",
+    "nombre": "Warp Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card provides Colorless Energy.",
+      "When you attach this card from your hand to your Active Pokémon, switch that Pokémon with 1 of your Benched Pokémon."
+    ],
+    "imagen": "/images/cards/sm35-70.png"
+  },
+  {
+    "id": "xy7-82",
+    "nombre": "Dangerous Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Darkness Pokémon. This card provides Darkness Energy only while this card is attached to a Darkness Pokémon.",
+      "Whenever the Darkness Pokémon this card is attached to is your Active Pokémon and is damaged by an attack from your opponent's Pokémon-EX (even if that Pokémon is Knocked Out), put 2 damage counters on the Attacking Pokémon-EX.",
+      "(If this card is attached to anything other than a Darkness Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/xy7-82.png"
+  },
+  {
+    "id": "hgss3-79",
+    "nombre": "Darkness Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "If the Pokémon Darkness Energy is attached to attacks, the attack does 10 more damage to the Active Pokémon (before applying Weakness and Resistance). Ignore this effect if the Pokémon that Darkness Energy is attached to isn't Darkness. Darkness Energy provides Darkness Energy. (Doesn't count as a basic Energy card.)"
+    ],
+    "imagen": "/images/cards/hgss3-79.png"
+  },
+  {
+    "id": "hgss3-80",
+    "nombre": "Metal Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Damage done by attacks to the Pokémon that Metal Energy is attached to is reduced by 10 (after applying Weakness and Resistance). Ignore this effect if the Pokémon that Metal Energy is attached to isn't Metal Metal Energy provides Metal Energy. (Doesn't count as a basic Energy card.)"
+    ],
+    "imagen": "/images/cards/hgss3-80.png"
+  },
+  {
+    "id": "xy7-83",
+    "nombre": "Flash Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Lightning Pokémon. This card provides Lightning Energy only while this card is attached to a Lightning Pokémon.",
+      "The Lightning Pokémon this card is attached to has no Weakness.",
+      "(If this card is attached to anything other than a Lightning Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/xy7-83.png"
+  },
+  {
+    "id": "base5-80",
+    "nombre": "Rainbow Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Attach Rainbow Energy to 1 of your Pokémon. While in play, Rainbow Energy counts as every type of basic Energy but only provides 1 Energy at a time. (Doesn't count as a basic Energy card when not in play.) When you attach this card from your hand to 1 of your Pokémon, it does 10 damage to that Pokémon. (Don't apply Weakness and Resistance.)"
+    ],
+    "imagen": "/images/cards/base5-80.png"
+  },
+  {
+    "id": "base5-81",
+    "nombre": "Full Heal Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "If you play this card from your hand, the Pokémon you attach it to is no longer Asleep, Confused, Paralyzed, or Poisoned.",
+      "Full Heal Energy provides Colorless energy. (Doesn't count as a basic Energy card.)"
+    ],
+    "imagen": "/images/cards/base5-81.png"
   }
 ]
