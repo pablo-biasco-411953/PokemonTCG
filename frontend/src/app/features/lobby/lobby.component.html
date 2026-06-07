@@ -827,7 +827,7 @@
 
           <div class="trade-slots">
             <div class="trade-slot-card" *ngFor="let card of tradeLeftCards" (click)="removeCardFromTrade(card)">
-              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+              <img [src]="getImagenCarta(card.id)" [alt]="card.nombre">
               <span class="remove-hint">{{ 'lobby.quitar' | t }}</span>
             </div>
             <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeLeftCards.length)">
@@ -883,7 +883,7 @@
 
           <div class="trade-slots">
             <div class="trade-slot-card" *ngFor="let card of tradeRightCards">
-              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+              <img [src]="getImagenCarta(card.id)" [alt]="card.nombre">
             </div>
             <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeRightCards.length)">
               <span>{{ 'lobby.vacas' | t }}</span>
@@ -947,7 +947,7 @@
             (click)="addCardToTrade(card)"
             [class.already-in-trade]="isCardInTrade(card)"
           >
-            <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            <img [src]="getImagenCarta(card.id)" [alt]="card.nombre">
             <div class="card-overlay-info">
               <strong>{{ card.nombre }}</strong>
               <small>{{ card.rarity || 'Common' }}</small>

@@ -166,6 +166,20 @@ export class BattleBoardUiService {
 
   // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
+    const energyMap: Record<string, string> = {
+      'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass',
+      'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire',
+      'col1-90': 'water', 'g1-77': 'water', 'xy12-93': 'water', 'base1-102': 'water',
+      'col1-91': 'lightning', 'g1-78': 'lightning', 'xy12-94': 'lightning', 'base1-100': 'lightning',
+      'col1-92': 'psychic', 'g1-79': 'psychic', 'xy12-95': 'psychic', 'base1-101': 'psychic',
+      'col1-93': 'fighting', 'g1-80': 'fighting', 'xy12-96': 'fighting', 'base1-97': 'fighting',
+      'col1-94': 'darkness', 'g1-81': 'darkness', 'xy12-97': 'darkness',
+      'col1-95': 'metal', 'g1-82': 'metal',
+      'g1-83': 'fairy'
+    };
+    if (energyMap[id]) {
+      return `/images/cards/energy-${energyMap[id]}.png`;
+    }
     return `/images/cards/${id}.png`;
   }
 

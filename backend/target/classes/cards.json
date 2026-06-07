@@ -7627,5 +7627,6042 @@
     "resistencias": [],
     "reglas": [],
     "imagen": "/images/cards/xy12-97.png"
+  },
+  {
+    "id": "xy0-10",
+    "nombre": "Delphox",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Fire",
+    "hp": "140",
+    "costoRetirada": 2,
+    "evolvesFrom": "Braixen",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Will-O-Wisp",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": ""
+      },
+      {
+        "nombre": "Fire Blast",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 120,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy0-10.png"
+  },
+  {
+    "id": "xy1-15",
+    "nombre": "Scatterbug",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Grass",
+    "hp": "40",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-15.png"
+  },
+  {
+    "id": "xy1-16",
+    "nombre": "Spewpa",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Grass",
+    "hp": "80",
+    "costoRetirada": 3,
+    "evolvesFrom": "Scatterbug",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bug Bite",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Stun Spore",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-16.png"
+  },
+  {
+    "id": "xy10-16",
+    "nombre": "Dewgong",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "120",
+    "costoRetirada": 3,
+    "evolvesFrom": "Seel",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Freezing Breath",
+        "costo": [
+          "Water"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed. If tails, your opponent's Active Pokémon is now Asleep."
+      },
+      {
+        "nombre": "Aurora Beam",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy10-16.png"
+  },
+  {
+    "id": "xy10-43a",
+    "nombre": "Regirock-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fighting",
+    "hp": "180",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Regi Power",
+        "tipo": "Ability",
+        "texto": "The attacks of your Fighting Pokémon (excluding Regirock-EX) do 10 more damage to your opponent's Active Pokémon (before applying Weakness and Resistance)."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Bedrock Press",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Fighting"
+        ],
+        "dano": 100,
+        "texto": "During your opponent's next turn, any damage done to this Pokémon by attacks is reduced by 20 (after applying Weakness and Resistance)."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy10-43a.png"
+  },
+  {
+    "id": "xy10-54a",
+    "nombre": "Zygarde-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fighting",
+    "hp": "190",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Land's Pulse",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 20,
+        "texto": "If there is any Stadium card in play, this attack does 20 more damage."
+      },
+      {
+        "nombre": "Cell Storm",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Heal 30 damage from this Pokémon."
+      },
+      {
+        "nombre": "Land's Wrath",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy10-54a.png"
+  },
+  {
+    "id": "xy11-18",
+    "nombre": "Chimchar",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Ember",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If tails, discard a Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy11-18.png"
+  },
+  {
+    "id": "xy11-19",
+    "nombre": "Monferno",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Chimchar",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      },
+      {
+        "nombre": "Flare",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy11-19.png"
+  },
+  {
+    "id": "xy12-9",
+    "nombre": "Charmander",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Ember",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Discard a Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy12-9.png"
+  },
+  {
+    "id": "xy2-100",
+    "nombre": "Charizard-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fire",
+    "hp": "180",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Stoke",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, search your deck for up to 3 basic Energy cards and attach them to this Pokémon. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Fire Blast",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 120,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy2-100.png"
+  },
+  {
+    "id": "xy2-20",
+    "nombre": "Pyroar",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "110",
+    "costoRetirada": 2,
+    "evolvesFrom": "Litleo",
+    "habilidades": [
+      {
+        "nombre": "Intimidating Mane",
+        "tipo": "Ability",
+        "texto": "Prevent all damage done to this Pokémon by attacks from your opponent's Basic Pokémon."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Scorching Fang",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "You may discard a Fire Energy attached to this Pokémon. If you do, this attack does 30 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy2-20.png"
+  },
+  {
+    "id": "xy3-55a",
+    "nombre": "M Lucario-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "MEGA",
+      "EX"
+    ],
+    "tipo": "Fighting",
+    "hp": "220",
+    "costoRetirada": 2,
+    "evolvesFrom": "Lucario-EX",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rising Fist",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Fighting"
+        ],
+        "dano": 140,
+        "texto": "Discard an Energy attached to your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.",
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy3-55a.png"
+  },
+  {
+    "id": "xy3-7",
+    "nombre": "Leafeon",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Grass",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Eevee",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Soothing Scent",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 30,
+        "texto": "Your opponent's Active Pokémon is now Asleep."
+      },
+      {
+        "nombre": "Magical Leaf",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Flip a coin. If heads, this attack does 30 more damage and heal 30 damage from this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy3-7.png"
+  },
+  {
+    "id": "xy4-14",
+    "nombre": "Kingler",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "100",
+    "costoRetirada": 3,
+    "evolvesFrom": "Krabby",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Guard Claw",
+        "costo": [
+          "Water"
+        ],
+        "dano": 20,
+        "texto": "During your opponent's next turn, any damage done to this Pokémon by attacks is reduced by 20 (after applying Weakness and Resistance)."
+      },
+      {
+        "nombre": "Crabhammer",
+        "costo": [
+          "Water",
+          "Water",
+          "Water",
+          "Water"
+        ],
+        "dano": 100,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy4-14.png"
+  },
+  {
+    "id": "xy4-15",
+    "nombre": "Totodile",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Fury Strikes",
+        "costo": [
+          "Water"
+        ],
+        "dano": 10,
+        "texto": "Flip 3 coins. This attack does 10 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy4-15.png"
+  },
+  {
+    "id": "xy4-24a",
+    "nombre": "M Manectric-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "MEGA",
+      "EX"
+    ],
+    "tipo": "Lightning",
+    "hp": "210",
+    "costoRetirada": 0,
+    "evolvesFrom": "Manectric-EX",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Turbo Bolt",
+        "costo": [
+          "Lightning",
+          "Colorless"
+        ],
+        "dano": 110,
+        "texto": "Attach 2 basic Energy cards from your discard pile to 1 of your Benched Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.",
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy4-24a.png"
+  },
+  {
+    "id": "xy4-65a",
+    "nombre": "Aegislash-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Metal",
+    "hp": "170",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Mighty Shield",
+        "tipo": "Ability",
+        "texto": "Prevent all damage done to this Pokémon by attacks from each of your opponent's Pokémon that has Special Energy attached to it."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Slash Blast",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "This attack does 20 more damage for each Metal Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy4-65a.png"
+  },
+  {
+    "id": "xy5-16",
+    "nombre": "Breloom",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Grass",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Shroomish",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Dynamic Punch",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "Flip a coin. If heads, this attack does 20 more damage and your opponent's Active Pokémon is now Confused."
+      },
+      {
+        "nombre": "Mega Kick",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy5-16.png"
+  },
+  {
+    "id": "xy6-13",
+    "nombre": "Victini",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "70",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Me First",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Draw a card."
+      },
+      {
+        "nombre": "Psy Bolt",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy6-13.png"
+  },
+  {
+    "id": "xy6-77a",
+    "nombre": "Shaymin-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Colorless",
+    "hp": "110",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Set Up",
+        "tipo": "Ability",
+        "texto": "When you play this Pokémon from your hand onto your Bench, you may draw cards until you have 6 cards in your hand."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Sky Return",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Return this Pokémon and all cards attached to it to your hand."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy6-77a.png"
+  },
+  {
+    "id": "xy7-17",
+    "nombre": "Volcarona",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "100",
+    "costoRetirada": 1,
+    "evolvesFrom": "Larvesta",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Solar Birth",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a Basic Pokémon and put it onto your Bench. Then, search your deck for up to 2 basic Energy cards and attach them to that Pokémon. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Flamethrower",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy7-17.png"
+  },
+  {
+    "id": "xy7-82",
+    "nombre": "Dangerous Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Darkness Pokémon. This card provides Darkness Energy only while this card is attached to a Darkness Pokémon.",
+      "Whenever the Darkness Pokémon this card is attached to is your Active Pokémon and is damaged by an attack from your opponent's Pokémon-EX (even if that Pokémon is Knocked Out), put 2 damage counters on the Attacking Pokémon-EX.",
+      "(If this card is attached to anything other than a Darkness Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/xy7-82.png"
+  },
+  {
+    "id": "xy7-83",
+    "nombre": "Flash Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card can only be attached to Lightning Pokémon. This card provides Lightning Energy only while this card is attached to a Lightning Pokémon.",
+      "The Lightning Pokémon this card is attached to has no Weakness.",
+      "(If this card is attached to anything other than a Lightning Pokémon, discard this card.)"
+    ],
+    "imagen": "/images/cards/xy7-83.png"
+  },
+  {
+    "id": "xy7-84",
+    "nombre": "Sceptile-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Grass",
+    "hp": "170",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Sleep Poison",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 10,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Asleep and Poisoned."
+      },
+      {
+        "nombre": "Unseen Claw",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "If your opponent's Active Pokémon is affected by a Special Condition, this attack does 70 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-84.png"
+  },
+  {
+    "id": "xy7-85",
+    "nombre": "M Sceptile-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "MEGA",
+      "EX"
+    ],
+    "tipo": "Grass",
+    "hp": "220",
+    "costoRetirada": 2,
+    "evolvesFrom": "Sceptile-EX",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Jagged Saber",
+        "costo": [
+          "Grass",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "You may attach up to 2 Grass Energy cards from your hand to your Benched Pokémon in any way you like. If you attached Energy to a Pokémon in this way, heal all damage from that Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.",
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-85.png"
+  },
+  {
+    "id": "xy7-86",
+    "nombre": "Kyurem-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Water",
+    "hp": "180",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Glaciate",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "This attack does 30 damage to each of your opponent's Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      },
+      {
+        "nombre": "Icecalibur",
+        "costo": [
+          "Water",
+          "Water",
+          "Water",
+          "Colorless"
+        ],
+        "dano": 130,
+        "texto": "Discard an Energy attached to this Pokémon. The Defending Pokémon can't attack during your opponent's next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-86.png"
+  },
+  {
+    "id": "xy7-87",
+    "nombre": "Ampharos-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Lightning",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Thunder Rod",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Look at the top 4 cards of your deck and attach as many Lightning Energy cards you find there as you like to this Pokémon. Shuffle the other cards back into your deck."
+      },
+      {
+        "nombre": "Sparkling Tail",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "This attack's damage isn't affected by Weakness, Resistance, or any other effects on your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-87.png"
+  },
+  {
+    "id": "xy7-88",
+    "nombre": "M Ampharos-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "MEGA",
+      "EX"
+    ],
+    "tipo": "Lightning",
+    "hp": "220",
+    "costoRetirada": 3,
+    "evolvesFrom": "Ampharos-EX",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Exavolt",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 120,
+        "texto": "You may do 50 more damage and leave your opponent's Active Pokémon Paralyzed. If you do, this Pokémon does 30 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.",
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-88.png"
+  },
+  {
+    "id": "xy7-89",
+    "nombre": "Hoopa-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Psychic",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Scoundrel Ring",
+        "tipo": "Ability",
+        "texto": "When you play this Pokémon from your hand onto your Bench, you may search your deck for up to 3 Pokémon-EX (except for Hoopa-EX), reveal them, and put them into your hand. Shuffle your deck afterward."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Hyperspace Fury",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Psychic"
+        ],
+        "dano": 0,
+        "texto": "Discard 2 Energy attached to this Pokémon. This attack does 100 damage to 1 of your opponent's Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-89.png"
+  },
+  {
+    "id": "xy7-90",
+    "nombre": "Machamp-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fighting",
+    "hp": "180",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Steaming Mad",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 20 damage times the number of damage counters on this Pokémon. This Pokémon is now Confused."
+      },
+      {
+        "nombre": "Crazy Hammer",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "If this Pokémon is affected by a Special Condition, this attack does 80 more damage. Then, remove all Special Conditions from this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy7-90.png"
+  },
+  {
+    "id": "xy8-12",
+    "nombre": "Chesnaught BREAK",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "BREAK"
+    ],
+    "tipo": "Grass",
+    "hp": "190",
+    "costoRetirada": 0,
+    "evolvesFrom": "Chesnaught",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Tough Hammer",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 160,
+        "texto": "This Pokémon does 30 damage to itself. This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      }
+    ],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "BREAK Evolution Rule: Chesnaught BREAK retains the attacks, Abilities, Weakness, Resistance, and Retreat Cost of its previous Evolution."
+    ],
+    "imagen": "/images/cards/xy8-12.png"
+  },
+  {
+    "id": "xy9-7",
+    "nombre": "Petilil",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Grass",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Aromatherapy",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0,
+        "texto": "Heal 10 damage from each of your Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy9-7.png"
+  },
+  {
+    "id": "xy9-8",
+    "nombre": "Lilligant",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Grass",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Petilil",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Boo-Hoo",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 20,
+        "texto": "If your opponent attaches an Energy card from his or her hand to the Defending Pokémon during his or her next turn, that Pokémon will be Asleep."
+      },
+      {
+        "nombre": "Leaf Slice",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip 2 coins. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy9-8.png"
+  },
+  {
+    "id": "xyp-XY07",
+    "nombre": "Xerneas-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fairy",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Break Through",
+        "costo": [
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      },
+      {
+        "nombre": "X Blast",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 140,
+        "texto": "This Pokémon can't use X Blast during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xyp-XY07.png"
+  },
+  {
+    "id": "xy1-17",
+    "nombre": "Vivillon",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Grass",
+    "hp": "130",
+    "costoRetirada": 1,
+    "evolvesFrom": "Spewpa",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Conversion Powder",
+        "costo": [
+          "Grass"
+        ],
+        "dano": 0,
+        "texto": "Choose either Asleep or Poisoned. Your opponent's Active Pokémon is now affected by that Special Condition."
+      },
+      {
+        "nombre": "Colorful Wind",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "This attack does 30 more damage for each different type of basic Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-17.png"
+  },
+  {
+    "id": "xy1-18",
+    "nombre": "Skiddo",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Grass",
+    "hp": "70",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Lead",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, search your deck for a Supporter card, reveal it, and put it into your hand. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-18.png"
+  },
+  {
+    "id": "xy1-19",
+    "nombre": "Gogoat",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Grass",
+    "hp": "110",
+    "costoRetirada": 2,
+    "evolvesFrom": "Skiddo",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Lead",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for up to 2 Supporter cards, reveal them, and put them into your hand. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Charge Dash",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 70,
+        "texto": "You may do 20 more damage. If you do, this Pokémon does 20 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-19.png"
+  },
+  {
+    "id": "xy1-20",
+    "nombre": "Slugma",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "70",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Flamethrower",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-20.png"
+  },
+  {
+    "id": "xy1-21",
+    "nombre": "Magcargo",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "110",
+    "costoRetirada": 3,
+    "evolvesFrom": "Slugma",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Magma Mantle",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "You may discard the top card of your deck. If that card is a Fire Energy card, this attack does 50 more damage."
+      },
+      {
+        "nombre": "Heat Blast",
+        "costo": [
+          "Fire",
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-21.png"
+  },
+  {
+    "id": "xy1-22",
+    "nombre": "Pansear",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Live Coal",
+        "costo": [
+          "Fire"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Fireworks",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-22.png"
+  },
+  {
+    "id": "xy1-23",
+    "nombre": "Simisear",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Pansear",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Yawn",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Your opponent's Active Pokémon is now Asleep."
+      },
+      {
+        "nombre": "Flamethrower",
+        "costo": [
+          "Fire",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 90,
+        "texto": "Discard a Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-23.png"
+  },
+  {
+    "id": "xy1-24",
+    "nombre": "Fennekin",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fire",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Will-O-Wisp",
+        "costo": [
+          "Fire"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-24.png"
+  },
+  {
+    "id": "xy1-25",
+    "nombre": "Braixen",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Fennekin",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Clairvoyant Eye",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Look at the top 3 cards of your deck and put them back on top of your deck in any order."
+      },
+      {
+        "nombre": "Fire Tail Slap",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "Discard a Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-25.png"
+  },
+  {
+    "id": "xy1-26",
+    "nombre": "Delphox",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Fire",
+    "hp": "140",
+    "costoRetirada": 2,
+    "evolvesFrom": "Braixen",
+    "habilidades": [
+      {
+        "nombre": "Mystical Fire",
+        "tipo": "Ability",
+        "texto": "Once during your turn (before your attack), you may draw cards until you have 6 cards in your hand."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Blaze Ball",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "This attack does 20 more damage for each Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Water",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-26.png"
+  },
+  {
+    "id": "xy1-27",
+    "nombre": "Fletchinder",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fire",
+    "hp": "70",
+    "costoRetirada": 1,
+    "evolvesFrom": "Fletchling",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Flame Charge",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a Fire Energy card and attach it to this Pokémon. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Fire Wing",
+        "costo": [
+          "Fire",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-27.png"
+  },
+  {
+    "id": "xy1-28",
+    "nombre": "Talonflame",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Fire",
+    "hp": "130",
+    "costoRetirada": 0,
+    "evolvesFrom": "Fletchinder",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Devastating Wind",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Your opponent shuffles his or her hand into his or her deck and draws 4 cards."
+      },
+      {
+        "nombre": "Flare Blitz",
+        "costo": [
+          "Fire",
+          "Fire"
+        ],
+        "dano": 100,
+        "texto": "Discard all Fire Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-28.png"
+  },
+  {
+    "id": "xy1-29",
+    "nombre": "Blastoise-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Water",
+    "hp": "180",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rapid Spin",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Switch this Pokémon with 1 of your Benched Pokémon. Then, your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon."
+      },
+      {
+        "nombre": "Splash Bomb",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ],
+        "dano": 120,
+        "texto": "Flip a coin. If tails, this Pokémon does 30 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-29.png"
+  },
+  {
+    "id": "xy1-30",
+    "nombre": "M Blastoise-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "MEGA",
+      "EX"
+    ],
+    "tipo": "Water",
+    "hp": "220",
+    "costoRetirada": 3,
+    "evolvesFrom": "Blastoise-EX",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Hydro Bombard",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ],
+        "dano": 120,
+        "texto": "This attack does 30 damage to 2 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.",
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-30.png"
+  },
+  {
+    "id": "xy1-31",
+    "nombre": "Shellder",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rain Splash",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-31.png"
+  },
+  {
+    "id": "xy1-32",
+    "nombre": "Cloyster",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "100",
+    "costoRetirada": 3,
+    "evolvesFrom": "Shellder",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Clamp Crush",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed and discard an Energy attached to that Pokémon."
+      },
+      {
+        "nombre": "Spike Cannon",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip 5 coins. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-32.png"
+  },
+  {
+    "id": "xy1-33",
+    "nombre": "Staryu",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Reckless Charge",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "This Pokémon does 10 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-33.png"
+  },
+  {
+    "id": "xy1-34",
+    "nombre": "Starmie",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Staryu",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Recover",
+        "costo": [
+          "Water"
+        ],
+        "dano": 0,
+        "texto": "Discard an Energy attached to this Pokémon and heal all damage from it."
+      },
+      {
+        "nombre": "Core Splash",
+        "costo": [
+          "Water",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "If this Pokémon has any Psychic Energy attached to it, this attack does 30 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-34.png"
+  },
+  {
+    "id": "xy1-35",
+    "nombre": "Lapras",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "110",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Seafaring",
+        "costo": [
+          "Water"
+        ],
+        "dano": 0,
+        "texto": "Flip 3 coins. For each heads, attach a Water Energy card from your discard pile to your Benched Pokémon in any way you like."
+      },
+      {
+        "nombre": "Hydro Pump",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "This attack does 20 more damage for each Water Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-35.png"
+  },
+  {
+    "id": "xy1-36",
+    "nombre": "Corsola",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "70",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Refresh",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Heal 30 damage and remove all Special Conditions from this Pokémon."
+      },
+      {
+        "nombre": "Spiny Rush",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin until you get tails. This attack does 20 more damage for each heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-36.png"
+  },
+  {
+    "id": "xy1-37",
+    "nombre": "Panpour",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Wave Splash",
+        "costo": [
+          "Water"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Water Splash",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "Flip a coin. If heads, this attack does 20 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-37.png"
+  },
+  {
+    "id": "xy1-38",
+    "nombre": "Simipour",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Panpour",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Recycle",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Put a card from your discard pile on top of your deck."
+      },
+      {
+        "nombre": "Surf",
+        "costo": [
+          "Water",
+          "Water",
+          "Colorless"
+        ],
+        "dano": 70,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-38.png"
+  },
+  {
+    "id": "xy1-39",
+    "nombre": "Froakie",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Water",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bounce",
+        "costo": [
+          "Water"
+        ],
+        "dano": 10,
+        "texto": "Flip a coin. If heads, switch this Pokémon with 1 of your Benched Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-39.png"
+  },
+  {
+    "id": "xy1-40",
+    "nombre": "Frogadier",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Water",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Froakie",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Lick",
+        "costo": [
+          "Water",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-40.png"
+  },
+  {
+    "id": "xy1-41",
+    "nombre": "Greninja",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Water",
+    "hp": "130",
+    "costoRetirada": 1,
+    "evolvesFrom": "Frogadier",
+    "habilidades": [
+      {
+        "nombre": "Water Shuriken",
+        "tipo": "Ability",
+        "texto": "Once during your turn (before your attack), you may discard a Water Energy card from your hand. If you do, put 3 damage counters on 1 of your opponent's Pokémon."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Mist Slash",
+        "costo": [
+          "Water"
+        ],
+        "dano": 50,
+        "texto": "This attack's damage isn't affected by Weakness, Resistance, or any other effects on your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-41.png"
+  },
+  {
+    "id": "xy1-42",
+    "nombre": "Pikachu",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Lightning",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Nuzzle",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      },
+      {
+        "nombre": "Quick Attack",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, this attack does 10 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-42.png"
+  },
+  {
+    "id": "xy1-43",
+    "nombre": "Raichu",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Lightning",
+    "hp": "90",
+    "costoRetirada": 0,
+    "evolvesFrom": "Pikachu",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Circle Circuit",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 20 damage times the number of your Benched Pokémon."
+      },
+      {
+        "nombre": "Thunderbolt",
+        "costo": [
+          "Lightning",
+          "Lightning",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "Discard all Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Metal",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-43.png"
+  },
+  {
+    "id": "xy1-44",
+    "nombre": "Voltorb",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Lightning",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Destiny Burst",
+        "tipo": "Ability",
+        "texto": "If this Pokémon is your Active Pokémon and is Knocked Out by damage from an opponent's attack, flip a coin. If heads, put 5 damage counters on the Attacking Pokémon."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Rollout",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-44.png"
+  },
+  {
+    "id": "xy1-45",
+    "nombre": "Electrode",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Lightning",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Voltorb",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Eerie Impulse",
+        "costo": [
+          "Lightning"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, discard an Energy attached to 1 of your opponent's Pokémon."
+      },
+      {
+        "nombre": "Rollout",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-45.png"
+  },
+  {
+    "id": "xy1-46",
+    "nombre": "Emolga-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Lightning",
+    "hp": "110",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Energy Glide",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon."
+      },
+      {
+        "nombre": "Electron Crush",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "You may discard an Energy attached to this Pokémon. If you do, this attack does 30 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-46.png"
+  },
+  {
+    "id": "xy1-47",
+    "nombre": "Ekans",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "70",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bite",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-47.png"
+  },
+  {
+    "id": "xy1-48",
+    "nombre": "Arbok",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Psychic",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Ekans",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Gastro Acid",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "The Defending Pokémon has no Abilities until the end of your next turn."
+      },
+      {
+        "nombre": "Poison Jab",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Your opponent's Active Pokémon is now Poisoned."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-48.png"
+  },
+  {
+    "id": "xy1-49",
+    "nombre": "Spoink",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Splash",
+        "costo": [
+          "Psychic"
+        ],
+        "dano": 10,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-49.png"
+  },
+  {
+    "id": "xy1-50",
+    "nombre": "Grumpig",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Psychic",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Spoink",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Tricky Steps",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "You may move an Energy attached to your opponent's Active Pokémon to 1 of your opponent's Benched Pokémon."
+      },
+      {
+        "nombre": "Psybeam",
+        "costo": [
+          "Psychic",
+          "Psychic",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Your opponent's Active Pokémon is now Confused."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-50.png"
+  },
+  {
+    "id": "xy1-51",
+    "nombre": "Venipede",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "70",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Poison Sting",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Your opponent's Active Pokémon is now Poisoned."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-51.png"
+  },
+  {
+    "id": "xy1-52",
+    "nombre": "Whirlipede",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Psychic",
+    "hp": "90",
+    "costoRetirada": 3,
+    "evolvesFrom": "Venipede",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Continuous Tumble",
+        "costo": [
+          "Psychic",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin until you get tails. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-52.png"
+  },
+  {
+    "id": "xy1-53",
+    "nombre": "Scolipede",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Psychic",
+    "hp": "150",
+    "costoRetirada": 3,
+    "evolvesFrom": "Whirlipede",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Random Peck",
+        "costo": [
+          "Psychic"
+        ],
+        "dano": 20,
+        "texto": "Flip 2 coins. This attack does 20 more damage for each heads."
+      },
+      {
+        "nombre": "Poison Ring",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 70,
+        "texto": "Your opponent's Active Pokémon is now Poisoned. That Pokémon can't retreat during your opponent's next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-53.png"
+  },
+  {
+    "id": "xy1-54",
+    "nombre": "Phantump",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "60",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Astonish",
+        "costo": [
+          "Psychic"
+        ],
+        "dano": 0,
+        "texto": "Choose a random card from your opponent's hand. Your opponent reveals that card and shuffles it into his or her deck."
+      },
+      {
+        "nombre": "Hook",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-54.png"
+  },
+  {
+    "id": "xy1-55",
+    "nombre": "Trevenant",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Psychic",
+    "hp": "110",
+    "costoRetirada": 3,
+    "evolvesFrom": "Phantump",
+    "habilidades": [
+      {
+        "nombre": "Forest's Curse",
+        "tipo": "Ability",
+        "texto": "As long as this Pokémon is your Active Pokémon, your opponent can't play any Item cards from his or her hand."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Tree Slam",
+        "costo": [
+          "Psychic",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "This attack does 20 damage to 2 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-55.png"
+  },
+  {
+    "id": "xy1-56",
+    "nombre": "Pumpkaboo",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Psychic",
+    "hp": "60",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Confuse Ray",
+        "costo": [
+          "Psychic"
+        ],
+        "dano": 0,
+        "texto": "Your opponent's Active Pokémon is now Confused."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-56.png"
+  },
+  {
+    "id": "xy1-57",
+    "nombre": "Gourgeist",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Psychic",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Pumpkaboo",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Eerie Voice",
+        "costo": [
+          "Psychic"
+        ],
+        "dano": 0,
+        "texto": "Put 2 damage counters each of your opponent's Pokémon."
+      },
+      {
+        "nombre": "Spirit Scream",
+        "costo": [
+          "Psychic",
+          "Psychic"
+        ],
+        "dano": 0,
+        "texto": "Put damage counters on both Active Pokémon until the remaining HP of each Pokémon is 10."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Darkness",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-57.png"
+  },
+  {
+    "id": "xy1-58",
+    "nombre": "Diglett",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Mine",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 0,
+        "texto": "Look at the top card of your opponent's deck. Then, you may have your opponent shuffle his or her deck."
+      },
+      {
+        "nombre": "Mud-Slap",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-58.png"
+  },
+  {
+    "id": "xy1-59",
+    "nombre": "Dugtrio",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fighting",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Diglett",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Earthquake",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 60,
+        "texto": "This attack does 10 damage to each of your Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      },
+      {
+        "nombre": "Rock Tumble",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "This attack's damage isn't affected by Resistance."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-59.png"
+  },
+  {
+    "id": "xy1-60",
+    "nombre": "Rhyhorn",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "80",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Dig Out",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 10,
+        "texto": "Discard the top card of your deck. If that card is a Fighting Energy, attach it to this Pokémon."
+      },
+      {
+        "nombre": "Horn Drill",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-60.png"
+  },
+  {
+    "id": "xy1-61",
+    "nombre": "Rhydon",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fighting",
+    "hp": "100",
+    "costoRetirada": 3,
+    "evolvesFrom": "Rhyhorn",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Horn Drill",
+        "costo": [
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": ""
+      },
+      {
+        "nombre": "Mad Mountain",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Flip 2 coins. If both of them are heads, discard the top card of your opponent's deck for each damage counter on this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-61.png"
+  },
+  {
+    "id": "xy1-62",
+    "nombre": "Rhyperior",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Fighting",
+    "hp": "160",
+    "costoRetirada": 4,
+    "evolvesFrom": "Rhydon",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rock Black",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 50,
+        "texto": "Flip a coin for each Fighting Energy attached to this Pokémon. This attack does 50 damage times the number of heads."
+      },
+      {
+        "nombre": "Rock Wrecker",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 130,
+        "texto": "This attack's damage isn't affected by Weakness or Resistance. This Pokémon can't attack during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-62.png"
+  },
+  {
+    "id": "xy1-63",
+    "nombre": "Lunatone",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Double Draw",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Draw 2 cards."
+      },
+      {
+        "nombre": "Moonblast",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "During your opponent's next turn, any damage done by attacks from the Defending Pokémon is reduced by 20 (before applying Weakness and Resistance)."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-63.png"
+  },
+  {
+    "id": "xy1-64",
+    "nombre": "Solrock",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "90",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Cosmic Spin",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "If Lunatone is on your Bench, this attack does 30 more damage."
+      },
+      {
+        "nombre": "Solar Beam",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-64.png"
+  },
+  {
+    "id": "xy1-65",
+    "nombre": "Timburr",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fighting",
+    "hp": "70",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Pummel",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, this attack does 20 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-65.png"
+  },
+  {
+    "id": "xy1-66",
+    "nombre": "Gurdurr",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fighting",
+    "hp": "90",
+    "costoRetirada": 3,
+    "evolvesFrom": "Timburr",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Pummel",
+        "costo": [
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, this attack does 20 more damage."
+      },
+      {
+        "nombre": "Hammer Arm",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Discard the top card of your opponent's deck."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-66.png"
+  },
+  {
+    "id": "xy1-67",
+    "nombre": "Conkeldurr",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Fighting",
+    "hp": "140",
+    "costoRetirada": 3,
+    "evolvesFrom": "Gurdurr",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Wake-Up Slap",
+        "costo": [
+          "Fighting"
+        ],
+        "dano": 30,
+        "texto": "If your opponent's Active Pokémon is affected by a Special Condition, this attack does 60 more damage. Then, remove all Special Conditions from that Pokémon."
+      },
+      {
+        "nombre": "Dynamic Punch",
+        "costo": [
+          "Fighting",
+          "Fighting",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Flip a coin. If heads, this attack does 40 more damage and your opponent's Active Pokémon is now Confused."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Psychic",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-67.png"
+  },
+  {
+    "id": "xy1-68",
+    "nombre": "Sableye",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Filch",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Draw a card."
+      },
+      {
+        "nombre": "Rip Claw",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-68.png"
+  },
+  {
+    "id": "xy1-69",
+    "nombre": "Sandile",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "70",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Ram",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      },
+      {
+        "nombre": "Darkness Fang",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-69.png"
+  },
+  {
+    "id": "xy1-70",
+    "nombre": "Krokorok",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Darkness",
+    "hp": "90",
+    "costoRetirada": 3,
+    "evolvesFrom": "Sandile",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Crunch",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon."
+      },
+      {
+        "nombre": "Darkness Fang",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-70.png"
+  },
+  {
+    "id": "xy1-71",
+    "nombre": "Krookodile",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Darkness",
+    "hp": "140",
+    "costoRetirada": 3,
+    "evolvesFrom": "Krokorok",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bother",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Flip a coin. If heads, your opponent can't play any Supporter cards from his or her hand during his or her next turn."
+      },
+      {
+        "nombre": "Knock Back",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "Your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-71.png"
+  },
+  {
+    "id": "xy1-72",
+    "nombre": "Zorua",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Scratch",
+        "costo": [
+          "Darkness"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Nasty Plot",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a card and put it into your hand. Shuffle your deck afterward."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-72.png"
+  },
+  {
+    "id": "xy1-73",
+    "nombre": "Zoroark",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Darkness",
+    "hp": "100",
+    "costoRetirada": 1,
+    "evolvesFrom": "Zorua",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Corner",
+        "costo": [
+          "Darkness"
+        ],
+        "dano": 30,
+        "texto": "The Defending Pokémon can't retreat during your opponent's next turn."
+      },
+      {
+        "nombre": "Night Claw",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "Flip a coin. If tails, discard 2 Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-73.png"
+  },
+  {
+    "id": "xy1-74",
+    "nombre": "Inkay",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Upside-Down Evolution",
+        "tipo": "Ability",
+        "texto": "Once during your turn, (before your attack), if this Pokémon is Confused, you may search your deck for a card that evolves from this Pokémon and put it onto this Pokémon. (This counts as evolving this Pokémon.) Shuffle your deck afterward."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Confusion Wave",
+        "costo": [
+          "Darkness"
+        ],
+        "dano": 0,
+        "texto": "Both Active Pokémon are now Confused."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-74.png"
+  },
+  {
+    "id": "xy1-75",
+    "nombre": "Inkay",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Puncture",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack's damage isn't affected by Resistance."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-75.png"
+  },
+  {
+    "id": "xy1-76",
+    "nombre": "Malamar",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Darkness",
+    "hp": "100",
+    "costoRetirada": 1,
+    "evolvesFrom": "Inkay",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Mental Trash",
+        "costo": [
+          "Darkness"
+        ],
+        "dano": 0,
+        "texto": "Your opponent flips 4 coins. For each tails, he or she discards a card from his or her hand."
+      },
+      {
+        "nombre": "Distortion Beam",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Asleep. If tails, your opponent's Active Pokémon is now Confused."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-76.png"
+  },
+  {
+    "id": "xy1-77",
+    "nombre": "Malamar",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Darkness",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Inkay",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Mental Panic",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "If the Defending Pokémon tries to attack during your opponent's next turn, your opponent flips a coin. If tails, that attack does nothing."
+      },
+      {
+        "nombre": "Puncture",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 70,
+        "texto": "This attack's damage isn't affected by Resistance."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-77.png"
+  },
+  {
+    "id": "xy1-78",
+    "nombre": "Yveltal",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Darkness",
+    "hp": "130",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Oblivion Wing",
+        "costo": [
+          "Darkness"
+        ],
+        "dano": 30,
+        "texto": "Attach a Darkness Energy card from your discard pile to 1 of your Benched Pokémon."
+      },
+      {
+        "nombre": "Darkness Blade",
+        "costo": [
+          "Darkness",
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "Flip a coin. If tails, this Pokémon can't attack during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-78.png"
+  },
+  {
+    "id": "xy1-79",
+    "nombre": "Yveltal-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Darkness",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Evil Ball",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 20 more damage times the amount of Energy attached to both Active Pokémon."
+      },
+      {
+        "nombre": "Y Cyclone",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 90,
+        "texto": "Move an Energy from this Pokémon to 1 of your Benched Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-79.png"
+  },
+  {
+    "id": "xy1-80",
+    "nombre": "Skarmory-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Metal",
+    "hp": "170",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Joust",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Before doing damage, discard all Pokémon Tool cards attached to your opponent's Active Pokémon."
+      },
+      {
+        "nombre": "Tailspin Piledriver",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-80.png"
+  },
+  {
+    "id": "xy1-81",
+    "nombre": "Pawniard",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Metal",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Cut Down",
+        "costo": [
+          "Metal"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon."
+      },
+      {
+        "nombre": "Metal Claw",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-81.png"
+  },
+  {
+    "id": "xy1-82",
+    "nombre": "Bisharp",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Metal",
+    "hp": "90",
+    "costoRetirada": 2,
+    "evolvesFrom": "Pawniard",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Metal Sound",
+        "costo": [
+          "Metal"
+        ],
+        "dano": 0,
+        "texto": "Your opponent's Active Pokémon is now Confused."
+      },
+      {
+        "nombre": "Metal Wallop",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "During your next turn, this Pokémon's Metal Wallop attack does 40 more damage (before applying Weakness and Resistance)."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-82.png"
+  },
+  {
+    "id": "xy1-83",
+    "nombre": "Honedge",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Metal",
+    "hp": "60",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Pierce",
+        "costo": [
+          "Metal"
+        ],
+        "dano": 10,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-83.png"
+  },
+  {
+    "id": "xy1-84",
+    "nombre": "Doublade",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Metal",
+    "hp": "80",
+    "costoRetirada": 2,
+    "evolvesFrom": "Honedge",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Dual Blades",
+        "costo": [
+          "Metal",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip 2 coins. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-84.png"
+  },
+  {
+    "id": "xy1-85",
+    "nombre": "Aegislash",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Metal",
+    "hp": "140",
+    "costoRetirada": 3,
+    "evolvesFrom": "Doublade",
+    "habilidades": [
+      {
+        "nombre": "Stance Change",
+        "tipo": "Ability",
+        "texto": "Once during your turn (before your attack), you may switch this Pokémon with an Aegislash in your hand. (Any cards attached to this Pokémon, damage counters, Special Conditions, turns in play, and any other effects remain on the new Pokémon.)"
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Buster Swing",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 120,
+        "texto": "This attack's damage isn't affected by Resistance."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-85.png"
+  },
+  {
+    "id": "xy1-86",
+    "nombre": "Aegislash",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Metal",
+    "hp": "140",
+    "costoRetirada": 3,
+    "evolvesFrom": "Doublade",
+    "habilidades": [
+      {
+        "nombre": "Stance Change",
+        "tipo": "Ability",
+        "texto": "Once during your turn (before your attack), you may switch this Pokémon with an Aegislash in your hand. (Any cards attached to this Pokémon, damage counters, Special Conditions, turns in play, and any other effects remain on the new Pokémon.)"
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "King's Shield",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Prevent all damage done to this Pokémon by attacks during your opponent's next turn. This Pokémon can't use King's Shield during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-86.png"
+  },
+  {
+    "id": "xy1-87",
+    "nombre": "Jigglypuff",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rollout",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Heartfelt Song",
+        "costo": [
+          "Fairy"
+        ],
+        "dano": 0,
+        "texto": "Discard a Darkness Energy attached to your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-87.png"
+  },
+  {
+    "id": "xy1-88",
+    "nombre": "Jigglypuff",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "70",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Body Slam",
+        "costo": [
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-88.png"
+  },
+  {
+    "id": "xy1-89",
+    "nombre": "Wigglytuff",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fairy",
+    "hp": "100",
+    "costoRetirada": 1,
+    "evolvesFrom": "Jigglypuff",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Gather Energy",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a basic Energy card and attach it to 1 of your Pokémon. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Hocus Pinkus",
+        "costo": [
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "The Defending Pokémon can't attack during your opponent's next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-89.png"
+  },
+  {
+    "id": "xy1-90",
+    "nombre": "Wigglytuff",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fairy",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Jigglypuff",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Balloon Barrage",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 20 damage times the amount of Energy attached to this Pokémon."
+      },
+      {
+        "nombre": "Double-Edge",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 90,
+        "texto": "This Pokémon does 10 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-90.png"
+  },
+  {
+    "id": "xy1-91",
+    "nombre": "Mr. Mime",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "80",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Massage",
+        "costo": [
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Heal 60 damage from 1 of your Benched Pokémon."
+      },
+      {
+        "nombre": "Slap Down",
+        "costo": [
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "Flip 2 coins. This attack does 20 more damage for each heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-91.png"
+  },
+  {
+    "id": "xy1-92",
+    "nombre": "Spritzee",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Sweet Scent",
+        "costo": [
+          "Fairy"
+        ],
+        "dano": 0,
+        "texto": "Heal 20 damage from 1 of your Pokémon."
+      },
+      {
+        "nombre": "Flop",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-92.png"
+  },
+  {
+    "id": "xy1-93",
+    "nombre": "Aromatisse",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fairy",
+    "hp": "90",
+    "costoRetirada": 2,
+    "evolvesFrom": "Spritzee",
+    "habilidades": [
+      {
+        "nombre": "Fairy Transfer",
+        "tipo": "Ability",
+        "texto": "As often as you like during your turn (before your attack), you may move a Fairy Energy attached to 1 of your Pokémon to another of your Pokémon."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Fairy Wind",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-93.png"
+  },
+  {
+    "id": "xy1-94",
+    "nombre": "Swirlix",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Fairy Wind",
+        "costo": [
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-94.png"
+  },
+  {
+    "id": "xy1-95",
+    "nombre": "Slurpuff",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Fairy",
+    "hp": "90",
+    "costoRetirada": 2,
+    "evolvesFrom": "Swirlix",
+    "habilidades": [
+      {
+        "nombre": "Sweet Veil",
+        "tipo": "Ability",
+        "texto": "Each of your Pokémon that has any Fairy Energy attached to it can't be affected by any Special Conditions. (Remove any Special Conditions affecting those Pokémon.)"
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Draining Kiss",
+        "costo": [
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Heal 30 damage from this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-95.png"
+  },
+  {
+    "id": "xy1-96",
+    "nombre": "Xerneas",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Fairy",
+    "hp": "130",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Geomancy",
+        "costo": [
+          "Fairy"
+        ],
+        "dano": 0,
+        "texto": "Choose 2 of your Benched Pokémon. For each of those Pokémon, search your deck for a Fairy Energy card and attach it to that Pokémon. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Rainbow Spear",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless"
+        ],
+        "dano": 100,
+        "texto": "Discard an Energy attached to this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-96.png"
+  },
+  {
+    "id": "xy1-97",
+    "nombre": "Xerneas-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fairy",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Break Through",
+        "costo": [
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      },
+      {
+        "nombre": "X Blast",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 140,
+        "texto": "This Pokémon can't use X Blast during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-97.png"
+  },
+  {
+    "id": "xy1-98",
+    "nombre": "Doduo",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "70",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Double Hit",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip 2 coins. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-98.png"
+  },
+  {
+    "id": "xy1-99",
+    "nombre": "Dodrio",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Doduo",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rage",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 10 more damage for each damage counter on this Pokémon."
+      },
+      {
+        "nombre": "Endeavor",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Flip 2 coins. This attack does 20 more damage for each heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-99.png"
+  },
+  {
+    "id": "xy1-100",
+    "nombre": "Tauros",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "110",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Take Down",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "This Pokémon does 10 damage to itself."
+      },
+      {
+        "nombre": "Seething Anger",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin for each damage counter on this Pokémon. This attack does 30 damage times the number of heads."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-100.png"
+  },
+  {
+    "id": "xy1-101",
+    "nombre": "Dunsparce",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "40",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Glare",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      },
+      {
+        "nombre": "Second Bite",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "Does 10 more damage for each damage counter on your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-101.png"
+  },
+  {
+    "id": "xy1-102",
+    "nombre": "Taillow",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Aerial Ace",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "Flip a coin. If heads, this attack does 30 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-102.png"
+  },
+  {
+    "id": "xy1-103",
+    "nombre": "Swellow",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": "Taillow",
+    "habilidades": [
+      {
+        "nombre": "Drive Off",
+        "tipo": "Ability",
+        "texto": "Once during your turn (before your attack), you may have your opponent switch his or her Active Pokémon with 1 of his or her Benched Pokémon."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Wing Attack",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-103.png"
+  },
+  {
+    "id": "xy1-104",
+    "nombre": "Skitty",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Heal Bell",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Heal 10 damage from each of your Pokémon."
+      },
+      {
+        "nombre": "Tail Whap",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-104.png"
+  },
+  {
+    "id": "xy1-105",
+    "nombre": "Delcatty",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Skitty",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Energy Salon",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for 3 different types of basic Energy cards, reveal them, and put them into your hand. Shuffle your deck afterward."
+      },
+      {
+        "nombre": "Fake Out",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-105.png"
+  },
+  {
+    "id": "xy1-106",
+    "nombre": "Bidoof",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "60",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Hyper Fang",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 40,
+        "texto": "Flip a coin. If tails, this attack does nothing."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-106.png"
+  },
+  {
+    "id": "xy1-107",
+    "nombre": "Bibarel",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "100",
+    "costoRetirada": 3,
+    "evolvesFrom": "Bidoof",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Double Headbutt",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Flip 2 coins. This attack does 30 damage for each heads."
+      },
+      {
+        "nombre": "Hypno Headbutt",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "You may do 30 more damage. If you do, this Pokémon is now Asleep."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-107.png"
+  },
+  {
+    "id": "xy1-108",
+    "nombre": "Lillipup",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Tackle",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": ""
+      },
+      {
+        "nombre": "Bite",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-108.png"
+  },
+  {
+    "id": "xy1-109",
+    "nombre": "Herdier",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "80",
+    "costoRetirada": 1,
+    "evolvesFrom": "Lillipup",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bite",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      },
+      {
+        "nombre": "Jump On",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Flip a coin. If heads, this attack does 20 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-109.png"
+  },
+  {
+    "id": "xy1-110",
+    "nombre": "Stoutland",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 2"
+    ],
+    "tipo": "Colorless",
+    "hp": "140",
+    "costoRetirada": 3,
+    "evolvesFrom": "Herdier",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Bite Off",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "If your opponent's Active Pokémon is a Pokémon-EX, this attack does 60 more damage."
+      },
+      {
+        "nombre": "Wild Barking",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "Does 20 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-110.png"
+  },
+  {
+    "id": "xy1-111",
+    "nombre": "Bunnelby",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "60",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Dig",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 10,
+        "texto": "Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-111.png"
+  },
+  {
+    "id": "xy1-112",
+    "nombre": "Diggersby",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Stage 1"
+    ],
+    "tipo": "Colorless",
+    "hp": "100",
+    "costoRetirada": 2,
+    "evolvesFrom": "Bunnelby",
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Pickup",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Put 2 Item cards from your discard pile into your hand."
+      },
+      {
+        "nombre": "Dig",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 50,
+        "texto": "Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-112.png"
+  },
+  {
+    "id": "xy1-113",
+    "nombre": "Fletchling",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "50",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Me First",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Draw a card."
+      },
+      {
+        "nombre": "Peck",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": ""
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-113.png"
+  },
+  {
+    "id": "xy1-114",
+    "nombre": "Furfrou",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "90",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [
+      {
+        "nombre": "Fur Coat",
+        "tipo": "Ability",
+        "texto": "Any damage done to this Pokémon by attacks is reduced by 20 (after applying Weakness and Resistance)."
+      }
+    ],
+    "ataques": [
+      {
+        "nombre": "Energy Cutoff",
+        "costo": [
+          "Colorless",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fighting",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-114.png"
+  },
+  {
+    "id": "xy1-130",
+    "nombre": "Double Colorless Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "Double Colorless Energy provides ColorlessColorless Energy."
+    ],
+    "imagen": "/images/cards/xy1-130.png"
+  },
+  {
+    "id": "xy1-131",
+    "nombre": "Rainbow Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Special"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [
+      "This card provides Colorless Energy. While in play, this card provides every type of Energy but provides only 1 Energy at a time. When you attach this card from your hand to 1 of your Pokémon, put 1 damage counter on that Pokémon."
+    ],
+    "imagen": "/images/cards/xy1-131.png"
+  },
+  {
+    "id": "xy1-132",
+    "nombre": "Grass Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-132.png"
+  },
+  {
+    "id": "xy1-133",
+    "nombre": "Fire Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-133.png"
+  },
+  {
+    "id": "xy1-134",
+    "nombre": "Water Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-134.png"
+  },
+  {
+    "id": "xy1-135",
+    "nombre": "Lightning Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-135.png"
+  },
+  {
+    "id": "xy1-136",
+    "nombre": "Psychic Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-136.png"
+  },
+  {
+    "id": "xy1-137",
+    "nombre": "Fighting Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-137.png"
+  },
+  {
+    "id": "xy1-138",
+    "nombre": "Darkness Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-138.png"
+  },
+  {
+    "id": "xy1-139",
+    "nombre": "Metal Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-139.png"
+  },
+  {
+    "id": "xy1-140",
+    "nombre": "Fairy Energy",
+    "supertype": "Energy",
+    "subtypes": [
+      "Basic"
+    ],
+    "tipo": "Colorless",
+    "hp": "0",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [],
+    "debilidades": [],
+    "resistencias": [],
+    "reglas": [],
+    "imagen": "/images/cards/xy1-140.png"
+  },
+  {
+    "id": "xy1-141",
+    "nombre": "Venusaur-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Grass",
+    "hp": "180",
+    "costoRetirada": 4,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Poison Powder",
+        "costo": [
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "Your opponent's Active Pokémon is now Poisoned."
+      },
+      {
+        "nombre": "Jungle Hammer",
+        "costo": [
+          "Grass",
+          "Grass",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 90,
+        "texto": "Heal 30 damage from this Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-141.png"
+  },
+  {
+    "id": "xy1-142",
+    "nombre": "Blastoise-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Water",
+    "hp": "180",
+    "costoRetirada": 3,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Rapid Spin",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Switch this Pokémon with 1 of your Benched Pokémon. Then, your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon."
+      },
+      {
+        "nombre": "Splash Bomb",
+        "costo": [
+          "Water",
+          "Water",
+          "Water"
+        ],
+        "dano": 120,
+        "texto": "Flip a coin. If tails, this Pokémon does 30 damage to itself."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Grass",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-142.png"
+  },
+  {
+    "id": "xy1-143",
+    "nombre": "Emolga-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Lightning",
+    "hp": "110",
+    "costoRetirada": 0,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Energy Glide",
+        "costo": [
+          "Colorless"
+        ],
+        "dano": 0,
+        "texto": "Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon."
+      },
+      {
+        "nombre": "Electron Crush",
+        "costo": [
+          "Lightning",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "You may discard an Energy attached to this Pokémon. If you do, this attack does 30 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-143.png"
+  },
+  {
+    "id": "xy1-144",
+    "nombre": "Yveltal-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Darkness",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Evil Ball",
+        "costo": [
+          "Darkness",
+          "Colorless"
+        ],
+        "dano": 20,
+        "texto": "This attack does 20 more damage times the amount of Energy attached to both Active Pokémon."
+      },
+      {
+        "nombre": "Y Cyclone",
+        "costo": [
+          "Darkness",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 90,
+        "texto": "Move an Energy from this Pokémon to 1 of your Benched Pokémon."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Lightning",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Fighting",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-144.png"
+  },
+  {
+    "id": "xy1-145",
+    "nombre": "Skarmory-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Metal",
+    "hp": "170",
+    "costoRetirada": 1,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Joust",
+        "costo": [
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 30,
+        "texto": "Before doing damage, discard all Pokémon Tool cards attached to your opponent's Active Pokémon."
+      },
+      {
+        "nombre": "Tailspin Piledriver",
+        "costo": [
+          "Metal",
+          "Metal",
+          "Colorless"
+        ],
+        "dano": 80,
+        "texto": "If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Fire",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Psychic",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-145.png"
+  },
+  {
+    "id": "xy1-146",
+    "nombre": "Xerneas-EX",
+    "supertype": "Pokémon",
+    "subtypes": [
+      "Basic",
+      "EX"
+    ],
+    "tipo": "Fairy",
+    "hp": "170",
+    "costoRetirada": 2,
+    "evolvesFrom": null,
+    "habilidades": [],
+    "ataques": [
+      {
+        "nombre": "Break Through",
+        "costo": [
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 60,
+        "texto": "This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)"
+      },
+      {
+        "nombre": "X Blast",
+        "costo": [
+          "Fairy",
+          "Fairy",
+          "Colorless",
+          "Colorless"
+        ],
+        "dano": 140,
+        "texto": "This Pokémon can't use X Blast during your next turn."
+      }
+    ],
+    "debilidades": [
+      {
+        "tipo": "Metal",
+        "valor": "×2"
+      }
+    ],
+    "resistencias": [
+      {
+        "tipo": "Darkness",
+        "valor": "-20"
+      }
+    ],
+    "reglas": [
+      "Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards."
+    ],
+    "imagen": "/images/cards/xy1-146.png"
   }
 ]
