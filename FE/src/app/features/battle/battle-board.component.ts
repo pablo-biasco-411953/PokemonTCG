@@ -121,6 +121,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private ataqueRealizado = false;
   private pollingPartida: ReturnType<typeof setInterval> | null = null;
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
+  private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
+  showEndGameOverlay = false;
+  isVictory = false;
+  coinsEarned = 0;
+  endGameWinner = '';
+  endGameReason = '';
+  private endGameRewardSent = false;
   private lastAppliedStateSignature = '';
   public botEstaAtacando = false;
   private datosPendientesBot: Partida | null = null;
@@ -253,40 +260,111 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
     this.jugadorNombre = this.obtenerNombreJugadorLocal();
+    this.iniciarPresenciaBatalla();
     this.cargarCatalogoGodMode();
     this.showIntro = true;
     setTimeout(() => (this.introFadingOut = true), 2000);
     setTimeout(() => (this.showIntro = false), 3000);
 
     this.battleService.getState(this.matchId).subscribe({
-      next: (data) => {
-        this.partida = data;
-        this.lastAppliedStateSignature = this.crearFirmaPartida(data);
-        if (data.faseActual === 'LANZAMIENTO_MONEDA') {
-          setTimeout(() => {
-            this.estadoCoinFlip = 'DAR_LA_MANO';
-            this.iniciarPollingHandshake();
-            this.syncHandshakeWithServer(true);
-            this.cdr.detectChanges();
-          }, 3200);
-        } else {
-          this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
-          this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
-          this.finalizarCoinFlip();
-        }
-      },
+      next: (data) => this.hidratarEstadoInicial(data),
+      error: (err) => {
+        console.error('No se pudo recuperar la partida al recargar', err);
+        alert('La partida ya no esta disponible. Volviendo al lobby.');
+        this.router.navigate(['/lobby']);
+      }
     });
   }
 
   ngOnDestroy(): void {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
+    if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
     this.cleanupHandshakeScene();
   }
 
   private requestLandscapeOrientation(): void {}
+
+  private iniciarPresenciaBatalla(): void {
+    if (!this.matchId) return;
+    if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
+
+    this.battleService.heartbeat(this.matchId).subscribe({
+      next: (data) => {
+        if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+      },
+      error: (err) => console.warn('No se pudo enviar heartbeat inicial de batalla', err)
+    });
+
+    this.battlePresenceInterval = setInterval(() => {
+      if (!this.matchId || this.showEndGameOverlay) return;
+      this.battleService.heartbeat(this.matchId).subscribe({
+        next: (data) => {
+          if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+        },
+        error: (err) => console.warn('No se pudo enviar heartbeat de batalla', err)
+      });
+    }, 10000);
+  }
+
+  private hidratarEstadoInicial(data: Partida): void {
+    if (!data) return;
+    this.partida = data;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+    this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
+    this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
+    if (!this.opponentLoaded && this.nombreRival) {
+      this.cargarDatosOponente();
+    }
+
+    if (data.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(data);
+      return;
+    }
+
+    if (data.faseActual === 'LANZAMIENTO_MONEDA') {
+      this.boardVisible = false;
+      this.hidratarPreparativosIniciales(data);
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.finalizarCoinFlip();
+  }
+
+  private hidratarPreparativosIniciales(data: Partida): void {
+    this.handshakePower = data.coinHandshakeJugadorPower ?? 0;
+    this.opponentHandshakePower = data.coinHandshakeBotPower ?? 0;
+    this.opponentHandshakeHolding = !!data.coinHandshakeBotHolding;
+    this.handshakeComplete = !!data.coinHandshakeComplete;
+
+    if (data.coinFlipped) {
+      this.detenerPollingHandshake();
+      this.estadoCoinFlip = data.coinFlipWinner === this.jugadorNombre ? 'ELEGIR_TURNO' : 'RESULTADO_BOT';
+      if (this.estadoCoinFlip === 'RESULTADO_BOT') {
+        this.iniciarPollingSorteo();
+      }
+      return;
+    }
+
+    if (data.coinHandshakeComplete) {
+      this.estadoCoinFlip = this.puedeCantarSorteo(data) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
+      if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
+        this.iniciarPollingSorteo();
+      }
+      return;
+    }
+
+    this.estadoCoinFlip = 'DAR_LA_MANO';
+    this.iniciarPollingHandshake();
+    setTimeout(() => {
+      if (this.estadoCoinFlip === 'DAR_LA_MANO') {
+        this.syncHandshakeWithServer(true);
+      }
+    }, 120);
+  }
 
   dismissLandscapeHint(): void {
     this.landscapeHintDismissed = true;
@@ -527,6 +605,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         next: async (data) => {
           this.partida = data;
           this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+
+          if (data.faseActual === 'FIN_PARTIDA') {
+            this.handleGameEnd(data);
+            return;
+          }
 
           if (data.faseActual === 'TURNO_NORMAL') {
             this.finalizarCoinFlip();
@@ -1070,6 +1153,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => {
         const dataOnline = this.esPartidaOnline(data);
+        if (data?.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(data);
+          return;
+        }
         if (!dataOnline && (this.bloqueadoPorAnimacion || this.botEstaAtacando)) {
           console.log('??? Polling interceptado.');
           return;
@@ -1124,6 +1211,74 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         this.cdr.detectChanges();
       },
+    });
+  }
+
+  private handleGameEnd(partida: Partida): void {
+    if (this.showEndGameOverlay) return;
+
+    this.partida = partida;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(partida);
+    this.endGameWinner = partida.ganador || 'BOT';
+    this.isVictory = this.endGameWinner === this.jugadorNombre;
+    this.endGameReason = partida.razonFinPartida || this.buildFallbackEndGameReason();
+    const online = this.esPartidaOnline(partida);
+    this.coinsEarned = this.isVictory ? (online ? 100 : 50) : (online ? 20 : 10);
+    this.showEndGameOverlay = true;
+    this.boardVisible = true;
+    this.estadoCoinFlip = 'OCULTO';
+    this.cargandoAccion = false;
+    this.bloqueadoPorAnimacion = false;
+    this.botPensando = false;
+    this.botEstaAtacando = false;
+
+    if (this.pollingPartida) {
+      clearInterval(this.pollingPartida);
+      this.pollingPartida = null;
+    }
+    this.detenerRelojTurno();
+
+    this.awardEndGameCoins();
+    this.cdr.detectChanges();
+  }
+
+  surrenderBattle(): void {
+    if (!this.matchId || this.showEndGameOverlay || this.cargandoAccion) return;
+
+    const confirmar = window.confirm('¿Rendirte y conceder la victoria al rival?');
+    if (!confirmar) return;
+
+    this.cargandoAccion = true;
+    this.battleService.surrender(this.matchId).subscribe({
+      next: (partida) => {
+        if (partida?.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(partida);
+          return;
+        }
+        this.partida = partida;
+        this.cargandoAccion = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al rendirse', err);
+        this.cargandoAccion = false;
+        window.alert(err?.error || 'No se pudo rendir la partida.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private buildFallbackEndGameReason(): string {
+    return this.isVictory
+      ? 'Ganaste por condicion de victoria del tablero.'
+      : 'Perdiste por condicion de victoria del rival.';
+  }
+
+  private awardEndGameCoins(): void {
+    if (this.endGameRewardSent || !this.jugadorNombre || this.coinsEarned <= 0) return;
+    this.endGameRewardSent = true;
+    this.jugadorService.rewardCoins(this.jugadorNombre, this.coinsEarned).subscribe({
+      error: (err) => console.error('Error acreditando SantoCoins', err)
     });
   }
 
@@ -1263,6 +1418,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (!botAtaco) {
       this.aplicarEstadoRefrescado(estadoFinal);
+      if (this.showEndGameOverlay) return;
 
       this.limpiarBanderasBot();
 
@@ -1303,6 +1459,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     this.showImpactFlash = true;
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     await this.delay(150);
@@ -1447,6 +1604,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleService.getState(this.matchId!).subscribe({
       next: async (data) => {
         if (!data) return;
+        if (data.faseActual === 'FIN_PARTIDA') {
+          this.handleGameEnd(data);
+          return;
+        }
         if (this.partida?.turnoActual === 'JUGADOR' && data.turnoActual === 'BOT') {
           this.bloqueadoPorAnimacion = true;
           const miHp = this.hpRenderJugador;
@@ -2047,6 +2208,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
     if (!estado) return;
+    if (estado.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(estado);
+      return;
+    }
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
@@ -2175,6 +2340,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.showImpactFlash = true;
 
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     await this.delay(200);
@@ -2187,6 +2353,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private async finalizarSecuenciaAtaque(estadoFinal: Partida): Promise<void> {
+    if (estadoFinal.faseActual === 'FIN_PARTIDA') {
+      this.handleGameEnd(estadoFinal);
+      return;
+    }
     if (estadoFinal.turnoActual === 'BOT') {
       await this.iniciarTurnoBot(estadoFinal);
       return;
@@ -2220,6 +2390,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
     this.aplicarEstadoRefrescado(estadoFinal);
+    if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
     if (estadoFinal.turnoActual !== 'BOT') {

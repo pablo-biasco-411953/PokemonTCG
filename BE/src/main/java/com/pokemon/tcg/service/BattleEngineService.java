@@ -27,6 +27,7 @@ public class BattleEngineService {
     private final MazoRepository mazoRepo;
     private final CardRepository cardRepo;
     private final Random random = new Random();
+    private static final long ONLINE_DISCONNECT_TIMEOUT_MS = 30_000L;
     private final Map<String, Partida> partidasEnCurso = new ConcurrentHashMap<>();
     private final BotAIService botAIService;
     private final BattleAttackService battleAttackService;
@@ -90,6 +91,9 @@ public class BattleEngineService {
         partida.setMulligansJugador(mulligansJugador);
         partida.setMulligansBot(mulligansBot);
         partida.transicionarA(new EstadoLanzamientoMoneda());
+        long now = System.currentTimeMillis();
+        partida.setJugadorLastSeenAt(now);
+        partida.setBotLastSeenAt(now);
 
         partidasEnCurso.put(partida.getId(), partida);
         System.out.println("✅ Partida creada con ID: " + partida.getId());
@@ -215,7 +219,81 @@ public class BattleEngineService {
     }
 
     public Partida getEstadoPartida(String matchId) {
-        return partidasEnCurso.get(matchId);
+        return getEstadoPartida(matchId, null);
+    }
+
+    public synchronized Partida getEstadoPartida(String matchId, String username) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida == null) return null;
+        evaluarDesconexionOnline(partida, username);
+        registrarHeartbeat(partida, username);
+        return partida;
+    }
+
+    public synchronized Partida registrarHeartbeat(String matchId, String username) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida == null) return null;
+        evaluarDesconexionOnline(partida, username);
+        registrarHeartbeat(partida, username);
+        return partida;
+    }
+
+    private void registrarHeartbeat(Partida partida, String username) {
+        if (username == null || partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) return;
+        long now = System.currentTimeMillis();
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setJugadorLastSeenAt(now);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setBotLastSeenAt(now);
+        }
+    }
+
+    private void evaluarDesconexionOnline(Partida partida, String callerUsername) {
+        if (partida == null
+                || partida.getBotUsername() == null
+                || partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        boolean jugadorAusente = now - partida.getJugadorLastSeenAt() > ONLINE_DISCONNECT_TIMEOUT_MS;
+        boolean botAusente = now - partida.getBotLastSeenAt() > ONLINE_DISCONNECT_TIMEOUT_MS;
+
+        if (jugadorAusente && !partida.getJugadorUsername().equals(callerUsername)) {
+            cerrarPorDesconexion(partida, partida.getBotUsername());
+        } else if (botAusente && !partida.getBotUsername().equals(callerUsername)) {
+            cerrarPorDesconexion(partida, partida.getJugadorUsername());
+        }
+    }
+
+    private void cerrarPorDesconexion(Partida partida, String ganador) {
+        partida.transicionarA(new EstadoFinPartida());
+        partida.setGanador(ganador);
+        partida.setRazonFinPartida("El rival se ha desconectado");
+    }
+
+    public synchronized Partida rendirse(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            return partida;
+        }
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Jugador no identificado.");
+        }
+
+        String ganador;
+        if (username.equals(partida.getJugadorUsername())) {
+            ganador = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
+        } else if (username.equals(partida.getBotUsername())) {
+            ganador = partida.getJugadorUsername();
+        } else {
+            throw new IllegalArgumentException("El jugador no pertenece a esta partida.");
+        }
+
+        partida.transicionarA(new EstadoFinPartida());
+        partida.setGanador(ganador);
+        partida.setRazonFinPartida("El jugador se ha rendido");
+        return partida;
     }
 
     public void jugarPokemon(String matchId, String cartaId, String callerUsername) {
@@ -628,6 +706,9 @@ public class BattleEngineService {
         partida.setMulligansJugador(mulligansJugador);
         partida.setMulligansBot(mulligansBot);
         partida.transicionarA(new EstadoLanzamientoMoneda());
+        long now = System.currentTimeMillis();
+        partida.setJugadorLastSeenAt(now);
+        partida.setBotLastSeenAt(now);
 
         partidasEnCurso.put(partida.getId(), partida);
         System.out.println("✅ Partida Online creada con ID: " + partida.getId());
