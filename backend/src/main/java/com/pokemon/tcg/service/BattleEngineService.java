@@ -1,12 +1,14 @@
 package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.CardAttribute;
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.model.Mazo;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
 import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.model.battle.*;
+import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.battle.state.*;
 import com.pokemon.tcg.service.battle.command.*;
 import org.springframework.scheduling.annotation.Async;
@@ -63,8 +65,7 @@ public class BattleEngineService {
         Mazo mazoSeleccionado = mazoRepo.findById(mazoId)
                 .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + mazoId));
 
-        List<Card> cartasMazo = mazoSeleccionado.getCartas();
-        inicializarGrafoCartas(cartasMazo);
+        List<Card> cartasMazo = crearSnapshotMazo(mazoSeleccionado.getCartas());
         if (cartasMazo.size() < 60)
             throw new IllegalStateException("El mazo debe tener 60 cartas. Tiene: " + cartasMazo.size());
 
@@ -321,6 +322,7 @@ public class BattleEngineService {
         cartaEnJuego.setBocaAbajo(true);
         tablero.setActivo(cartaEnJuego);
         tablero.getMano().remove(carta);
+        agregarLog(partida, "ACTIVE_PLACED", username);
 
         if (username.equals(partida.getJugadorUsername())) {
             partida.setSetupJugadorListo(true);
@@ -360,6 +362,7 @@ public class BattleEngineService {
         cartaEnJuego.setBocaAbajo(true);
         tablero.getBanca().add(cartaEnJuego);
         tablero.getMano().remove(carta);
+        agregarLog(partida, "BENCH_PLACED", username);
     }
 
     public synchronized void confirmarBancaSetup(String matchId, String username) {
@@ -468,6 +471,7 @@ public class BattleEngineService {
         if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
             prepararPremios(partida.getJugador());
             prepararPremios(partida.getBot());
+            agregarLog(partida, "PRIZES_PLACED", username);
             partida.setSetupJugadorListo(false);
             partida.setSetupBotListo(false);
 
@@ -543,9 +547,13 @@ public class BattleEngineService {
     }
 
     private void cerrarPorDesconexion(Partida partida, String ganador) {
+        String desconectado = ganador != null && ganador.equals(partida.getJugadorUsername())
+                ? partida.getBotUsername()
+                : partida.getJugadorUsername();
         partida.transicionarA(new EstadoFinPartida());
         partida.setGanador(ganador);
         partida.setRazonFinPartida("El rival se ha desconectado");
+        agregarLog(partida, "DISCONNECTED", desconectado);
     }
 
     public synchronized Partida rendirse(String matchId, String username) {
@@ -569,6 +577,7 @@ public class BattleEngineService {
         partida.transicionarA(new EstadoFinPartida());
         partida.setGanador(ganador);
         partida.setRazonFinPartida("El jugador se ha rendido");
+        agregarLog(partida, "SURRENDERED", username);
         return partida;
     }
 
@@ -583,6 +592,7 @@ public class BattleEngineService {
         if (!esPokemonBasico(carta)) throw new IllegalArgumentException("Solo podés bajar Pokémon básicos.");
 
         ejecutarComando(partida, new ComandoJugarPokemon(carta, tablero));
+        agregarLog(partida, "POKEMON_PLAYED", callerUsername, nombreCarta(carta));
     }
 
     public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername) {
@@ -597,6 +607,7 @@ public class BattleEngineService {
         if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("Energía no encontrada.");
 
         ejecutarComando(partida, new ComandoUnirEnergia(objetivo, energia, tablero));
+        agregarLog(partida, "ENERGY_ATTACHED", callerUsername, nombreCarta(objetivo));
     }
 
     public void realizarRetirada(String matchId, String nuevoActivoId, String callerUsername) {
@@ -623,11 +634,28 @@ public class BattleEngineService {
 
         TableroJugador tableroAtacante = getTableroDeJugador(partida, callerUsername);
         TableroJugador tableroDefensor = getTableroOponente(partida, callerUsername);
+        CartaEnJuego defensorAntes = tableroDefensor.getActivo();
+        int hpDefensorAntes = defensorAntes != null ? defensorAntes.getHpActual() : 0;
+        java.util.Set<String> condicionesAntes = defensorAntes == null
+                ? java.util.Collections.emptySet()
+                : new java.util.HashSet<>(defensorAntes.getCondicionesEspeciales());
 
         ejecutarComando(partida, new ComandoAtacar(
                 nombreAtaqueElegido, tableroAtacante, tableroDefensor,
                 battleAttackService, battleKoService
         ));
+
+        CartaEnJuego defensorDespues = tableroDefensor.getActivo();
+        int hpDefensorDespues = defensorDespues != null ? defensorDespues.getHpActual() : 0;
+        int danio = Math.max(0, hpDefensorAntes - hpDefensorDespues);
+        agregarLog(partida, "ATTACK_USED", callerUsername, nombreAtaqueElegido, nombreCarta(defensorAntes), danio > 0 ? String.valueOf(danio) : "");
+        if (defensorDespues != null) {
+            for (String condicion : defensorDespues.getCondicionesEspeciales()) {
+                if (!condicionesAntes.contains(condicion)) {
+                    agregarLog(partida, "STATUS_APPLIED", callerUsername, nombreCarta(defensorDespues), condicion);
+                }
+            }
+        }
 
         if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
             System.out.println("🏆 Partida terminada por ataque.");
@@ -714,18 +742,22 @@ public class BattleEngineService {
         }
 
         partida.setYaSeRetiroEsteTurno(false);
+        agregarLog(partida, "TURN_PASSED", callerUsername);
 
         if (partida.getBotUsername() == null) {
             partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             partida.setTurnoActual(Partida.Turno.BOT);
+            agregarLog(partida, "TURN_STARTED", "BOT");
         } else {
             partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
                 partida.setTurnoActual(Partida.Turno.BOT);
                 robarCarta(partida.getBot());
+                agregarLog(partida, "TURN_STARTED", partida.getBotUsername());
             } else {
                 partida.setTurnoActual(Partida.Turno.JUGADOR);
                 robarCarta(partida.getJugador());
+                agregarLog(partida, "TURN_STARTED", partida.getJugadorUsername());
             }
         }
     }
@@ -1011,19 +1043,20 @@ public class BattleEngineService {
         Mazo mazo2 = mazoRepo.findById(player2MazoId)
                 .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + player2MazoId));
 
-        if (mazo1.getCartas().size() < 60 || mazo2.getCartas().size() < 60)
+        List<Card> cartasMazo1 = crearSnapshotMazo(mazo1.getCartas());
+        List<Card> cartasMazo2 = crearSnapshotMazo(mazo2.getCartas());
+
+        if (cartasMazo1.size() < 60 || cartasMazo2.size() < 60)
             throw new IllegalStateException("Los mazos deben tener 60 cartas.");
-        inicializarGrafoCartas(mazo1.getCartas());
-        inicializarGrafoCartas(mazo2.getCartas());
 
         TableroJugador tableroJugador = new TableroJugador();
         TableroJugador tableroBot = new TableroJugador();
 
-        List<Card> m1 = new ArrayList<>(mazo1.getCartas());
+        List<Card> m1 = new ArrayList<>(cartasMazo1);
         Collections.shuffle(m1);
         tableroJugador.setMazo(m1);
 
-        List<Card> m2 = new ArrayList<>(mazo2.getCartas());
+        List<Card> m2 = new ArrayList<>(cartasMazo2);
         Collections.shuffle(m2);
         tableroBot.setMazo(m2);
 
@@ -1046,10 +1079,79 @@ public class BattleEngineService {
         return partida;
     }
 
+    private List<Card> crearSnapshotMazo(List<Card> cartas) {
+        inicializarGrafoCartas(cartas);
+        return cartas.stream().map(this::copiarCartaParaPartida).toList();
+    }
+
+    private Card copiarCartaParaPartida(Card source) {
+        if (source == null) return null;
+
+        Card copy = new Card();
+        copy.setId(source.getId());
+        copy.setNombre(source.getNombre());
+        copy.setHp(source.getHp());
+        copy.setTipo(source.getTipo());
+        copy.setImagen(source.getImagen());
+        copy.setCostoRetirada(source.getCostoRetirada());
+        copy.setSupertype(source.getSupertype());
+        copy.setEvolvesFrom(source.getEvolvesFrom());
+        copy.setSubtypes(new ArrayList<>(source.getSubtypes()));
+        copy.setReglas(new ArrayList<>(source.getReglas()));
+        copy.reemplazarAtaques(source.getAtaques().stream().map(this::copiarAtaqueParaPartida).toList());
+        copy.setDebilidades(source.getDebilidades().stream().map(this::copiarAtributoCarta).toList());
+        copy.setResistencias(source.getResistencias().stream().map(this::copiarAtributoCarta).toList());
+        return copy;
+    }
+
+    private Ataque copiarAtaqueParaPartida(Ataque source) {
+        Ataque copy = new Ataque();
+        copy.setNombre(source.getNombre());
+        copy.setDanio(source.getDanio());
+        copy.setTiposEnergia(source.getCosto() == null ? new ArrayList<>() : new ArrayList<>(source.getCosto()));
+        copy.setTexto(source.getTexto());
+        return copy;
+    }
+
+    private CardAttribute copiarAtributoCarta(CardAttribute source) {
+        if (source == null) return null;
+        return new CardAttribute(source.getType(), source.getValue());
+    }
+
+    private void agregarLog(Partida partida, String evento, String actor, String... detalles) {
+        if (partida == null || evento == null) return;
+        StringBuilder log = new StringBuilder(sanitizarLog(evento))
+                .append(":")
+                .append(sanitizarLog(actor == null || actor.isBlank() ? "Sistema" : actor));
+        if (detalles != null) {
+            for (String detalle : detalles) {
+                log.append(":").append(sanitizarLog(detalle));
+            }
+        }
+        partida.getTurnLogs().add(log.toString());
+        while (partida.getTurnLogs().size() > 80) {
+            partida.getTurnLogs().remove(0);
+        }
+    }
+
+    private String nombreCarta(Card card) {
+        return card == null ? "" : card.getNombre();
+    }
+
+    private String nombreCarta(CartaEnJuego carta) {
+        return carta == null ? "" : nombreCarta(carta.getCard());
+    }
+
+    private String sanitizarLog(String value) {
+        if (value == null) return "";
+        return value.replace(':', '-').replace('\n', ' ').replace('\r', ' ').trim();
+    }
+
     private void inicializarGrafoCartas(List<Card> cartas) {
         for (Card card : cartas) {
             if (card == null) continue;
             card.getAtaques().size();
+            card.getReglas().size();
             card.getDebilidades().size();
             card.getResistencias().size();
             card.getSubtypes().size();

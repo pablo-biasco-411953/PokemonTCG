@@ -22,23 +22,25 @@ public class LobbyRoomController {
     }
 
     @GetMapping
-    public ResponseEntity<?> listRooms() {
-        return ResponseEntity.ok(lobbyRoomService.listRooms());
+    public ResponseEntity<?> listRooms(@RequestHeader(value = "X-Username", required = false) String headerUsername) {
+        return ResponseEntity.ok(lobbyRoomService.listRooms(headerUsername));
     }
 
     @GetMapping("/{roomId}")
-    public ResponseEntity<?> getRoom(@PathVariable String roomId) {
+    public ResponseEntity<?> getRoom(@PathVariable String roomId,
+                                     @RequestHeader(value = "X-Username", required = false) String headerUsername) {
         try {
-            return ResponseEntity.ok(lobbyRoomService.getRoom(roomId));
+            return ResponseEntity.ok(lobbyRoomService.getRoom(roomId, headerUsername));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @GetMapping("/match/{matchId}")
-    public ResponseEntity<?> getRoomByMatch(@PathVariable String matchId) {
+    public ResponseEntity<?> getRoomByMatch(@PathVariable String matchId,
+                                            @RequestHeader(value = "X-Username", required = false) String headerUsername) {
         try {
-            return ResponseEntity.ok(lobbyRoomService.getRoomByMatchId(matchId));
+            return ResponseEntity.ok(lobbyRoomService.getRoomByMatchId(matchId, headerUsername));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -84,6 +84,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   isSpectator = false;
   battleRoom: LobbyRoomSnapshot | null = null;
   battleReactions: Array<{ id: string; icon: string; sender: string; x: number }> = [];
+  battleLogMinimized = false;
   private seenBattleReactionIds = new Set<string>();
   private battleRoomPolling: ReturnType<typeof setInterval> | null = null;
   landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
@@ -386,6 +387,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (data.coinFlipped) {
       this.detenerPollingHandshake();
+      if (this.isSpectator) {
+        this.estadoCoinFlip = 'ESPERANDO_RIVAL';
+        this.iniciarPollingSorteo();
+        return;
+      }
       this.estadoCoinFlip = data.coinFlipWinner === this.jugadorNombre ? 'ELEGIR_TURNO' : 'RESULTADO_BOT';
       if (this.estadoCoinFlip === 'RESULTADO_BOT') {
         this.iniciarPollingSorteo();
@@ -394,10 +400,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     if (data.coinHandshakeComplete) {
+      if (this.isSpectator) {
+        this.estadoCoinFlip = 'ESPERANDO_RIVAL';
+        this.iniciarPollingSorteo();
+        return;
+      }
       this.estadoCoinFlip = this.puedeCantarSorteo(data) ? 'ELEGIR_LADO' : 'ESPERANDO_RIVAL';
       if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
         this.iniciarPollingSorteo();
       }
+      return;
+    }
+
+    if (this.isSpectator) {
+      this.estadoCoinFlip = 'ESPERANDO_RIVAL';
+      this.iniciarPollingSorteo();
       return;
     }
 
@@ -560,6 +577,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private updateLoadingPercentage(pct: number): void {
     if (!this.matchId) return;
+    if (this.isSpectator) return;
     pct = Math.min(100, Math.max(0, pct));
     this.battleService.actualizarLoading(this.matchId, pct).subscribe(state => {
       if (state) {
@@ -581,6 +599,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   comenzarApretonMano(event: PointerEvent): void {
+    if (this.isSpectator) return;
     if (this.estadoCoinFlip !== 'DAR_LA_MANO' || this.handshakeComplete) return;
     event.preventDefault();
     this.handshakeHolding = true;
@@ -590,6 +609,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   soltarApretonMano(event?: PointerEvent): void {
+    if (this.isSpectator) return;
     if (event) {
       try {
         (event.currentTarget as HTMLElement | null)?.releasePointerCapture?.(event.pointerId);
@@ -647,6 +667,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private syncHandshakeWithServer(force = false): void {
     if (!this.matchId) return;
+    if (this.isSpectator) return;
     const now = Date.now();
     if (!force && now - this.lastHandshakeSyncAt < 120) return;
     this.lastHandshakeSyncAt = now;
@@ -692,6 +713,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
+    if (this.isSpectator) return;
     if (!this.puedeCantarSorteo(this.partida)) {
       this.estadoCoinFlip = 'ESPERANDO_RIVAL';
       this.iniciarPollingSorteo();
@@ -704,6 +726,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async seleccionarTurno(yoVoyPrimero: boolean) {
+    if (this.isSpectator) return;
     try {
       await firstValueFrom(this.battleService.elegirTurno(this.matchId!, yoVoyPrimero));
       this.finalizarCoinFlip();
@@ -845,16 +868,42 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const actor = parts[1] || 'Sistema';
     const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
     const subject = esMiAccion ? 'Vos' : (actor === 'BOT' ? this.nombreRival : actor);
+    const first = parts[2] || '';
+    const second = parts[3] || '';
+    const third = parts[4] || '';
     const map: Record<string, { title: string; detail: string; kind: string }> = {
       ENERGY_DISCARDED: { title: 'Energia descartada', detail: `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
       DECK_SEARCHED: { title: 'Busqueda en mazo', detail: `${subject} busco cartas en el mazo.`, kind: 'search' },
-      ENERGY_MOVED: { title: 'Energia movida', detail: `${subject} movio una energia en el campo.`, kind: 'energy' }
+      ENERGY_MOVED: { title: 'Energia movida', detail: `${subject} movio una energia en el campo.`, kind: 'energy' },
+      POKEMON_PLAYED: { title: 'Pokemon en banca', detail: `${subject} bajo a ${first || 'un Pokemon'} a la banca.`, kind: 'bench' },
+      ACTIVE_PLACED: { title: 'Activo preparado', detail: `${subject} preparo su Pokemon activo.`, kind: 'setup' },
+      BENCH_PLACED: { title: 'Banca preparada', detail: `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
+      PRIZES_PLACED: { title: 'Premios colocados', detail: `${subject} coloco sus premios.`, kind: 'setup' },
+      ENERGY_ATTACHED: { title: 'Energia unida', detail: `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
+      ATTACK_USED: { title: 'Ataque', detail: `${subject} uso ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.`, kind: 'attack' },
+      STATUS_APPLIED: { title: 'Estado aplicado', detail: `${subject} dejo a ${first || 'un Pokemon'} ${this.traducirCondicionLog(second)}.`, kind: 'status' },
+      TURN_PASSED: { title: 'Turno terminado', detail: `${subject} termino su turno.`, kind: 'phase' },
+      TURN_STARTED: { title: 'Nuevo turno', detail: `Comienza el turno de ${subject}.`, kind: 'phase' },
+      SURRENDERED: { title: 'Rendicion', detail: `${subject} se rindio.`, kind: 'system' },
+      DISCONNECTED: { title: 'Desconexion', detail: `${subject} se desconecto.`, kind: 'system' }
     };
     return map[event] || {
       title: event.replaceAll('_', ' ').toLowerCase(),
       detail: log,
       kind: 'system'
     };
+  }
+
+  private traducirCondicionLog(condition: string): string {
+    const map: Record<string, string> = {
+      Paralyzed: 'paralizado',
+      Asleep: 'dormido',
+      Confused: 'confundido',
+      Poisoned: 'envenenado',
+      Burned: 'quemado',
+      CantRetreat: 'sin retirada'
+    };
+    return map[condition] || condition || 'afectado';
   }
 
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
@@ -1996,11 +2045,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
 
       if (coinConfig) {
-        const carasReales = this.battleBoardTurn.resolverCarasBot(
-          coinConfig,
-          estadoFinal,
-          danioHecho,
-        );
+        const carasReales = this.contarCarasServidor(estadoFinal)
+          ?? this.battleBoardTurn.resolverCarasBot(
+            coinConfig,
+            estadoFinal,
+            danioHecho,
+          );
         this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
           coinConfig.cantidadMonedas,
           carasReales,
@@ -2949,12 +2999,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
     const danioHecho = this.battleBoardCombat.calcularDanioHecho(hpBotAntes, hpBotDespues);
 
-    const carasReales = this.battleBoardTurn.resolverCarasJugador(
-      coinConfig,
-      habilidad,
-      estadoFinal,
-      danioHecho,
-    );
+    const carasReales = this.contarCarasServidor(estadoFinal)
+      ?? this.battleBoardTurn.resolverCarasJugador(
+        coinConfig,
+        habilidad,
+        estadoFinal,
+        danioHecho,
+      );
     this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
       coinConfig.cantidadMonedas,
       carasReales,
@@ -2966,6 +3017,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       carasReales,
       coinConfig.esSoloEstado,
     );
+  }
+
+  private contarCarasServidor(estado: Partida | null | undefined): number | null {
+    const monedas = estado?.ultimasMonedasLanzadas;
+    if (!monedas?.length) return null;
+    return monedas.filter(Boolean).length;
   }
 
   private async reproducirImpactoAtaqueJugador(
