@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, HostListener, NgZone, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SobreService } from './services/sobre.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
 import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
@@ -1198,10 +1199,22 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.sobresDisponibles--;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error al abrir sobre', err);
+      error: (err: HttpErrorResponse) => {
+        const backendMessage = this.getBackendErrorMessage(err);
+        console.error('Error al abrir sobre', backendMessage, err);
+        alert(backendMessage);
+        this.refrescarTodo();
       }
     });
+  }
+
+  private getBackendErrorMessage(err: HttpErrorResponse): string {
+    const fallback = 'No se pudo abrir el sobre. Revisa si el jugador tiene sobres disponibles y si Render cargo el catalogo de cartas.';
+    if (!err) return fallback;
+    if (typeof err.error === 'string' && err.error.trim()) return err.error;
+    if (err.error?.message) return err.error.message;
+    if (err.message) return err.message;
+    return fallback;
   }
 
   // Cierra la experiencia de apertura y refresca el lobby.
