@@ -39,9 +39,13 @@ public class Partida {
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
+    
+    private List<String> turnLogs = new ArrayList<>();
+
+    private java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue = new java.util.LinkedList<>();
 
     public enum Turno { JUGADOR, BOT }
-    public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, FIN_PARTIDA }
+    public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, ESPERANDO_INTERACCION, FIN_PARTIDA }
 
     public Partida(TableroJugador jugador, TableroJugador bot) {
         // Cada partida vive en memoria y se identifica por UUID.
@@ -56,6 +60,9 @@ public class Partida {
 
     public void setId(String id) { this.id = id; }
     public String getId() { return id; }
+    
+    public List<String> getTurnLogs() { return turnLogs; }
+    public void setTurnLogs(List<String> turnLogs) { this.turnLogs = turnLogs; }
 
     public TableroJugador getJugador() { return jugador; }
     public void setJugador(TableroJugador jugador) { this.jugador = jugador; }
@@ -76,6 +83,7 @@ public class Partida {
                 case INICIO -> new EstadoInicio();
                 case LANZAMIENTO_MONEDA -> new EstadoLanzamientoMoneda();
                 case TURNO_NORMAL -> new EstadoTurnoNormal();
+                case ESPERANDO_INTERACCION -> new EstadoEsperandoInteraccion();
                 case FIN_PARTIDA -> new EstadoFinPartida();
             };
         }
@@ -105,6 +113,14 @@ public class Partida {
 
     public void setUltimasMonedasLanzadas(List<Boolean> ultimasMonedasLanzadas) {
         this.ultimasMonedasLanzadas = ultimasMonedasLanzadas;
+    }
+
+    public java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> getExecutionQueue() {
+        return executionQueue;
+    }
+
+    public void setExecutionQueue(java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue) {
+        this.executionQueue = executionQueue;
     }
 
     public String getJugadorUsername() { return jugadorUsername; }

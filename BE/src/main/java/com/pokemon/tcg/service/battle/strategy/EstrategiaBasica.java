@@ -254,10 +254,32 @@ public class EstrategiaBasica implements EstrategiaBot {
         List<Ataque> ataques = activoBot.getCard().getAtaques();
         if (ataques == null || ataques.isEmpty()) return;
 
-        Ataque ataqueElegido = ataques.get(0);
+        Ataque ataqueElegido = null;
+        int maxScore = -1;
 
-        if (!puedePagarCosto(activoBot, ataqueElegido)) {
-            System.out.println("🤖 [BOT] No tiene energía para " + ataqueElegido.getNombre());
+        for (Ataque atk : ataques) {
+            if (!puedePagarCosto(activoBot, atk)) continue;
+
+            int score = calcularDanioFinal(activoBot, activoJugador, atk);
+            String txt = (atk.getTexto() != null) ? atk.getTexto().toLowerCase() : "";
+
+            if (score >= activoJugador.getHpActual()) {
+                score += 1000; // Insta-kill is best
+            }
+
+            if (txt.contains("paralyzed") || txt.contains("asleep")) score += 30;
+            if (txt.contains("poisoned") || txt.contains("confused")) score += 20;
+            if (txt.contains("heal") && activoBot.getHpActual() < Integer.parseInt(activoBot.getCard().getHp())) score += 40;
+            if (txt.contains("draw")) score += 25;
+
+            if (score > maxScore) {
+                maxScore = score;
+                ataqueElegido = atk;
+            }
+        }
+
+        if (ataqueElegido == null) {
+            System.out.println("🤖 [BOT] No tiene energía para ningún ataque");
             return;
         }
 

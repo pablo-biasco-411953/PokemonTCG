@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BattleNotificationComponent } from './components/battle-notification/battle-notification';
 import { BattleBoardAbilitiesPanelComponent } from './battle-board-abilities-panel.component';
 import { BattleBoardCardDetailPanelComponent } from './battle-board-card-detail-panel.component';
 import { BattleBoardDebugPanelComponent } from './battle-board-debug-panel.component';
@@ -62,9 +63,13 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
     BattleBoardDebugPanelComponent,
     BattleBoardDiscardModalComponent,
     TranslatePipe,
+    BattleNotificationComponent,
   ],
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
+  mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
+    console.log('[NOTIFICACION]', mensaje, tipo);
+  }
   public Math = Math;
   readonly handDropListId = 'player-hand-dropzone';
   readonly activeDropListId = 'player-active-dropzone';
@@ -123,6 +128,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private ataqueRealizado = false;
   private pollingPartida: ReturnType<typeof setInterval> | null = null;
+  mostrarVictoriaModal = false;
+  mostrarDerrotaModal = false;
+  animandoTransicionFinJuego = false;
+  
+  private lastProcessedLogIndex = 0;
+
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
   private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
   showEndGameOverlay = false;
@@ -244,11 +255,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private effectsTriggered = false;
 
   constructor(
-    private battleService: BattleService,
     private route: ActivatedRoute,
     private router: Router,
+    private battleService: BattleService,
+    public battleBoardUi: BattleBoardUiService,
     private cdr: ChangeDetectorRef,
-    private battleBoardUi: BattleBoardUiService,
+    private i18nService: I18nService,
     private battleBoardAttack: BattleBoardAttackService,
     private battleBoardAction: BattleBoardActionService,
     private battleBoardCombat: BattleBoardCombatService,
@@ -593,6 +605,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private crearFirmaPartida(estado: Partida | null | undefined): string {
     return estado ? JSON.stringify(estado) : '';
+  }
+
+  private procesarTurnLogs(): void {
+    if (!this.partida?.turnLogs) return;
+
+    for (let i = this.lastProcessedLogIndex; i < this.partida.turnLogs.length; i++) {
+      const log = this.partida.turnLogs[i];
+      const parts = log.split(':');
+      const event = parts[0];
+      const actor = parts[1];
+      
+      const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
+
+      switch (event) {
+        case 'ENERGY_DISCARDED':
+          this.mostrarNotificacion(`${esMiAccion ? 'Descartaste' : 'El rival descartó'} una energía al ataque.`, 'warning');
+          break;
+        case 'DECK_SEARCHED':
+          this.mostrarNotificacion(`${esMiAccion ? 'Buscaste' : 'El rival buscó'} cartas en el mazo.`, 'info');
+          break;
+        case 'ENERGY_MOVED':
+          this.mostrarNotificacion(`${esMiAccion ? 'Moviste' : 'El rival movió'} una energía.`, 'info');
+          break;
+      }
+    }
+    this.lastProcessedLogIndex = this.partida.turnLogs.length;
   }
 
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
@@ -1187,9 +1225,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
 
         const turnoAnterior = this.partida?.turnoActual;
-
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
+
+        this.procesarTurnLogs();
 
         if (!this.opponentLoaded && this.nombreRival) {
           this.cargarDatosOponente();
@@ -1399,6 +1438,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async ejecutarIAEnemigaConData(estadoFinal: any) {
+    this.botPensando = true;
+    this.cdr.detectChanges();
+    await this.delay(2500); // Artificial delay to simulate thinking
+    this.botPensando = false;
+    this.cdr.detectChanges();
+
     const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
     const analisisBot = this.battleBoardTurn.analizarTurnoBot(
       estadoAntiguo,
@@ -1421,6 +1466,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
     if (!botAtaco) {
+      this.mostrarNotificacion('El rival pasó su turno.', 'info');
       this.aplicarEstadoRefrescado(estadoFinal);
       if (this.showEndGameOverlay) return;
 
@@ -1582,25 +1628,58 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const condViejoJugador = estadoAnterior.jugador?.activo?.condicionesEspeciales || [];
     const condNuevoJugador = estadoNuevo.jugador?.activo?.condicionesEspeciales || [];
 
+    // CURADOS JUGADOR
     if (condViejoJugador.includes('Paralyzed') && !condNuevoJugador.includes('Paralyzed')) {
-      console.log('⚡ Jugador curado de parálisis!');
+      this.mostrarNotificacion('¡Tu Pokémon ya no está paralizado!', 'success');
       await this.animarCuraEstado('jugador', 'Paralyzed', '¡Parálisis curada!');
     }
     if (condViejoJugador.includes('Asleep') && !condNuevoJugador.includes('Asleep')) {
-      console.log('😴 Jugador despertó!');
+      this.mostrarNotificacion('¡Tu Pokémon se despertó!', 'success');
       await this.animarCuraEstado('jugador', 'Asleep', '¡Se despertó!');
+    }
+    if (condViejoJugador.includes('Poisoned') && !condNuevoJugador.includes('Poisoned')) {
+      this.mostrarNotificacion('¡Tu Pokémon se curó del veneno!', 'success');
+    }
+
+    // NUEVOS ESTADOS JUGADOR
+    if (!condViejoJugador.includes('Paralyzed') && condNuevoJugador.includes('Paralyzed')) {
+      this.mostrarNotificacion('¡Tu Pokémon fue paralizado!', 'error');
+    }
+    if (!condViejoJugador.includes('Asleep') && condNuevoJugador.includes('Asleep')) {
+      this.mostrarNotificacion('¡Tu Pokémon se quedó dormido!', 'error');
+    }
+    if (!condViejoJugador.includes('Poisoned') && condNuevoJugador.includes('Poisoned')) {
+      this.mostrarNotificacion('¡Tu Pokémon fue envenenado!', 'error');
+    }
+    if (!condViejoJugador.includes('Confused') && condNuevoJugador.includes('Confused')) {
+      this.mostrarNotificacion('¡Tu Pokémon está confundido!', 'error');
     }
 
     const condViejoBot = estadoAnterior.bot?.activo?.condicionesEspeciales || [];
     const condNuevoBot = estadoNuevo.bot?.activo?.condicionesEspeciales || [];
 
+    // CURADOS BOT
     if (condViejoBot.includes('Paralyzed') && !condNuevoBot.includes('Paralyzed')) {
-      console.log('⚡ Bot curado de parálisis!');
+      this.mostrarNotificacion('El Pokémon rival se curó de la parálisis.', 'info');
       await this.animarCuraEstado('bot', 'Paralyzed', '¡Parálisis curada!');
     }
     if (condViejoBot.includes('Asleep') && !condNuevoBot.includes('Asleep')) {
-      console.log('😴 Bot despertó!');
+      this.mostrarNotificacion('El Pokémon rival se despertó.', 'info');
       await this.animarCuraEstado('bot', 'Asleep', '¡Se despertó!');
+    }
+
+    // NUEVOS ESTADOS BOT
+    if (!condViejoBot.includes('Paralyzed') && condNuevoBot.includes('Paralyzed')) {
+      this.mostrarNotificacion('¡El Pokémon rival fue paralizado!', 'success');
+    }
+    if (!condViejoBot.includes('Asleep') && condNuevoBot.includes('Asleep')) {
+      this.mostrarNotificacion('¡El Pokémon rival se durmió!', 'success');
+    }
+    if (!condViejoBot.includes('Poisoned') && condNuevoBot.includes('Poisoned')) {
+      this.mostrarNotificacion('¡El Pokémon rival fue envenenado!', 'success');
+    }
+    if (!condViejoBot.includes('Confused') && condNuevoBot.includes('Confused')) {
+      this.mostrarNotificacion('¡El Pokémon rival está confundido!', 'success');
     }
   }
 
@@ -2062,8 +2141,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return this.battleBoardUi.getSpriteFront(nombreCarta);
   }
 
-  onSpriteError(event: Event): void {
-    (event.target as HTMLImageElement).style.display = 'none';
+  onSpriteError(event: Event, cardId: string): void {
+    const img = event.target as HTMLImageElement;
+    const fallbackSrc = this.battleBoardUi.getImagenCarta(cardId);
+    if (!img.src.includes(fallbackSrc)) {
+      img.src = fallbackSrc;
+      img.classList.add('fallback-sprite'); // Add class for styling
+    } else {
+      img.style.display = 'none'; // If even the fallback fails, hide it
+    }
   }
 
   tieneCondicionEspecial(quien: 'JUGADOR' | 'BOT', condicion: string): boolean {
@@ -2220,6 +2306,24 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.handleGameEnd(estado);
       return;
     }
+    
+    // Check if cards were drawn
+    if (this.partida) {
+      const prevHandSizeJugador = this.partida.jugador?.mano?.length || 0;
+      const newHandSizeJugador = estado.jugador?.mano?.length || 0;
+      if (newHandSizeJugador > prevHandSizeJugador) {
+        const drawn = newHandSizeJugador - prevHandSizeJugador;
+        this.mostrarNotificacion(`Has robado ${drawn} carta(s).`, 'info');
+      }
+
+      const prevHandSizeBot = this.partida.bot?.mano?.length || 0;
+      const newHandSizeBot = estado.bot?.mano?.length || 0;
+      if (newHandSizeBot > prevHandSizeBot) {
+        const drawn = newHandSizeBot - prevHandSizeBot;
+        this.mostrarNotificacion(`El rival robó ${drawn} carta(s).`, 'info');
+      }
+    }
+
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
