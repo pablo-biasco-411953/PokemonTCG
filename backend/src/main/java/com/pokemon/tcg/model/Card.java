@@ -132,7 +132,9 @@ public class Card {
     public void setEvolvesFrom(String evolvesFrom) { this.evolvesFrom = evolvesFrom; }
 
     public List<String> getSubtypes() { return subtypes; }
+    public List<String> getReglas() { return reglas; }
     public List<Ataque> getAtaques() { return ataques; }
+    public void reemplazarAtaques(List<Ataque> ataques) { this.ataques = ataques != null ? ataques : new ArrayList<>(); }
     public List<CardAttribute> getDebilidades() { return debilidades; }
     public List<CardAttribute> getResistencias() { return resistencias; }
 

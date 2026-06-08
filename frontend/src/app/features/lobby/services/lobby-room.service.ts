@@ -36,6 +36,7 @@ export interface LobbyRoomSnapshot {
   matchId?: string | null;
   canJoin: boolean;
   canSpectate: boolean;
+  currentUserSpectator: boolean;
   updatedAt: number;
   chat: LobbyRoomChatMessage[];
   reactions: LobbyRoomReaction[];

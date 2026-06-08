@@ -32,26 +32,44 @@ public class LobbyRoomService {
     }
 
     public List<LobbyRoomSnapshot> listRooms() {
+        return listRooms(null);
+    }
+
+    public List<LobbyRoomSnapshot> listRooms(String username) {
+        rooms.values().removeIf(room -> !syncRoomStatus(room));
         return rooms.values().stream()
-                .peek(this::syncRoomStatus)
                 .sorted(Comparator.comparing(LobbyRoom::getUpdatedAt).reversed())
-                .map(this::toSnapshot)
+                .map(room -> toSnapshot(room, username))
                 .toList();
     }
 
     public LobbyRoomSnapshot getRoom(String roomId) {
+        return getRoom(roomId, null);
+    }
+
+    public LobbyRoomSnapshot getRoom(String roomId, String username) {
         LobbyRoom room = requireRoom(roomId);
-        syncRoomStatus(room);
-        return toSnapshot(room);
+        if (!syncRoomStatus(room)) {
+            rooms.remove(roomId);
+            throw new IllegalArgumentException("La sala ya finalizo.");
+        }
+        return toSnapshot(room, username);
     }
 
     public LobbyRoomSnapshot getRoomByMatchId(String matchId) {
+        return getRoomByMatchId(matchId, null);
+    }
+
+    public LobbyRoomSnapshot getRoomByMatchId(String matchId, String username) {
         LobbyRoom room = rooms.values().stream()
                 .filter(r -> matchId != null && matchId.equals(r.getMatchId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Sala de la partida no encontrada."));
-        syncRoomStatus(room);
-        return toSnapshot(room);
+        if (!syncRoomStatus(room)) {
+            rooms.remove(room.getId());
+            throw new IllegalArgumentException("La sala ya finalizo.");
+        }
+        return toSnapshot(room, username);
     }
 
     public LobbyRoomSnapshot createRoom(String username, LobbyRoomRequest request) {
@@ -80,11 +98,19 @@ public class LobbyRoomService {
         synchronized (room) {
             ensureUserCanEnterRoom(username, roomId);
             assertPassword(room, request.getPassword());
-            if (room.getStatus() != LobbyRoomStatus.OPEN) {
-                throw new IllegalStateException("La partida ya empezo. Podes entrar como espectador.");
-            }
-            if (username.equals(room.getOwnerUsername())) {
+            if (username.equals(room.getOwnerUsername()) || username.equals(room.getGuestUsername())) {
                 return toSnapshot(room);
+            }
+            if (room.getStatus() == LobbyRoomStatus.IN_PROGRESS) {
+                if (room.getSpectators().add(username)) {
+                    room.getChat().add(new LobbyRoomChatMessage("SISTEMA", username + " esta mirando la partida.", true));
+                    trimChat(room);
+                    touch(room);
+                }
+                return toSnapshot(room, username);
+            }
+            if (room.getStatus() != LobbyRoomStatus.OPEN) {
+                throw new IllegalStateException("La sala ya finalizo.");
             }
             if (room.getGuestUsername() != null && !username.equals(room.getGuestUsername())) {
                 throw new IllegalStateException("La sala ya esta completa.");
@@ -229,17 +255,18 @@ public class LobbyRoomService {
         LobbyRoom room = requireRoom(roomId);
         synchronized (room) {
             assertPassword(room, password);
-            if (room.getStatus() != LobbyRoomStatus.IN_PROGRESS || room.getMatchId() == null) {
-                throw new IllegalStateException("La partida todavia no esta en curso.");
+            if (room.getStatus() != LobbyRoomStatus.OPEN && room.getStatus() != LobbyRoomStatus.IN_PROGRESS) {
+                throw new IllegalStateException("La sala ya finalizo.");
             }
             if (username.equals(room.getOwnerUsername()) || username.equals(room.getGuestUsername())) {
                 throw new IllegalStateException("Los jugadores deben entrar como participantes, no como espectadores.");
             }
-            room.getSpectators().add(username);
-            room.getChat().add(new LobbyRoomChatMessage("SISTEMA", username + " esta mirando la partida.", true));
-            trimChat(room);
-            touch(room);
-            return new LobbyRoomStartResponse(toSnapshot(room), room.getMatchId());
+            if (room.getSpectators().add(username)) {
+                room.getChat().add(new LobbyRoomChatMessage("SISTEMA", username + " esta mirando la sala.", true));
+                trimChat(room);
+                touch(room);
+            }
+            return new LobbyRoomStartResponse(toSnapshot(room, username), room.getMatchId());
         }
     }
 
@@ -292,7 +319,10 @@ public class LobbyRoomService {
     }
 
     private LobbyRoomSnapshot toSnapshot(LobbyRoom room) {
-        syncRoomStatus(room);
+        return toSnapshot(room, null);
+    }
+
+    private LobbyRoomSnapshot toSnapshot(LobbyRoom room, String username) {
         LobbyRoomSnapshot s = new LobbyRoomSnapshot();
         s.setId(room.getId());
         s.setName(room.getName());
@@ -309,7 +339,8 @@ public class LobbyRoomService {
         s.setSpectatorCount(room.getSpectators().size());
         s.setMatchId(room.getMatchId());
         s.setCanJoin(room.getStatus() == LobbyRoomStatus.OPEN && room.getGuestUsername() == null);
-        s.setCanSpectate(room.getStatus() == LobbyRoomStatus.IN_PROGRESS && room.getMatchId() != null);
+        s.setCanSpectate(room.getStatus() == LobbyRoomStatus.OPEN || room.getStatus() == LobbyRoomStatus.IN_PROGRESS);
+        s.setCurrentUserSpectator(username != null && room.getSpectators().contains(username));
         s.setUpdatedAt(room.getUpdatedAt());
         int from = Math.max(0, room.getChat().size() - 30);
         s.setChat(new java.util.ArrayList<>(room.getChat().subList(from, room.getChat().size())));
@@ -338,7 +369,9 @@ public class LobbyRoomService {
         rooms.values().stream()
                 .filter(room -> room.getStatus() != LobbyRoomStatus.FINISHED)
                 .filter(room -> allowedRoomId == null || !room.getId().equals(allowedRoomId))
-                .filter(room -> username.equals(room.getOwnerUsername()) || username.equals(room.getGuestUsername()))
+                .filter(room -> username.equals(room.getOwnerUsername())
+                        || username.equals(room.getGuestUsername())
+                        || room.getSpectators().contains(username))
                 .findFirst()
                 .ifPresent(room -> {
                     throw new IllegalStateException("Ya estas en una sala activa. Sali de esa sala antes de crear o entrar a otra.");
@@ -406,17 +439,17 @@ public class LobbyRoomService {
         }
     }
 
-    private void syncRoomStatus(LobbyRoom room) {
-        if (room.getStatus() != LobbyRoomStatus.IN_PROGRESS || room.getMatchId() == null) return;
+    private boolean syncRoomStatus(LobbyRoom room) {
+        if (room.getStatus() == LobbyRoomStatus.FINISHED) return false;
+        if (room.getStatus() != LobbyRoomStatus.IN_PROGRESS || room.getMatchId() == null) return true;
         try {
             Partida partida = battleEngineService.getEstadoPartida(room.getMatchId());
             if (partida == null || partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
-                room.setStatus(LobbyRoomStatus.FINISHED);
-                touch(room);
+                return false;
             }
         } catch (Exception e) {
-            room.setStatus(LobbyRoomStatus.FINISHED);
-            touch(room);
+            return false;
         }
+        return true;
     }
 }
