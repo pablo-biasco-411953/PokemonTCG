@@ -2,7 +2,10 @@ package com.pokemon.tcg.controller;
 
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.model.battle.CartaEnJuego;
+import com.pokemon.tcg.model.Card;
 import com.pokemon.tcg.service.BattleEngineService;
+import com.pokemon.tcg.service.LobbyRoomService;
 import com.pokemon.tcg.dto.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,9 +17,11 @@ import java.util.Map;
 public class BattleController {
 
     private final BattleEngineService battleEngine;
+    private final LobbyRoomService lobbyRoomService;
 
-    public BattleController(BattleEngineService battleEngine) {
+    public BattleController(BattleEngineService battleEngine, LobbyRoomService lobbyRoomService) {
         this.battleEngine = battleEngine;
+        this.lobbyRoomService = lobbyRoomService;
     }
 
     @PostMapping("/start/{username}")
@@ -48,6 +53,10 @@ public class BattleController {
                                              @RequestHeader(value = "X-Username", required = false) String username) {
         Partida partida = battleEngine.getEstadoPartida(matchId, username);
         if (partida == null) return ResponseEntity.notFound().build();
+
+        if (lobbyRoomService.isSpectator(matchId, username)) {
+            return ResponseEntity.ok(toSpectatorView(partida));
+        }
 
         if (username != null && username.equals(partida.getBotUsername())) {
             return ResponseEntity.ok(swapPerspective(partida));
@@ -441,5 +450,67 @@ public class BattleController {
         }
 
         return swapped;
+    }
+
+    private Partida toSpectatorView(Partida p) {
+        Partida view = new Partida(toSpectatorBoard(p.getJugador()), toSpectatorBoard(p.getBot()));
+        view.setId(p.getId());
+        view.setFaseActual(p.getFaseActual());
+        view.setTurnoActual(p.getTurnoActual());
+        view.setNumeroTurno(p.getNumeroTurno());
+        view.setYaSeRetiroEsteTurno(p.isYaSeRetiroEsteTurno());
+        view.setMulligansJugador(p.getMulligansJugador());
+        view.setMulligansBot(p.getMulligansBot());
+        view.setUltimasMonedasLanzadas(p.getUltimasMonedasLanzadas());
+        view.setJugadorUsername(p.getJugadorUsername());
+        view.setBotUsername(p.getBotUsername());
+        view.setCoinFlipped(p.isCoinFlipped());
+        view.setCoinFlipWinner(p.getCoinFlipWinner());
+        view.setCoinFlipResult(p.getCoinFlipResult());
+        view.setCoinFlipCallerUsername(p.getCoinFlipCallerUsername());
+        view.setGanador(p.getGanador());
+        view.setRazonFinPartida(p.getRazonFinPartida());
+        view.setTurnLogs(p.getTurnLogs());
+        view.setSetupJugadorListo(p.isSetupJugadorListo());
+        view.setSetupBotListo(p.isSetupBotListo());
+        view.setJugadorLoadingPercentage(p.getJugadorLoadingPercentage());
+        view.setBotLoadingPercentage(p.getBotLoadingPercentage());
+        return view;
+    }
+
+    private TableroJugador toSpectatorBoard(TableroJugador source) {
+        TableroJugador board = new TableroJugador();
+        board.setMazo(hiddenCards(source.getMazo().size(), "deck"));
+        board.setMano(java.util.Collections.emptyList());
+        board.setPremios(hiddenCards(source.getPremios().size(), "prize"));
+        board.setPilaDescarte(source.getPilaDescarte());
+        board.setActivo(copyInPlay(source.getActivo()));
+        board.setBanca(source.getBanca().stream().map(this::copyInPlay).toList());
+        return board;
+    }
+
+    private java.util.List<Card> hiddenCards(int count, String prefix) {
+        java.util.List<Card> hidden = new java.util.ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            Card card = new Card();
+            card.setId("hidden-" + prefix + "-" + i);
+            card.setNombre("Carta oculta");
+            card.setImagen("/images/cards/back.png");
+            card.setSupertype("Hidden");
+            hidden.add(card);
+        }
+        return hidden;
+    }
+
+    private CartaEnJuego copyInPlay(CartaEnJuego source) {
+        if (source == null) return null;
+        CartaEnJuego copy = new CartaEnJuego(source.getCard());
+        copy.setHpActual(source.getHpActual());
+        copy.setPuedeAtacar(source.isPuedeAtacar());
+        copy.setInvulnerable(source.isInvulnerable());
+        copy.setBocaAbajo(source.isBocaAbajo());
+        copy.getEnergiasUnidas().addAll(source.getEnergiasUnidas());
+        source.getCondicionesEspeciales().forEach(copy::agregarCondicion);
+        return copy;
     }
 }

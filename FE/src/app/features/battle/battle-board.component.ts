@@ -26,6 +26,7 @@ import { BattleBoardTurnService } from './services/battle-board-turn.service';
 import { BattleNotificationService } from './services/battle-notification';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { JugadorService } from '../../core/services/jugador.service';
+import { LobbyRoomReaction, LobbyRoomService, LobbyRoomSnapshot } from '../lobby/services/lobby-room.service';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
@@ -80,6 +81,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   matchId: string | null = null;
   partida: Partida | null = null;
   jugadorNombre = '';
+  isSpectator = false;
+  battleRoom: LobbyRoomSnapshot | null = null;
+  battleReactions: Array<{ id: string; icon: string; sender: string; x: number }> = [];
+  private seenBattleReactionIds = new Set<string>();
+  private battleRoomPolling: ReturnType<typeof setInterval> | null = null;
   landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
 
   private yStart = 0;
@@ -87,6 +93,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private coinPointerId: number | null = null;
   public lanzada = false;
   hoveredCard: Card | BattleActionCard | null = null;
+  hoveredInPlayCard: CartaEnJuego | null = null;
   hoveredCardStatuses: CardGlossaryEntry[] = [];
   hoveredCardList: HoveredBattleCard[] = [];
   hoveredCardIndex = -1;
@@ -278,6 +285,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private jugadorService: JugadorService,
     private imagePreloader: ImagePreloaderService,
     private battleNotificationService: BattleNotificationService,
+    private lobbyRoomService: LobbyRoomService,
     public i18n: I18nService,
   ) {}
 
@@ -286,8 +294,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
     if (!this.matchId) return;
+    this.isSpectator = this.route.snapshot.queryParamMap.get('spectate') === '1';
     this.jugadorNombre = this.obtenerNombreJugadorLocal();
-    this.iniciarPresenciaBatalla();
+    if (!this.isSpectator) {
+      this.iniciarPresenciaBatalla();
+    }
+    this.iniciarPollingSalaBatalla();
     this.cargarCatalogoGodMode();
     this.showIntro = true;
     setTimeout(() => (this.introFadingOut = true), 2000);
@@ -307,6 +319,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingPartida) clearInterval(this.pollingPartida);
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
+    if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
     this.cleanupHandshakeScene();
@@ -483,6 +496,66 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       };
       img.src = url;
     });
+  }
+
+  private iniciarPollingSalaBatalla(): void {
+    if (!this.matchId) return;
+    if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
+    this.refrescarSalaBatalla();
+    this.battleRoomPolling = setInterval(() => this.refrescarSalaBatalla(), 2200);
+  }
+
+  private refrescarSalaBatalla(): void {
+    if (!this.matchId) return;
+    this.lobbyRoomService.getRoomByMatch(this.matchId).subscribe({
+      next: (room) => {
+        this.battleRoom = room;
+        this.registrarReaccionesBatalla(room.reactions || []);
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.battleRoom = null;
+      }
+    });
+  }
+
+  sendBattleReaction(reaction: string): void {
+    if (!this.matchId) return;
+    this.lobbyRoomService.sendMatchReaction(this.matchId, reaction).subscribe({
+      next: (room) => {
+        this.battleRoom = room;
+        this.registrarReaccionesBatalla(room.reactions || []);
+      },
+      error: () => {}
+    });
+  }
+
+  private registrarReaccionesBatalla(reactions: LobbyRoomReaction[]): void {
+    for (const reaction of reactions) {
+      if (!reaction?.id || this.seenBattleReactionIds.has(reaction.id)) continue;
+      this.seenBattleReactionIds.add(reaction.id);
+      const item = {
+        id: reaction.id,
+        icon: this.getReactionIcon(reaction.reaction),
+        sender: reaction.sender || 'Trainer',
+        x: 18 + Math.round(Math.random() * 64)
+      };
+      this.battleReactions = [...this.battleReactions, item].slice(-16);
+      setTimeout(() => {
+        this.battleReactions = this.battleReactions.filter(r => r.id !== item.id);
+        this.cdr.detectChanges();
+      }, 1700);
+    }
+  }
+
+  private getReactionIcon(reaction: string): string {
+    const iconMap: Record<string, string> = {
+      heart: '♥',
+      fire: '🔥',
+      spark: '✦',
+      coin: '●'
+    };
+    return iconMap[reaction] || reaction || '✦';
   }
 
   private updateLoadingPercentage(pct: number): void {
@@ -753,6 +826,37 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.lastProcessedLogIndex = this.partida.turnLogs.length;
   }
 
+  get visualBattleLog(): Array<{ kind: string; title: string; detail: string }> {
+    const logs = (this.partida?.turnLogs || []).slice(-7).map(log => this.formatBattleLog(log));
+    if (logs.length) return logs;
+    if (!this.partida) return [];
+    return [
+      {
+        kind: 'phase',
+        title: this.partida.faseActual === 'TURNO_NORMAL' ? 'Turno en curso' : 'Preparativos',
+        detail: `Fase ${this.partida.faseActual} · Turno ${this.partida.numeroTurno || 1}`
+      }
+    ];
+  }
+
+  private formatBattleLog(log: string): { kind: string; title: string; detail: string } {
+    const parts = (log || '').split(':');
+    const event = parts[0] || 'EVENT';
+    const actor = parts[1] || 'Sistema';
+    const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
+    const subject = esMiAccion ? 'Vos' : (actor === 'BOT' ? this.nombreRival : actor);
+    const map: Record<string, { title: string; detail: string; kind: string }> = {
+      ENERGY_DISCARDED: { title: 'Energia descartada', detail: `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
+      DECK_SEARCHED: { title: 'Busqueda en mazo', detail: `${subject} busco cartas en el mazo.`, kind: 'search' },
+      ENERGY_MOVED: { title: 'Energia movida', detail: `${subject} movio una energia en el campo.`, kind: 'energy' }
+    };
+    return map[event] || {
+      title: event.replaceAll('_', ' ').toLowerCase(),
+      detail: log,
+      kind: 'system'
+    };
+  }
+
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
     return !this.esPartidaOnline(estado) || estado?.coinFlipCallerUsername === this.jugadorNombre;
   }
@@ -975,6 +1079,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.isScrollingMode) return;
 
     this.hoveredCard = null;
+    this.hoveredInPlayCard = null;
     this.hoveredCardStatuses = [];
     this.hoveredCardList = [];
     this.hoveredCardIndex = -1;
@@ -1011,6 +1116,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const cartaReal: Card | BattleActionCard = 'card' in nextItem ? nextItem.card : nextItem;
 
       this.hoveredCard = cartaReal;
+      this.hoveredInPlayCard = 'card' in nextItem ? nextItem as CartaEnJuego : null;
       this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
     }
   }
@@ -1039,6 +1145,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   @HostListener('window:keydown', ['$event'])
   onKeyDown(event: KeyboardEvent) {
     if (event.key === 'F3') {
+      if (this.isSpectator) return;
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
 
@@ -1137,6 +1244,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
     const cartaReal = item.card ? item.card : item;
     this.hoveredCard = cartaReal;
+    this.hoveredInPlayCard = item.card ? item as CartaEnJuego : null;
     this.hoveredCardStatuses = this.extraerGlosario(cartaReal);
     this.hoveredCardList = list;
     this.hoveredCardIndex = index;
@@ -2187,6 +2295,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async pasarTurno(): Promise<void> {
+    if (this.isSpectator) return;
     console.log("?? Botón 'Pasar Turno' presionado.");
 
     if (this.partida?.turnoActual !== 'JUGADOR') {
@@ -2323,6 +2432,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async jugarCarta(carta: any): Promise<void> {
+    if (this.isSpectator) return;
     if (!this.partida || this.partida.turnoActual !== 'JUGADOR' || this.partida.faseActual !== 'TURNO_NORMAL' || this.cargandoAccion) return;
 
     const decision = this.battleBoardAction.resolverAccionCarta(this.partida, carta);

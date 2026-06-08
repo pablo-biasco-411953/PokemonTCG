@@ -18,11 +18,13 @@ public class MazoService {
     private final MazoRepository mazoRepo;
     private final JugadorRepository jugadorRepo;
     private final CardRepository cardRepo;
+    private final MazoBackupService mazoBackupService;
 
-    public MazoService(MazoRepository mazoRepo, JugadorRepository jugadorRepo, CardRepository cardRepo) {
+    public MazoService(MazoRepository mazoRepo, JugadorRepository jugadorRepo, CardRepository cardRepo, MazoBackupService mazoBackupService) {
         this.mazoRepo = mazoRepo;
         this.jugadorRepo = jugadorRepo;
         this.cardRepo = cardRepo;
+        this.mazoBackupService = mazoBackupService;
     }
 
     /**
@@ -53,7 +55,9 @@ public class MazoService {
         // Crear y guardar el mazo
         Mazo mazo = new Mazo(nombre, jugador);
         mazo.setCartas(cartas);
-        return mazoRepo.save(mazo);
+        Mazo guardado = mazoRepo.save(mazo);
+        mazoBackupService.backupAll();
+        return guardado;
     }
 
     /**
@@ -74,7 +78,9 @@ public class MazoService {
 
         mazo.setCartas(nuevasCartas);
 
-        return mazoRepo.save(mazo);
+        Mazo guardado = mazoRepo.save(mazo);
+        mazoBackupService.backupAll();
+        return guardado;
     }
 
     /**
@@ -86,6 +92,17 @@ public class MazoService {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
         }
         return mazoRepo.findByJugador(jugador);
+    }
+
+    /**
+     * Elimina un mazo del jugador.
+     */
+    public void eliminarMazo(Long id) {
+        if (!mazoRepo.existsById(id)) {
+            throw new IllegalArgumentException("Mazo no encontrado con ID: " + id);
+        }
+        mazoRepo.deleteById(id);
+        mazoBackupService.backupAll();
     }
 
     /**
@@ -126,6 +143,8 @@ public class MazoService {
         }
 
         mazo.setCartas(cartasActuales);
-        return mazoRepo.save(mazo);
+        Mazo guardado = mazoRepo.save(mazo);
+        mazoBackupService.backupAll();
+        return guardado;
     }
 }

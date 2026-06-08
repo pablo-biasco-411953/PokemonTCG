@@ -11,6 +11,7 @@ import com.pokemon.tcg.model.battle.state.*;
 import com.pokemon.tcg.service.battle.command.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
 import java.util.List;
@@ -54,6 +55,7 @@ public class BattleEngineService {
         comando.ejecutar(partida);
     }
 
+    @Transactional
     public Partida startBattle(String username, Long mazoId) {
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) throw new IllegalArgumentException("Jugador no encontrado: " + username);
@@ -62,6 +64,7 @@ public class BattleEngineService {
                 .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado: " + mazoId));
 
         List<Card> cartasMazo = mazoSeleccionado.getCartas();
+        inicializarGrafoCartas(cartasMazo);
         if (cartasMazo.size() < 60)
             throw new IllegalStateException("El mazo debe tener 60 cartas. Tiene: " + cartasMazo.size());
 
@@ -996,6 +999,7 @@ public class BattleEngineService {
         return cardRepo.findAll();
     }
 
+    @Transactional
     public Partida startBattleOnline(String player1, Long player1MazoId, String player2, Long player2MazoId) {
         Jugador j1 = jugadorRepo.findByUsername(player1);
         if (j1 == null) throw new IllegalArgumentException("Jugador no encontrado: " + player1);
@@ -1009,6 +1013,8 @@ public class BattleEngineService {
 
         if (mazo1.getCartas().size() < 60 || mazo2.getCartas().size() < 60)
             throw new IllegalStateException("Los mazos deben tener 60 cartas.");
+        inicializarGrafoCartas(mazo1.getCartas());
+        inicializarGrafoCartas(mazo2.getCartas());
 
         TableroJugador tableroJugador = new TableroJugador();
         TableroJugador tableroBot = new TableroJugador();
@@ -1038,5 +1044,15 @@ public class BattleEngineService {
         partidasEnCurso.put(partida.getId(), partida);
         System.out.println("✅ Partida Online creada con ID: " + partida.getId());
         return partida;
+    }
+
+    private void inicializarGrafoCartas(List<Card> cartas) {
+        for (Card card : cartas) {
+            if (card == null) continue;
+            card.getAtaques().size();
+            card.getDebilidades().size();
+            card.getResistencias().size();
+            card.getSubtypes().size();
+        }
     }
 }
