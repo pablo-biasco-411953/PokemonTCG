@@ -422,6 +422,10 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
   }
 
   getImagenCarta(id: string): string {
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
+    }
+
     const energyMap: Record<string, string> = {
       'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass', 'xy1-132': 'grass',
       'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire', 'xy1-133': 'fire',
@@ -439,17 +443,40 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
     return `/images/cards/${id}.png`;
   }
 
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
+  }
+
   private crearCartasAntiBug() {
     const loader = new THREE.TextureLoader();
     const backTex = loader.load('images/cards/back.png');
 
     this.cartas.forEach((c, i) => {
       const group = new THREE.Group();
-      const matFront = new THREE.MeshPhysicalMaterial({ 
-        map: loader.load(this.getImagenCarta(c.id)), 
-        metalness: 0.5, roughness: 0.3, iridescence: 0.4, iridescenceIOR: 1.3,
-        side: THREE.FrontSide 
+      const matFront = new THREE.MeshPhysicalMaterial({
+        map: backTex,
+        metalness: 0.5,
+        roughness: 0.3,
+        iridescence: 0.4,
+        iridescenceIOR: 1.3,
+        side: THREE.FrontSide
       });
+
+      loader.load(
+        this.getImagenCarta(c.id),
+        (tex) => {
+          matFront.map = tex;
+          matFront.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          matFront.map = backTex;
+          matFront.needsUpdate = true;
+        }
+      );
+
       const front = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.1), matFront);
       const back = new THREE.Mesh(
         new THREE.PlaneGeometry(2.2, 3.1),

@@ -166,6 +166,10 @@ export class BattleBoardUiService {
 
   // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
+    }
+
     const energyMap: Record<string, string> = {
       'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass', 'xy1-132': 'grass',
       'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire', 'xy1-133': 'fire',

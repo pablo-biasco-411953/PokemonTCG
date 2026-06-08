@@ -423,7 +423,7 @@
           (mouseenter)="setHoveredCard(b)"
           (mouseleave)="clearHoveredCard()"
         >
-          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre" />
+          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre" (error)="onCardImageError($event)" />
           <div class="bench-bar">
             <div
               class="bench-fill"
@@ -455,7 +455,7 @@
             (mouseleave)="clearHoveredCard()"
           >
             <ng-container *ngIf="partida.bot.activo">
-              <img [src]="getImagenCarta(partida.bot.activo.card.id)" />
+              <img [src]="getImagenCarta(partida.bot.activo.card.id)" (error)="onCardImageError($event)" />
             </ng-container>
           </div>
 
@@ -553,7 +553,7 @@
                 class="energy-badge"
                 [title]="energia.nombre"
               >
-                <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" />
+                <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
               </div>
             </div>
 
@@ -697,7 +697,7 @@
                 class="energy-badge"
                 [title]="energia.nombre"
               >
-                <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" />
+                <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
               </div>
             </div>
 
@@ -742,7 +742,7 @@
               (mouseleave)="clearHoveredCard()"
             >
               <ng-container *ngIf="partida.jugador.activo">
-                <img [src]="getImagenCarta(partida.jugador.activo.card.id)" />
+                <img [src]="getImagenCarta(partida.jugador.activo.card.id)" (error)="onCardImageError($event)" />
                 <div class="energias-unidas-activo">
                   <div
                     *ngFor="let energia of getEnergiasActivas('JUGADOR')"
@@ -773,7 +773,7 @@
           (mouseenter)="setHoveredCard(b)"
           (mouseleave)="clearHoveredCard()"
         >
-          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre" />
+          <img [src]="getImagenCarta(b.card.id)" [alt]="b.card.nombre" (error)="onCardImageError($event)" />
           <div
             class="evolution-flash-fx"
             *ngIf="animandoEvolucionId === b.card.id"
@@ -825,9 +825,9 @@
           >
             <div class="evolve-badge" *ngIf="puedeEvolucionar(carta)">{{ 'battle.evolve' | t }}</div>
             <div *cdkDragPreview class="custom-drag-preview">
-              <img [src]="getImagenCarta(carta.id)" />
+              <img [src]="getImagenCarta(carta.id)" (error)="onCardImageError($event)" />
             </div>
-            <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre" />
+            <img [src]="getImagenCarta(carta.id)" [alt]="carta.nombre" (error)="onCardImageError($event)" />
           </div>
         </div>
       </div>
@@ -853,6 +853,7 @@
             <img
               [src]="getImagenCarta(getUltimaCartaDescarte('BOT')!.id)"
               class="top-discard-img"
+              (error)="onCardImageError($event)"
             />
             <span class="discard-count bot-count">{{ getCantidadDescarte('BOT') }}</span>
           </div>
@@ -908,6 +909,7 @@
             <img
               [src]="getImagenCarta(getUltimaCartaDescarte('JUGADOR')!.id)"
               class="top-discard-img"
+              (error)="onCardImageError($event)"
             />
             <span class="discard-count">{{ getCantidadDescarte('JUGADOR') }}</span>
           </div>

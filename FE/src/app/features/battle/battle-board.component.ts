@@ -2152,6 +2152,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
+  }
+
   tieneCondicionEspecial(quien: 'JUGADOR' | 'BOT', condicion: string): boolean {
     const activo = quien === 'JUGADOR' ? this.partida?.jugador?.activo : this.partida?.bot?.activo;
     return activo?.condicionesEspeciales.includes(condicion) ?? false;

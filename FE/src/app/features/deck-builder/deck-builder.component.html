@@ -52,7 +52,7 @@
           </div>
 
           <div class="img-container">
-            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" onerror="this.src='/images/card-back.png'">
+            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" onerror="this.src='/images/cards/back.png'">
           </div>
 
           <p class="pokemon-name dot-matrix">{{ carta.nombre | uppercase }}</p>
@@ -88,7 +88,7 @@
     </section>
 
     <div class="inspection-overlay pokedex-screen-inset-zoom" *ngIf="showInspeccion && cardFocus">
-      <img [src]="getImagenReal(cardFocus.id)" [alt]="cardFocus.nombre">
+      <img [src]="getImagenReal(cardFocus.id)" [alt]="cardFocus.nombre" onerror="this.src='/images/cards/back.png'">
       <div class="info">
         <h2 class="dot-matrix">{{ cardFocus.nombre | uppercase }}</h2>
         <p class="dot-matrix">HP: {{ cardFocus.hp }} | {{ 'deck.type' | t }}: {{ cardFocus.tipo | uppercase }}</p>
