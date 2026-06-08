@@ -23,6 +23,7 @@ public class LobbyRoomSnapshot {
     private String matchId;
     private boolean canJoin;
     private boolean canSpectate;
+    private boolean currentUserSpectator;
     private long updatedAt;
     private List<LobbyRoomChatMessage> chat = new ArrayList<>();
     private List<LobbyRoomReaction> reactions = new ArrayList<>();
@@ -59,6 +60,8 @@ public class LobbyRoomSnapshot {
     public void setCanJoin(boolean canJoin) { this.canJoin = canJoin; }
     public boolean isCanSpectate() { return canSpectate; }
     public void setCanSpectate(boolean canSpectate) { this.canSpectate = canSpectate; }
+    public boolean isCurrentUserSpectator() { return currentUserSpectator; }
+    public void setCurrentUserSpectator(boolean currentUserSpectator) { this.currentUserSpectator = currentUserSpectator; }
     public long getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(long updatedAt) { this.updatedAt = updatedAt; }
     public List<LobbyRoomChatMessage> getChat() { return chat; }

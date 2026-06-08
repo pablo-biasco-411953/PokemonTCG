@@ -4505,7 +4505,7 @@ img.fallback-sprite {
 
 .battle-social-hud {
   position: absolute;
-  top: clamp(72px, 8vh, 96px);
+  top: clamp(12px, 2vh, 24px);
   right: clamp(18px, 2vw, 34px);
   z-index: 28;
   display: flex;
@@ -4587,8 +4587,9 @@ img.fallback-sprite {
 
 .battle-event-log {
   position: absolute;
-  top: clamp(126px, 15vh, 158px);
-  right: clamp(18px, 2vw, 34px);
+  top: 50%;
+  left: clamp(132px, 9vw, 178px);
+  transform: translateY(-50%);
   z-index: 27;
   width: min(320px, 24vw);
   max-height: 34vh;
@@ -4600,7 +4601,14 @@ img.fallback-sprite {
   background: linear-gradient(135deg, rgba(2, 8, 23, 0.76), rgba(8, 47, 73, 0.58)), radial-gradient(circle at 100% 0%, rgba(250, 204, 21, 0.12), transparent 42%);
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(13px);
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.battle-event-log.minimized {
+  width: auto;
+  min-width: 172px;
+  max-height: none;
+  padding: 10px 12px;
 }
 
 .battle-event-head {
@@ -4608,6 +4616,23 @@ img.fallback-sprite {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.battle-log-toggle {
+  width: 26px;
+  height: 24px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 6px;
+  background: rgba(2, 8, 23, 0.74);
+  color: #f8fafc;
+  cursor: pointer;
+  font-family: var(--fu);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.battle-log-toggle:hover {
+  border-color: rgba(250, 204, 21, 0.72);
 }
 
 .battle-event-head small {
@@ -4653,6 +4678,10 @@ img.fallback-sprite {
 
 .battle-event-item.energy b { background: #facc15; box-shadow: 0 0 12px rgba(250, 204, 21, 0.68); }
 .battle-event-item.search b { background: #86efac; box-shadow: 0 0 12px rgba(134, 239, 172, 0.62); }
+.battle-event-item.attack b { background: #fb7185; box-shadow: 0 0 12px rgba(251, 113, 133, 0.66); }
+.battle-event-item.status b { background: #a78bfa; box-shadow: 0 0 12px rgba(167, 139, 250, 0.66); }
+.battle-event-item.bench b,
+.battle-event-item.setup b { background: #2dd4bf; box-shadow: 0 0 12px rgba(45, 212, 191, 0.58); }
 
 .battle-event-item strong,
 .battle-event-item span {
@@ -4680,7 +4709,7 @@ img.fallback-sprite {
   }
 
   .battle-social-hud {
-    top: 72px;
+    top: 12px;
     right: 12px;
   }
 }

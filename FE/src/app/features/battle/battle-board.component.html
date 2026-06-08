@@ -472,12 +472,20 @@
     </div>
   </div>
 
-  <aside class="battle-event-log" *ngIf="visualBattleLog.length">
+  <aside class="battle-event-log" *ngIf="visualBattleLog.length" [class.minimized]="battleLogMinimized">
     <div class="battle-event-head">
       <small>Battle log</small>
       <strong>{{ partida.faseActual }}</strong>
+      <button
+        type="button"
+        class="battle-log-toggle"
+        (click)="battleLogMinimized = !battleLogMinimized"
+        [attr.aria-label]="battleLogMinimized ? 'Expand battle log' : 'Minimize battle log'"
+      >
+        {{ battleLogMinimized ? '+' : '-' }}
+      </button>
     </div>
-    <div class="battle-event-list">
+    <div class="battle-event-list" *ngIf="!battleLogMinimized">
       <div class="battle-event-item" *ngFor="let item of visualBattleLog" [ngClass]="item.kind">
         <b></b>
         <div>

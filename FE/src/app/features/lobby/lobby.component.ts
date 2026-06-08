@@ -1560,7 +1560,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.lobbyRooms = rooms;
         const username = this.jugador?.username;
         const userRoom = username
-          ? rooms.find(room => room.ownerUsername === username || room.guestUsername === username)
+          ? rooms.find(room => room.ownerUsername === username || room.guestUsername === username || room.currentUserSpectator)
           : null;
         if (userRoom) {
           this.currentRoom = userRoom;
@@ -1765,7 +1765,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   continueCurrentRoomBattle() {
     if (!this.currentRoom?.matchId) return;
-    this.router.navigate(['/battle', this.currentRoom.matchId]);
+    this.router.navigate(
+      ['/battle', this.currentRoom.matchId],
+      this.isCurrentRoomSpectator ? { queryParams: { spectate: '1' } } : undefined
+    );
   }
 
   spectateSelectedRoom() {
@@ -1776,7 +1779,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.roomActionLoading = false;
         if (response.matchId) {
           this.router.navigate(['/battle', response.matchId], { queryParams: { spectate: '1' } });
+          return;
         }
+        this.currentRoom = response.room;
+        this.selectedRoom = response.room;
+        this.roomJoinPassword = '';
+        this.roomError = '';
+        this.loadLobbyRooms();
       },
       error: (err) => this.handleRoomError(err)
     });
@@ -1824,10 +1833,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 1600);
   }
 
-  private beginRoomCountdown(matchId: string) {
+  private beginRoomCountdown(matchId: string, spectate = false) {
     if (this.roomCountdownMatchId === matchId && this.roomCountdownValue !== null) return;
     if (this.roomCountdownTimer) clearInterval(this.roomCountdownTimer);
     this.roomCountdownMatchId = matchId;
+    const shouldSpectate = spectate;
     this.roomCountdownValue = 5;
     this.cdr.detectChanges();
     this.roomCountdownTimer = setInterval(() => {
@@ -1840,7 +1850,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.roomCountdownValue = null;
         this.roomCountdownMatchId = null;
         if (target) {
-          this.router.navigate(['/battle', target]);
+          this.router.navigate(['/battle', target], shouldSpectate ? { queryParams: { spectate: '1' } } : undefined);
         }
       }
       this.cdr.detectChanges();
@@ -1861,8 +1871,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return !!this.currentRoom && this.currentRoom.ownerUsername === this.jugador?.username;
   }
 
+  get isCurrentRoomSpectator(): boolean {
+    return !!this.currentRoom?.currentUserSpectator;
+  }
+
   get isCurrentUserReady(): boolean {
     if (!this.currentRoom || !this.jugador?.username) return false;
+    if (this.isCurrentRoomSpectator) return false;
     if (this.currentRoom.ownerUsername === this.jugador.username) return this.currentRoom.ownerReady;
     if (this.currentRoom.guestUsername === this.jugador.username) return this.currentRoom.guestReady;
     return false;
@@ -6022,17 +6037,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const username = this.jugador.username;
     const userIsParticipant = room.ownerUsername === username || room.guestUsername === username;
+    const userIsSpectator = this.currentRoom?.id === room.id && this.currentRoom.currentUserSpectator;
+    const roomForCurrentUser = userIsSpectator ? { ...room, currentUserSpectator: true } : room;
     if (this.currentRoom?.id === room.id) {
-      if (!userIsParticipant) {
+      if (!userIsParticipant && !userIsSpectator) {
         this.currentRoom = null;
       } else {
-        this.currentRoom = room;
+        this.currentRoom = roomForCurrentUser;
       }
-      this.selectedRoom = room;
+      this.selectedRoom = roomForCurrentUser;
     }
 
-    if (userIsParticipant && room.status === 'IN_PROGRESS' && room.matchId) {
-      this.beginRoomCountdown(room.matchId);
+    if ((userIsParticipant || userIsSpectator) && room.status === 'IN_PROGRESS' && room.matchId) {
+      this.beginRoomCountdown(room.matchId, userIsSpectator);
     }
   }
 

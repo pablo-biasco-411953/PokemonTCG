@@ -586,7 +586,7 @@
                 <small>Tu sala</small>
                 <h3>{{ room.name }}</h3>
               </div>
-              <span [class.ready]="isCurrentUserReady">{{ isCurrentUserReady ? 'LISTO' : 'NO LISTO' }}</span>
+              <span [class.ready]="isCurrentUserReady">{{ isCurrentRoomSpectator ? 'MIRANDO' : (isCurrentUserReady ? 'LISTO' : 'NO LISTO') }}</span>
             </div>
             <div class="room-players">
               <div [class.ready]="room.ownerReady">
@@ -611,11 +611,11 @@
               </div>
             </div>
             <div class="room-actions">
-              <button type="button" class="primary-action" *ngIf="room.status === 'IN_PROGRESS' && room.matchId" (click)="continueCurrentRoomBattle()" [disabled]="roomActionLoading">Continuar batalla</button>
-              <button type="button" *ngIf="room.status === 'OPEN'" (click)="toggleRoomReady()" [disabled]="roomActionLoading">{{ isCurrentUserReady ? 'Cancelar listo' : 'Estoy listo' }}</button>
-              <button type="button" *ngIf="room.status === 'OPEN' && isCurrentRoomOwner && !room.guestUsername" (click)="addBotToCurrentRoom()" [disabled]="roomActionLoading">Añadir bot</button>
-              <button type="button" *ngIf="room.status === 'OPEN' && isCurrentRoomOwner" (click)="startCurrentRoomBattle()" [disabled]="!canStartCurrentRoom || roomActionLoading">Iniciar partida</button>
-              <button type="button" *ngIf="room.status === 'OPEN' && isCurrentRoomOwner && room.guestUsername && !room.guestBot" (click)="kickRoomGuest()" [disabled]="roomActionLoading">Echar rival</button>
+              <button type="button" class="primary-action" *ngIf="room.status === 'IN_PROGRESS' && room.matchId" (click)="continueCurrentRoomBattle()" [disabled]="roomActionLoading">{{ isCurrentRoomSpectator ? 'Ver batalla' : 'Continuar batalla' }}</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator" (click)="toggleRoomReady()" [disabled]="roomActionLoading">{{ isCurrentUserReady ? 'Cancelar listo' : 'Estoy listo' }}</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner && !room.guestUsername" (click)="addBotToCurrentRoom()" [disabled]="roomActionLoading">Añadir bot</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner" (click)="startCurrentRoomBattle()" [disabled]="!canStartCurrentRoom || roomActionLoading">Iniciar partida</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner && room.guestUsername && !room.guestBot" (click)="kickRoomGuest()" [disabled]="roomActionLoading">Echar rival</button>
               <button type="button" class="danger" (click)="leaveCurrentRoom()" [disabled]="roomActionLoading">Salir</button>
             </div>
             <div class="room-chat-box" [class.compact]="room.status === 'IN_PROGRESS'">
