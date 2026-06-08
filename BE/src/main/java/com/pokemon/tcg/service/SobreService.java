@@ -6,6 +6,7 @@ import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.repository.JugadorRepository;
 import org.springframework.stereotype.Service;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Random;
 
 @Service
 /**
- * Genera sobres aleatorios y los agrega a la colección del jugador.
+ * Genera sobres aleatorios y los agrega a la coleccion del jugador.
  */
 public class SobreService {
     private final JugadorRepository jugadorRepo;
@@ -26,7 +27,6 @@ public class SobreService {
     }
 
     public List<Card> abrirSobre(String username) {
-        // Mezcla energías y Pokémon, descuenta un sobre y actualiza la colección.
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
@@ -38,13 +38,12 @@ public class SobreService {
 
         List<Card> todasLasCartas = cardRepo.findAll();
 
-        // 🚩 FIX: Ahora filtramos por Supertype en lugar de Tipo
         List<Card> energias = todasLasCartas.stream()
-                .filter(c -> "Energy".equalsIgnoreCase(c.getSupertype()))
+                .filter(this::esEnergia)
                 .toList();
 
         List<Card> pokemones = todasLasCartas.stream()
-                .filter(c -> "Pokemon".equalsIgnoreCase(c.getSupertype()) || "Pokémon".equalsIgnoreCase(c.getSupertype()))
+                .filter(this::esPokemon)
                 .toList();
 
         if (energias.isEmpty() || pokemones.isEmpty()) {
@@ -71,5 +70,29 @@ public class SobreService {
         jugadorRepo.save(jugador);
 
         return sobreGenerado;
+    }
+
+    private boolean esEnergia(Card card) {
+        String supertype = normalizar(card.getSupertype());
+        String nombre = normalizar(card.getNombre());
+        String hp = card.getHp();
+
+        return "energy".equals(supertype)
+                || (supertype.isBlank() && nombre.contains("energy"))
+                || (supertype.isBlank() && "0".equals(hp) && nombre.contains("energia"));
+    }
+
+    private boolean esPokemon(Card card) {
+        String supertype = normalizar(card.getSupertype());
+        String hp = card.getHp();
+
+        return "pokemon".equals(supertype)
+                || (supertype.isBlank() && hp != null && !"0".equals(hp));
+    }
+
+    private String normalizar(String value) {
+        if (value == null) return "";
+        return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
     }
 }
