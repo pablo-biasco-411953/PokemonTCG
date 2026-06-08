@@ -7,7 +7,7 @@ import com.pokemon.tcg.model.battle.ResultadoAtaque;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Random;
+
 
 @Service
 public class BattleAttackService {
