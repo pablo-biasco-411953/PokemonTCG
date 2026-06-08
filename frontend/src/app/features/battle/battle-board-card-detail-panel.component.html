@@ -15,6 +15,28 @@
       </div>
 
       <p class="cd-type">Tipo: {{ hoveredCard.tipo || 'Desconocido' }}</p>
+      <div class="cd-board-state" *ngIf="hoveredInPlayCard">
+        <span *ngIf="getCurrentHp() !== null">HP actual: {{ getCurrentHp() }}</span>
+        <span *ngIf="getEvolutionInfo(hoveredCard)">{{ getEvolutionInfo(hoveredCard) }}</span>
+        <span *ngIf="hoveredInPlayCard.invulnerable">Protegido</span>
+        <span *ngIf="hoveredInPlayCard.puedeAtacar === false">No puede atacar</span>
+      </div>
+      <div class="cd-attachments" *ngIf="getAttachedEnergies().length || getAttachedStatuses().length">
+        <div *ngIf="getAttachedEnergies().length">
+          <strong>Energias unidas</strong>
+          <span
+            *ngFor="let energia of getAttachedEnergies()"
+            class="attachment-pill"
+            [style.borderColor]="resolveEnergyColor(energia.tipo || energia.nombre)"
+          >
+            {{ energia.nombre }}
+          </span>
+        </div>
+        <div *ngIf="getAttachedStatuses().length">
+          <strong>Estados</strong>
+          <span class="attachment-pill status" *ngFor="let estado of getAttachedStatuses()">{{ estado }}</span>
+        </div>
+      </div>
       <hr class="cd-divider" />
 
       <div class="cd-attacks-list">

@@ -6,6 +6,7 @@ import com.pokemon.tcg.model.Mazo;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
 import com.pokemon.tcg.service.CardCatalogService;
+import com.pokemon.tcg.service.MazoBackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -19,13 +20,16 @@ public class DataLoader implements CommandLineRunner {
     private final CardCatalogService cardCatalogService;
     private final JugadorRepository jugadorRepo;
     private final MazoRepository mazoRepo;
+    private final MazoBackupService mazoBackupService;
 
     public DataLoader(CardCatalogService cardCatalogService,
                       JugadorRepository jugadorRepo,
-                      MazoRepository mazoRepo) {
+                      MazoRepository mazoRepo,
+                      MazoBackupService mazoBackupService) {
         this.cardCatalogService = cardCatalogService;
         this.jugadorRepo = jugadorRepo;
         this.mazoRepo = mazoRepo;
+        this.mazoBackupService = mazoBackupService;
     }
 
     @Override
@@ -54,6 +58,9 @@ public class DataLoader implements CommandLineRunner {
         } else {
             actualizarColeccionUsuario(bot, todasLasCartas);
         }
+
+        mazoBackupService.restoreMissingDecks();
+        mazoBackupService.backupAll();
     }
 
     private void crearUsuarioTest(List<Card> todasLasCartas) {

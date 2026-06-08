@@ -41,6 +41,16 @@ public class MazoController {
         }
     }
 
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<?> eliminarMazo(@PathVariable Long id) {
+        try {
+            mazoService.eliminarMazo(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al eliminar el mazo: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/{id}/debug/inject-card")
     public ResponseEntity<?> debugInyectarCarta(@PathVariable Long id, @RequestBody DebugInjectCardRequest request) {
         try {

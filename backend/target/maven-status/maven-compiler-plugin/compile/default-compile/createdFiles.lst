@@ -5,12 +5,16 @@ com\pokemon\tcg\model\battle\Partida.class
 com\pokemon\tcg\service\AuthService.class
 com\pokemon\tcg\service\battle\chain\EfectoConfusion.class
 com\pokemon\tcg\dto\JugarPokemonRequest.class
+com\pokemon\tcg\service\LobbyRoomService.class
+com\pokemon\tcg\service\MazoBackupService.class
 com\pokemon\tcg\service\battle\command\ComandoRetirarse.class
 com\pokemon\tcg\model\battle\state\EstadoLanzamientoMoneda.class
 com\pokemon\tcg\service\battle\chain\EfectoCuracion.class
 com\pokemon\tcg\model\Card.class
+com\pokemon\tcg\model\lobby\LobbyRoomStatus.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaBot.class
 com\pokemon\tcg\model\battle\command\HealCommand.class
+com\pokemon\tcg\dto\lobby\LobbyRoomRequest.class
 com\pokemon\tcg\service\battle\chain\EfectoSueno.class
 com\pokemon\tcg\service\battle\chain\EfectoMultiMoneda.class
 com\pokemon\tcg\dto\DebugSetSobresRequest.class
@@ -28,6 +32,7 @@ com\pokemon\tcg\service\battle\command\ComandoAtacar.class
 com\pokemon\tcg\model\battle\command\DrawCardCommand.class
 com\pokemon\tcg\dto\GuardarMazoRequest.class
 com\pokemon\tcg\model\battle\state\EstadoSetupMulliganEvaluation.class
+com\pokemon\tcg\model\lobby\LobbyRoom.class
 com\pokemon\tcg\service\BattleKoService$TableroVictimaYAtacante.class
 com\pokemon\tcg\service\SobreService.class
 com\pokemon\tcg\dto\ActualizarMazoRequest.class
@@ -41,7 +46,9 @@ com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBenchExtra.class
 com\pokemon\tcg\controller\MazoController.class
 com\pokemon\tcg\model\battle\command\BattleCommand.class
 com\pokemon\tcg\service\battle\chain\EfectoDanioBanca.class
+com\pokemon\tcg\model\lobby\LobbyRoomChatMessage.class
 com\pokemon\tcg\model\battle\state\EstadoInicio.class
+com\pokemon\tcg\service\MazoBackupService$MazoBackupEntry.class
 com\pokemon\tcg\service\battle\command\ComandoSubirActivo.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaDificil.class
 com\pokemon\tcg\service\battle\command\ComandoEvolucionar.class
@@ -73,6 +80,7 @@ com\pokemon\tcg\service\PasswordRecoveryService.class
 com\pokemon\tcg\model\battle\state\EstadoPartida.class
 com\pokemon\tcg\service\BattleTurnService$KoResolver.class
 com\pokemon\tcg\service\battle\chain\EfectoMonedaFalla.class
+com\pokemon\tcg\controller\LobbyRoomController.class
 com\pokemon\tcg\service\battle\command\AttackEffectParserService.class
 com\pokemon\tcg\service\battle\chain\EfectoRobarCartas.class
 com\pokemon\tcg\model\battle\state\EstadoFinPartida.class
@@ -92,6 +100,7 @@ com\pokemon\tcg\dto\LobbyMessage.class
 com\pokemon\tcg\exception\GlobalExceptionHandler.class
 com\pokemon\tcg\service\CardCatalogService.class
 com\pokemon\tcg\model\battle\command\DamageCommand.class
+com\pokemon\tcg\model\lobby\LobbyRoomReaction.class
 com\pokemon\tcg\service\battle\chain\EfectoParalisis.class
 com\pokemon\tcg\service\battle\chain\EfectoContadoresDanio.class
 com\pokemon\tcg\model\battle\command\DiscardEnergyCommand.class
@@ -105,6 +114,8 @@ com\pokemon\tcg\dto\EvolveRequest.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\service\battle\chain\EfectoDescartarEnergiaPropia.class
+com\pokemon\tcg\dto\lobby\LobbyRoomSnapshot.class
+com\pokemon\tcg\dto\lobby\LobbyRoomStartResponse.class
 com\pokemon\tcg\model\battle\Partida$Turno.class
 com\pokemon\tcg\service\battle\chain\ManejadorEfecto.class
 com\pokemon\tcg\BackendApplication.class
@@ -113,7 +124,9 @@ com\pokemon\tcg\dto\ForgotPasswordRequest.class
 com\pokemon\tcg\service\battle\chain\ContextoAtaque.class
 com\pokemon\tcg\config\DataLoader.class
 com\pokemon\tcg\dto\JugadorDatosResponse.class
+com\pokemon\tcg\config\BattleSpectatorGuardInterceptor.class
 com\pokemon\tcg\service\BattleEngineService.class
+com\pokemon\tcg\config\WebMvcConfig.class
 com\pokemon\tcg\model\battle\command\ApplyStatusConditionCommand.class
 com\pokemon\tcg\service\battle\command\ComandoUnirEnergia.class
 com\pokemon\tcg\dto\UnirEnergiaRequest.class

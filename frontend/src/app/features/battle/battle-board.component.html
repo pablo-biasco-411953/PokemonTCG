@@ -86,7 +86,7 @@
     <h2 class="setup-title">Elegi tu Pokemon Activo</h2>
     <p class="setup-sub">Debe ser un Pokemon Basico. Sale boca abajo hasta que empiece el turno 1.</p>
     <div class="setup-hand-grid setup-select-grid">
-      <button class="setup-card setup-choice-card" type="button" *ngFor="let c of cartasBasicasSetupDisponibles()" (click)="colocarActivoSetup(c)" [disabled]="setupAccionEnCurso">
+      <button class="setup-card setup-choice-card" type="button" *ngFor="let c of cartasBasicasSetupDisponibles(); trackBy: trackByCardId" (click)="colocarActivoSetup(c)" [disabled]="setupAccionEnCurso">
         <img [src]="getImagenCarta(c.id)" (error)="onCardImageError($event)" />
         <span>{{ c.nombre || c.name }}</span>
       </button>
@@ -106,7 +106,7 @@
       </div>
     </div>
     <div class="setup-hand-grid setup-select-grid" *ngIf="tieneBasicosSetupDisponibles()">
-      <button class="setup-card setup-choice-card" type="button" *ngFor="let c of cartasBasicasSetupDisponibles()" (click)="colocarBancaSetup(c)" [disabled]="setupAccionEnCurso || (partida?.jugador?.banca?.length || 0) >= 5">
+      <button class="setup-card setup-choice-card" type="button" *ngFor="let c of cartasBasicasSetupDisponibles(); trackBy: trackByCardId" (click)="colocarBancaSetup(c)" [disabled]="setupAccionEnCurso || (partida?.jugador?.banca?.length || 0) >= 5">
         <img [src]="getImagenCarta(c.id)" (error)="onCardImageError($event)" />
         <span>{{ c.nombre || c.name }}</span>
       </button>
@@ -458,7 +458,36 @@
   <div class="ko-badge">KO!</div>
 </div>
 
-<div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible">
+<div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible" [class.spectator-mode]="isSpectator">
+  <div class="battle-social-hud">
+    <div class="battle-spectator-counter">
+      <strong>{{ battleRoom?.spectatorCount || 0 }}</strong>
+      <span>{{ i18n.currentLanguage() === 'en' ? 'watching' : 'mirando' }}</span>
+      <i *ngFor="let reaction of battleReactions" [style.left.%]="reaction.x">{{ reaction.icon }}</i>
+    </div>
+    <div class="battle-reaction-buttons">
+      <button type="button" (click)="sendBattleReaction('heart')">♥</button>
+      <button type="button" (click)="sendBattleReaction('fire')">🔥</button>
+      <button type="button" (click)="sendBattleReaction('spark')">✦</button>
+    </div>
+  </div>
+
+  <aside class="battle-event-log" *ngIf="visualBattleLog.length">
+    <div class="battle-event-head">
+      <small>Battle log</small>
+      <strong>{{ partida.faseActual }}</strong>
+    </div>
+    <div class="battle-event-list">
+      <div class="battle-event-item" *ngFor="let item of visualBattleLog" [ngClass]="item.kind">
+        <b></b>
+        <div>
+          <strong>{{ item.title }}</strong>
+          <span>{{ item.detail }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <div class="neoprene-texture" aria-hidden="true">
     <div class="neo-grid"></div>
     <div class="neo-glow bot-glow"></div>
@@ -927,6 +956,7 @@
           <div
             class="hand-card"
             cdkDrag
+            [cdkDragDisabled]="isSpectator"
             [cdkDragData]="carta"
             (click)="jugarCarta(carta)"
             [class.can-evolve-glow]="puedeEvolucionar(carta)"
@@ -1051,6 +1081,7 @@
   </svg>
   <app-battle-board-card-detail-panel
     [hoveredCard]="hoveredCard"
+    [hoveredInPlayCard]="hoveredInPlayCard"
     [hoveredCardStatuses]="hoveredCardStatuses"
     [mostrarHintMano]="esHoverSobreManoJugador()"
     [getImagenCarta]="getImagenCarta.bind(this)"
@@ -1065,6 +1096,11 @@
     [getImagenCarta]="getImagenCarta.bind(this)"
     (close)="mostrarModalDescarte = false"
   ></app-battle-board-discard-modal>
+
+  <div class="spectator-banner" *ngIf="isSpectator">
+    <strong>{{ i18n.currentLanguage() === 'en' ? 'SPECTATOR MODE' : 'MODO ESPECTADOR' }}</strong>
+    <span>{{ i18n.currentLanguage() === 'en' ? 'Hands are hidden. Board only.' : 'Manos ocultas. Solo campo visible.' }}</span>
+  </div>
 </div>
 
 <app-battle-notification></app-battle-notification>
