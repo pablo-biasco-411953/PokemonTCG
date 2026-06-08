@@ -45,20 +45,8 @@ public class DataLoader implements CommandLineRunner {
                 return;
             }
             todasLasCartas = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
-            long dbCount = cardRepo.count();
-            boolean necesitaActualizar = false;
-            for (Card c : todasLasCartas) {
-                if (!cardRepo.existsById(c.getId())) {
-                    necesitaActualizar = true;
-                    break;
-                }
-            }
-            if (necesitaActualizar || dbCount < todasLasCartas.size()) {
-                cardRepo.saveAll(todasLasCartas);
-                System.out.println("[DataLoader] Base de datos actualizada con nuevas cartas. Total: " + todasLasCartas.size());
-            } else {
-                System.out.println("[DataLoader] Base de datos al dia. Total: " + dbCount);
-            }
+            cardRepo.saveAll(todasLasCartas);
+            System.out.println("[DataLoader] Base de datos sincronizada con cards.json. Total: " + todasLasCartas.size());
         } catch (Exception e) {
             System.out.println("[DataLoader] Error cargando cartas: " + e.getMessage());
             e.printStackTrace();
