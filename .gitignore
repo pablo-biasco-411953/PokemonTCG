@@ -1,36 +1,32 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+### Windows
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+### Backend
+backend/target/
+*.log
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+### Frontend
+frontend/node_modules/
+frontend/.angular/cache/
+frontend/dist/
+frontend/coverage/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
+### IDEs
 .idea/
+backend/.idea/
+frontend/.vscode/*
+!frontend/.vscode/settings.json
+!frontend/.vscode/tasks.json
+!frontend/.vscode/launch.json
+!frontend/.vscode/extensions.json
+!frontend/.vscode/mcp.json
+
+### OS / Temp
+.DS_Store
+*.tmp
+*.swp
+
 .fake
