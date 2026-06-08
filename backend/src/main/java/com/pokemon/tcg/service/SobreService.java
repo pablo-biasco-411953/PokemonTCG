@@ -2,7 +2,6 @@ package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.Card;
 import com.pokemon.tcg.model.Jugador;
-import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.repository.JugadorRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,12 +17,12 @@ import java.util.Random;
  */
 public class SobreService {
     private final JugadorRepository jugadorRepo;
-    private final CardRepository cardRepo;
+    private final CardCatalogService cardCatalogService;
     private final Random random = new Random();
 
-    public SobreService(JugadorRepository jugadorRepo, CardRepository cardRepo) {
+    public SobreService(JugadorRepository jugadorRepo, CardCatalogService cardCatalogService) {
         this.jugadorRepo = jugadorRepo;
-        this.cardRepo = cardRepo;
+        this.cardCatalogService = cardCatalogService;
     }
 
     public List<Card> abrirSobre(String username) {
@@ -36,7 +35,7 @@ public class SobreService {
             throw new IllegalStateException("No hay sobres disponibles para el jugador: " + username);
         }
 
-        List<Card> todasLasCartas = cardRepo.findAll();
+        List<Card> todasLasCartas = cardCatalogService.getCatalogo();
 
         List<Card> energias = todasLasCartas.stream()
                 .filter(this::esEnergia)
@@ -47,7 +46,17 @@ public class SobreService {
                 .toList();
 
         if (energias.isEmpty() || pokemones.isEmpty()) {
-            throw new IllegalStateException("La base de datos no tiene suficientes cartas cargadas.");
+            todasLasCartas = cardCatalogService.sincronizarDesdeJson();
+            energias = todasLasCartas.stream()
+                    .filter(this::esEnergia)
+                    .toList();
+            pokemones = todasLasCartas.stream()
+                    .filter(this::esPokemon)
+                    .toList();
+
+            if (energias.isEmpty() || pokemones.isEmpty()) {
+                throw new IllegalStateException("La base de datos no tiene suficientes cartas cargadas.");
+            }
         }
 
         int cantEnergias = random.nextInt(4) + 2;
