@@ -104,6 +104,18 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/jugar-bot-setup")
+    public ResponseEntity<?> jugarBotSetup(@PathVariable String matchId) {
+        try {
+            battleEngine.ejecutarSetupBot(matchId);
+            Partida partidaActualizada = battleEngine.getEstadoPartida(matchId);
+            return ResponseEntity.ok(partidaActualizada);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("Error del bot en setup: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/coin-flip")
     public ResponseEntity<?> lanzarMoneda(@PathVariable String matchId,
                                           @RequestHeader(value = "X-Username", required = false) String username,
@@ -136,6 +148,127 @@ public class BattleController {
                 return ResponseEntity.ok(swapPerspective(partida));
             }
             return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/loading")
+    public ResponseEntity<?> actualizarLoading(@PathVariable String matchId,
+                                               @RequestHeader(value = "X-Username", required = false) String username,
+                                               @RequestBody java.util.Map<String, Object> payload) {
+        try {
+            int percentage = 0;
+            if (payload != null && payload.get("percentage") instanceof Number number) {
+                percentage = number.intValue();
+            }
+            Partida partida = battleEngine.actualizarLoading(matchId, username, percentage);
+            if (username != null && username.equals(partida.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partida));
+            }
+            return ResponseEntity.ok(partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/evaluate")
+    public ResponseEntity<?> evaluateSetup(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            battleEngine.evaluarSetupInitialDraw(matchId, username);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/execute-mulligan")
+    public ResponseEntity<?> executeMulligan(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            battleEngine.ejecutarMulligan(matchId, username);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/extra-draw")
+    public ResponseEntity<?> extraDraw(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody(required = false) Map<String, Integer> payload) {
+        try {
+            int cantidad = payload != null && payload.containsKey("cantidad") ? payload.get("cantidad") : 0;
+            battleEngine.resolverCartasExtra(matchId, username, cantidad);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/place-prizes")
+    public ResponseEntity<?> placePrizes(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            battleEngine.colocarPremios(matchId, username);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/reveal")
+    public ResponseEntity<?> revealSetup(@PathVariable String matchId,
+                                         @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            battleEngine.confirmarRevealSetup(matchId, username);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/place-active")
+    public ResponseEntity<?> placeActiveSetup(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody Map<String, String> payload) {
+        try {
+            String cartaId = payload.get("cartaId");
+            battleEngine.colocarActivoSetup(matchId, username, cartaId);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/place-bench")
+    public ResponseEntity<?> placeBenchSetup(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody Map<String, String> payload) {
+        try {
+            String cartaId = payload.get("cartaId");
+            battleEngine.colocarBancaSetup(matchId, username, cartaId);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{matchId}/setup/confirm-bench")
+    public ResponseEntity<?> confirmBenchSetup(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username) {
+        try {
+            battleEngine.confirmarBancaSetup(matchId, username);
+            Partida partida = battleEngine.getEstadoPartida(matchId, username);
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername()) ? swapPerspective(partida) : partida);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -273,6 +406,7 @@ public class BattleController {
         Partida swapped = new Partida(oldBot, oldJugador);
         swapped.setId(p.getId());
         swapped.setFaseActual(p.getFaseActual());
+        swapped.setNumeroTurno(p.getNumeroTurno());
         swapped.setYaSeRetiroEsteTurno(p.isYaSeRetiroEsteTurno());
         swapped.setMulligansJugador(p.getMulligansBot());
         swapped.setMulligansBot(p.getMulligansJugador());
@@ -290,6 +424,15 @@ public class BattleController {
         swapped.setCoinHandshakeJugadorHolding(p.isCoinHandshakeBotHolding());
         swapped.setCoinHandshakeBotHolding(p.isCoinHandshakeJugadorHolding());
         swapped.setCoinHandshakeComplete(p.isCoinHandshakeComplete());
+        swapped.setTurnLogs(p.getTurnLogs());
+        swapped.setJugadorLoadingPercentage(p.getBotLoadingPercentage());
+        swapped.setBotLoadingPercentage(p.getJugadorLoadingPercentage());
+        swapped.setSetupJugadorListo(p.isSetupBotListo());
+        swapped.setSetupBotListo(p.isSetupJugadorListo());
+        swapped.setCartasMulliganExtraPendientesJugador(p.getCartasMulliganExtraPendientesBot());
+        swapped.setCartasMulliganExtraPendientesBot(p.getCartasMulliganExtraPendientesJugador());
+        swapped.setSetupJugadorRoboExtraMulligan(p.isSetupBotRoboExtraMulligan());
+        swapped.setSetupBotRoboExtraMulligan(p.isSetupJugadorRoboExtraMulligan());
 
         if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
             swapped.setTurnoActual(Partida.Turno.BOT);

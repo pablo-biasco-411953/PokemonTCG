@@ -42,8 +42,7 @@ public class BattleKoService {
 
         boolean sinPremios = tableroGanador.getPremios().isEmpty();
         boolean sinPokemon = tableroVictima.getActivo() == null
-                && tableroVictima.getBanca().isEmpty()
-                && !tienePokemonBasicoEnMano(tableroVictima);
+                && tableroVictima.getBanca().isEmpty();
         if (sinPremios || sinPokemon) {
             partida.transicionarA(new EstadoFinPartida());
             partida.setGanador(tableroGanador == partida.getJugador()

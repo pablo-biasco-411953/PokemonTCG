@@ -8,6 +8,7 @@ import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
+import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -149,6 +150,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   cantidadCartas: number = 0;
   cantidadCartasUnicas: number = 0;
   mostrarAnimacionSobre: boolean = false;
+  isOpeningPacks: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
   debugPanelX = 18;
@@ -380,6 +382,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private jugadorService: JugadorService,
     private battleService: BattleService,
     private cardService: CardService,
+    private imagePreloader: ImagePreloaderService,
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
@@ -1145,7 +1148,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
       hpIcon: 'â™¥',
-      typeIcon: 'Ã°Å¸ÂÆ’',
+      typeIcon: 'Ã°Å¸Â Æ’',
       attacksIcon: 'â€¢'
     };
     this.pkmZoom = pkm;
@@ -1168,25 +1171,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return `/images/cards/${id}.png`;
   }
 
+  getImagenReal(carta: Card): string {
+    return this.getImagenCarta(carta.id);
+  }
+
   getImagenCarta(id: string): string {
     if (/^xy/i.test(id)) {
       return `/images/cards/${id}.png`;
     }
 
-    const energyMap: Record<string, string> = {
-      'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass', 'xy1-132': 'grass',
-      'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire', 'xy1-133': 'fire',
-      'col1-90': 'water', 'g1-77': 'water', 'xy12-93': 'water', 'base1-102': 'water', 'xy1-134': 'water',
-      'col1-91': 'lightning', 'g1-78': 'lightning', 'xy12-94': 'lightning', 'base1-100': 'lightning', 'xy1-135': 'lightning',
-      'col1-92': 'psychic', 'g1-79': 'psychic', 'xy12-95': 'psychic', 'base1-101': 'psychic', 'xy1-136': 'psychic',
-      'col1-93': 'fighting', 'g1-80': 'fighting', 'xy12-96': 'fighting', 'base1-97': 'fighting', 'xy1-137': 'fighting',
-      'col1-94': 'darkness', 'g1-81': 'darkness', 'xy12-97': 'darkness', 'xy1-138': 'darkness',
-      'col1-95': 'metal', 'g1-82': 'metal', 'xy1-139': 'metal',
-      'g1-83': 'fairy', 'xy1-140': 'fairy'
-    };
-    if (energyMap[id]) {
-      return `/images/cards/energy-${energyMap[id]}.png`;
-    }
     return `/images/cards/${id}.png`;
   }
 
@@ -1199,9 +1192,14 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   // Abre un sobre y dispara la animacion de revelado.
   abrirSobres() {
     if (!this.jugador?.username || this.sobresDisponibles <= 0) return;
+    this.isOpeningPacks = true;
 
     this.sobreService.abrirSobre(this.jugador.username).subscribe({
-      next: (res: Card[]) => {
+      next: async (res: Card[]) => {
+        const imageUrls = res.map(c => this.getImagenReal(c));
+        await this.imagePreloader.preloadImages(imageUrls);
+
+        this.isOpeningPacks = false;
         this.kioskShopOpen = false;
         this.vendorCameraFocus = false;
         this.cartasNuevas = res;
@@ -1210,6 +1208,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: (err: HttpErrorResponse) => {
+        this.isOpeningPacks = false;
+        this.tradeCollectionLoading = false;
         const backendMessage = this.getBackendErrorMessage(err);
         console.error('Error al abrir sobre', backendMessage, err);
         alert(backendMessage);

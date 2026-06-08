@@ -8,6 +8,7 @@ export interface CartaEnJuego {
   puedeAtacar: boolean;
   condicionesEspeciales: string[];
   invulnerable?: boolean;
+  bocaAbajo?: boolean;
 }
 
 // Zonas visibles de un jugador durante la partida.
@@ -26,7 +27,8 @@ export interface Partida {
   jugador: TableroJugador;
   bot: TableroJugador;
   turnoActual: 'JUGADOR' | 'BOT';
-  faseActual: 'INICIO' | 'LANZAMIENTO_MONEDA' | 'TURNO_NORMAL' | 'FIN_PARTIDA';
+  faseActual: 'INICIO' | 'LANZAMIENTO_MONEDA' | 'SETUP_INITIAL_DRAW' | 'SETUP_MULLIGAN_EVALUATION' | 'SETUP_MULLIGAN_REVEAL' | 'SETUP_PLACE_ACTIVE' | 'SETUP_PLACE_BENCH' | 'SETUP_PRIZE_PLACEMENT' | 'SETUP_MULLIGAN_EXTRA_DRAW' | 'SETUP_PLACE_BENCH_EXTRA' | 'SETUP_REVEAL' | 'ESPERANDO_INTERACCION' | 'TURNO_NORMAL' | 'FIN_PARTIDA';
+  numeroTurno?: number;
   yaSeRetiroEsteTurno: boolean;
   ultimasMonedasLanzadas: boolean[];
   jugadorUsername?: string;
@@ -43,6 +45,16 @@ export interface Partida {
   coinHandshakeBotHolding?: boolean;
   coinHandshakeComplete?: boolean;
   turnLogs?: string[];
+  jugadorLoadingPercentage?: number;
+  botLoadingPercentage?: number;
+  setupJugadorListo?: boolean;
+  setupBotListo?: boolean;
+  mulligansJugador?: number;
+  mulligansBot?: number;
+  cartasMulliganExtraPendientesJugador?: number;
+  cartasMulliganExtraPendientesBot?: number;
+  setupJugadorRoboExtraMulligan?: boolean;
+  setupBotRoboExtraMulligan?: boolean;
 }
 
 export interface StartBattleResponse extends Partida {}

@@ -7,6 +7,11 @@ import com.pokemon.tcg.model.battle.Partida;
 public class EstrategiaDificil implements EstrategiaBot {
 
     @Override
+    public void ejecutarSetup(Partida partida) {
+        new EstrategiaBasica().ejecutarSetup(partida);
+    }
+
+    @Override
     public void ejecutarTurno(Partida partida) {
         throw new UnsupportedOperationException("EstrategiaDificil aún no implementada.");
     }

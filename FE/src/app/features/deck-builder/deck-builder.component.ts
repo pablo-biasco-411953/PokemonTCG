@@ -7,6 +7,7 @@ import { MazoService } from './services/mazo.service';
 import { Card } from '../../shared/models/card';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { I18nService } from '../../i18n/i18n.service';
+import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 
 @Component({
   selector: 'app-deck-builder',
@@ -27,6 +28,9 @@ export class DeckBuilderComponent implements OnInit {
   username: string = '';
   cartaSinStockAnimandoId: string | null = null;
   
+  // PRELOADER
+  isLoadingImages: boolean = true;
+  loadingProgress: number = 0;
   // FILTROS
   filtroNombre: string = '';
   filtroTipo: string = 'Todos';
@@ -49,7 +53,8 @@ export class DeckBuilderComponent implements OnInit {
     private mazoService: MazoService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private i18n: I18nService
+    private i18n: I18nService,
+    private preloaderService: ImagePreloaderService
   ) {}
   idMazoAEditar: number | null = null; // Para saber si estamos editando
 ngOnInit(): void {
@@ -78,7 +83,27 @@ cargarColeccion() {
       // Eliminamos duplicados de la visualización para que la Pokédex sea limpia
       // pero sabiendo cuántas copias tenemos de cada una.
       this.coleccion = this.obtenerCartasUnicas(res);
-      this.cdr.detectChanges();
+      
+      this.precargarImagenes(this.coleccion);
+    });
+  }
+
+  precargarImagenes(cartas: Card[]) {
+    // Tomamos hasta 40 imágenes únicas para no bloquear demasiado tiempo
+    const urlsUnicas = Array.from(new Set(cartas.map(c => this.getImagenReal(c.id)))).slice(0, 40);
+    
+    this.preloaderService.preloadImages(urlsUnicas).subscribe({
+      next: (progress) => {
+        this.loadingProgress = progress;
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        // Un pequeño delay por estética de la animación
+        setTimeout(() => {
+          this.isLoadingImages = false;
+          this.cdr.detectChanges();
+        }, 600);
+      }
     });
   }
 
@@ -110,27 +135,10 @@ actualizarCantidadesPoseidas() {
   }
 
 getImagenReal(id: string): string {
-    if (/^xy/i.test(id)) {
-      return `images/cards/${id}.png`;
-    }
-
-    const energyMap: Record<string, string> = {
-      'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass',
-      'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire',
-      'col1-90': 'water', 'g1-77': 'water', 'xy12-93': 'water', 'base1-102': 'water',
-      'col1-91': 'lightning', 'g1-78': 'lightning', 'xy12-94': 'lightning', 'base1-100': 'lightning',
-      'col1-92': 'psychic', 'g1-79': 'psychic', 'xy12-95': 'psychic', 'base1-101': 'psychic',
-      'col1-93': 'fighting', 'g1-80': 'fighting', 'xy12-96': 'fighting', 'base1-97': 'fighting',
-      'col1-94': 'darkness', 'g1-81': 'darkness', 'xy12-97': 'darkness',
-      'col1-95': 'metal', 'g1-82': 'metal',
-      'g1-83': 'fairy'
-    };
     const archivo = this.mapaFotos[id] || id;
-    if (energyMap[archivo]) {
-      return `images/cards/energy-${energyMap[archivo]}.png`;
-    }
-    return `images/cards/${archivo}.png`;
-}
+    return `/images/cards/${archivo}.png`;
+  }
+
   startHover(card: Card) {
     this.hoverTimer = setTimeout(() => {
       this.cardFocus = card;

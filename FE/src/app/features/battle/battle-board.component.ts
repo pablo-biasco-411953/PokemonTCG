@@ -23,6 +23,8 @@ import { BattleBoardActionService } from './services/battle-board-action.service
 import { BattleBoardCombatService } from './services/battle-board-combat.service';
 import { BattleBoardStateService } from './services/battle-board-state.service';
 import { BattleBoardTurnService } from './services/battle-board-turn.service';
+import { BattleNotificationService } from './services/battle-notification';
+import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { JugadorService } from '../../core/services/jugador.service';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -68,7 +70,7 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
   mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    console.log('[NOTIFICACION]', mensaje, tipo);
+    this.battleNotificationService.show(mensaje, tipo);
   }
   public Math = Math;
   readonly handDropListId = 'player-hand-dropzone';
@@ -166,6 +168,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   public estadoCoinFlip:
+    | 'CARGANDO_VS'
     | 'DAR_LA_MANO'
     | 'ELEGIR_LADO'
     | 'ESPERANDO_TIRO'
@@ -173,10 +176,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     | 'ELEGIR_TURNO'
     | 'RESULTADO_BOT'
     | 'ESPERANDO_RIVAL'
-    | 'OCULTO' = 'OCULTO';
+    | 'OCULTO' = 'CARGANDO_VS';
   eleccionJugador: 'CARA' | 'CRUZ' = 'CARA';
   resultadoMoneda: CoinSide = 'CARA';
   public girando = false;
+
+  jugadorLoadingPercentage = 0;
+  botLoadingPercentage = 0;
+  loadingPhaseFinished = false;
+  private preloadPollingId: any = null;
+  private preloadTimeoutId: any = null;
 
   mostrarAuraCuracionBot = false;
   mostrarAuraCuracionPlayer = false;
@@ -267,6 +276,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleBoardState: BattleBoardStateService,
     private battleBoardTurn: BattleBoardTurnService,
     private jugadorService: JugadorService,
+    private imagePreloader: ImagePreloaderService,
+    private battleNotificationService: BattleNotificationService,
     public i18n: I18nService,
   ) {}
 
@@ -342,7 +353,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (data.faseActual === 'LANZAMIENTO_MONEDA') {
       this.boardVisible = false;
-      this.hidratarPreparativosIniciales(data);
+      if (this.estadoCoinFlip === 'CARGANDO_VS') {
+        this.startPreloadSequence(data);
+      } else {
+        this.hidratarPreparativosIniciales(data);
+      }
       this.cdr.detectChanges();
       return;
     }
@@ -380,6 +395,111 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.syncHandshakeWithServer(true);
       }
     }, 120);
+  }
+
+  private startPreloadSequence(data: Partida): void {
+    if (this.loadingPhaseFinished) {
+      this.hidratarPreparativosIniciales(data);
+      return;
+    }
+    if (this.estadoCoinFlip === 'CARGANDO_VS' && (this.preloadPollingId || this.preloadTimeoutId)) {
+      return;
+    }
+    this.estadoCoinFlip = 'CARGANDO_VS';
+    this.jugadorLoadingPercentage = data.jugadorLoadingPercentage ?? 0;
+    this.botLoadingPercentage = data.botLoadingPercentage ?? 0;
+
+    // Recopilar imagenes a precargar
+    const imageUrls = new Set<string>();
+    
+    const extractImages = (tablero: any) => {
+      if (!tablero) return;
+      [...(tablero.mazo || []), ...(tablero.mano || []), ...(tablero.premios || []), ...(tablero.banca || []), ...(tablero.descarte || [])]
+        .forEach(c => {
+          if (c?.imagen) imageUrls.add(`/images/cards/${c.id}.png`);
+        });
+      if (tablero.activo?.imagen) imageUrls.add(`/images/cards/${tablero.activo.id}.png`);
+    };
+
+    extractImages(data.jugador);
+    extractImages(data.bot);
+
+    // Texturas de tablero base
+    imageUrls.add('/assets/mat.png');
+    imageUrls.add('/assets/mat_bot.png');
+    imageUrls.add('/images/cards/back.png');
+
+    const totalItems = imageUrls.size;
+    let loadedItems = 0;
+
+    if (totalItems === 0) {
+      this.updateLoadingPercentage(100);
+      return;
+    }
+
+    const finalizarPreload = (state: Partida | null = null) => {
+      if (this.loadingPhaseFinished) return;
+      if (this.preloadPollingId) {
+        clearInterval(this.preloadPollingId);
+        this.preloadPollingId = null;
+      }
+      if (this.preloadTimeoutId) {
+        clearTimeout(this.preloadTimeoutId);
+        this.preloadTimeoutId = null;
+      }
+      this.jugadorLoadingPercentage = 100;
+      this.botLoadingPercentage = 100;
+      this.loadingPhaseFinished = true;
+      this.updateLoadingPercentage(100);
+      this.hidratarPreparativosIniciales(state || data);
+      this.cdr.detectChanges();
+    };
+
+    this.preloadTimeoutId = setTimeout(() => finalizarPreload(), 3500);
+
+    this.preloadPollingId = setInterval(() => {
+      this.battleService.getState(this.matchId!).subscribe(state => {
+        if (state) {
+          this.botLoadingPercentage = state.botLoadingPercentage ?? 0;
+          if (this.jugadorLoadingPercentage >= 99 && this.botLoadingPercentage >= 98) {
+            finalizarPreload(state);
+          } else if (!this.esPartidaOnline(state) && this.botLoadingPercentage < 100) {
+             this.updateLoadingPercentage(Math.min(100, this.botLoadingPercentage + 18));
+          }
+        }
+      });
+    }, 500);
+
+    Array.from(imageUrls).forEach(url => {
+      const img = new Image();
+      img.onload = img.onerror = () => {
+        loadedItems++;
+        const pct = loadedItems >= totalItems ? 100 : Math.min(99, Math.floor((loadedItems / totalItems) * 100));
+        this.jugadorLoadingPercentage = pct;
+        this.updateLoadingPercentage(pct);
+        if (pct >= 100 && (!this.esPartidaOnline(data) || this.botLoadingPercentage >= 98)) {
+          finalizarPreload();
+        }
+      };
+      img.src = url;
+    });
+  }
+
+  private updateLoadingPercentage(pct: number): void {
+    if (!this.matchId) return;
+    pct = Math.min(100, Math.max(0, pct));
+    this.battleService.actualizarLoading(this.matchId, pct).subscribe(state => {
+      if (state) {
+        this.botLoadingPercentage = this.loadingPhaseFinished ? 100 : (state.botLoadingPercentage ?? 0);
+        if (pct >= 100 && this.botLoadingPercentage >= 100) {
+          this.loadingPhaseFinished = true;
+          this.jugadorLoadingPercentage = 100;
+          this.botLoadingPercentage = 100;
+          this.hidratarPreparativosIniciales(state);
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   dismissLandscapeHint(): void {
@@ -653,12 +773,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             return;
           }
 
-          if (data.faseActual === 'TURNO_NORMAL') {
+          if (data.faseActual === 'TURNO_NORMAL' || data.faseActual === 'SETUP_INITIAL_DRAW') {
             this.finalizarCoinFlip();
             return;
           }
 
           if (!data.coinFlipped) {
+            return;
+          }
+
+          if (this.estadoCoinFlip === 'ESPERANDO_RIVAL') {
+            this.reproducirAnimacionMonedaRival(data);
             return;
           }
 
@@ -672,6 +797,44 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         },
       });
     }, 1000);
+  }
+
+  private async reproducirAnimacionMonedaRival(data: Partida) {
+    if (this.pollingSorteo) {
+      clearInterval(this.pollingSorteo);
+      this.pollingSorteo = null;
+    }
+    this.estadoCoinFlip = 'GIRANDO';
+    this.lanzada = true;
+    this.girando = true;
+
+    const duracionVuelo = 1.8;
+    const vueltasBase = 7;
+    const fuerza = 200;
+
+    document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza}px`);
+    document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
+
+    this.resultadoMoneda = data.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
+    this.anguloFinal = this.resultadoMoneda === 'CARA' ? vueltasBase * 360 : vueltasBase * 360 + 180;
+
+    this.cdr.detectChanges();
+
+    await this.delay(duracionVuelo * 1000 - 300);
+    this.girando = false;
+    this.cdr.detectChanges();
+
+    await this.delay(1200);
+
+    if (data.coinFlipWinner === this.jugadorNombre) {
+      this.estadoCoinFlip = 'ELEGIR_TURNO';
+    } else {
+      this.estadoCoinFlip = 'RESULTADO_BOT';
+      if (this.esPartidaOnline(data)) {
+        this.iniciarPollingSorteo();
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   onCoinPointerDown(event: PointerEvent) {
@@ -1228,6 +1391,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
 
+        this.procesarFasesSetup(data);
+
         this.procesarTurnLogs();
 
         if (!this.opponentLoaded && this.nombreRival) {
@@ -1255,6 +1420,240 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       },
     });
+  }
+
+
+  estadoSetupMulligan: 'REVEAL' | 'EXTRA_DRAW' | 'PLACE_ACTIVE' | 'PLACE_BENCH' | 'PLACE_BENCH_EXTRA' | 'PRIZES' | 'FINAL_REVEAL' | null = null;
+  mulliganCartasRival: any[] = [];
+  mulliganOponenteCount: number = 0;
+  mulliganJugadorCount: number = 0;
+  cartasExtraPermitidas: number = 0;
+  setupAccionEnCurso = false;
+  private setupAutoActionKey = '';
+  setupMulliganJugadorCartas: any[] = [];
+  setupMulliganRivalCartas: any[] = [];
+  setupMulliganJugadorDebeMostrar = false;
+  setupMulliganRivalDebeMostrar = false;
+  setupShuffleVisible = false;
+  private setupMulliganRevealKey = '';
+
+  async procesarFasesSetup(data: Partida) {
+    if (data.faseActual === 'SETUP_INITIAL_DRAW') {
+      if (!data.setupJugadorListo) {
+        // Enviar evaluación
+        this.ejecutarSetupUnaVez('evaluate', async () => {
+          const estado = await firstValueFrom(this.battleService.evaluateSetup(this.matchId!));
+          this.aplicarEstadoSetup(estado);
+        });
+      }
+    } else if (data.faseActual === 'SETUP_MULLIGAN_REVEAL') {
+      this.setEstadoSetup('REVEAL');
+      const jugadorDebeMostrar = !this.tienePokemonBasicoEnLista(data.jugador?.mano || []);
+      const rivalDebeMostrar = !this.tienePokemonBasicoEnLista(data.bot?.mano || []);
+      const jugadorIds = (data.jugador?.mano || []).map((c: any) => c.id).join(',');
+      const rivalIds = (data.bot?.mano || []).map((c: any) => c.id).join(',');
+      const revealKey = `${data.mulligansJugador || 0}:${data.mulligansBot || 0}:${jugadorDebeMostrar}:${rivalDebeMostrar}:${jugadorIds}:${rivalIds}`;
+
+      if (this.setupMulliganRevealKey !== revealKey) {
+        this.setupMulliganRevealKey = revealKey;
+        this.setupMulliganJugadorDebeMostrar = jugadorDebeMostrar;
+        this.setupMulliganRivalDebeMostrar = rivalDebeMostrar;
+        this.setupMulliganJugadorCartas = jugadorDebeMostrar ? (data.jugador?.mano || []) : [];
+        this.setupMulliganRivalCartas = rivalDebeMostrar ? (data.bot?.mano || []) : [];
+        this.mulliganCartasRival = this.setupMulliganRivalCartas;
+        this.setupShuffleVisible = false;
+      }
+      this.cdr.detectChanges();
+
+      if (!data.setupJugadorListo) {
+        this.ejecutarSetupUnaVez(`mulligan-${data.mulligansJugador || 0}-${data.mulligansBot || 0}`, async () => {
+          await this.delay(2300);
+          this.setupShuffleVisible = true;
+          this.cdr.detectChanges();
+          await this.delay(1000);
+          const estado = await firstValueFrom(this.battleService.executeMulligan(this.matchId!));
+          this.estadoSetupMulligan = null;
+          this.aplicarEstadoSetup(estado);
+        });
+      }
+    } else if (data.faseActual === 'SETUP_PLACE_ACTIVE') {
+      this.setEstadoSetup('PLACE_ACTIVE');
+      this.cdr.detectChanges();
+      this.ejecutarSetupBotSiHaceFalta(data);
+    } else if (data.faseActual === 'SETUP_PLACE_BENCH') {
+      this.setEstadoSetup('PLACE_BENCH');
+      this.cdr.detectChanges();
+      this.ejecutarSetupBotSiHaceFalta(data);
+    } else if (data.faseActual === 'SETUP_MULLIGAN_EXTRA_DRAW') {
+      this.mulliganJugadorCount = data.mulligansJugador || 0;
+      this.mulliganOponenteCount = data.mulligansBot || 0;
+      this.cartasExtraPermitidas = data.cartasMulliganExtraPendientesJugador || 0;
+
+      if (!data.setupJugadorListo && this.cartasExtraPermitidas === 0) {
+        this.estadoSetupMulligan = null;
+        this.enviarCartasExtra(0);
+        return;
+      }
+      if (this.cartasExtraPermitidas <= 0) {
+        this.estadoSetupMulligan = null;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      this.setEstadoSetup('EXTRA_DRAW');
+      this.cdr.detectChanges();
+    } else if (data.faseActual === 'SETUP_PLACE_BENCH_EXTRA') {
+      const jugadorPuedeBancaExtra = !!data.setupJugadorRoboExtraMulligan;
+      if (!jugadorPuedeBancaExtra) {
+        this.estadoSetupMulligan = null;
+        if (!data.setupJugadorListo) {
+          this.confirmarBancaSetup();
+        } else {
+          this.ejecutarSetupBotSiHaceFalta(data);
+        }
+        return;
+      }
+      this.setEstadoSetup('PLACE_BENCH_EXTRA');
+      this.cdr.detectChanges();
+      this.ejecutarSetupBotSiHaceFalta(data);
+      if (!data.setupJugadorListo && !this.tieneBasicosSetupDisponibles()) {
+        this.confirmarBancaSetup();
+      }
+    } else if (data.faseActual === 'SETUP_PRIZE_PLACEMENT') {
+      this.setEstadoSetup('PRIZES');
+      this.ejecutarSetupBotSiHaceFalta(data);
+      if (!data.setupJugadorListo) {
+        this.ejecutarSetupUnaVez('prizes', async () => {
+          await this.delay(1200);
+          const estado = await firstValueFrom(this.battleService.placePrizes(this.matchId!));
+          this.aplicarEstadoSetup(estado);
+        });
+      }
+    } else if (data.faseActual === 'SETUP_REVEAL') {
+      this.setEstadoSetup('FINAL_REVEAL');
+      this.ejecutarSetupUnaVez('final-reveal', async () => {
+        await this.delay(1400);
+        const estado = await firstValueFrom(this.battleService.revealSetup(this.matchId!));
+        this.estadoSetupMulligan = null;
+        this.aplicarEstadoSetup(estado);
+      });
+    } else if (data.faseActual === 'TURNO_NORMAL') {
+      this.estadoSetupMulligan = null;
+      this.setupMulliganRevealKey = '';
+      this.setupAutoActionKey = '';
+      this.setupAccionEnCurso = false;
+    }
+  }
+
+  enviarCartasExtra(cantidad: number) {
+    if (this.setupAccionEnCurso) return;
+    this.setupAccionEnCurso = true;
+    this.estadoSetupMulligan = null;
+    this.battleService.extraDraw(this.matchId!, cantidad).subscribe({
+      next: (estado) => this.aplicarEstadoSetup(estado),
+      error: (err) => {
+        this.setupAccionEnCurso = false;
+        alert(err.error || 'No se pudieron resolver las cartas extra.');
+      }
+    });
+  }
+
+  get opcionesCartasExtra(): number[] {
+    return Array.from({ length: this.cartasExtraPermitidas }, (_, i) => i + 1);
+  }
+
+  cartasBasicasSetupDisponibles(): any[] {
+    return (this.partida?.jugador?.mano || []).filter(c => this.esPokemonBasicoSetup(c));
+  }
+
+  tieneBasicosSetupDisponibles(): boolean {
+    return this.cartasBasicasSetupDisponibles().length > 0 && ((this.partida?.jugador?.banca?.length || 0) < 5);
+  }
+
+  puedeConfirmarBancaSetup(): boolean {
+    return !!this.partida?.jugador?.activo;
+  }
+
+  async colocarActivoSetup(carta: any): Promise<void> {
+    if (!this.matchId || this.setupAccionEnCurso) return;
+    this.setupAccionEnCurso = true;
+    try {
+      const estado = await firstValueFrom(this.battleService.placeActiveSetup(this.matchId, carta.id));
+      this.aplicarEstadoSetup(estado);
+    } catch (err: any) {
+      this.setupAccionEnCurso = false;
+      alert(err?.error || 'No se pudo colocar el Pokemon activo.');
+    }
+  }
+
+  async colocarBancaSetup(carta: any): Promise<void> {
+    if (!this.matchId || this.setupAccionEnCurso || !this.tieneBasicosSetupDisponibles()) return;
+    this.setupAccionEnCurso = true;
+    try {
+      const estado = await firstValueFrom(this.battleService.placeBenchSetup(this.matchId, carta.id));
+      this.aplicarEstadoSetup(estado);
+    } catch (err: any) {
+      this.setupAccionEnCurso = false;
+      alert(err?.error || 'No se pudo colocar ese Pokemon en banca.');
+    }
+  }
+
+  async confirmarBancaSetup(): Promise<void> {
+    if (!this.matchId || this.setupAccionEnCurso || !this.puedeConfirmarBancaSetup()) return;
+    this.setupAccionEnCurso = true;
+    try {
+      const estado = await firstValueFrom(this.battleService.confirmBenchSetup(this.matchId));
+      this.aplicarEstadoSetup(estado);
+    } catch (err: any) {
+      this.setupAccionEnCurso = false;
+      alert(err?.error || 'No se pudo confirmar la banca.');
+    }
+  }
+
+  private aplicarEstadoSetup(estado: Partida): void {
+    this.partida = estado;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(estado);
+    this.setupAccionEnCurso = false;
+    this.cdr.detectChanges();
+    this.procesarFasesSetup(estado);
+  }
+
+  private ejecutarSetupUnaVez(key: string, accion: () => Promise<void>): void {
+    if (this.setupAccionEnCurso || this.setupAutoActionKey === key) return;
+    this.setupAutoActionKey = key;
+    this.setupAccionEnCurso = true;
+    accion().catch(err => {
+      this.setupAccionEnCurso = false;
+      console.error('Error en setup', err);
+    });
+  }
+
+  private ejecutarSetupBotSiHaceFalta(data: Partida): void {
+    if (this.esPartidaOnline(data) || data.setupBotListo || !this.matchId) return;
+    const key = `bot-${data.faseActual}-${data.setupJugadorListo}-${data.bot?.mano?.length || 0}-${data.bot?.banca?.length || 0}`;
+    this.ejecutarSetupUnaVez(key, async () => {
+      await this.delay(500);
+      const estado = await firstValueFrom(this.battleService.jugarBotSetup(this.matchId!));
+      this.aplicarEstadoSetup(estado);
+    });
+  }
+
+  private esPokemonBasicoSetup(carta: any): boolean {
+    if (!this.esPokemon(carta)) return false;
+    return (carta?.subtypes || []).some((s: string) => String(s).toLowerCase() === 'basic');
+  }
+
+  private tienePokemonBasicoEnLista(cartas: any[]): boolean {
+    return (cartas || []).some(c => this.esPokemonBasicoSetup(c));
+  }
+
+  private setEstadoSetup(estado: typeof this.estadoSetupMulligan): void {
+    if (this.estadoSetupMulligan !== estado) {
+      this.estadoSetupMulligan = estado;
+      if (estado !== 'REVEAL') {
+        this.setupMulliganRevealKey = '';
+      }
+    }
   }
 
   private handleGameEnd(partida: Partida): void {
@@ -1777,6 +2176,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     try {
+      // Simula que el bot está pensando
+      await this.delay(2000);
       const estadoPostBot = await this.battleBoardCombat.ejecutarTurnoBot(this.matchId!);
       this.ejecutarIAEnemigaConData(estadoPostBot);
     } catch (err: any) {
@@ -1823,6 +2224,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   realizarAccion(habilidad: BattleBoardAttack): void {
     this.showHabilidadesPanel = false;
+    if ((this.partida?.numeroTurno || 1) <= 1) {
+      alert('No se puede atacar en el primer turno.');
+      return;
+    }
     if (!this.validarEnergiaAtaque(habilidad)) {
       alert(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }));
       return;
@@ -1918,7 +2323,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async jugarCarta(carta: any): Promise<void> {
-    if (!this.partida || this.partida.turnoActual !== 'JUGADOR' || this.cargandoAccion) return;
+    if (!this.partida || this.partida.turnoActual !== 'JUGADOR' || this.partida.faseActual !== 'TURNO_NORMAL' || this.cargandoAccion) return;
 
     const decision = this.battleBoardAction.resolverAccionCarta(this.partida, carta);
 
@@ -2096,9 +2501,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.partida?.jugador?.activo &&
       this.partida?.bot?.activo &&
       this.partida?.turnoActual === 'JUGADOR' &&
+      (this.partida?.numeroTurno || 1) > 1 &&
       !this.ataqueRealizado &&
+      !this.partida?.jugador?.activo?.bocaAbajo &&
+      !this.partida?.bot?.activo?.bocaAbajo &&
       (this.partida?.jugador?.activo?.energiasUnidas?.length ?? 0) > 0
     );
+  }
+
+  getImagenCartaEnJuego(carta: any): string {
+    if (carta?.bocaAbajo) return '/images/cards/back.png';
+    return this.getImagenCarta(carta?.card?.id || carta?.id);
   }
 
   onEnergyMouseMove = (event: MouseEvent) => {
@@ -2732,6 +3145,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.handshakeAnimationId = requestAnimationFrame(animate);
 
       const dt = this.handshakeClock.getDelta();
+
+      const currWidth = canvas.clientWidth || 520;
+      const currHeight = canvas.clientHeight || 156;
+      if (canvas.width !== currWidth || canvas.height !== currHeight) {
+        renderer.setSize(currWidth, currHeight, false);
+        camera.aspect = currWidth / currHeight;
+        camera.updateProjectionMatrix();
+      }
       
       if (this.playerMixer) this.playerMixer.update(dt);
       if (this.opponentMixer) this.opponentMixer.update(dt);

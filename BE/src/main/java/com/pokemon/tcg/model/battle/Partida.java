@@ -16,6 +16,7 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private int numeroTurno = 1;
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
 
@@ -35,17 +36,42 @@ public class Partida {
     private boolean coinHandshakeBotHolding = false;
     private boolean coinHandshakeComplete = false;
 
+    private int jugadorLoadingPercentage = 0;
+    private int botLoadingPercentage = 0;
+
     private transient EstadoPartida estado;
 
     // 🚩 ACÁ GUARDAMOS LA "VERDAD" DE LAS MONEDAS
     private List<Boolean> ultimasMonedasLanzadas = new ArrayList<>();
+    private int cartasMulliganExtraPendientesJugador = 0;
+    private int cartasMulliganExtraPendientesBot = 0;
+    private boolean setupJugadorRoboExtraMulligan = false;
+    private boolean setupBotRoboExtraMulligan = false;
     
+    private boolean setupJugadorListo = false;
+    private boolean setupBotListo = false;
+
     private List<String> turnLogs = new ArrayList<>();
 
     private java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue = new java.util.LinkedList<>();
 
     public enum Turno { JUGADOR, BOT }
-    public enum Fase { INICIO, LANZAMIENTO_MONEDA, TURNO_NORMAL, ESPERANDO_INTERACCION, FIN_PARTIDA }
+    public enum Fase { 
+        INICIO, 
+        LANZAMIENTO_MONEDA, 
+        SETUP_INITIAL_DRAW, 
+        SETUP_MULLIGAN_EVALUATION, 
+        SETUP_MULLIGAN_REVEAL, 
+        SETUP_PLACE_ACTIVE,
+        SETUP_PLACE_BENCH,
+        SETUP_PRIZE_PLACEMENT, 
+        SETUP_MULLIGAN_EXTRA_DRAW, 
+        SETUP_PLACE_BENCH_EXTRA,
+        SETUP_REVEAL,
+        TURNO_NORMAL, 
+        ESPERANDO_INTERACCION, 
+        FIN_PARTIDA 
+    }
 
     public Partida(TableroJugador jugador, TableroJugador bot) {
         // Cada partida vive en memoria y se identifica por UUID.
@@ -82,6 +108,15 @@ public class Partida {
             estado = switch (faseActual) {
                 case INICIO -> new EstadoInicio();
                 case LANZAMIENTO_MONEDA -> new EstadoLanzamientoMoneda();
+                case SETUP_INITIAL_DRAW -> new EstadoSetupInitialDraw();
+                case SETUP_MULLIGAN_EVALUATION -> new EstadoSetupMulliganEvaluation();
+                case SETUP_MULLIGAN_REVEAL -> new EstadoSetupMulliganReveal();
+                case SETUP_PLACE_ACTIVE -> new EstadoSetupPlaceActive();
+                case SETUP_PLACE_BENCH -> new EstadoSetupPlaceBench();
+                case SETUP_MULLIGAN_EXTRA_DRAW -> new EstadoSetupMulliganExtraDraw();
+                case SETUP_PLACE_BENCH_EXTRA -> new EstadoSetupPlaceBenchExtra();
+                case SETUP_PRIZE_PLACEMENT -> new EstadoSetupPrizePlacement();
+                case SETUP_REVEAL -> new EstadoSetupReveal();
                 case TURNO_NORMAL -> new EstadoTurnoNormal();
                 case ESPERANDO_INTERACCION -> new EstadoEsperandoInteraccion();
                 case FIN_PARTIDA -> new EstadoFinPartida();
@@ -100,11 +135,32 @@ public class Partida {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
     }
 
+    public int getNumeroTurno() { return numeroTurno; }
+    public void setNumeroTurno(int numeroTurno) { this.numeroTurno = Math.max(1, numeroTurno); }
+
     public int getMulligansJugador() { return mulligansJugador; }
     public void setMulligansJugador(int mulligansJugador) { this.mulligansJugador = mulligansJugador; }
 
     public int getMulligansBot() { return mulligansBot; }
     public void setMulligansBot(int mulligansBot) { this.mulligansBot = mulligansBot; }
+
+    public int getCartasMulliganExtraPendientesJugador() { return cartasMulliganExtraPendientesJugador; }
+    public void setCartasMulliganExtraPendientesJugador(int cartasMulliganExtraPendientesJugador) { this.cartasMulliganExtraPendientesJugador = cartasMulliganExtraPendientesJugador; }
+
+    public int getCartasMulliganExtraPendientesBot() { return cartasMulliganExtraPendientesBot; }
+    public void setCartasMulliganExtraPendientesBot(int cartasMulliganExtraPendientesBot) { this.cartasMulliganExtraPendientesBot = cartasMulliganExtraPendientesBot; }
+
+    public boolean isSetupJugadorRoboExtraMulligan() { return setupJugadorRoboExtraMulligan; }
+    public void setSetupJugadorRoboExtraMulligan(boolean setupJugadorRoboExtraMulligan) { this.setupJugadorRoboExtraMulligan = setupJugadorRoboExtraMulligan; }
+
+    public boolean isSetupBotRoboExtraMulligan() { return setupBotRoboExtraMulligan; }
+    public void setSetupBotRoboExtraMulligan(boolean setupBotRoboExtraMulligan) { this.setupBotRoboExtraMulligan = setupBotRoboExtraMulligan; }
+
+    public boolean isSetupJugadorListo() { return setupJugadorListo; }
+    public void setSetupJugadorListo(boolean setupJugadorListo) { this.setupJugadorListo = setupJugadorListo; }
+
+    public boolean isSetupBotListo() { return setupBotListo; }
+    public void setSetupBotListo(boolean setupBotListo) { this.setupBotListo = setupBotListo; }
 
     // 🚩 GETTER Y SETTER DE LAS MONEDAS PARA QUE VIAJEN A ANGULAR
     public List<Boolean> getUltimasMonedasLanzadas() {
@@ -175,4 +231,10 @@ public class Partida {
 
     public boolean isCoinHandshakeComplete() { return coinHandshakeComplete; }
     public void setCoinHandshakeComplete(boolean coinHandshakeComplete) { this.coinHandshakeComplete = coinHandshakeComplete; }
+
+    public int getJugadorLoadingPercentage() { return jugadorLoadingPercentage; }
+    public void setJugadorLoadingPercentage(int jugadorLoadingPercentage) { this.jugadorLoadingPercentage = Math.max(0, Math.min(100, jugadorLoadingPercentage)); }
+
+    public int getBotLoadingPercentage() { return botLoadingPercentage; }
+    public void setBotLoadingPercentage(int botLoadingPercentage) { this.botLoadingPercentage = Math.max(0, Math.min(100, botLoadingPercentage)); }
 }

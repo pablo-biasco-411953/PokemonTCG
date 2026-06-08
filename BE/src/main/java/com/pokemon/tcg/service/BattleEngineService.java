@@ -76,20 +76,17 @@ public class BattleEngineService {
         Collections.shuffle(mazoBot);
         tableroBot.setMazo(mazoBot);
 
-        int mulligansJugador = prepararManoConMulligan(tableroJugador);
-        int mulligansBot = prepararManoConMulligan(tableroBot);
-
-        robarCartas(tableroJugador, mulligansBot);
-        robarCartas(tableroBot, mulligansJugador);
-
-        prepararPremios(tableroJugador);
-        prepararPremios(tableroBot);
+        // Ya no preparamos la mano con mulligan automático, ni repartimos premios.
+        // Solo sacamos 7 cartas (esto es temporal, si decidimos que la animación la hace el front, tal vez solo transicionemos).
+        // Para que coincida con el backend, repartiremos 7 cartas a las manos ahora pero no los premios.
+        robarCartas(tableroJugador, 7);
+        robarCartas(tableroBot, 7);
 
         Partida partida = new Partida(tableroJugador, tableroBot);
         partida.setJugadorUsername(username);
         partida.setCoinFlipCallerUsername(username);
-        partida.setMulligansJugador(mulligansJugador);
-        partida.setMulligansBot(mulligansBot);
+        partida.setMulligansJugador(0);
+        partida.setMulligansBot(0);
         partida.transicionarA(new EstadoLanzamientoMoneda());
         long now = System.currentTimeMillis();
         partida.setJugadorLastSeenAt(now);
@@ -154,9 +151,20 @@ public class BattleEngineService {
             partida.setCoinFlipResult(resultado);
             partida.setCoinFlipWinner(callerWon ? callerUsername : oponente);
 
-            if (partida.getBotUsername() == null) {
-                partida.transicionarA(new EstadoTurnoNormal());
-            }
+        }
+        return partida;
+    }
+
+    public synchronized Partida actualizarLoading(String matchId, String username, int percentage) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (username != null && username.equals(partida.getJugadorUsername())) {
+            partida.setJugadorLoadingPercentage(percentage);
+        } else if (username != null && username.equals(partida.getBotUsername())) {
+            partida.setBotLoadingPercentage(percentage);
+        } else if (partida.getBotUsername() == null) {
+            // Si es singleplayer, forzamos que el "bot" siempre acompañe el porcentaje del jugador (o vaya a 100).
+            partida.setBotLoadingPercentage(100);
+            partida.setJugadorLoadingPercentage(percentage);
         }
         return partida;
     }
@@ -194,9 +202,8 @@ public class BattleEngineService {
                 partida.setTurnoActual(Partida.Turno.JUGADOR);
             } else {
                 partida.setTurnoActual(Partida.Turno.BOT);
-                ejecutarTurnoBot(matchId);
             }
-            partida.transicionarA(new EstadoTurnoNormal());
+            partida.transicionarA(new EstadoSetupInitialDraw());
         } else {
             if (partida.getFaseActual() == Partida.Fase.TURNO_NORMAL) {
                 return;
@@ -209,12 +216,278 @@ public class BattleEngineService {
             } else {
                 partida.setTurnoActual(callerUsername.equals(partida.getJugadorUsername()) ? Partida.Turno.BOT : Partida.Turno.JUGADOR);
             }
-            if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
-                robarCarta(partida.getJugador());
+            
+            partida.transicionarA(new EstadoSetupInitialDraw());
+        }
+    }
+
+    public synchronized void evaluarSetupInitialDraw(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_INITIAL_DRAW) return;
+
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            // Evaluar ambas manos
+            boolean jugadorTieneBasico = tienePokemonBasico(partida.getJugador());
+            boolean botTieneBasico = tienePokemonBasico(partida.getBot());
+
+            if (!jugadorTieneBasico || !botTieneBasico) {
+                partida.transicionarA(new EstadoSetupMulliganReveal());
             } else {
-                robarCarta(partida.getBot());
+                partida.transicionarA(new EstadoSetupPlaceActive());
             }
-            partida.transicionarA(new EstadoTurnoNormal());
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+        }
+    }
+
+    public synchronized void ejecutarMulligan(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_MULLIGAN_REVEAL) return;
+
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            boolean jugadorMulligan = !tienePokemonBasico(partida.getJugador());
+            boolean botMulligan = !tienePokemonBasico(partida.getBot());
+
+            if (jugadorMulligan) {
+                partida.setMulligansJugador(partida.getMulligansJugador() + 1);
+                partida.getJugador().getMazo().addAll(partida.getJugador().getMano());
+                partida.getJugador().getMano().clear();
+                Collections.shuffle(partida.getJugador().getMazo());
+                robarCartas(partida.getJugador(), 7);
+            }
+            
+            if (botMulligan) {
+                partida.setMulligansBot(partida.getMulligansBot() + 1);
+                partida.getBot().getMazo().addAll(partida.getBot().getMano());
+                partida.getBot().getMano().clear();
+                Collections.shuffle(partida.getBot().getMazo());
+                robarCartas(partida.getBot(), 7);
+            }
+
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+
+            boolean jugadorTieneBasico = tienePokemonBasico(partida.getJugador());
+            boolean botTieneBasico = tienePokemonBasico(partida.getBot());
+
+            if (!jugadorTieneBasico || !botTieneBasico) {
+                partida.transicionarA(new EstadoSetupMulliganReveal());
+            } else {
+                partida.transicionarA(new EstadoSetupPlaceActive());
+            }
+        }
+    }
+
+    public synchronized void colocarActivoSetup(String matchId, String username, String cartaId) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_PLACE_ACTIVE) return;
+
+        TableroJugador tablero = getTableroByUsername(partida, username);
+        if (tablero.getActivo() != null) return; // Ya colocó
+
+        Card carta = tablero.getMano().stream()
+                .filter(c -> c.getId().equals(cartaId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Carta no en mano"));
+
+        if (!esPokemonBasico(carta)) {
+            throw new IllegalArgumentException("Debe ser un Pokémon Básico");
+        }
+
+        CartaEnJuego cartaEnJuego = new CartaEnJuego(carta);
+        cartaEnJuego.setBocaAbajo(true);
+        tablero.setActivo(cartaEnJuego);
+        tablero.getMano().remove(carta);
+
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+            partida.transicionarA(new EstadoSetupPlaceBench());
+        }
+    }
+
+    public synchronized void colocarBancaSetup(String matchId, String username, String cartaId) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_PLACE_BENCH && 
+            partida.getFaseActual() != Partida.Fase.SETUP_PLACE_BENCH_EXTRA) return;
+
+        TableroJugador tablero = getTableroByUsername(partida, username);
+        if (tablero.getBanca().size() >= 5) return;
+
+        Card carta = tablero.getMano().stream()
+                .filter(c -> c.getId().equals(cartaId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Carta no en mano"));
+
+        if (!esPokemonBasico(carta)) {
+            throw new IllegalArgumentException("Debe ser un Pokémon Básico");
+        }
+
+        CartaEnJuego cartaEnJuego = new CartaEnJuego(carta);
+        cartaEnJuego.setBocaAbajo(true);
+        tablero.getBanca().add(cartaEnJuego);
+        tablero.getMano().remove(carta);
+    }
+
+    public synchronized void confirmarBancaSetup(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_PLACE_BENCH && 
+            partida.getFaseActual() != Partida.Fase.SETUP_PLACE_BENCH_EXTRA) return;
+
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+            if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH) {
+                partida.transicionarA(new EstadoSetupPrizePlacement());
+            } else {
+                partida.transicionarA(new EstadoSetupReveal());
+            }
+        }
+    }
+
+    private void transicionarAExtraDraw(Partida partida) {
+        int diffJugador = partida.getMulligansBot() - partida.getMulligansJugador();
+        int diffBot = partida.getMulligansJugador() - partida.getMulligansBot();
+        
+        partida.setCartasMulliganExtraPendientesJugador(Math.max(0, diffJugador));
+        partida.setCartasMulliganExtraPendientesBot(Math.max(0, diffBot));
+        partida.setSetupJugadorRoboExtraMulligan(false);
+        partida.setSetupBotRoboExtraMulligan(false);
+
+        if (partida.getCartasMulliganExtraPendientesJugador() > 0 || partida.getCartasMulliganExtraPendientesBot() > 0) {
+            partida.transicionarA(new EstadoSetupMulliganExtraDraw());
+        } else {
+            partida.transicionarA(new EstadoSetupReveal());
+        }
+    }
+
+    public synchronized void resolverCartasExtra(String matchId, String username, int cantidad) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_MULLIGAN_EXTRA_DRAW) return;
+
+        if (username.equals(partida.getJugadorUsername())) {
+            int max = partida.getCartasMulliganExtraPendientesJugador();
+            int aRobar = Math.min(cantidad, max);
+            robarCartas(partida.getJugador(), aRobar);
+            partida.setSetupJugadorRoboExtraMulligan(aRobar > 0);
+            partida.setCartasMulliganExtraPendientesJugador(0);
+        } else if (username.equals(partida.getBotUsername())) {
+            int max = partida.getCartasMulliganExtraPendientesBot();
+            int aRobar = Math.min(cantidad, max);
+            robarCartas(partida.getBot(), aRobar);
+            partida.setSetupBotRoboExtraMulligan(aRobar > 0);
+            partida.setCartasMulliganExtraPendientesBot(0);
+        }
+
+        if (partida.getBotUsername() == null) {
+            int max = partida.getCartasMulliganExtraPendientesBot();
+            robarCartas(partida.getBot(), max);
+            partida.setSetupBotRoboExtraMulligan(max > 0);
+            partida.setCartasMulliganExtraPendientesBot(0);
+        }
+
+        if (partida.getCartasMulliganExtraPendientesJugador() == 0 && partida.getCartasMulliganExtraPendientesBot() == 0) {
+            // Solo quien tuvo derecho a robar por mulligan puede bajar basicos nuevos en esta ventana extra.
+            boolean jugadorRoboExtra = partida.isSetupJugadorRoboExtraMulligan();
+            boolean botRoboExtra = partida.isSetupBotRoboExtraMulligan();
+
+            if ((jugadorRoboExtra && puedeColocarBasicosExtra(partida.getJugador())) ||
+                (botRoboExtra && puedeColocarBasicosExtra(partida.getBot()))) {
+                partida.setSetupJugadorListo(false);
+                partida.setSetupBotListo(false);
+                if (!jugadorRoboExtra) {
+                    partida.setSetupJugadorListo(true);
+                }
+                if (!botRoboExtra) {
+                    partida.setSetupBotListo(true);
+                }
+                partida.transicionarA(new EstadoSetupPlaceBenchExtra());
+            } else {
+                revelarSetupEIniciarTurno(partida);
+            }
+        }
+    }
+
+    public synchronized void colocarPremios(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_PRIZE_PLACEMENT) return;
+
+        if (username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            prepararPremios(partida.getJugador());
+            prepararPremios(partida.getBot());
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+
+            transicionarAExtraDraw(partida);
+        }
+    }
+
+    public synchronized void confirmarRevealSetup(String matchId, String username) {
+        Partida partida = getPartidaOThrow(matchId);
+        if (partida.getFaseActual() != Partida.Fase.SETUP_REVEAL) return;
+
+        if (username != null && username.equals(partida.getJugadorUsername())) {
+            partida.setSetupJugadorListo(true);
+        } else if (username != null && username.equals(partida.getBotUsername())) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.getBotUsername() == null) {
+            partida.setSetupBotListo(true);
+        }
+
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            revelarSetupEIniciarTurno(partida);
         }
     }
 
@@ -341,6 +614,9 @@ public class BattleEngineService {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
         validarTurno(partida, callerUsername);
+        if (partida.getNumeroTurno() <= 1) {
+            throw new IllegalStateException("No se puede atacar en el primer turno.");
+        }
 
         TableroJugador tableroAtacante = getTableroDeJugador(partida, callerUsername);
         TableroJugador tableroDefensor = getTableroOponente(partida, callerUsername);
@@ -437,9 +713,10 @@ public class BattleEngineService {
         partida.setYaSeRetiroEsteTurno(false);
 
         if (partida.getBotUsername() == null) {
+            partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             partida.setTurnoActual(Partida.Turno.BOT);
-            ejecutarTurnoBot(matchId);
         } else {
+            partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
                 partida.setTurnoActual(Partida.Turno.BOT);
                 robarCarta(partida.getBot());
@@ -450,9 +727,29 @@ public class BattleEngineService {
         }
     }
 
-
-
-
+    public void ejecutarSetupBot(String matchId) {
+        Partida partida = partidasEnCurso.get(matchId);
+        if (partida == null || partida.getBotUsername() != null) return; // Solo para offline
+        
+        botAIService.ejecutarSetup(partida);
+        
+        if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
+            partida.setSetupJugadorListo(false);
+            partida.setSetupBotListo(false);
+            
+            if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_ACTIVE) {
+                partida.transicionarA(new EstadoSetupPlaceBench());
+            } else if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH) {
+                partida.transicionarA(new EstadoSetupPrizePlacement());
+            } else if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH_EXTRA) {
+                partida.transicionarA(new EstadoSetupReveal());
+            } else if (partida.getFaseActual() == Partida.Fase.SETUP_PRIZE_PLACEMENT) {
+                prepararPremios(partida.getJugador());
+                prepararPremios(partida.getBot());
+                transicionarAExtraDraw(partida);
+            }
+        }
+    }
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
@@ -480,12 +777,33 @@ public class BattleEngineService {
 
         aplicarMantenimientoEntreTurnos(partida);
 
+        partida.setNumeroTurno(partida.getNumeroTurno() + 1);
         partida.setTurnoActual(Partida.Turno.JUGADOR);
         robarCarta(partida.getJugador());
     }
     private void robarCarta(TableroJugador tablero) {
         if (!tablero.getMazo().isEmpty())
             tablero.getMano().add(tablero.getMazo().remove(0));
+    }
+
+    private boolean puedeColocarBasicosExtra(TableroJugador tablero) {
+        return tablero.getBanca().size() < 5 && tablero.getMano().stream().anyMatch(this::esPokemonBasico);
+    }
+
+    private void revelarSetupEIniciarTurno(Partida partida) {
+        revelarTablero(partida.getJugador());
+        revelarTablero(partida.getBot());
+        partida.setSetupJugadorListo(false);
+        partida.setSetupBotListo(false);
+        partida.setNumeroTurno(1);
+        partida.transicionarA(new EstadoTurnoNormal());
+    }
+
+    private void revelarTablero(TableroJugador tablero) {
+        if (tablero.getActivo() != null) {
+            tablero.getActivo().setBocaAbajo(false);
+        }
+        tablero.getBanca().forEach(carta -> carta.setBocaAbajo(false));
     }
 
     private Partida getPartidaOThrow(String matchId) {
@@ -527,6 +845,19 @@ public class BattleEngineService {
             return partida.getBot();
         }
         throw new IllegalArgumentException("Usuario no válido para esta partida.");
+    }
+
+    private TableroJugador getTableroByUsername(Partida partida, String username) {
+        if (username != null && username.equals(partida.getJugadorUsername())) {
+            return partida.getJugador();
+        }
+        if (username != null && username.equals(partida.getBotUsername())) {
+            return partida.getBot();
+        }
+        if (partida.getBotUsername() == null) {
+            return partida.getJugador();
+        }
+        throw new IllegalArgumentException("Usuario no valido para esta partida.");
     }
 
     public TableroJugador getTableroOponente(Partida partida, String callerUsername) {
@@ -690,21 +1021,15 @@ public class BattleEngineService {
         Collections.shuffle(m2);
         tableroBot.setMazo(m2);
 
-        int mulligansJugador = prepararManoConMulligan(tableroJugador);
-        int mulligansBot = prepararManoConMulligan(tableroBot);
-
-        robarCartas(tableroJugador, mulligansBot);
-        robarCartas(tableroBot, mulligansJugador);
-
-        prepararPremios(tableroJugador);
-        prepararPremios(tableroBot);
+        robarCartas(tableroJugador, 7);
+        robarCartas(tableroBot, 7);
 
         Partida partida = new Partida(tableroJugador, tableroBot);
         partida.setJugadorUsername(player1);
         partida.setBotUsername(player2);
         partida.setCoinFlipCallerUsername(player1);
-        partida.setMulligansJugador(mulligansJugador);
-        partida.setMulligansBot(mulligansBot);
+        partida.setMulligansJugador(0);
+        partida.setMulligansBot(0);
         partida.transicionarA(new EstadoLanzamientoMoneda());
         long now = System.currentTimeMillis();
         partida.setJugadorLastSeenAt(now);

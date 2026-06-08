@@ -1,5 +1,31 @@
+<!-- PANTALLA DE CARGA GLOBAL DEL DECK BUILDER -->
+<div class="loading-overlay pokedex-chassis" *ngIf="isLoadingImages">
+  <div class="loading-content">
+    <div class="pokedex-top-bar" style="justify-content: center; margin-bottom: 30px; border-bottom: none;">
+      <div class="led-container">
+        <div class="led main-blue pulsing"></div>
+        <div class="led red"></div>
+        <div class="led yellow"></div>
+        <div class="led green"></div>
+      </div>
+    </div>
+    
+    <div class="radar-container">
+      <div class="radar-sweep"></div>
+      <div class="pokeball-center"></div>
+    </div>
+    
+    <h2 class="dot-matrix loading-text">{{ 'deck.syncing' | t | uppercase }}...</h2>
+    
+    <div class="progress-bar pokedex-screen-inset-mini">
+      <div class="progress-fill" [style.width.%]="loadingProgress"></div>
+    </div>
+    <p class="dot-matrix percentage">{{ loadingProgress }}%</p>
+  </div>
+</div>
+
 <!-- Editor de mazos con coleccion filtrable y zona de armado. -->
-<div class="builder-container pokedex-chassis">
+<div class="builder-container pokedex-chassis" *ngIf="!isLoadingImages">
   
   <div class="pokedex-top-bar">
     <div class="led-container">

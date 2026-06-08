@@ -18,8 +18,14 @@ public class CartaEnJuego {
     private int reduccionDanioRecibido = 0;
     private int aumentoDanioCausado = 0;
     private boolean invulnerable = false;
+    private boolean bocaAbajo = false;
+
     public void setInvulnerable(boolean value) { this.invulnerable = value; }
     public boolean isInvulnerable() { return invulnerable; }
+    
+    public void setBocaAbajo(boolean value) { this.bocaAbajo = value; }
+    public boolean isBocaAbajo() { return bocaAbajo; }
+    
     public CartaEnJuego(Card card) {
         // El HP inicial se toma de la carta base al entrar en juego.
         this.card = card;

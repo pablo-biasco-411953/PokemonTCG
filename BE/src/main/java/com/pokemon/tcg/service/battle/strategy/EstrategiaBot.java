@@ -4,4 +4,5 @@ import com.pokemon.tcg.model.battle.Partida;
 
 public interface EstrategiaBot {
     void ejecutarTurno(Partida partida);
+    void ejecutarSetup(Partida partida);
 }
