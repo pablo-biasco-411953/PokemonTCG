@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class CardCatalogService {
@@ -26,6 +27,7 @@ public class CardCatalogService {
     public List<Card> getCatalogo() {
         List<Card> cartas = filtrarCartasJugables(cardRepo.findAll());
         if (!cartas.isEmpty()) {
+            normalizarEnergiasXy(cartas);
             return cartas;
         }
 
@@ -39,9 +41,12 @@ public class CardCatalogService {
         if (cartas.isEmpty()) {
             throw new IllegalStateException("cards.json no contiene cartas XY jugables.");
         }
+        normalizarEnergiasXy(cartas);
         cardRepo.saveAll(cartas);
         cardRepo.flush();
-        return filtrarCartasJugables(cardRepo.findAll());
+        List<Card> guardadas = filtrarCartasJugables(cardRepo.findAll());
+        normalizarEnergiasXy(guardadas);
+        return guardadas;
     }
 
     private List<Card> leerCardsJson() {
@@ -73,6 +78,54 @@ public class CardCatalogService {
 
     private boolean esEnergia(Card card) {
         return "energy".equals(normalizar(card.getSupertype()));
+    }
+
+    private void normalizarEnergiasXy(List<Card> cartas) {
+        Map<String, String> tiposPorId = Map.ofEntries(
+                Map.entry("xy1-132", "Grass"),
+                Map.entry("xy1-133", "Fire"),
+                Map.entry("xy1-134", "Water"),
+                Map.entry("xy1-135", "Lightning"),
+                Map.entry("xy1-136", "Psychic"),
+                Map.entry("xy1-137", "Fighting"),
+                Map.entry("xy1-138", "Darkness"),
+                Map.entry("xy1-139", "Metal"),
+                Map.entry("xy1-140", "Fairy")
+        );
+
+        boolean hayCambios = false;
+        for (Card card : cartas) {
+            String tipoCorrecto = tiposPorId.get(card.getId());
+            if (tipoCorrecto == null) {
+                tipoCorrecto = inferirTipoEnergiaBasica(card);
+            }
+            if (tipoCorrecto != null && !tipoCorrecto.equalsIgnoreCase(card.getTipo())) {
+                card.setTipo(tipoCorrecto);
+                hayCambios = true;
+            }
+        }
+        if (hayCambios) {
+            cardRepo.saveAll(cartas);
+            cardRepo.flush();
+        }
+    }
+
+    private String inferirTipoEnergiaBasica(Card card) {
+        if (!esEnergia(card) || card.getNombre() == null || card.getSubtypes() == null) return null;
+        boolean esBasica = card.getSubtypes().stream().anyMatch(s -> "basic".equals(normalizar(s)));
+        if (!esBasica) return null;
+
+        String nombre = normalizar(card.getNombre());
+        if (nombre.contains("grass energy")) return "Grass";
+        if (nombre.contains("fire energy")) return "Fire";
+        if (nombre.contains("water energy")) return "Water";
+        if (nombre.contains("lightning energy")) return "Lightning";
+        if (nombre.contains("psychic energy")) return "Psychic";
+        if (nombre.contains("fighting energy")) return "Fighting";
+        if (nombre.contains("darkness energy")) return "Darkness";
+        if (nombre.contains("metal energy")) return "Metal";
+        if (nombre.contains("fairy energy")) return "Fairy";
+        return null;
     }
 
     private String normalizar(String value) {

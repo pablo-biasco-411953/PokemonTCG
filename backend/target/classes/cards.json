@@ -8432,7 +8432,7 @@
       "Basic",
       "EX"
     ],
-    "tipo": "Colorless",
+    "tipo": "Lightning",
     "hp": "110",
     "costoRetirada": 1,
     "evolvesFrom": null,
@@ -8519,7 +8519,7 @@
     "subtypes": [
       "Special"
     ],
-    "tipo": "Colorless",
+    "tipo": "Psychic",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -8541,7 +8541,7 @@
     "subtypes": [
       "Special"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fighting",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -12471,7 +12471,7 @@
     "subtypes": [
       "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Darkness",
     "hp": "70",
     "costoRetirada": 1,
     "evolvesFrom": null,
@@ -12510,7 +12510,7 @@
     "subtypes": [
       "Stage 1"
     ],
-    "tipo": "Colorless",
+    "tipo": "Metal",
     "hp": "90",
     "costoRetirada": 1,
     "evolvesFrom": "Doduo",
@@ -12557,7 +12557,7 @@
     "subtypes": [
       "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fairy",
     "hp": "110",
     "costoRetirada": 2,
     "evolvesFrom": null,
@@ -13211,7 +13211,7 @@
     "subtypes": [
       "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Grass",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -13229,7 +13229,7 @@
     "subtypes": [
       "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Fire",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,
@@ -13247,7 +13247,7 @@
     "subtypes": [
       "Basic"
     ],
-    "tipo": "Colorless",
+    "tipo": "Water",
     "hp": "0",
     "costoRetirada": 0,
     "evolvesFrom": null,

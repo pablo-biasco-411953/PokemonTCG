@@ -12,6 +12,26 @@
     <strong>{{ 'lobby.rotatePhone' | t }}</strong>
     <span>{{ 'lobby.rotateHint' | t }}</span>
   </div>
+  <!-- PANTALLA DE CARGA GLOBAL DE APERTURA DE SOBRES -->
+  <div class="loading-overlay pokedex-chassis" *ngIf="isOpeningPacks" style="z-index: 1000000; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+    <div class="loading-content">
+      <div class="pokedex-top-bar" style="justify-content: center; margin-bottom: 30px; border-bottom: none;">
+        <div class="led-container">
+          <div class="led main-blue pulsing"></div>
+          <div class="led red"></div>
+          <div class="led yellow"></div>
+          <div class="led green"></div>
+        </div>
+      </div>
+      
+      <div class="radar-container">
+        <div class="radar-sweep"></div>
+        <div class="pokeball-center"></div>
+      </div>
+      
+      <h2 class="dot-matrix loading-text">{{ 'lobby.openingPack' | t | uppercase }}...</h2>
+    </div>
+  </div>
 
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
   <div 

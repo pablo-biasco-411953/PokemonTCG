@@ -57,6 +57,38 @@ export class BattleService {
     return this.http.post<Partida>(`${this.base}/${matchId}/surrender`, {}, this.getHeaders());
   }
 
+  evaluateSetup(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/evaluate`, {}, this.getHeaders());
+  }
+
+  executeMulligan(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/execute-mulligan`, {}, this.getHeaders());
+  }
+
+  extraDraw(matchId: string, cantidad: number): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/extra-draw`, { cantidad }, this.getHeaders());
+  }
+
+  placePrizes(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/place-prizes`, {}, this.getHeaders());
+  }
+
+  placeActiveSetup(matchId: string, cartaId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/place-active`, { cartaId }, this.getHeaders());
+  }
+
+  placeBenchSetup(matchId: string, cartaId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/place-bench`, { cartaId }, this.getHeaders());
+  }
+
+  confirmBenchSetup(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/confirm-bench`, {}, this.getHeaders());
+  }
+
+  revealSetup(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/setup/reveal`, {}, this.getHeaders());
+  }
+
   // Ejecuta el lanzamiento inicial de moneda.
   lanzarMoneda(matchId: string, eleccion: 'CARA' | 'CRUZ'): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/coin-flip`, { eleccion }, this.getHeaders());
@@ -67,6 +99,15 @@ export class BattleService {
     return this.http.post<Partida>(
       `${this.base}/${matchId}/coin-handshake`,
       { holding, power },
+      this.getHeaders()
+    );
+  }
+
+  // Sincroniza el porcentaje de carga.
+  actualizarLoading(matchId: string, percentage: number): Observable<Partida> {
+    return this.http.post<Partida>(
+      `${this.base}/${matchId}/loading`,
+      { percentage },
       this.getHeaders()
     );
   }
@@ -103,6 +144,10 @@ export class BattleService {
   // Pide al backend que resuelva el turno del bot.
   jugarBot(matchId: string): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/jugar-bot`, {}, this.getHeaders());
+  }
+
+  jugarBotSetup(matchId: string): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/${matchId}/jugar-bot-setup`, {}, this.getHeaders());
   }
 
   // Cierra el turno del jugador actual.

@@ -11,6 +11,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Card.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoAtacar.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LoginRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\Ataque.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupMulliganEvaluation.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoInmunidad.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\OpenApiConfig.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\CardController.java
@@ -20,6 +21,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\TableroJugador.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\CardRepository.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DiscardEnergyCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBench.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoEscalaPorEnergias.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugadorDatosResponse.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\SobreController.java
@@ -40,6 +42,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ActualizarMa
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\exception\GlobalExceptionHandler.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\MazoService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\HealCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupMulliganExtraDraw.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BotAIService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\CorsConfig.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\JugadorRepository.java
@@ -61,6 +64,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\sta
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoParalisis.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoSueno.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\SantoroTrackingRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBenchExtra.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\CoinFlipCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoMultiMoneda.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleService.java
@@ -69,13 +73,16 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoUnirEnergia.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LobbyMessage.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SearchDeckCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPrizePlacement.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoJugarPokemon.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\SobreService.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupInitialDraw.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoTurno.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoInicio.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\ManejadorEfecto.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugInjectCardRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugarPokemonRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPlaceActive.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Mazo.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugSetSobresRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugadorDTO.java
@@ -99,9 +106,11 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\WebSocket
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoAtrapar.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\strategy\EstrategiaBasica.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoVeneno.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupReveal.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoEsperandoInteraccion.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoDescartarEnergiaPropia.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\ContextoAtaque.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupMulliganReveal.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\StartBattleOnlineRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\LobbyWebSocketHandler.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\StartBattleRequest.java
