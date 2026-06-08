@@ -46,7 +46,14 @@ public class DataLoader implements CommandLineRunner {
             }
             todasLasCartas = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
             long dbCount = cardRepo.count();
-            if (dbCount < todasLasCartas.size()) {
+            boolean necesitaActualizar = false;
+            for (Card c : todasLasCartas) {
+                if (!cardRepo.existsById(c.getId())) {
+                    necesitaActualizar = true;
+                    break;
+                }
+            }
+            if (necesitaActualizar || dbCount < todasLasCartas.size()) {
                 cardRepo.saveAll(todasLasCartas);
                 System.out.println("[DataLoader] Base de datos actualizada con nuevas cartas. Total: " + todasLasCartas.size());
             } else {
