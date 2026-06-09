@@ -19,6 +19,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\SantoroQuest
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleTurnService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\CadenaAtaqueFactory.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\TableroJugador.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelfDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\LobbyRoomController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\CardRepository.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DiscardEnergyCommand.java

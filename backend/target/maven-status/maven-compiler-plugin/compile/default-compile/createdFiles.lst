@@ -57,6 +57,7 @@ com\pokemon\tcg\service\battle\strategy\EstrategiaBasica.class
 com\pokemon\tcg\model\battle\Ataque.class
 com\pokemon\tcg\service\BattleAttackService$KoResolver.class
 com\pokemon\tcg\dto\TradeExecutionRequest.class
+com\pokemon\tcg\model\battle\command\SelfDamageCommand.class
 com\pokemon\tcg\dto\SantoroTrackingRequest.class
 com\pokemon\tcg\model\battle\command\Target.class
 com\pokemon\tcg\config\LobbyWebSocketHandler.class
