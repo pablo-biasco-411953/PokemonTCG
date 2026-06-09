@@ -422,21 +422,17 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
   }
 
   getImagenCarta(id: string): string {
-    const energyMap: Record<string, string> = {
-      'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass',
-      'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire',
-      'col1-90': 'water', 'g1-77': 'water', 'xy12-93': 'water', 'base1-102': 'water',
-      'col1-91': 'lightning', 'g1-78': 'lightning', 'xy12-94': 'lightning', 'base1-100': 'lightning',
-      'col1-92': 'psychic', 'g1-79': 'psychic', 'xy12-95': 'psychic', 'base1-101': 'psychic',
-      'col1-93': 'fighting', 'g1-80': 'fighting', 'xy12-96': 'fighting', 'base1-97': 'fighting',
-      'col1-94': 'darkness', 'g1-81': 'darkness', 'xy12-97': 'darkness',
-      'col1-95': 'metal', 'g1-82': 'metal',
-      'g1-83': 'fairy'
-    };
-    if (energyMap[id]) {
-      return `/images/cards/energy-${energyMap[id]}.png`;
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
     }
+
     return `/images/cards/${id}.png`;
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
   }
 
   private crearCartasAntiBug() {
@@ -445,11 +441,28 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
 
     this.cartas.forEach((c, i) => {
       const group = new THREE.Group();
-      const matFront = new THREE.MeshPhysicalMaterial({ 
-        map: loader.load(this.getImagenCarta(c.id)), 
-        metalness: 0.5, roughness: 0.3, iridescence: 0.4, iridescenceIOR: 1.3,
-        side: THREE.FrontSide 
+      const matFront = new THREE.MeshPhysicalMaterial({
+        map: backTex,
+        metalness: 0.5,
+        roughness: 0.3,
+        iridescence: 0.4,
+        iridescenceIOR: 1.3,
+        side: THREE.FrontSide
       });
+
+      loader.load(
+        this.getImagenCarta(c.id),
+        (tex) => {
+          matFront.map = tex;
+          matFront.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          matFront.map = backTex;
+          matFront.needsUpdate = true;
+        }
+      );
+
       const front = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.1), matFront);
       const back = new THREE.Mesh(
         new THREE.PlaneGeometry(2.2, 3.1),

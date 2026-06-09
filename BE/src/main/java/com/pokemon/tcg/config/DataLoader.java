@@ -1,17 +1,15 @@
 package com.pokemon.tcg.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.model.Mazo;
-import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
+import com.pokemon.tcg.service.CardCatalogService;
+import com.pokemon.tcg.service.MazoBackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,42 +17,33 @@ import java.util.List;
 @Component
 public class DataLoader implements CommandLineRunner {
 
-    private final CardRepository cardRepo;
+    private final CardCatalogService cardCatalogService;
     private final JugadorRepository jugadorRepo;
     private final MazoRepository mazoRepo;
-    private final ObjectMapper objectMapper;
+    private final MazoBackupService mazoBackupService;
 
-    public DataLoader(CardRepository cardRepo,
+    public DataLoader(CardCatalogService cardCatalogService,
                       JugadorRepository jugadorRepo,
                       MazoRepository mazoRepo,
-                      ObjectMapper objectMapper) {
-        this.cardRepo = cardRepo;
+                      MazoBackupService mazoBackupService) {
+        this.cardCatalogService = cardCatalogService;
         this.jugadorRepo = jugadorRepo;
         this.mazoRepo = mazoRepo;
-        this.objectMapper = objectMapper;
+        this.mazoBackupService = mazoBackupService;
     }
 
     @Override
     public void run(String... args) throws Exception {
         List<Card> todasLasCartas;
 
-        // Cargar desde JSON siempre para mantener base actualizada
-        try (InputStream inputStream = getClass().getResourceAsStream("/cards.json")) {
-            if (inputStream == null) {
-                System.out.println("[DataLoader] No se encontro /cards.json");
-                return;
-            }
-            todasLasCartas = objectMapper.readValue(inputStream, new TypeReference<List<Card>>() {});
-            cardRepo.saveAll(todasLasCartas);
-            System.out.println("[DataLoader] Base de datos sincronizada con cards.json. Total: " + todasLasCartas.size());
+        try {
+            todasLasCartas = cardCatalogService.getCatalogo();
+            System.out.println("[DataLoader] Catalogo de cartas listo. Total: " + todasLasCartas.size());
         } catch (Exception e) {
             System.out.println("[DataLoader] Error cargando cartas: " + e.getMessage());
             e.printStackTrace();
             return;
         }
-
-        // Recuperar la lista definitiva de la base de datos
-        todasLasCartas = cardRepo.findAll();
 
         Jugador pablo = jugadorRepo.findByUsername("Pablo");
         if (pablo == null) {
@@ -69,6 +58,9 @@ public class DataLoader implements CommandLineRunner {
         } else {
             actualizarColeccionUsuario(bot, todasLasCartas);
         }
+
+        mazoBackupService.restoreMissingDecks();
+        mazoBackupService.backupAll();
     }
 
     private void crearUsuarioTest(List<Card> todasLasCartas) {

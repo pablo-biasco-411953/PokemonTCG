@@ -1,16 +1,19 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, HostListener, NgZone, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SobreService } from './services/sobre.service';
+import { LobbyRoomService, LobbyRoomSnapshot } from './services/lobby-room.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
 import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
+import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
 import { TranslatePipe } from '../../i18n/translate.pipe';
-import { I18nService } from '../../i18n/i18n.service';
+import { I18nService, LanguageCode } from '../../i18n/i18n.service';
 import { Card } from '../../shared/models/card';
 import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
 import { Mazo } from '../../shared/models/mazo';
@@ -70,6 +73,7 @@ interface CampusNpc {
 }
 
 type SantoroDialogState = 'intro' | 'thanks' | 'forced' | 'gift' | 'afterGift' | 'repeat';
+type FloatingLobbyPanel = 'chat' | 'decks' | 'help';
 
 export interface OtherPlayerNPC {
   username: string;
@@ -125,6 +129,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   chatActive = false;
   chatText = '';
   chatLog: Array<{ sender: string; text: string; system?: boolean }> = [];
+  chatPanelMinimized = localStorage.getItem('ptcg_chat_panel_minimized') === 'true';
+  chatPanelX = this.getStoredPanelNumber('ptcg_chat_panel_x', typeof window !== 'undefined' ? Math.max(24, window.innerWidth - 404) : 760);
+  chatPanelY = this.getStoredPanelNumber('ptcg_chat_panel_y', typeof window !== 'undefined' ? Math.max(92, window.innerHeight - 294) : 420);
   localChatBubble: string | null = null;
   localBubbleScreenX?: number;
   localBubbleScreenY?: number;
@@ -148,6 +155,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   cantidadCartas: number = 0;
   cantidadCartasUnicas: number = 0;
   mostrarAnimacionSobre: boolean = false;
+  isOpeningPacks: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
   debugPanelX = 18;
@@ -175,9 +183,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   debugAccionEnCurso: boolean = false;
   selectedBattleDeckId: number | null = null;
   battlePanelOpen = false;
+  lobbyRooms: LobbyRoomSnapshot[] = [];
+  selectedRoom: LobbyRoomSnapshot | null = null;
+  currentRoom: LobbyRoomSnapshot | null = null;
+  roomCreateName = '';
+  roomPassword = '';
+  roomPinDigits = ['', '', '', '', '', ''];
+  roomPinMasked = [false, false, false, false, false, false];
+  private roomPinTimers: Array<ReturnType<typeof setTimeout> | undefined> = [];
+  roomJoinPassword = '';
+  roomChatText = '';
+  roomsLoading = false;
+  roomActionLoading = false;
+  roomError = '';
+  roomCountdownValue: number | null = null;
+  private roomCountdownMatchId: string | null = null;
+  private roomCountdownTimer?: ReturnType<typeof setInterval>;
+  roomReactions: Array<{ id: number; roomId: string; icon: string; username: string; x: number }> = [];
+  private roomReactionSeq = 0;
   kioskShopOpen = false;
   vendorCameraFocus = false;
   deckBuilderOpen = false;
+  mazoBuilderInicial: Mazo | null = null;
   santoroDialogOpen = false;
   kiosqueraDialogOpen = false;
   santoroDialogState: SantoroDialogState = 'intro';
@@ -192,6 +219,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   dayPhaseLabel = 'lobby.phase.morning';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+  shadowQuality: 'off' | 'balanced' | 'high' = (localStorage.getItem('ptcg_shadow_quality') as 'off' | 'balanced' | 'high' | null) || 'balanced';
+  remote3dQuality: 'low' | 'medium' | 'high' = (localStorage.getItem('ptcg_remote_3d_quality') as 'low' | 'medium' | 'high' | null) || 'medium';
+  settingsOpen = false;
+  settingsSection: 'graphics' | 'audio' | 'language' = 'graphics';
+  graphicsApplying = false;
+  graphicsLoadingMessage = 'Aplicando graficos...';
+  deckDockMinimized = localStorage.getItem('ptcg_deck_dock_minimized') === 'true';
+  deckDockX = this.getStoredPanelNumber('ptcg_deck_dock_x', 24);
+  deckDockY = this.getStoredPanelNumber('ptcg_deck_dock_y', typeof window !== 'undefined' ? Math.max(112, Math.round(window.innerHeight * 0.44)) : 320);
+  helpPanelMinimized = localStorage.getItem('ptcg_help_panel_minimized') === 'true';
+  helpPanelX = this.getStoredPanelNumber('ptcg_help_panel_x', 28);
+  helpPanelY = this.getStoredPanelNumber('ptcg_help_panel_y', typeof window !== 'undefined' ? Math.max(120, window.innerHeight - 170) : 520);
+  private floatingPanelDragging: FloatingLobbyPanel | null = null;
+  private floatingPanelDragOffsetX = 0;
+  private floatingPanelDragOffsetY = 0;
   landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
   readonly packBundlePrices: Record<number, number> = { 1: 80, 3: 200, 5: 300 };
 
@@ -378,7 +420,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private mazoService: MazoService,
     private jugadorService: JugadorService,
     private battleService: BattleService,
+    private lobbyRoomService: LobbyRoomService,
     private cardService: CardService,
+    private imagePreloader: ImagePreloaderService,
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
@@ -670,15 +714,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.graphicsQuality = quality;
     localStorage.setItem('ptcg_graphics_quality', quality);
     if (updateRenderer) {
-      this.updateRendererPixelRatio();
-      this.updateCachedTextureQuality();
-      this.updateShadowQuality();
-      // Force update shadow state immediately
-      if (this.scene && this.sunLight && this.moonLight) {
-        const elapsed = this.clock.elapsedTime;
-        this.updateDayNightCycle(elapsed);
-      }
-      this.cdr.detectChanges();
+      this.runGraphicsChange('Aplicando calidad grafica...', () => {
+        this.updateRendererPixelRatio();
+        this.updateCachedTextureQuality();
+        this.updateShadowQuality();
+        if (this.scene && this.sunLight && this.moonLight) {
+          const elapsed = this.clock.elapsedTime;
+          this.updateDayNightCycle(elapsed);
+        }
+      });
     }
   }
 
@@ -686,6 +730,176 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const qualities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
     const nextIndex = (qualities.indexOf(this.graphicsQuality) + 1) % qualities.length;
     this.setGraphicsQuality(qualities[nextIndex]);
+  }
+
+  toggleSettings(section: 'graphics' | 'audio' | 'language' = this.settingsSection) {
+    if (this.settingsOpen && this.settingsSection === section) {
+      this.settingsOpen = false;
+      return;
+    }
+    this.settingsSection = section;
+    this.settingsOpen = true;
+    this.showEmoteMenu = false;
+  }
+
+  closeSettings() {
+    this.settingsOpen = false;
+  }
+
+  setSettingsSection(section: 'graphics' | 'audio' | 'language') {
+    this.settingsSection = section;
+  }
+
+  applyGraphicsPreset(preset: 'performance' | 'balanced' | 'ultra') {
+    this.runGraphicsChange('Aplicando preset grafico...', () => {
+      if (preset === 'performance') {
+        this.setGraphicsQuality('low', false);
+        this.setShadowQuality('off', false);
+        this.setRemote3dQuality('low', false);
+      } else if (preset === 'balanced') {
+        this.setGraphicsQuality('medium', false);
+        this.setShadowQuality('balanced', false);
+        this.setRemote3dQuality('medium', false);
+      } else {
+        this.setGraphicsQuality('high', false);
+        this.setShadowQuality('high', false);
+        this.setRemote3dQuality('high', false);
+      }
+
+      this.updateRendererPixelRatio();
+      this.updateCachedTextureQuality();
+      this.updateShadowQuality();
+      this.updateRemoteDetailBudget(true);
+      if (this.scene && this.sunLight && this.moonLight) {
+        this.updateDayNightCycle(this.clock.elapsedTime);
+      }
+    });
+  }
+
+  setShadowQuality(quality: 'off' | 'balanced' | 'high', update = true) {
+    this.shadowQuality = quality;
+    localStorage.setItem('ptcg_shadow_quality', quality);
+    if (update) {
+      this.runGraphicsChange('Actualizando sombras...', () => {
+        this.updateShadowQuality();
+        if (this.scene && this.sunLight && this.moonLight) {
+          this.updateDayNightCycle(this.clock.elapsedTime);
+        }
+      });
+    }
+  }
+
+  setRemote3dQuality(quality: 'low' | 'medium' | 'high', update = true) {
+    this.remote3dQuality = quality;
+    localStorage.setItem('ptcg_remote_3d_quality', quality);
+    if (update) {
+      this.updateRemoteDetailBudget(true);
+      this.cdr.detectChanges();
+    }
+  }
+
+  selectLanguage(language: LanguageCode) {
+    this.i18n.setLanguage(language);
+    this.cdr.detectChanges();
+  }
+
+  get currentLanguageCode(): LanguageCode {
+    return this.i18n.currentLanguage();
+  }
+
+  toggleDeckDockMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.deckDockMinimized = !this.deckDockMinimized;
+    localStorage.setItem('ptcg_deck_dock_minimized', String(this.deckDockMinimized));
+  }
+
+  toggleChatPanelMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.chatPanelMinimized = !this.chatPanelMinimized;
+    if (this.chatPanelMinimized) {
+      this.chatActive = false;
+    }
+    localStorage.setItem('ptcg_chat_panel_minimized', String(this.chatPanelMinimized));
+  }
+
+  toggleHelpPanelMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.helpPanelMinimized = !this.helpPanelMinimized;
+    localStorage.setItem('ptcg_help_panel_minimized', String(this.helpPanelMinimized));
+  }
+
+  startFloatingPanelDrag(panel: FloatingLobbyPanel, event: PointerEvent) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.floatingPanelDragging = panel;
+    const position = this.getFloatingPanelPosition(panel);
+    this.floatingPanelDragOffsetX = event.clientX - position.x;
+    this.floatingPanelDragOffsetY = event.clientY - position.y;
+  }
+
+  private moveFloatingPanel(event: PointerEvent) {
+    if (!this.floatingPanelDragging) return;
+    const panel = this.floatingPanelDragging;
+    const size = this.getFloatingPanelSize(panel);
+    const maxX = Math.max(8, window.innerWidth - size.width - 8);
+    const maxY = Math.max(8, window.innerHeight - size.height - 8);
+    const nextX = Math.max(8, Math.min(maxX, event.clientX - this.floatingPanelDragOffsetX));
+    const nextY = Math.max(8, Math.min(maxY, event.clientY - this.floatingPanelDragOffsetY));
+
+    if (panel === 'chat') {
+      this.chatPanelX = nextX;
+      this.chatPanelY = nextY;
+    } else if (panel === 'decks') {
+      this.deckDockX = nextX;
+      this.deckDockY = nextY;
+    } else {
+      this.helpPanelX = nextX;
+      this.helpPanelY = nextY;
+    }
+  }
+
+  private getFloatingPanelPosition(panel: FloatingLobbyPanel) {
+    if (panel === 'chat') return { x: this.chatPanelX, y: this.chatPanelY };
+    if (panel === 'decks') return { x: this.deckDockX, y: this.deckDockY };
+    return { x: this.helpPanelX, y: this.helpPanelY };
+  }
+
+  private getFloatingPanelSize(panel: FloatingLobbyPanel) {
+    if (panel === 'chat') {
+      return this.chatPanelMinimized ? { width: 190, height: 48 } : { width: 380, height: 250 };
+    }
+    if (panel === 'decks') {
+      return this.deckDockMinimized ? { width: 190, height: 48 } : { width: 270, height: 320 };
+    }
+    return this.helpPanelMinimized ? { width: 210, height: 48 } : { width: 260, height: 170 };
+  }
+
+  private persistFloatingPanelPosition(panel: FloatingLobbyPanel) {
+    const position = this.getFloatingPanelPosition(panel);
+    const prefix = panel === 'decks' ? 'ptcg_deck_dock' : `ptcg_${panel}_panel`;
+    localStorage.setItem(`${prefix}_x`, String(Math.round(position.x)));
+    localStorage.setItem(`${prefix}_y`, String(Math.round(position.y)));
+  }
+
+  private getStoredPanelNumber(key: string, fallback: number): number {
+    const stored = Number(localStorage.getItem(key));
+    return Number.isFinite(stored) ? stored : fallback;
+  }
+
+  private runGraphicsChange(message: string, action: () => void) {
+    this.graphicsLoadingMessage = message;
+    this.graphicsApplying = true;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      action();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.graphicsApplying = false;
+        this.cdr.detectChanges();
+      }, 520);
+    }, 40);
   }
 
   updateRendererPixelRatio() {
@@ -749,26 +963,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateShadowQuality() {
     if (!this.renderer) return;
-    const enabled = this.graphicsQuality !== 'low';
+    const enabled = this.graphicsQuality !== 'low' && this.shadowQuality !== 'off';
     this.renderer.shadowMap.enabled = enabled;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.worldObjects.forEach((object) => {
       if (object instanceof THREE.Mesh && object.userData['radius']) {
-        object.castShadow = this.graphicsQuality === 'high';
+        object.castShadow = enabled;
+        object.receiveShadow = enabled;
       }
     });
 
-    const sunSize = this.graphicsQuality === 'high' ? 2048 : 1024;
-    const moonSize = this.graphicsQuality === 'high' ? 1024 : 512;
+    const highShadows = enabled && this.shadowQuality === 'high' && this.graphicsQuality === 'high';
+    const sunSize = highShadows ? 2048 : 1024;
+    const moonSize = highShadows ? 1024 : 512;
     if (this.sunLight) {
       this.sunLight.castShadow = enabled;
       this.sunLight.shadow.mapSize.set(sunSize, sunSize);
-      this.sunLight.shadow.camera.left = this.graphicsQuality === 'high' ? -58 : -42;
-      this.sunLight.shadow.camera.right = this.graphicsQuality === 'high' ? 58 : 42;
-      this.sunLight.shadow.camera.top = this.graphicsQuality === 'high' ? 58 : 42;
-      this.sunLight.shadow.camera.bottom = this.graphicsQuality === 'high' ? -58 : -42;
-      this.sunLight.shadow.camera.far = this.graphicsQuality === 'high' ? 125 : 95;
-      this.sunLight.shadow.radius = this.graphicsQuality === 'high' ? 3 : 2;
+      this.sunLight.shadow.camera.left = highShadows ? -58 : -42;
+      this.sunLight.shadow.camera.right = highShadows ? 58 : 42;
+      this.sunLight.shadow.camera.top = highShadows ? 58 : 42;
+      this.sunLight.shadow.camera.bottom = highShadows ? -58 : -42;
+      this.sunLight.shadow.camera.far = highShadows ? 125 : 95;
+      this.sunLight.shadow.radius = highShadows ? 3 : 2;
       this.sunLight.shadow.normalBias = 0.018;
       this.sunLight.shadow.map?.dispose();
       this.sunLight.shadow.map = null as any;
@@ -776,7 +992,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.moonLight) {
-      this.moonLight.castShadow = enabled && this.graphicsQuality === 'high';
+      this.moonLight.castShadow = highShadows;
       this.moonLight.shadow.mapSize.set(moonSize, moonSize);
       this.moonLight.shadow.radius = 2;
       this.moonLight.shadow.normalBias = 0.022;
@@ -806,6 +1022,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
     }
+    if (this.roomCountdownTimer) {
+      clearInterval(this.roomCountdownTimer);
+      this.roomCountdownTimer = undefined;
+    }
+    this.roomPinTimers.forEach(timer => timer && clearTimeout(timer));
+    this.roomPinTimers = [];
     if (this.cameraHoldTimeout) {
       clearTimeout(this.cameraHoldTimeout);
       this.cameraHoldTimeout = undefined;
@@ -886,6 +1108,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:pointermove', ['$event'])
   onWindowPointerMove(event: PointerEvent) {
+    if (this.floatingPanelDragging) {
+      this.moveFloatingPanel(event);
+      return;
+    }
+
     if (!this.debugPanelDragging) return;
     const maxX = Math.max(12, window.innerWidth - 260);
     const maxY = Math.max(12, window.innerHeight - 120);
@@ -895,6 +1122,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:pointerup')
   onWindowPointerUp() {
+    if (this.floatingPanelDragging) {
+      this.persistFloatingPanelPosition(this.floatingPanelDragging);
+      this.floatingPanelDragging = null;
+    }
     this.debugPanelDragging = false;
   }
 
@@ -1093,6 +1324,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.mazos.filter((mazo) => (mazo.cartas?.length ?? 0) === 60);
   }
 
+  get validBattleDecks(): Mazo[] {
+    return this.getBattleDeckCandidates();
+  }
+
   private syncSelectedBattleDeck(preferNewestDeck = false): number | null {
     const candidates = this.getBattleDeckCandidates();
     if (!candidates.length) {
@@ -1144,7 +1379,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
       hpIcon: 'â™¥',
-      typeIcon: 'Ã°Å¸ÂÆ’',
+      typeIcon: 'Ã°Å¸Â Æ’',
       attacksIcon: 'â€¢'
     };
     this.pkmZoom = pkm;
@@ -1167,30 +1402,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return `/images/cards/${id}.png`;
   }
 
+  getImagenReal(carta: Card): string {
+    return this.getImagenCarta(carta.id);
+  }
+
   getImagenCarta(id: string): string {
-    const energyMap: Record<string, string> = {
-      'col1-88': 'grass', 'g1-75': 'grass', 'xy12-91': 'grass', 'base1-99': 'grass',
-      'col1-89': 'fire', 'g1-76': 'fire', 'xy12-92': 'fire', 'base1-98': 'fire',
-      'col1-90': 'water', 'g1-77': 'water', 'xy12-93': 'water', 'base1-102': 'water',
-      'col1-91': 'lightning', 'g1-78': 'lightning', 'xy12-94': 'lightning', 'base1-100': 'lightning',
-      'col1-92': 'psychic', 'g1-79': 'psychic', 'xy12-95': 'psychic', 'base1-101': 'psychic',
-      'col1-93': 'fighting', 'g1-80': 'fighting', 'xy12-96': 'fighting', 'base1-97': 'fighting',
-      'col1-94': 'darkness', 'g1-81': 'darkness', 'xy12-97': 'darkness',
-      'col1-95': 'metal', 'g1-82': 'metal',
-      'g1-83': 'fairy'
-    };
-    if (energyMap[id]) {
-      return `/images/cards/energy-${energyMap[id]}.png`;
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
     }
+
     return `/images/cards/${id}.png`;
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
   }
 
   // Abre un sobre y dispara la animacion de revelado.
   abrirSobres() {
     if (!this.jugador?.username || this.sobresDisponibles <= 0) return;
+    this.isOpeningPacks = true;
 
     this.sobreService.abrirSobre(this.jugador.username).subscribe({
-      next: (res: Card[]) => {
+      next: async (res: Card[]) => {
+        const imageUrls = res.map(c => this.getImagenReal(c));
+        await this.imagePreloader.preloadImages(imageUrls);
+
+        this.isOpeningPacks = false;
         this.kioskShopOpen = false;
         this.vendorCameraFocus = false;
         this.cartasNuevas = res;
@@ -1198,10 +1438,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.sobresDisponibles--;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error al abrir sobre', err);
+      error: (err: HttpErrorResponse) => {
+        this.isOpeningPacks = false;
+        this.tradeCollectionLoading = false;
+        const backendMessage = this.getBackendErrorMessage(err);
+        console.error('Error al abrir sobre', backendMessage, err);
+        alert(backendMessage);
+        this.refrescarTodo();
       }
     });
+  }
+
+  private getBackendErrorMessage(err: HttpErrorResponse): string {
+    const fallback = 'No se pudo abrir el sobre. Revisa si el jugador tiene sobres disponibles y si Render cargo el catalogo de cartas.';
+    if (!err) return fallback;
+    if (typeof err.error === 'string' && err.error.trim()) return err.error;
+    if (err.error?.message) return err.error.message;
+    if (err.message) return err.message;
+    return fallback;
   }
 
   // Cierra la experiencia de apertura y refresca el lobby.
@@ -1226,7 +1480,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Navega al editor de mazos.
-  irAlDeckBuilder() {
+  irAlDeckBuilder(mazo?: Mazo | null) {
+    this.mazoBuilderInicial = mazo
+      ? { ...mazo, cartas: [...(mazo.cartas || [])] }
+      : null;
     this.deckBuilderOpen = true;
     this.keys.clear();
     this.playerVelocity.set(0, 0, 0);
@@ -1236,10 +1493,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cerrarDeckBuilder(refresh = false) {
     this.deckBuilderOpen = false;
+    this.mazoBuilderInicial = null;
     if (refresh) {
       this.refrescarTodo(true);
     }
     this.cdr.detectChanges();
+  }
+
+  editarMazo(mazo: Mazo, event?: Event) {
+    event?.stopPropagation();
+    this.irAlDeckBuilder(mazo);
+  }
+
+  borrarMazo(mazo: Mazo, event?: Event) {
+    event?.stopPropagation();
+    const confirmar = confirm(`Eliminar el mazo "${mazo.nombre}"? Esta accion no se puede deshacer.`);
+    if (!confirmar) return;
+
+    this.mazoService.eliminarMazo(mazo.id).subscribe({
+      next: () => {
+        if (this.selectedBattleDeckId === mazo.id) {
+          this.selectedBattleDeckId = null;
+        }
+        this.refrescarTodo(true);
+      },
+      error: (err) => {
+        console.error('Error al eliminar mazo:', err);
+        alert('No se pudo eliminar el mazo.');
+      }
+    });
   }
 
   // Crea una partida usando el mazo elegido.
@@ -1248,7 +1530,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.battleService.startBattle(this.jugador!.username, mazoId).subscribe({
       next: (partida: Partida) => {
         if (partida && partida.id) {
-          this.router.navigate(['/battle', partida.id]);
+          this.beginRoomCountdown(partida.id);
         }
       },
       error: (err) => console.error('Error al iniciar batalla', err)
@@ -1263,6 +1545,370 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.buscarPartida(mazoId);
+  }
+
+  openBattleRooms() {
+    this.battlePanelOpen = true;
+    this.roomError = '';
+    this.loadLobbyRooms();
+  }
+
+  loadLobbyRooms() {
+    this.roomsLoading = true;
+    this.lobbyRoomService.listRooms().subscribe({
+      next: (rooms) => {
+        this.lobbyRooms = rooms;
+        const username = this.jugador?.username;
+        const userRoom = username
+          ? rooms.find(room => room.ownerUsername === username || room.guestUsername === username || room.currentUserSpectator)
+          : null;
+        if (userRoom) {
+          this.currentRoom = userRoom;
+          this.selectedRoom = userRoom;
+          this.roomError = '';
+        }
+        if (this.currentRoom) {
+          this.currentRoom = rooms.find(room => room.id === this.currentRoom?.id) || null;
+        }
+        if (this.selectedRoom) {
+          this.selectedRoom = rooms.find(room => room.id === this.selectedRoom?.id) || null;
+        }
+        this.roomsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.roomError = this.extractErrorMessage(err, 'No se pudieron cargar las salas.');
+        this.roomsLoading = false;
+      }
+    });
+  }
+
+  selectLobbyRoom(room: LobbyRoomSnapshot) {
+    this.selectedRoom = room;
+    this.roomJoinPassword = '';
+    if (this.currentRoom?.id === room.id) {
+      this.currentRoom = room;
+    }
+  }
+
+  createLobbyRoom() {
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para crear sala.';
+      return;
+    }
+    this.roomActionLoading = true;
+    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomCreateName = '';
+        this.clearRoomPin();
+        this.roomError = '';
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  onRoomPinInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const clean = (input.value || '').replace(/\D/g, '').slice(0, 6);
+    input.value = clean;
+
+    for (let i = 0; i < 6; i++) {
+      const nextDigit = clean[i] || '';
+      const changed = this.roomPinDigits[i] !== nextDigit;
+      this.roomPinDigits[i] = nextDigit;
+      if (!nextDigit) {
+        this.roomPinMasked[i] = false;
+        if (this.roomPinTimers[i]) clearTimeout(this.roomPinTimers[i]);
+        continue;
+      }
+      if (changed) {
+        this.roomPinMasked[i] = false;
+        if (this.roomPinTimers[i]) clearTimeout(this.roomPinTimers[i]);
+        this.roomPinTimers[i] = setTimeout(() => {
+          this.roomPinMasked[i] = true;
+          this.cdr.detectChanges();
+        }, 900);
+      }
+    }
+    this.roomPassword = clean;
+  }
+
+  getRoomPinDisplay(index: number): string {
+    const digit = this.roomPinDigits[index] || '';
+    return digit && this.roomPinMasked[index] ? '*' : digit;
+  }
+
+  get roomPinComplete(): boolean {
+    return this.roomPinDigits.every(Boolean);
+  }
+
+  private syncRoomPasswordFromPin() {
+    this.roomPassword = this.roomPinDigits.join('');
+  }
+
+  private clearRoomPin() {
+    this.roomPinTimers.forEach(timer => timer && clearTimeout(timer));
+    this.roomPinTimers = [];
+    this.roomPinDigits = ['', '', '', '', '', ''];
+    this.roomPinMasked = [false, false, false, false, false, false];
+    this.roomPassword = '';
+  }
+
+  startOfflineBotBattle() {
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para jugar contra bot.';
+      return;
+    }
+    this.buscarPartida(deck.id);
+  }
+
+  joinSelectedRoom() {
+    if (!this.selectedRoom) return;
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para entrar.';
+      return;
+    }
+    this.roomActionLoading = true;
+    this.lobbyRoomService.joinRoom(this.selectedRoom.id, deck.id, deck.nombre, this.roomJoinPassword).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomError = '';
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  leaveCurrentRoom() {
+    if (!this.currentRoom) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.leaveRoom(this.currentRoom.id).subscribe({
+      next: () => {
+        this.currentRoom = null;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  kickRoomGuest() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.kickGuest(this.currentRoom.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  addBotToCurrentRoom() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.addBot(this.currentRoom.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  toggleRoomReady() {
+    if (!this.currentRoom) return;
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas antes de marcar listo.';
+      return;
+    }
+    const nextReady = this.isCurrentUserReady ? false : true;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.setReady(this.currentRoom.id, nextReady, deck.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  startCurrentRoomBattle() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.startRoom(this.currentRoom.id).subscribe({
+      next: (response) => {
+        this.roomActionLoading = false;
+        if (response.matchId) {
+          this.beginRoomCountdown(response.matchId);
+        }
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  continueCurrentRoomBattle() {
+    if (!this.currentRoom?.matchId) return;
+    this.router.navigate(
+      ['/battle', this.currentRoom.matchId],
+      this.isCurrentRoomSpectator ? { queryParams: { spectate: '1' } } : undefined
+    );
+  }
+
+  spectateSelectedRoom() {
+    if (!this.selectedRoom) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.spectateRoom(this.selectedRoom.id, this.roomJoinPassword).subscribe({
+      next: (response) => {
+        this.roomActionLoading = false;
+        if (response.matchId) {
+          this.router.navigate(['/battle', response.matchId], { queryParams: { spectate: '1' } });
+          return;
+        }
+        this.currentRoom = response.room;
+        this.selectedRoom = response.room;
+        this.roomJoinPassword = '';
+        this.roomError = '';
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  sendRoomChat() {
+    if (!this.currentRoom || !this.roomChatText.trim()) return;
+    const text = this.roomChatText.trim();
+    this.roomChatText = '';
+    this.lobbyRoomService.sendChat(this.currentRoom.id, text).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  sendRoomReaction(reaction: string) {
+    const room = this.currentRoom || this.selectedRoom;
+    if (!room) return;
+    this.spawnRoomReaction(room.id, reaction, this.jugador?.username || 'Trainer');
+    this.lobbyRoomService.sendReaction(room.id, reaction).subscribe({ error: () => {} });
+  }
+
+  private spawnRoomReaction(roomId: string, reaction: string, username: string) {
+    const iconMap: Record<string, string> = {
+      heart: '♥',
+      fire: '🔥',
+      spark: '✦',
+      coin: '●'
+    };
+    const item = {
+      id: ++this.roomReactionSeq,
+      roomId,
+      icon: iconMap[reaction] || reaction || '✦',
+      username,
+      x: 18 + Math.round(Math.random() * 64)
+    };
+    this.roomReactions = [...this.roomReactions, item].slice(-12);
+    setTimeout(() => {
+      this.roomReactions = this.roomReactions.filter(r => r.id !== item.id);
+      this.cdr.detectChanges();
+    }, 1600);
+  }
+
+  private beginRoomCountdown(matchId: string, spectate = false) {
+    if (this.roomCountdownMatchId === matchId && this.roomCountdownValue !== null) return;
+    if (this.roomCountdownTimer) clearInterval(this.roomCountdownTimer);
+    this.roomCountdownMatchId = matchId;
+    const shouldSpectate = spectate;
+    this.roomCountdownValue = 5;
+    this.cdr.detectChanges();
+    this.roomCountdownTimer = setInterval(() => {
+      if (this.roomCountdownValue === null) return;
+      this.roomCountdownValue -= 1;
+      if (this.roomCountdownValue <= 0) {
+        const target = this.roomCountdownMatchId;
+        clearInterval(this.roomCountdownTimer);
+        this.roomCountdownTimer = undefined;
+        this.roomCountdownValue = null;
+        this.roomCountdownMatchId = null;
+        if (target) {
+          this.router.navigate(['/battle', target], shouldSpectate ? { queryParams: { spectate: '1' } } : undefined);
+        }
+      }
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  get selectedBattleDeck(): Mazo | null {
+    return this.mazos.find(mazo => mazo.id === this.selectedBattleDeckId) || this.validBattleDecks[0] || null;
+  }
+
+  get selectedRoomDetail(): LobbyRoomSnapshot | null {
+    if (!this.selectedRoom) return null;
+    if (this.currentRoom?.id === this.selectedRoom.id) return null;
+    return this.selectedRoom;
+  }
+
+  get isCurrentRoomOwner(): boolean {
+    return !!this.currentRoom && this.currentRoom.ownerUsername === this.jugador?.username;
+  }
+
+  get isCurrentRoomSpectator(): boolean {
+    return !!this.currentRoom?.currentUserSpectator;
+  }
+
+  get isCurrentUserReady(): boolean {
+    if (!this.currentRoom || !this.jugador?.username) return false;
+    if (this.isCurrentRoomSpectator) return false;
+    if (this.currentRoom.ownerUsername === this.jugador.username) return this.currentRoom.ownerReady;
+    if (this.currentRoom.guestUsername === this.jugador.username) return this.currentRoom.guestReady;
+    return false;
+  }
+
+  get canStartCurrentRoom(): boolean {
+    return !!this.currentRoom?.guestUsername
+      && this.currentRoom.status === 'OPEN'
+      && this.currentRoom.ownerReady
+      && this.currentRoom.guestReady
+      && this.isCurrentRoomOwner;
+  }
+
+  getRoomReactions(roomId: string) {
+    return this.roomReactions.filter(reaction => reaction.roomId === roomId);
+  }
+
+  get roomStatusLabel(): string {
+    const status = this.selectedRoom?.status || this.currentRoom?.status;
+    if (status === 'IN_PROGRESS') return this.i18n.currentLanguage() === 'en' ? 'In battle' : 'En combate';
+    if (status === 'FINISHED') return this.i18n.currentLanguage() === 'en' ? 'Finished' : 'Finalizada';
+    return this.i18n.currentLanguage() === 'en' ? 'Waiting' : 'Esperando';
+  }
+
+  private handleRoomError(err: unknown) {
+    this.roomError = this.extractErrorMessage(err, 'No se pudo completar la accion.');
+    this.roomActionLoading = false;
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    return typeof err?.error === 'string' ? err.error : (err?.message || fallback);
   }
 
   get selectedCharacterLabel(): string {
@@ -1763,12 +2409,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.currentInteraction.id === 'battle') {
-      if (this.mazos.length === 1) {
-        this.buscarPartida(this.mazos[0].id);
-      } else {
-        this.selectedBattleDeckId = this.selectedBattleDeckId ?? this.mazos[0]?.id ?? null;
-        this.battlePanelOpen = true;
-      }
+      this.selectedBattleDeckId = this.selectedBattleDeckId ?? this.validBattleDecks[0]?.id ?? null;
+      this.openBattleRooms();
     }
   }
 
@@ -2657,10 +3299,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     
     // OptimizaciÃ³n de sombras segÃºn la calidad grÃ¡fica activa
     const sunVisible = sunHeight > 0.03;
+    const shadowsEnabled = this.graphicsQuality !== 'low' && this.shadowQuality !== 'off';
     const shadowMode =
-      this.graphicsQuality === 'low'
+      !shadowsEnabled
         ? 'none'
-        : this.graphicsQuality === 'medium'
+        : this.shadowQuality === 'balanced' || this.graphicsQuality === 'medium'
           ? (sunVisible ? 'sun' : 'moon')
           : 'both';
     if (shadowMode !== this.lastShadowMode) {
@@ -5331,9 +5974,25 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleWebSocketMessage(dataStr: string) {
     try {
       const msg = JSON.parse(dataStr);
-      if (!msg || !msg.username || msg.username === this.jugador?.username) return;
+      if (!msg) return;
 
       const type = msg.type;
+      if (type === 'ROOMS_UPDATED') {
+        this.handleRoomSocketUpdate(msg.room);
+        if (this.battlePanelOpen) {
+          this.loadLobbyRooms();
+        }
+        return;
+      }
+
+      if (type === 'ROOM_REACTION') {
+        if (msg.username !== this.jugador?.username) {
+          this.spawnRoomReaction(msg.roomId, msg.reaction, msg.username || 'Trainer');
+        }
+        return;
+      }
+
+      if (!msg.username || msg.username === this.jugador?.username) return;
       const username = msg.username;
 
       if (type === 'JOIN') {
@@ -5370,6 +6029,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
+    }
+  }
+
+  private handleRoomSocketUpdate(room: LobbyRoomSnapshot | undefined) {
+    if (!room || !this.jugador?.username) return;
+
+    const username = this.jugador.username;
+    const userIsParticipant = room.ownerUsername === username || room.guestUsername === username;
+    const userIsSpectator = this.currentRoom?.id === room.id && this.currentRoom.currentUserSpectator;
+    const roomForCurrentUser = userIsSpectator ? { ...room, currentUserSpectator: true } : room;
+    if (this.currentRoom?.id === room.id) {
+      if (!userIsParticipant && !userIsSpectator) {
+        this.currentRoom = null;
+      } else {
+        this.currentRoom = roomForCurrentUser;
+      }
+      this.selectedRoom = roomForCurrentUser;
+    }
+
+    if ((userIsParticipant || userIsSpectator) && room.status === 'IN_PROGRESS' && room.matchId) {
+      this.beginRoomCountdown(room.matchId, userIsSpectator);
     }
   }
 
@@ -5751,6 +6431,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getRemoteFullModelBudget(): number {
+    if (this.remote3dQuality === 'low') return this.isMobileViewport ? 0 : 1;
+    if (this.remote3dQuality === 'high' && this.graphicsQuality !== 'low') return this.isMobileViewport ? 3 : 8;
     if (this.graphicsQuality === 'low') return this.isMobileViewport ? 1 : 3;
     if (this.adaptivePixelRatioScale < 0.82) return this.isMobileViewport ? 1 : 2;
     if (this.graphicsQuality === 'medium') return this.isMobileViewport ? 2 : 5;
@@ -5765,6 +6447,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private shouldAllowRemoteCompanion(p: OtherPlayerNPC): boolean {
     if (!p.pikachuEnabled) return false;
+    if (this.remote3dQuality === 'low') return false;
     if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.86) return false;
     if (this.otherPlayers.size > (this.isMobileViewport ? 3 : 6)) return false;
     return this.getRemoteDistanceSq(p) < this.remoteCompanionDistanceSq;
@@ -6059,6 +6742,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleChat() {
     this.ngZone.run(() => {
+      if (this.chatPanelMinimized) {
+        this.chatPanelMinimized = false;
+        localStorage.setItem('ptcg_chat_panel_minimized', 'false');
+      }
       if (!this.chatActive) {
         this.chatActive = true;
         this.keys.clear(); // Limpiar teclas activas para no moverse mientras se chatea

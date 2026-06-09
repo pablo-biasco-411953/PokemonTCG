@@ -13,4 +13,8 @@ public class BotAIService {
     public void ejecutarTurno(Partida partida) {
         estrategia.ejecutarTurno(partida);
     }
+
+    public void ejecutarSetup(Partida partida) {
+        estrategia.ejecutarSetup(partida);
+    }
 }

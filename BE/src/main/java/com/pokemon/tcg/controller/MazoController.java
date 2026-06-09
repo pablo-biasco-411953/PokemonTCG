@@ -9,7 +9,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/mazos")
-@CrossOrigin(origins = "http://localhost:4200")
 public class MazoController {
     private final MazoService mazoService;
 
@@ -39,6 +38,16 @@ public class MazoController {
             return ResponseEntity.ok(mazo);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error al actualizar el mazo: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/eliminar/{id}")
+    public ResponseEntity<?> eliminarMazo(@PathVariable Long id) {
+        try {
+            mazoService.eliminarMazo(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al eliminar el mazo: " + e.getMessage());
         }
     }
 

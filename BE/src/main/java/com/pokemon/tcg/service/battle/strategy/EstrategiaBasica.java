@@ -15,6 +15,50 @@ public class EstrategiaBasica implements EstrategiaBot {
     private final Random random = new Random();
 
     @Override
+    public void ejecutarSetup(Partida partida) {
+        TableroJugador tableroBot = partida.getBot();
+
+        if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_ACTIVE || partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH || partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH_EXTRA) {
+            List<Card> mano = new ArrayList<>(tableroBot.getMano());
+            List<Card> energiasEnMano = mano.stream().filter(this::esEnergia).collect(java.util.stream.Collectors.toList());
+            List<Card> pokemonesBasicos = mano.stream().filter(this::esPokemonBasico).collect(java.util.stream.Collectors.toList());
+            
+            if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_ACTIVE) {
+                if (tableroBot.getActivo() == null && !pokemonesBasicos.isEmpty()) {
+                    // Ordenamos para priorizar al activo (mayor potencial)
+                    pokemonesBasicos.sort((p1, p2) -> {
+                        int potencial1 = evaluarPotencialDeMano(p1, energiasEnMano, null);
+                        int potencial2 = evaluarPotencialDeMano(p2, energiasEnMano, null);
+                        return Integer.compare(potencial2, potencial1);
+                    });
+                    Card elegido = pokemonesBasicos.get(0);
+                    CartaEnJuego cartaEnJuego = new CartaEnJuego(elegido);
+                    cartaEnJuego.setBocaAbajo(true);
+                    tableroBot.setActivo(cartaEnJuego);
+                    tableroBot.getMano().remove(elegido);
+                    pokemonesBasicos.remove(elegido);
+                }
+            }
+            
+            // Para la banca, ponemos todos los básicos que podamos
+            if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH || partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH_EXTRA) {
+                for (Card basico : pokemonesBasicos) {
+                    if (tableroBot.getBanca().size() < 5) {
+                        CartaEnJuego cartaEnJuego = new CartaEnJuego(basico);
+                        cartaEnJuego.setBocaAbajo(true);
+                        tableroBot.getBanca().add(cartaEnJuego);
+                        tableroBot.getMano().remove(basico);
+                    }
+                }
+            }
+            
+            partida.setSetupBotListo(true);
+        } else if (partida.getFaseActual() == Partida.Fase.SETUP_PRIZE_PLACEMENT) {
+            partida.setSetupBotListo(true);
+        }
+    }
+
+    @Override
     public void ejecutarTurno(Partida partida) {
         TableroJugador tableroBot = partida.getBot();
 
@@ -238,6 +282,10 @@ public class EstrategiaBasica implements EstrategiaBot {
         CartaEnJuego activoJugador = partida.getJugador().getActivo();
 
         if (activoBot == null || activoJugador == null) return;
+        if (partida.getNumeroTurno() <= 1) {
+            System.out.println("[BOT] No ataca en el primer turno.");
+            return;
+        }
 
         boolean estaDormido = activoBot.getCondicionesEspeciales().stream()
                 .anyMatch(e -> e.equalsIgnoreCase("Asleep"));
