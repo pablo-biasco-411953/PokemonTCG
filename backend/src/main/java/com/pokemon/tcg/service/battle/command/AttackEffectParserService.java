@@ -23,6 +23,8 @@ public class AttackEffectParserService {
             return commands;
         }
 
+        String lowerText = text.toLowerCase();
+
         Matcher healMatcher = HEAL_PATTERN.matcher(text);
         if (healMatcher.find()) {
             int amount = Integer.parseInt(healMatcher.group(1));
@@ -45,12 +47,16 @@ public class AttackEffectParserService {
         if (statusMatcher.find()) {
             ApplyStatusConditionCommand statusCommand =
                     new ApplyStatusConditionCommand(statusMatcher.group(1), Target.OPPONENT);
-            String lowerText = text.toLowerCase();
             if (lowerText.contains("flip a coin") && lowerText.contains("if heads")) {
                 commands.add(new CoinFlipCommand(statusCommand));
             } else {
                 commands.add(statusCommand);
             }
+        }
+
+        // Detect retreat blocking phrases (e.g., "can't retreat during your opponent's next turn")
+        if (lowerText.contains("can't retreat") || lowerText.contains("cant retreat") || lowerText.contains("can't retreat during")) {
+            commands.add(new ApplyStatusConditionCommand("CantRetreat", Target.OPPONENT));
         }
 
         Matcher selfDamageMatcher = SELF_DAMAGE_PATTERN.matcher(text);
@@ -59,7 +65,6 @@ public class AttackEffectParserService {
             commands.add(new SelfDamageCommand(amount));
         }
 
-        String lowerText = text.toLowerCase();
         if (lowerText.contains("discard an energy attached to this pok")) {
             commands.add(new DiscardEnergyCommand(1, Target.SELF));
         }
