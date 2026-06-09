@@ -16,8 +16,8 @@ Bienvenido a la documentación completa y exhaustiva del **Pokémon Trading Card
 Este es un **Trading Card Game interactivo** desarrollado con:
 
 - **Backend**: Spring Boot 3.2.4 + Java 21
-- **Frontend**: React + TypeScript + Three.js
-- **Base de Datos**: H2 (desarrollo) / PostgreSQL (producción)
+- **Frontend**: Angular 21 + TypeScript + Three.js
+- **Base de Datos**: MySQL 8.0 (Docker en desarrollo)
 - **Tiempo Real**: WebSocket para batallas multijugador
 
 El proyecto implementa **todas las reglas del Pokémon TCG oficial** con:
@@ -62,7 +62,7 @@ Para contribuidores que quieren leer el código línea por línea:
 - Controllers y endpoints
 - Services y lógica de negocio
 - Models y entidades
-- Componentes de React
+- Componentes de Angular
 - Algoritmos específicos
 
 👉 [Ir a Componentes Detallados](/docs/componentes-detallados/backend/controllers/auth-controller)
@@ -155,9 +155,9 @@ Toda la documentación está diseñada con **temática Pokémon oficial**:
 Este proyecto es ideal para:
 
 1. **Aprender Spring Boot** - Backend enterprise con reglas complejas
-2. **Aprender React** - Frontend interactivo con estado complejo
+2. **Aprender Angular** - Frontend SPA con standalone components y Three.js
 3. **Aprender WebSocket** - Comunicación en tiempo real
-4. **Aprender Patrones de Diseño** - Observer, Factory, Service, etc
+4. **Aprender Patrones de Diseño** - Strategy, Command, State Machine, etc
 5. **Aprender TCG Mechanics** - Cómo funcionan los juegos de cartas
 
 ---
@@ -182,7 +182,7 @@ git commit -m "feat: descripción"
 git push origin feature/tu-feature
 ```
 
-[Ver guía completa de contribución](/docs/operaciones/setup-local#contribuir)
+[Ver guía de Setup Local](/docs/operaciones/setup-local)
 
 ---
 

@@ -443,7 +443,7 @@ git push origin feature/mi-feature
 # 5. Abre un Pull Request en GitHub
 ```
 
-[Ver guía completa de contribución](/docs/operaciones/setup-local#contribuir)
+[Ver guía de Setup Local](/docs/operaciones/setup-local)
 
 ---
 
