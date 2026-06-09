@@ -5875,10 +5875,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.jugador?.username) return;
 
     try {
+
       const wsUrl = this.getWsUrl();
       console.log('Conectando a WebSocket del Lobby:', wsUrl);
       this.socket = new WebSocket(wsUrl);
 
+
+      
       this.socket.onopen = () => {
         console.log('ConexiÃ³n WebSocket establecida con Ã©xito.');
         if (this.personalizationSynced) {
