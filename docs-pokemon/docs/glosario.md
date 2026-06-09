@@ -286,7 +286,7 @@ Indicación de que un jugador hace el primer turno.
 Interface que permite la comunicación entre el Frontend y Backend.
 
 **Angular**
-Framework web (legacy, en este proyecto).
+Framework web usado en el frontend de este proyecto (v21, standalone components).
 
 **Atributo**
 Propiedad de una clase o entidad que almacena datos.
@@ -297,7 +297,7 @@ Propiedad de una clase o entidad que almacena datos.
 Lógica del servidor (Spring Boot en este proyecto).
 
 **Base de Datos**
-Sistema que almacena toda la información (H2 o PostgreSQL).
+Sistema que almacena toda la información (MySQL 8.0 en este proyecto).
 
 **Bean**
 Objeto manejado por Spring.
@@ -353,7 +353,7 @@ Patrón de diseño que crea objetos.
 Conjunto de herramientas y librerías para desarrollo.
 
 **Frontend**
-Interfaz visible para el usuario (React en este proyecto).
+Interfaz visible para el usuario (Angular + TypeScript + Three.js en este proyecto).
 
 ### G
 
@@ -363,7 +363,7 @@ Método que obtiene el valor de un atributo.
 ### H
 
 **H2**
-Base de datos en memoria para desarrollo.
+Base de datos en memoria para desarrollo (disponible como dependencia, pero el proyecto usa MySQL por defecto).
 
 **HashMap**
 Estructura de datos que almacena pares clave-valor.
@@ -380,7 +380,7 @@ HTTP seguro (con encriptación).
 Contrato que define métodos sin implementación.
 
 **JWT (JSON Web Token)**
-Token para autenticación stateless.
+Token para autenticación stateless. Este proyecto NO usa JWT; la autenticación es via SHA-256 password hash y header X-Username.
 
 ### J
 
@@ -447,8 +447,8 @@ Función que transforma observables (RxJS).
 **Patrón de Diseño**
 Solución comprobada a problemas comunes.
 
-**PostgreSQL**
-Base de datos relacional avanzada.
+**MySQL**
+Base de datos relacional usada en este proyecto (v8.0, via Docker en desarrollo).
 
 **PKCE (Proof Key for Code Exchange)**
 Protocolo de autenticación seguro.
@@ -463,8 +463,8 @@ Consulta a la base de datos.
 
 ### R
 
-**React**
-Biblioteca JavaScript para construir interfaces.
+**Angular**
+Framework de Google para construir aplicaciones web SPA (usado en el frontend de este proyecto).
 
 **Reactive Programming**
 Paradigma basado en flujos de datos.
@@ -554,12 +554,12 @@ Tipo de dato para fecha y hora con zona horaria.
 | DTO | Data Transfer Object | Transferencia de datos |
 | HTTP | Hypertext Transfer Protocol | Protocolo web |
 | JPA | Java Persistence API | Mapeo de BD |
-| JWT | JSON Web Token | Autenticación |
+| JWT | JSON Web Token | Autenticación (no usado en este proyecto) |
 | ORM | Object-Relational Mapping | Mapeo BD |
 | REST | Representational State Transfer | Estilo de API |
 | SQL | Structured Query Language | Consultas BD |
 | TCG | Trading Card Game | Juego de cartas |
-| DTJ | Decking Total Jug | Derrota por decking (TÉRMINO MODIFICADO) |
+| SHA-256 | Secure Hash Algorithm 256-bit | Hashing de passwords |
 
 ---
 
@@ -567,7 +567,7 @@ Tipo de dato para fecha y hora con zona horaria.
 
 - [Pokémon Official TCG Rules](https://www.pokemontcg.io/)
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
-- [React Documentation](https://react.dev)
+- [Angular Documentation](https://angular.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [RxJS Documentation](https://rxjs.dev)
 
