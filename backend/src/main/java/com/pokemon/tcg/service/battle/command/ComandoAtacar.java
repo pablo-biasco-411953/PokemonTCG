@@ -4,6 +4,7 @@ import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.model.battle.command.CoinFlipCommand;
 import com.pokemon.tcg.service.BattleAttackService;
 import com.pokemon.tcg.service.BattleKoService;
 
@@ -46,27 +47,43 @@ public class ComandoAtacar implements ComandoTurno {
         CartaEnJuego activoAtacante = tableroAtacante.getActivo();
         CartaEnJuego activoDefensor = tableroDefensor.getActivo();
 
-        if (activoDefensor == null) throw new IllegalStateException("El oponente no tiene un Pokémon activo.");
+        if (activoDefensor == null) throw new IllegalStateException("El oponente no tiene un Pokemon activo.");
 
-        // Invulnerabilidad se chequea antes que el estado del atacante (igual que el código original)
         if (activoDefensor.isInvulnerable()) {
-            System.out.println("🚫 El ataque rebotó: " + activoDefensor.getCard().getNombre() + " es invulnerable.");
+            System.out.println("[BATTLE] El ataque reboto: " + activoDefensor.getCard().getNombre() + " es invulnerable.");
             partida.setUltimasMonedasLanzadas(new ArrayList<>());
             return;
         }
 
-        if (activoAtacante == null) throw new IllegalStateException("No tenés un Pokémon activo.");
+        if (activoAtacante == null) throw new IllegalStateException("No tenes un Pokemon activo.");
 
         if (activoAtacante.getCondicionesEspeciales().contains("Asleep")
                 || activoAtacante.getCondicionesEspeciales().contains("Paralyzed")) {
-            throw new IllegalStateException("Tu Pokémon activo no puede atacar porque está " +
-                    (activoAtacante.getCondicionesEspeciales().contains("Asleep") ? "Dormido 💤" : "Paralizado ⚡"));
+            throw new IllegalStateException("Tu Pokemon activo no puede atacar porque esta " +
+                    (activoAtacante.getCondicionesEspeciales().contains("Asleep") ? "Dormido" : "Paralizado"));
         }
 
         Ataque ataqueUsado = resolverAtaque(activoAtacante);
         if (ataqueUsado == null) throw new IllegalStateException("Ataque no encontrado: " + nombreAtaque);
+        if (activoAtacante.getAtaqueBloqueadoSiguienteTurno() != null
+                && activoAtacante.getAtaqueBloqueadoSiguienteTurno().equalsIgnoreCase(nombreAtaque)) {
+            throw new IllegalStateException("No podés usar " + nombreAtaque + " porque fue bloqueado en el turno anterior.");
+        }
         if (!puedePagarCosto(activoAtacante, ataqueUsado)) {
-            throw new IllegalStateException("Energías insuficientes para usar " + ataqueUsado.getNombre() + ".");
+            throw new IllegalStateException("Energias insuficientes para usar " + ataqueUsado.getNombre() + ".");
+        }
+
+        if (activoAtacante.isDebeLanzarMonedaSiAtaca()) {
+            CoinFlipCommand preventAttackFlip = new CoinFlipCommand(null, null);
+            preventAttackFlip.execute(partida, tableroAtacante, tableroDefensor);
+            activoAtacante.setDebeLanzarMonedaSiAtaca(false);
+            attackService.registrarEventoMoneda(partida, obtenerActorMoneda(partida), ataqueUsado.getNombre());
+
+            boolean pudoAtacar = !partida.getUltimasMonedasLanzadas().isEmpty() && partida.getUltimasMonedasLanzadas().get(0);
+            if (!pudoAtacar) {
+                System.out.println("[BATTLE] El ataque fallo por efecto de moneda.");
+                return;
+            }
         }
 
         BattleAttackService.AttackResolution resolution = attackService.resolveAttack(
@@ -75,7 +92,14 @@ public class ComandoAtacar implements ComandoTurno {
         );
 
         partida.setUltimasMonedasLanzadas(resolution.historialMonedas());
-        System.out.println("🔄 Ataque finalizado.");
+        if (!resolution.historialMonedas().isEmpty()) {
+            attackService.registrarEventoMoneda(partida, obtenerActorMoneda(partida), ataqueUsado.getNombre());
+        }
+        System.out.println("[BATTLE] Ataque finalizado.");
+    }
+
+    private String obtenerActorMoneda(Partida partida) {
+        return tableroAtacante == partida.getJugador() ? partida.getJugadorUsername() : "BOT";
     }
 
     private Ataque resolverAtaque(CartaEnJuego activo) {

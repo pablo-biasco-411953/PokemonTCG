@@ -8,11 +8,13 @@ import { Card } from '../../shared/models/card';
 import { Mazo } from '../../shared/models/mazo';
 import { I18nService } from '../../i18n/i18n.service';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
+import { BattleNotificationComponent } from '../battle/components/battle-notification/battle-notification';
+import { BattleNotificationService } from '../battle/services/battle-notification';
 
 @Component({
   selector: 'app-deck-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BattleNotificationComponent],
   templateUrl: './deck-builder.component.html',
   styleUrls: ['./deck-builder.component.scss'],
   host: { '[class.embedded]': 'embedded' }
@@ -27,26 +29,22 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   mazoEnProceso: Card[] = [];
   cantidadesPoseidas: { [key: string]: number } = {};
   private cantidadesEnMazo: { [key: string]: number } = {};
-  nombreMazo: string = 'Mi Nuevo Mazo';
-  username: string = '';
+  nombreMazo = 'Mi Nuevo Mazo';
+  username = '';
   cartaSinStockAnimandoId: string | null = null;
-  
-  // PRELOADER
-  isLoadingImages: boolean = true;
-  loadingProgress: number = 0;
-  // FILTROS
-  filtroNombre: string = '';
-  filtroTipo: string = 'Todos';
+
+  isLoadingImages = true;
+  loadingProgress = 0;
+  filtroNombre = '';
+  filtroTipo = 'Todos';
   tipos: string[] = ['Todos', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless'];
 
-  // INSPECCIÓN (Zoom)
-  showInspeccion: boolean = false;
+  showInspeccion = false;
   cardFocus: Card | null = null;
   hoverTimer: any;
   vistaDeckBuilder: 'library' | 'editor' = 'editor';
   mazoMenuSeleccionado: Mazo | null = null;
 
-  // MAPEADO DE IDS VIEJOS A FOTOS REALES
   mapaFotos: { [key: string]: string } = {
     'p1': 'base1-1', 'p2': 'base3-1', 'p3': 'base3-2', 'p4': 'base3-3',
     'p5': 'base4-1', 'p6': 'base6-1', 'p7': 'base6-2', 'p8': 'bw1-1',
@@ -59,56 +57,55 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private i18n: I18nService,
-    private preloaderService: ImagePreloaderService
+    private preloaderService: ImagePreloaderService,
+    private notificationService: BattleNotificationService
   ) {}
-  idMazoAEditar: number | null = null; // Para saber si estamos editando
-ngOnInit(): void {
-  const data = localStorage.getItem('jugador');
-  if (data) {
-    this.username = JSON.parse(data).username;
-    this.cargarColeccion();
 
-    const mazoInicial = this.mazoInicial || history.state.mazo || null;
-    this.cargarMazoParaEditar(mazoInicial);
-    this.vistaDeckBuilder = this.embedded && !mazoInicial ? 'library' : 'editor';
-  } else {
-    this.isLoadingImages = false;
-  }
-}
+  idMazoAEditar: number | null = null;
 
-ngOnChanges(changes: SimpleChanges): void {
-  if (changes['mazoInicial'] && !changes['mazoInicial'].firstChange) {
-    this.cargarMazoParaEditar(this.mazoInicial);
-    this.vistaDeckBuilder = this.mazoInicial ? 'editor' : (this.embedded ? 'library' : 'editor');
-  }
-}
+  ngOnInit(): void {
+    const data = localStorage.getItem('jugador');
+    if (data) {
+      this.username = JSON.parse(data).username;
+      this.cargarColeccion();
 
-private cargarMazoParaEditar(mazo: Mazo | null) {
-  if (!mazo) {
-    this.idMazoAEditar = null;
-    this.nombreMazo = 'Mi Nuevo Mazo';
-    this.mazoEnProceso = [];
-    this.cantidadesEnMazo = {};
-    return;
+      const mazoInicial = this.mazoInicial || history.state.mazo || null;
+      this.cargarMazoParaEditar(mazoInicial);
+      this.vistaDeckBuilder = this.embedded && !mazoInicial ? 'library' : 'editor';
+    } else {
+      this.isLoadingImages = false;
+    }
   }
 
-  this.idMazoAEditar = mazo.id;
-  this.nombreMazo = mazo.nombre;
-  this.mazoEnProceso = [...(mazo.cartas || [])];
-  this.recalcularCantidadesEnMazo();
-}
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['mazoInicial'] && !changes['mazoInicial'].firstChange) {
+      this.cargarMazoParaEditar(this.mazoInicial);
+      this.vistaDeckBuilder = this.mazoInicial ? 'editor' : (this.embedded ? 'library' : 'editor');
+    }
+  }
 
-cargarColeccion() {
+  private cargarMazoParaEditar(mazo: Mazo | null) {
+    if (!mazo) {
+      this.idMazoAEditar = null;
+      this.nombreMazo = 'Mi Nuevo Mazo';
+      this.mazoEnProceso = [];
+      this.cantidadesEnMazo = {};
+      return;
+    }
+
+    this.idMazoAEditar = mazo.id;
+    this.nombreMazo = mazo.nombre;
+    this.mazoEnProceso = [...(mazo.cartas || [])];
+    this.recalcularCantidadesEnMazo();
+  }
+
+  cargarColeccion() {
     this.jugadorService.getColeccion(this.username).subscribe({
       next: (res: Card[]) => {
-      this.coleccion = res;
-      this.actualizarCantidadesPoseidas(); // Contamos cuántas de cada una tiene
-      
-      // Eliminamos duplicados de la visualización para que la Pokédex sea limpia
-      // pero sabiendo cuántas copias tenemos de cada una.
-      this.coleccion = this.obtenerCartasUnicas(res);
-      
-      this.precargarImagenes(this.coleccion);
+        this.coleccion = res;
+        this.actualizarCantidadesPoseidas();
+        this.coleccion = this.obtenerCartasUnicas(res);
+        this.precargarImagenes(this.coleccion);
       },
       error: (err) => {
         console.error('Error cargando coleccion:', err);
@@ -119,16 +116,14 @@ cargarColeccion() {
   }
 
   precargarImagenes(cartas: Card[]) {
-    // Tomamos hasta 40 imágenes únicas para no bloquear demasiado tiempo
     const urlsUnicas = Array.from(new Set(cartas.map(c => this.getImagenReal(c.id)))).slice(0, 18);
-    
+
     this.preloaderService.preloadImages(urlsUnicas).subscribe({
       next: (progress) => {
         this.loadingProgress = progress;
         this.cdr.detectChanges();
       },
       complete: () => {
-        // Un pequeño delay por estética de la animación
         setTimeout(() => {
           this.isLoadingImages = false;
           this.cdr.detectChanges();
@@ -137,7 +132,7 @@ cargarColeccion() {
     });
   }
 
-obtenerCartasUnicas(cartas: Card[]): Card[] {
+  obtenerCartasUnicas(cartas: Card[]): Card[] {
     const unicas: Card[] = [];
     const idsVistos = new Set();
     cartas.forEach(c => {
@@ -149,7 +144,7 @@ obtenerCartasUnicas(cartas: Card[]): Card[] {
     return unicas;
   }
 
-actualizarCantidadesPoseidas() {
+  actualizarCantidadesPoseidas() {
     this.cantidadesPoseidas = {};
     this.coleccion.forEach(c => {
       this.cantidadesPoseidas[c.id] = (this.cantidadesPoseidas[c.id] || 0) + 1;
@@ -200,13 +195,19 @@ actualizarCantidadesPoseidas() {
     const confirmar = confirm(`Eliminar el mazo "${mazo.nombre}"?`);
     if (!confirmar) return;
 
-    this.mazoService.eliminarMazo(mazo.id).subscribe(() => {
-      this.mazoMenuSeleccionado = null;
-      this.closed.emit(true);
+    this.mazoService.eliminarMazo(mazo.id).subscribe({
+      next: () => {
+        this.notificar(`Mazo "${mazo.nombre}" eliminado.`, 'success');
+        this.mazoMenuSeleccionado = null;
+        this.closed.emit(true);
+      },
+      error: (err) => {
+        this.notificar(err?.error || 'No se pudo eliminar el mazo.', 'error');
+      }
     });
   }
 
-getImagenReal(id: string): string {
+  getImagenReal(id: string): string {
     const archivo = this.mapaFotos[id] || id;
     return `/images/cards/${archivo}.png`;
   }
@@ -235,16 +236,15 @@ getImagenReal(id: string): string {
     const copiasEnMazo = this.getCantidadEnMazo(carta.id);
     const totalPoseidas = this.cantidadesPoseidas[carta.id] || 0;
 
-    // REGLA: No podés meter más de las que tenés, y máximo 4 (regla TCG)
     if (copiasEnMazo < totalPoseidas && copiasEnMazo < 4 && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);
       this.cantidadesEnMazo[carta.id] = copiasEnMazo + 1;
     } else if (copiasEnMazo >= totalPoseidas) {
-      alert(this.i18n.translate('alert.noMoreCopies', { card: carta.nombre }));
+      this.notificar(this.i18n.translate('alert.noMoreCopies', { card: carta.nombre }), 'warning');
     }
   }
 
-getCantidadEnMazo(id: string): number {
+  getCantidadEnMazo(id: string): number {
     return this.cantidadesEnMazo[id] || 0;
   }
 
@@ -266,24 +266,42 @@ getCantidadEnMazo(id: string): number {
       this.cantidadesEnMazo[c.id] = (this.cantidadesEnMazo[c.id] || 0) + 1;
     });
   }
-  
-guardar() {
-  const ids = this.mazoEnProceso.map(c => c.id);
-  
-  if (this.idMazoAEditar) {
-    // Lógica para actualizar (necesitás este método en tu mazoService)
-    this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe(() => {
-      alert(this.i18n.translate('alert.deckUpdated'));
-      this.cerrar(true);
-    });
-  } else {
-    // Lógica original de guardado
-    this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe(() => {
-      alert(this.i18n.translate('alert.deckCreated'));
-      this.cerrar(true);
-    });
+
+  guardar() {
+    if (this.mazoEnProceso.length !== 60) {
+      this.notificar('El mazo debe tener exactamente 60 cartas.', 'warning');
+      return;
+    }
+
+    if (!this.tienePokemonBasicoEnMazo()) {
+      this.notificar('No podés guardar un mazo sin al menos 1 Pokémon Básico.', 'error');
+      return;
+    }
+
+    const ids = this.mazoEnProceso.map(c => c.id);
+
+    if (this.idMazoAEditar) {
+      this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe({
+        next: () => {
+          this.notificar(this.i18n.translate('alert.deckUpdated'), 'success');
+          this.cerrar(true);
+        },
+        error: (err) => {
+          this.notificar(err?.error || 'No se pudo actualizar el mazo.', 'error');
+        }
+      });
+    } else {
+      this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe({
+        next: () => {
+          this.notificar(this.i18n.translate('alert.deckCreated'), 'success');
+          this.cerrar(true);
+        },
+        error: (err) => {
+          this.notificar(err?.error || 'No se pudo guardar el mazo.', 'error');
+        }
+      });
+    }
   }
-}
 
   volver() {
     if (this.embedded && this.vistaDeckBuilder === 'editor' && !this.mazoInicial) {
@@ -300,5 +318,19 @@ guardar() {
       return;
     }
     this.router.navigate(['/lobby']);
+  }
+
+  private tienePokemonBasicoEnMazo(): boolean {
+    return this.mazoEnProceso.some(carta => this.esPokemonBasico(carta));
+  }
+
+  private esPokemonBasico(carta: Card): boolean {
+    const esPokemon = (carta.supertype || '').toLowerCase() === 'pokemon';
+    const esBasico = (carta.subtypes || []).some(subtype => subtype.toLowerCase() === 'basic');
+    return esPokemon && esBasico;
+  }
+
+  private notificar(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {
+    this.notificationService.show(message, type, 3200);
   }
 }

@@ -8,7 +8,10 @@ export interface CartaEnJuego {
   puedeAtacar: boolean;
   condicionesEspeciales: string[];
   invulnerable?: boolean;
+  reduccionDanioRecibido?: number;
+  aumentoDanioCausado?: number;
   bocaAbajo?: boolean;
+  debeLanzarMonedaSiAtaca?: boolean;
 }
 
 // Zonas visibles de un jugador durante la partida.
@@ -45,6 +48,9 @@ export interface Partida {
   coinHandshakeBotHolding?: boolean;
   coinHandshakeComplete?: boolean;
   turnLogs?: string[];
+  lastCoinFlipEventId?: number;
+  lastCoinFlipAttackName?: string;
+  lastCoinFlipActor?: string;
   jugadorLoadingPercentage?: number;
   botLoadingPercentage?: number;
   setupJugadorListo?: boolean;

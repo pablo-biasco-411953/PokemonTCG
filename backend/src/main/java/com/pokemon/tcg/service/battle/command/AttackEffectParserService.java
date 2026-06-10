@@ -163,6 +163,20 @@ public class AttackEffectParserService {
             commands.add(new DiscardEnergyCommand(1, Target.SELF));
         }
 
+        if (lowerText.contains("put a card from your discard pile on top of your deck")) {
+            commands.add(new MoveDiscardCardToTopDeckCommand(
+                    Target.SELF,
+                    1,
+                    "Elegi una carta de tu descarte para poner arriba del mazo."
+            ));
+        }
+
+        if (lowerText.contains("tries to attack during your opponent's next turn")
+                && lowerText.contains("if tails")
+                && lowerText.contains("that attack does nothing")) {
+            commands.add(new SetAttackBlockNextTurnCommand(Target.OPPONENT));
+        }
+
         if (lowerText.contains("search your deck for a grass pok")) {
             commands.add(new SearchDeckCommand(
                     "Pokemon", null, "Grass", "HAND", 1,
@@ -195,6 +209,10 @@ public class AttackEffectParserService {
             ));
         }
 
+        if (lowerText.contains("choose a random card from your opponent's hand") && lowerText.contains("shuffle")) {
+            commands.add(new ShuffleRandomHandToDeckCommand());
+        }
+
         if (lowerText.contains("move a basic energy from this pok") || lowerText.contains("move as many")) {
             commands.add(new MoveEnergyCommand(null, 1));
         }
@@ -204,6 +222,69 @@ public class AttackEffectParserService {
         }
         if (lowerText.contains("if your opponent's active pok") && lowerText.contains("is a grass pok") && lowerText.contains("20 more damage")) {
             commands.add(new ConditionalDamageMultiplierCommand(0, 20, "OPPONENT_TYPE", "Grass"));
+        }
+
+        // Restricciones de ataque para el siguiente turno
+        if (lowerText.contains("can't attack during your next turn") || lowerText.contains("cannot attack during your next turn")) {
+            if (lowerText.contains("flip a coin") && lowerText.contains("if tails")) {
+                commands.add(new CoinFlipCommand(null, new SetNoPuedeAtacarSiguienteTurnoCommand(Target.SELF)));
+            } else {
+                commands.add(new SetNoPuedeAtacarSiguienteTurnoCommand(Target.SELF));
+            }
+        }
+
+        if (lowerText.contains("defending pok") && (lowerText.contains("can't attack during your opponent's next turn") || lowerText.contains("cannot attack during your opponent's next turn"))) {
+            commands.add(new SetCannotAttackDefendingCommand());
+        }
+
+        Pattern blockAttackPattern = Pattern.compile("this pok.{1,2}mon can't use ([a-zA-Z'\\s-]+) during your next turn", Pattern.CASE_INSENSITIVE);
+        Matcher blockAttackMatcher = blockAttackPattern.matcher(text);
+        if (blockAttackMatcher.find()) {
+            commands.add(new BlockAttackNextTurnCommand(blockAttackMatcher.group(1).trim(), Target.SELF));
+        }
+
+        if (lowerText.contains("prevent all damage done to this pok") && !lowerText.contains("if heads")) {
+            commands.add(new SetInvulnerableCommand());
+        }
+
+        // Escalado de daño según la banca
+        Pattern benchDamageMultiplierPattern = Pattern.compile("does (\\d+) damage times the number of your benched", Pattern.CASE_INSENSITIVE);
+        Matcher benchDamageMultiplierMatcher = benchDamageMultiplierPattern.matcher(text);
+        if (benchDamageMultiplierMatcher.find()) {
+            int multiplier = Integer.parseInt(benchDamageMultiplierMatcher.group(1));
+            commands.add(new ConditionalDamageMultiplierCommand(0, multiplier, "BENCHED_POKEMON", null));
+        }
+
+        // Daño a la propia banca
+        Pattern selfBenchDamagePattern = Pattern.compile("does (\\d+) damage to each of your benched", Pattern.CASE_INSENSITIVE);
+        Matcher selfBenchDamageMatcher = selfBenchDamagePattern.matcher(text);
+        if (selfBenchDamageMatcher.find()) {
+            int amount = Integer.parseInt(selfBenchDamageMatcher.group(1));
+            commands.add(new SelfBenchDamageCommand(amount));
+        }
+
+        // Daño a la banca del oponente
+        Pattern oppBenchDamagePattern = Pattern.compile("(?:does|this attack does) (\\d+) damage to (\\d+|1) of your opponent's benched", Pattern.CASE_INSENSITIVE);
+        Matcher oppBenchDamageMatcher = oppBenchDamagePattern.matcher(text);
+        if (oppBenchDamageMatcher.find()) {
+            int amount = Integer.parseInt(oppBenchDamageMatcher.group(1));
+            String countStr = oppBenchDamageMatcher.group(2);
+            int count = "one".equalsIgnoreCase(countStr) || "1".equals(countStr) ? 1 : Integer.parseInt(countStr);
+            commands.add(new DamageOpponentBenchedCommand(amount, count));
+        }
+
+        // Descarte de cartas del tope del mazo e interacciones relacionadas (Rhyhorn, Gurdurr, Rhydon, Magcargo)
+        if (lowerText.contains("discard the top card of your deck") && lowerText.contains("fighting energy")) {
+            commands.add(new DiscardTopDeckAttachEnergyCommand("Fighting"));
+        }
+        if (lowerText.contains("discard the top card of your deck") && lowerText.contains("fire energy")) {
+            commands.add(new MagcargoMagmaMantleCommand());
+        }
+        if (lowerText.contains("discard the top card of your opponent's deck") && !lowerText.contains("damage counter")) {
+            commands.add(new DiscardTopDeckCommand(Target.OPPONENT, 1));
+        }
+        if (lowerText.contains("discard the top card of your opponent's deck") && lowerText.contains("damage counter")) {
+            commands.add(new RhydonMadMountainCommand());
         }
 
         return commands;

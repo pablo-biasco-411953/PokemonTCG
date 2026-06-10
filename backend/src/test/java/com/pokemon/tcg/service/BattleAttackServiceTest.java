@@ -5,6 +5,7 @@ import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.model.battle.command.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -98,6 +99,102 @@ class BattleAttackServiceTest {
 
         assertEquals(0, atacante.getHpActual());
         assertTrue(koInvocado.get());
+    }
+
+    @Test
+    void comandoSetNoPuedeAtacarSiguienteTurnoPoneFlagCorrecto() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        BattleCommand cmd = new SetNoPuedeAtacarSiguienteTurnoCommand(Target.SELF);
+        
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertTrue(atacante.isNoPuedeAtacarSiguienteTurno());
+        assertFalse(atacante.isNoPuedeAtacarYaConsumido());
+    }
+
+    @Test
+    void comandoSetCannotAttackDefendingPonePuedeAtacarEnFalse() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        BattleCommand cmd = new SetCannotAttackDefendingCommand();
+
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertFalse(defensor.isPuedeAtacar());
+    }
+
+    @Test
+    void comandoBlockAttackNextTurnPoneFlagCorrecto() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        BattleCommand cmd = new BlockAttackNextTurnCommand("King's Shield", Target.SELF);
+
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertEquals("King's Shield", atacante.getAtaqueBloqueadoSiguienteTurno());
+        assertFalse(atacante.isAtaqueBloqueadoYaConsumido());
+    }
+
+    @Test
+    void comandoConditionalDamageMultiplierBenchedPokemonAplicaDanioCorrecto() {
+        Partida partida = partidaBasica();
+        partida.getJugador().getBanca().add(new CartaEnJuego(card("b1", "Bulbasaur", "50")));
+        partida.getJugador().getBanca().add(new CartaEnJuego(card("b2", "Squirtle", "50")));
+
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        defensor.setHpActual(80);
+
+        BattleCommand cmd = new ConditionalDamageMultiplierCommand(0, 20, "BENCHED_POKEMON", null);
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertEquals(40, defensor.getHpActual());
+    }
+
+    @Test
+    void comandoSelfBenchDamageRestaHpACadaPokemonDeTuBanca() {
+        Partida partida = partidaBasica();
+        CartaEnJuego b1 = new CartaEnJuego(card("b1", "Bulbasaur", "50"));
+        CartaEnJuego b2 = new CartaEnJuego(card("b2", "Squirtle", "60"));
+        partida.getJugador().getBanca().add(b1);
+        partida.getJugador().getBanca().add(b2);
+
+        BattleCommand cmd = new SelfBenchDamageCommand(10);
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertEquals(40, b1.getHpActual());
+        assertEquals(50, b2.getHpActual());
+    }
+
+    @Test
+    void comandoDamageOpponentBenchedAplicaDanioCorrectoALaBancaEnemiga() {
+        Partida partida = partidaBasica();
+        CartaEnJuego b1 = new CartaEnJuego(card("b1", "Bulbasaur", "50"));
+        CartaEnJuego b2 = new CartaEnJuego(card("b2", "Squirtle", "60"));
+        partida.getBot().getBanca().add(b1);
+        partida.getBot().getBanca().add(b2);
+
+        BattleCommand cmd = new DamageOpponentBenchedCommand(20, 2);
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertEquals(30, b1.getHpActual());
+        assertEquals(40, b2.getHpActual());
+    }
+
+    @Test
+    void comandoShuffleRandomHandToDeckShufflesCardIntoOpponentsDeck() {
+        Partida partida = partidaBasica();
+        Card handCard = card("hc1", "Trainer's Mail", "0");
+        partida.getBot().getMano().add(handCard);
+        int initialDeckSize = partida.getBot().getMazo().size();
+
+        BattleCommand cmd = new ShuffleRandomHandToDeckCommand();
+        cmd.execute(partida, partida.getJugador(), partida.getBot());
+
+        assertTrue(partida.getBot().getMano().isEmpty());
+        assertEquals(initialDeckSize + 1, partida.getBot().getMazo().size());
+        assertTrue(partida.getBot().getMazo().contains(handCard));
+        assertTrue(partida.getTurnLogs().stream().anyMatch(log -> log.startsWith("ASTONISH_REVEALED:")));
     }
 
     private Partida partidaBasica() {

@@ -527,6 +527,7 @@ public class BattleController {
         copy.setPuedeAtacar(source.isPuedeAtacar());
         copy.setInvulnerable(source.isInvulnerable());
         copy.setBocaAbajo(source.isBocaAbajo());
+        copy.setDebeLanzarMonedaSiAtaca(source.isDebeLanzarMonedaSiAtaca());
         copy.getEnergiasUnidas().addAll(source.getEnergiasUnidas());
         source.getCondicionesEspeciales().forEach(copy::agregarCondicion);
         return copy;

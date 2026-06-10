@@ -44,7 +44,16 @@ export class BattleBoardAttackService {
       }
     }
 
-    if (texto.includes('does nothing')) {
+    const esRestriccionPorAtaque = texto.includes("tries to attack during your opponent's next turn")
+      && texto.includes('that attack does nothing');
+
+    if (esRestriccionPorAtaque) {
+      tipoEfecto = 'restriction';
+      esSoloEstado = true;
+      esFalloCruz = true;
+      danioBase = 0;
+      danioExtraPorCara = 0;
+    } else if (texto.includes('does nothing')) {
       tipoEfecto = 'damage';
       esFalloCruz = true;
       danioExtraPorCara = danioBase;
@@ -76,7 +85,7 @@ export class BattleBoardAttackService {
     } else if (texto.includes('search your deck')) {
       tipoEfecto = 'search';
       esSoloEstado = true;
-    } else if (texto.includes("can't attack") || texto.includes("can't play any supporter")) {
+    } else if (esRestriccionPorAtaque || texto.includes("can't attack") || texto.includes("can't play any supporter")) {
       tipoEfecto = 'restriction';
       esSoloEstado = true;
     }

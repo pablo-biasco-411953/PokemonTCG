@@ -619,10 +619,21 @@
         <div
           *ngFor="let b of partida.bot.banca"
           class="bench-slot occupied"
+          [class.low-hp-warning]="getHpPercent(b) < 30"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
         >
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
+          <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
+            <div
+              *ngFor="let energia of b.energiasUnidas"
+              class="bench-energy-badge"
+              [style.background-color]="getEnergyColor(energia.tipo)"
+              [title]="energia.nombre"
+            >
+              <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div class="bench-bar" *ngIf="!b.bocaAbajo">
             <div
               class="bench-fill"
@@ -631,7 +642,22 @@
               [class.low]="getHpPercent(b) < 25"
             ></div>
           </div>
-          <span class="bench-hp" *ngIf="!b.bocaAbajo">{{ b.hpActual }}</span>
+          <div class="bench-footer-badges" *ngIf="!b.bocaAbajo">
+            <span
+              class="bench-hp"
+              [class.high]="getHpPercent(b) >= 70"
+              [class.mid]="getHpPercent(b) < 70 && getHpPercent(b) >= 30"
+              [class.low]="getHpPercent(b) < 30"
+            >
+              {{ b.hpActual }} HP
+            </span>
+            <span class="bench-damage-counter" *ngIf="getDamageCounters(b) > 0">
+              x{{ getDamageCounters(b) }}
+            </span>
+          </div>
+          <div class="bench-hover-hud" *ngIf="!b.bocaAbajo">
+            <span>{{ b.hpActual }}/{{ getHpMax(b) }} HP</span>
+          </div>
         </div>
         <div
           *ngFor="let _ of getEmptySlots(partida.bot.banca.length)"
@@ -656,13 +682,39 @@
           </div>
 
           <div class="sprite-container" [class.recibiendo-danio]="animandoBotDanio">
+            <!-- Floating Texts -->
+            <div class="floating-texts-overlay">
+              <div
+                *ngFor="let ft of floatingTextsBot"
+                class="floating-text-item"
+                [ngClass]="ft.type"
+              >
+                {{ ft.text }}
+              </div>
+            </div>
+
+            <!-- Energy Discard Particle Emitter -->
+            <div class="energy-explosion-emitter" *ngIf="mostrarExplosionEnergiaBot">
+              <div
+                *ngFor="let p of particulasEnergiaBot"
+                class="energy-particle"
+                [style.backgroundColor]="p.color"
+                [style.boxShadow]="'0 0 10px ' + p.color"
+                [style.width.px]="p.size"
+                [style.height.px]="p.size"
+                [style.animationDuration.s]="p.duracion"
+                [style.--tx.px]="p.tx"
+                [style.--ty.px]="p.ty"
+              ></div>
+            </div>
+
             <div
               class="damage-number"
               *ngIf="damageNumberBot"
               [class.big]="damageNumberBot.valor > 80"
               [class.heal]="damageNumberBot.esCuracion"
             >
-              {{ damageNumberBot.esCuracion ? '+' : '-' }}{{ damageNumberBot.valor }}
+              {{ damageNumberBot.esCuracion ? 'Curando +' + damageNumberBot.valor : '-' + damageNumberBot.valor }}
             </div>
             <div class="impact-callout effective" *ngIf="impactCalloutBot === 'effective'">¡Es muy efectivo!</div>
             <div class="impact-callout resisted" *ngIf="impactCalloutBot === 'resisted'">¡Resistente al ataque!</div>
@@ -728,6 +780,13 @@
                 </div>
 
                 <ng-container *ngIf="partida.bot.activo && !partida.bot.activo.bocaAbajo">
+                  <div class="switch-pokeball-fx" *ngIf="switchFxBot">
+                    <div class="switch-pokeball-core"></div>
+                    <div class="switch-pokeball-ring ring-a"></div>
+                    <div class="switch-pokeball-ring ring-b"></div>
+                    <div class="switch-spark switch-spark-a"></div>
+                    <div class="switch-spark switch-spark-b"></div>
+                  </div>
                   <img
                     class="poke-sprite sprite-front"
                     [src]="getSpriteFront(partida.bot.activo.card)"
@@ -769,6 +828,9 @@
               <span class="hp-label"
                 >{{ partida.bot.activo.hpActual }} / {{ getHpMax(partida.bot.activo) }} HP</span
               >
+              <div class="damage-counter-strip" *ngIf="getDamageCounters(partida.bot.activo) > 0">
+                <span class="damage-counter-chip">Contadores x{{ getDamageCounters(partida.bot.activo) }}</span>
+              </div>
             </div>
           </div>
 
@@ -795,13 +857,39 @@
             <canvas #playerTrainerCanvas class="trainer-canvas"></canvas>
           </div>
           <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
+            <!-- Floating Texts -->
+            <div class="floating-texts-overlay">
+              <div
+                *ngFor="let ft of floatingTextsPlayer"
+                class="floating-text-item"
+                [ngClass]="ft.type"
+              >
+                {{ ft.text }}
+              </div>
+            </div>
+
+            <!-- Energy Discard Particle Emitter -->
+            <div class="energy-explosion-emitter" *ngIf="mostrarExplosionEnergiaPlayer">
+              <div
+                *ngFor="let p of particulasEnergiaPlayer"
+                class="energy-particle"
+                [style.backgroundColor]="p.color"
+                [style.boxShadow]="'0 0 10px ' + p.color"
+                [style.width.px]="p.size"
+                [style.height.px]="p.size"
+                [style.animationDuration.s]="p.duracion"
+                [style.--tx.px]="p.tx"
+                [style.--ty.px]="p.ty"
+              ></div>
+            </div>
+
             <div
               class="damage-number"
               *ngIf="damageNumberPlayer"
               [class.big]="damageNumberPlayer.valor > 80"
               [class.heal]="damageNumberPlayer.esCuracion"
             >
-              {{ damageNumberPlayer.esCuracion ? '+' : '-' }}{{ damageNumberPlayer.valor }}
+              {{ damageNumberPlayer.esCuracion ? 'Curando +' + damageNumberPlayer.valor : '-' + damageNumberPlayer.valor }}
             </div>
             <div class="impact-callout effective victim" *ngIf="impactCalloutPlayer === 'effective'">¡Es muy efectivo!</div>
             <div class="impact-callout resisted" *ngIf="impactCalloutPlayer === 'resisted'">¡Resistente al ataque!</div>
@@ -868,6 +956,13 @@
                 </div>
 
                 <ng-container *ngIf="partida.jugador.activo && !partida.jugador.activo.bocaAbajo">
+                  <div class="switch-pokeball-fx" *ngIf="switchFxPlayer">
+                    <div class="switch-pokeball-core"></div>
+                    <div class="switch-pokeball-ring ring-a"></div>
+                    <div class="switch-pokeball-ring ring-b"></div>
+                    <div class="switch-spark switch-spark-a"></div>
+                    <div class="switch-spark switch-spark-b"></div>
+                  </div>
                   <img
                     class="poke-sprite sprite-back"
                     [src]="getSpriteBack(partida.jugador.activo.card)"
@@ -917,6 +1012,9 @@
                 >{{ partida.jugador.activo.hpActual }} /
                 {{ getHpMax(partida.jugador.activo) }} HP</span
               >
+              <div class="damage-counter-strip" *ngIf="getDamageCounters(partida.jugador.activo) > 0">
+                <span class="damage-counter-chip">Contadores x{{ getDamageCounters(partida.jugador.activo) }}</span>
+              </div>
             </div>
           </div>
 
@@ -937,7 +1035,8 @@
             <div
               class="active-card player-active"
               [class.can-attack]="puedeAtacar()"
-              (click)="intentarAbrirHabilidades()"
+              [class.can-receive-energy-glow]="modoSeleccionUnionEnergia"
+              (click)="clickEnActivo()"
               (mouseenter)="setHoveredCard(partida.jugador.activo?.bocaAbajo ? null : partida.jugador.activo)"
               (mouseleave)="clearHoveredCard()"
             >
@@ -969,11 +1068,23 @@
         <div
           *ngFor="let b of partida.jugador.banca; trackBy: trackByCardId"
           class="bench-slot occupied player-slot"
+          [class.can-receive-energy-glow]="modoSeleccionUnionEnergia"
+          [class.low-hp-warning]="getHpPercent(b) < 30"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
         >
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
+          <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
+            <div
+              *ngFor="let energia of b.energiasUnidas"
+              class="bench-energy-badge"
+              [style.background-color]="getEnergyColor(energia.tipo)"
+              [title]="energia.nombre"
+            >
+              <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div
             class="evolution-flash-fx"
             *ngIf="animandoEvolucionId === b.card.id"
@@ -987,7 +1098,22 @@
               [class.low]="getHpPercent(b) < 25"
             ></div>
           </div>
-          <span class="bench-hp" *ngIf="!b.bocaAbajo">{{ b.hpActual }}</span>
+          <div class="bench-footer-badges" *ngIf="!b.bocaAbajo">
+            <span
+              class="bench-hp"
+              [class.high]="getHpPercent(b) >= 70"
+              [class.mid]="getHpPercent(b) < 70 && getHpPercent(b) >= 30"
+              [class.low]="getHpPercent(b) < 30"
+            >
+              {{ b.hpActual }} HP
+            </span>
+            <span class="bench-damage-counter" *ngIf="getDamageCounters(b) > 0">
+              x{{ getDamageCounters(b) }}
+            </span>
+          </div>
+          <div class="bench-hover-hud" *ngIf="!b.bocaAbajo">
+            <span>{{ b.hpActual }}/{{ getHpMax(b) }} HP</span>
+          </div>
         </div>
         <div
           *ngFor="let _ of getEmptySlots(partida.jugador.banca.length)"
@@ -1164,5 +1290,38 @@
   </div>
 </div>
 
+<!-- ASTONISH REVEAL OVERLAY -->
+<div class="setup-overlay" *ngIf="astonishReveal?.visible" style="z-index: 10000;">
+  <div class="setup-backdrop" (click)="cerrarAstonishReveal()"></div>
+  <div class="setup-panel setup-panel-wide setup-reveal-panel" style="max-width: 420px; text-align: center; padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+    <h2 class="setup-title" style="margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px;">
+      {{ 'battle.astonish.title' | t }}
+    </h2>
+    <p class="setup-sub" style="margin-bottom: 1.5rem; font-size: 0.95rem;">
+      {{ (astonishReveal?.esMiAccion ? 'battle.astonish.selfDetail' : 'battle.astonish.oppDetail') | t: { card: astonishReveal?.cardNombre } }}
+    </p>
+    
+    <div style="display: flex; justify-content: center; margin-bottom: 1.8rem;">
+      <div class="astonish-flip-card">
+        <div class="astonish-flip-inner" [class.flipped]="astonishReveal?.isFlipped">
+          <div class="astonish-flip-face astonish-flip-back"></div>
+          <img class="astonish-flip-face astonish-flip-front" [src]="getImagenCarta(astonishReveal?.cardId || '')" (error)="onCardImageError($event)" />
+        </div>
+      </div>
+    </div>
+
+    <button class="menu-btn btn-primary" (click)="cerrarAstonishReveal()" style="padding: 0.5rem 2.5rem; border-radius: 8px;">
+      {{ 'lobby.close' | t }}
+    </button>
+  </div>
+</div>
+
 <app-battle-notification></app-battle-notification>
+
+<div class="energy-selection-banner" *ngIf="modoSeleccionUnionEnergia">
+  <span>{{ 'battle.selectTargetForEnergy' | t }}</span>
+  <button class="btn-cancel-energy" (click)="cancelarModoUnionEnergia()">
+    {{ i18n.currentLanguage() === 'en' ? 'Cancel' : 'Cancelar' }}
+  </button>
+</div>
 

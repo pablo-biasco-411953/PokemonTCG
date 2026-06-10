@@ -690,15 +690,21 @@ public class BattleEngineService {
     private void procesarEstado(TableroJugador dueno, TableroJugador rival, Partida partida) {
         CartaEnJuego activo = dueno.getActivo();
         if (activo == null) return;
+        String owner = dueno == partida.getJugador()
+                ? sanitizarLog(partida.getJugadorUsername())
+                : sanitizarLog(partida.getBotUsername() != null ? partida.getBotUsername() : "BOT");
+        String cardName = sanitizarLog(nombreCarta(activo));
 
         if (activo.getCondicionesEspeciales().contains("Poisoned")) {
             System.out.println("☠️ Veneno: " + activo.getCard().getNombre() + " recibe 10 de daño.");
             activo.setHpActual(Math.max(0, activo.getHpActual() - 10));
+            partida.getTurnLogs().add("POISON_DAMAGE:" + owner + ":" + cardName + ":10");
         }
 
         if (activo.getCondicionesEspeciales().contains("Burned")) {
             System.out.println("🔥 Quemadura: " + activo.getCard().getNombre() + " recibe 20 de daño.");
             activo.setHpActual(Math.max(0, activo.getHpActual() - 20));
+            partida.getTurnLogs().add("BURN_DAMAGE:" + owner + ":" + cardName + ":20");
 
             if (random.nextBoolean()) {
                 System.out.println("🔥 ¡Salió CARA! " + activo.getCard().getNombre() + " se curó de la Quemadura.");
@@ -736,9 +742,35 @@ public class BattleEngineService {
 
         // LIMPIEZA DE TU POKÉMON (PERO DEJAMOS EL ESCUDO PRENDIDO)
         if (jugador.getActivo() != null) {
-            jugador.getActivo().getCondicionesEspeciales().remove("CantRetreat");
-            jugador.getActivo().getCondicionesEspeciales().remove("Paralyzed");
-            jugador.getActivo().setPuedeAtacar(true);
+            CartaEnJuego activo = jugador.getActivo();
+            activo.getCondicionesEspeciales().remove("CantRetreat");
+            activo.getCondicionesEspeciales().remove("Paralyzed");
+            
+            // Evaluar noPuedeAtacarSiguienteTurno
+            if (activo.isNoPuedeAtacarSiguienteTurno()) {
+                if (activo.isNoPuedeAtacarYaConsumido()) {
+                    activo.setNoPuedeAtacarSiguienteTurno(false);
+                    activo.setNoPuedeAtacarYaConsumido(false);
+                    activo.setPuedeAtacar(true);
+                } else {
+                    activo.setNoPuedeAtacarYaConsumido(true);
+                    activo.setPuedeAtacar(false);
+                }
+            } else {
+                activo.setPuedeAtacar(true);
+            }
+
+            // Evaluar ataqueBloqueadoSiguienteTurno
+            if (activo.getAtaqueBloqueadoSiguienteTurno() != null) {
+                if (activo.isAtaqueBloqueadoYaConsumido()) {
+                    activo.setAtaqueBloqueadoSiguienteTurno(null);
+                    activo.setAtaqueBloqueadoYaConsumido(false);
+                } else {
+                    activo.setAtaqueBloqueadoYaConsumido(true);
+                }
+            }
+
+            activo.setDebeLanzarMonedaSiAtaca(false);
             // ❌ ACÁ YA NO SE APAGA TU ESCUDO
         }
 
@@ -823,21 +855,33 @@ public class BattleEngineService {
         }
 
         TableroJugador board = getTableroDeJugador(partida, callerUsername);
-        for (String id : ids) {
-            Card card = board.getMazo().stream()
-                    .filter(candidate -> id.equals(candidate.getId()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("La carta ya no está en el mazo."));
-            board.getMazo().remove(card);
-            if ("ATTACH_ACTIVE".equals(pending.getDestination()) && board.getActivo() != null) {
-                board.getActivo().getEnergiasUnidas().add(card);
-                agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
-            } else {
-                board.getMano().add(card);
+        if ("DISCARD_TO_TOP_DECK".equals(pending.getType())) {
+            for (String id : ids) {
+                Card card = board.getPilaDescarte().stream()
+                        .filter(candidate -> id.equals(candidate.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("La carta ya no esta en el descarte."));
+                board.getPilaDescarte().remove(card);
+                board.getMazo().add(0, card);
+                agregarLog(partida, "DISCARD_TO_TOP_DECK", callerUsername, card.getNombre());
             }
+        } else {
+            for (String id : ids) {
+                Card card = board.getMazo().stream()
+                        .filter(candidate -> id.equals(candidate.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("La carta ya no esta en el mazo."));
+                board.getMazo().remove(card);
+                if ("ATTACH_ACTIVE".equals(pending.getDestination()) && board.getActivo() != null) {
+                    board.getActivo().getEnergiasUnidas().add(card);
+                    agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
+                } else {
+                    board.getMano().add(card);
+                }
+            }
+            Collections.shuffle(board.getMazo());
+            agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
         }
-        Collections.shuffle(board.getMazo());
-        agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
         partida.setPendingAction(null);
         partida.transicionarA(new EstadoTurnoNormal());
         return partida;
@@ -856,9 +900,35 @@ public class BattleEngineService {
 
         // LIMPIEZA DEL POKÉMON DEL BOT (PERO DEJAMOS SU ESCUDO PRENDIDO)
         if (partida.getBot().getActivo() != null) {
-            partida.getBot().getActivo().setPuedeAtacar(true);
-            partida.getBot().getActivo().getCondicionesEspeciales().remove("CantRetreat");
-            partida.getBot().getActivo().getCondicionesEspeciales().remove("Paralyzed");
+            CartaEnJuego botActivo = partida.getBot().getActivo();
+            botActivo.getCondicionesEspeciales().remove("CantRetreat");
+            botActivo.getCondicionesEspeciales().remove("Paralyzed");
+
+            // Evaluar noPuedeAtacarSiguienteTurno
+            if (botActivo.isNoPuedeAtacarSiguienteTurno()) {
+                if (botActivo.isNoPuedeAtacarYaConsumido()) {
+                    botActivo.setNoPuedeAtacarSiguienteTurno(false);
+                    botActivo.setNoPuedeAtacarYaConsumido(false);
+                    botActivo.setPuedeAtacar(true);
+                } else {
+                    botActivo.setNoPuedeAtacarYaConsumido(true);
+                    botActivo.setPuedeAtacar(false);
+                }
+            } else {
+                botActivo.setPuedeAtacar(true);
+            }
+
+            // Evaluar ataqueBloqueadoSiguienteTurno
+            if (botActivo.getAtaqueBloqueadoSiguienteTurno() != null) {
+                if (botActivo.isAtaqueBloqueadoYaConsumido()) {
+                    botActivo.setAtaqueBloqueadoSiguienteTurno(null);
+                    botActivo.setAtaqueBloqueadoYaConsumido(false);
+                } else {
+                    botActivo.setAtaqueBloqueadoYaConsumido(true);
+                }
+            }
+
+            botActivo.setDebeLanzarMonedaSiAtaca(false);
             // ❌ ACÁ YA NO SE APAGA EL ESCUDO DEL BOT
         }
 
