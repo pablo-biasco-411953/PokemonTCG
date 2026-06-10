@@ -26,7 +26,7 @@ public class CardCatalogService {
     @Transactional
     public List<Card> getCatalogo() {
         List<Card> cartas = filtrarCartasJugables(cardRepo.findAll());
-        if (!cartas.isEmpty()) {
+        if (cartas.size() == 146) {
             normalizarEnergiasXy(cartas);
             return cartas;
         }
@@ -42,6 +42,12 @@ public class CardCatalogService {
             throw new IllegalStateException("cards.json no contiene cartas XY jugables.");
         }
         normalizarEnergiasXy(cartas);
+        java.util.Set<String> idsXy1 = cartas.stream()
+                .map(Card::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        cardRepo.findAll().stream()
+                .filter(card -> !idsXy1.contains(card.getId()))
+                .forEach(cardRepo::delete);
         cardRepo.saveAll(cartas);
         cardRepo.flush();
         List<Card> guardadas = filtrarCartasJugables(cardRepo.findAll());
@@ -62,14 +68,14 @@ public class CardCatalogService {
 
     private List<Card> filtrarCartasJugables(List<Card> cartas) {
         return cartas.stream()
-                .filter(this::esSetXy)
-                .filter(card -> esPokemon(card) || esEnergia(card))
+                .filter(this::esSetXy1)
+                .filter(card -> esPokemon(card) || esEnergia(card) || esEntrenador(card))
                 .toList();
     }
 
-    private boolean esSetXy(Card card) {
+    private boolean esSetXy1(Card card) {
         String id = normalizar(card.getId());
-        return id.startsWith("xy");
+        return id.startsWith("xy1-");
     }
 
     private boolean esPokemon(Card card) {
@@ -78,6 +84,10 @@ public class CardCatalogService {
 
     private boolean esEnergia(Card card) {
         return "energy".equals(normalizar(card.getSupertype()));
+    }
+
+    private boolean esEntrenador(Card card) {
+        return "trainer".equals(normalizar(card.getSupertype()));
     }
 
     private void normalizarEnergiasXy(List<Card> cartas) {

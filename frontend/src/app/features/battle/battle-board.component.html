@@ -112,7 +112,9 @@
       </button>
     </div>
     <div class="setup-draw-actions">
-      <button class="btn-primary" type="button" (click)="confirmarBancaSetup()" [disabled]="setupAccionEnCurso || !puedeConfirmarBancaSetup()">Confirmar</button>
+      <button class="btn-primary" type="button" (click)="confirmarBancaSetup()" [disabled]="setupAccionEnCurso || !!partida?.setupJugadorListo || !puedeConfirmarBancaSetup()">
+        {{ partida?.setupJugadorListo ? 'Esperando rival...' : 'Confirmar' }}
+      </button>
     </div>
   </div>
   <div class="setup-panel" *ngIf="estadoSetupMulligan === 'PRIZES'">
@@ -355,6 +357,32 @@
 </div>
 
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
+<div class="guided-effect-overlay" *ngIf="pendingAction as pending">
+  <section class="guided-effect-panel">
+    <small>EFECTO DE CARTA</small>
+    <h2>{{ pending.prompt }}</h2>
+    <p>Elegidas {{ pendingEffectSelection.size }} / {{ pending.maxSelections }}</p>
+    <div class="guided-effect-options">
+      <button
+        type="button"
+        *ngFor="let option of pending.options"
+        [class.selected]="isPendingEffectCardSelected(option.id)"
+        (click)="togglePendingEffectCard(option.id)"
+      >
+        <img [src]="getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" />
+        <span>{{ option.nombre }}</span>
+      </button>
+    </div>
+    <button
+      type="button"
+      class="guided-effect-confirm"
+      [disabled]="!canConfirmPendingEffect() || cargandoAccion"
+      (click)="confirmPendingEffect()"
+    >
+      Confirmar
+    </button>
+  </section>
+</div>
 <div class="attack-coinflip-overlay" *ngIf="coinFlipAtaque">
   <div class="acf-backdrop"></div>
   <div class="acf-panel">
@@ -414,7 +442,13 @@
 
     <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
       <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
-        {{ resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t) }}
+        {{
+          coinFlipAtaque.tipoEfecto === 'protection'
+            ? (resultadoMoneda === 'CARA' ? '¡PROTECCIÓN ACTIVADA!' : 'NO SE ACTIVÓ LA PROTECCIÓN')
+            : coinFlipAtaque.tipoEfecto === 'self-damage'
+              ? (resultadoMoneda === 'CRUZ' ? '¡RECIBE DAÑO DE RETROCESO!' : 'SIN DAÑO DE RETROCESO')
+              : (resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t))
+        }}
       </span>
     </div>
   </div>
@@ -458,7 +492,14 @@
   <div class="ko-badge">KO!</div>
 </div>
 
-<div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible" [class.spectator-mode]="isSpectator">
+<div
+  class="playmat"
+  *ngIf="partida"
+  [class.board-visible]="boardVisible"
+  [class.spectator-mode]="isSpectator"
+  [class.damage-pulse]="battlefieldDamagePulse"
+>
+  <canvas #battleAtmosphereCanvas class="battle-atmosphere-canvas" aria-hidden="true"></canvas>
   <div class="battle-social-hud">
     <div class="battle-spectator-counter">
       <strong>{{ battleRoom?.spectatorCount || 0 }}</strong>
@@ -495,6 +536,16 @@
       </div>
     </div>
   </aside>
+
+  <div class="prize-reveal-overlay" *ngIf="prizeRevealCard">
+    <div class="prize-flight-card">
+      <div class="prize-flight-inner">
+        <div class="prize-flight-back card-back gold"></div>
+        <img [src]="getImagenCarta(prizeRevealCard.id)" [alt]="prizeRevealCard.nombre" (error)="onCardImageError($event)" />
+      </div>
+      <strong>Premio obtenido</strong>
+    </div>
+  </div>
 
   <div class="neoprene-texture" aria-hidden="true">
     <div class="neo-grid"></div>
@@ -556,9 +607,10 @@
             [class.nueva-carta]="cartasNuevasBot.has(c.id)"
             [style.--bi]="i"
             [style.--btot]="partida.bot.mano.length"
+            [style.--bstep.px]="getOpponentHandStep(partida.bot.mano.length)"
           ></div>
         </div>
-        <span class="bot-hand-tag">{{ 'battle.cardsCount' | t:{cantidad: partida.bot.mano.length.toString()} }}</span>
+        <span class="bot-hand-tag">MANO RIVAL</span>
       </div>
 
       <div class="bench-row bot-bench">
@@ -590,9 +642,6 @@
     </div>
 
     <div class="arena">
-      <div class="arena-particles">
-        <span *ngFor="let p of [1, 2, 3, 4, 5, 6]" [style.--pn]="p"></span>
-      </div>
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
@@ -615,6 +664,8 @@
             >
               {{ damageNumberBot.esCuracion ? '+' : '-' }}{{ damageNumberBot.valor }}
             </div>
+            <div class="impact-callout effective" *ngIf="impactCalloutBot === 'effective'">¡Es muy efectivo!</div>
+            <div class="impact-callout resisted" *ngIf="impactCalloutBot === 'resisted'">¡Resistente al ataque!</div>
 
             <div class="particle-emitter" *ngIf="mostrarEfectoBot">
               <div
@@ -679,7 +730,7 @@
                 <ng-container *ngIf="partida.bot.activo && !partida.bot.activo.bocaAbajo">
                   <img
                     class="poke-sprite sprite-front"
-                    [src]="getSpriteFront(partida.bot.activo.card.nombre)"
+                    [src]="getSpriteFront(partida.bot.activo.card)"
                     (error)="onSpriteError($event, partida.bot.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>
@@ -752,6 +803,8 @@
             >
               {{ damageNumberPlayer.esCuracion ? '+' : '-' }}{{ damageNumberPlayer.valor }}
             </div>
+            <div class="impact-callout effective victim" *ngIf="impactCalloutPlayer === 'effective'">¡Es muy efectivo!</div>
+            <div class="impact-callout resisted" *ngIf="impactCalloutPlayer === 'resisted'">¡Resistente al ataque!</div>
 
             <div class="particle-emitter" *ngIf="mostrarEfectoJugador">
               <div
@@ -817,7 +870,7 @@
                 <ng-container *ngIf="partida.jugador.activo && !partida.jugador.activo.bocaAbajo">
                   <img
                     class="poke-sprite sprite-back"
-                    [src]="getSpriteBack(partida.jugador.activo.card.nombre)"
+                    [src]="getSpriteBack(partida.jugador.activo.card)"
                     (error)="onSpriteError($event, partida.jugador.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>

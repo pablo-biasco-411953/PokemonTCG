@@ -59,6 +59,11 @@ public class BattleEngineService {
 
     @Transactional
     public Partida startBattle(String username, Long mazoId) {
+        return startBattle(username, mazoId, "NORMAL");
+    }
+
+    @Transactional
+    public Partida startBattle(String username, Long mazoId, String botDifficulty) {
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) throw new IllegalArgumentException("Jugador no encontrado: " + username);
 
@@ -76,7 +81,7 @@ public class BattleEngineService {
         Collections.shuffle(mazoJugador);
         tableroJugador.setMazo(mazoJugador);
 
-        List<Card> mazoBot = new ArrayList<>(cartasMazo);
+        List<Card> mazoBot = generarMazoBot(cartasMazo, botDifficulty);
         Collections.shuffle(mazoBot);
         tableroBot.setMazo(mazoBot);
 
@@ -649,6 +654,14 @@ public class BattleEngineService {
         int hpDefensorDespues = defensorDespues != null ? defensorDespues.getHpActual() : 0;
         int danio = Math.max(0, hpDefensorAntes - hpDefensorDespues);
         agregarLog(partida, "ATTACK_USED", callerUsername, nombreAtaqueElegido, nombreCarta(defensorAntes), danio > 0 ? String.valueOf(danio) : "");
+        if (defensorAntes != null && tableroAtacante.getActivo() != null) {
+            String tipoAtacante = tableroAtacante.getActivo().getCard().getTipo();
+            if (coincideTipo(defensorAntes.getCard().getDebilidades(), tipoAtacante)) {
+                agregarLog(partida, "SUPER_EFFECTIVE", callerUsername, nombreCarta(defensorAntes));
+            } else if (coincideTipo(defensorAntes.getCard().getResistencias(), tipoAtacante)) {
+                agregarLog(partida, "RESISTED", callerUsername, nombreCarta(defensorAntes));
+            }
+        }
         if (defensorDespues != null) {
             for (String condicion : defensorDespues.getCondicionesEspeciales()) {
                 if (!condicionesAntes.contains(condicion)) {
@@ -784,6 +797,50 @@ public class BattleEngineService {
                 transicionarAExtraDraw(partida);
             }
         }
+    }
+
+    public synchronized Partida resolverAccionPendiente(
+            String matchId,
+            String callerUsername,
+            List<String> selectedIds
+    ) {
+        Partida partida = getPartidaOThrow(matchId);
+        com.pokemon.tcg.model.battle.PendingBattleAction pending = partida.getPendingAction();
+        if (pending == null) throw new IllegalStateException("No hay una acción pendiente.");
+        if (callerUsername == null || !callerUsername.equals(pending.getActor())) {
+            throw new IllegalStateException("Esta decisión le corresponde al otro jugador.");
+        }
+
+        List<String> ids = selectedIds == null ? List.of() : selectedIds.stream().distinct().toList();
+        if (ids.size() < pending.getMinSelections() || ids.size() > pending.getMaxSelections()) {
+            throw new IllegalArgumentException("Cantidad de cartas seleccionadas inválida.");
+        }
+        java.util.Set<String> legalIds = pending.getOptions().stream()
+                .map(com.pokemon.tcg.model.battle.PendingBattleAction.Option::getId)
+                .collect(java.util.stream.Collectors.toSet());
+        if (!legalIds.containsAll(ids)) {
+            throw new IllegalArgumentException("La selección contiene cartas no permitidas.");
+        }
+
+        TableroJugador board = getTableroDeJugador(partida, callerUsername);
+        for (String id : ids) {
+            Card card = board.getMazo().stream()
+                    .filter(candidate -> id.equals(candidate.getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("La carta ya no está en el mazo."));
+            board.getMazo().remove(card);
+            if ("ATTACH_ACTIVE".equals(pending.getDestination()) && board.getActivo() != null) {
+                board.getActivo().getEnergiasUnidas().add(card);
+                agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
+            } else {
+                board.getMano().add(card);
+            }
+        }
+        Collections.shuffle(board.getMazo());
+        agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
+        partida.setPendingAction(null);
+        partida.transicionarA(new EstadoTurnoNormal());
+        return partida;
     }
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
@@ -1084,6 +1141,90 @@ public class BattleEngineService {
         return cartas.stream().map(this::copiarCartaParaPartida).toList();
     }
 
+    private List<Card> generarMazoBot(List<Card> mazoJugador, String difficulty) {
+        List<Card> catalogo = crearSnapshotMazo(cardRepo.findAll());
+        List<Card> pokemon = catalogo.stream()
+                .filter(card -> "Pokemon".equalsIgnoreCase(card.getSupertype()))
+                .toList();
+        List<Card> energias = catalogo.stream()
+                .filter(card -> "Energy".equalsIgnoreCase(card.getSupertype()))
+                .toList();
+        if (pokemon.isEmpty() || energias.isEmpty()) {
+            List<Card> fallback = new ArrayList<>(mazoJugador);
+            Collections.shuffle(fallback);
+            return fallback;
+        }
+
+        String dominantType = mazoJugador.stream()
+                .filter(card -> "Pokemon".equalsIgnoreCase(card.getSupertype()))
+                .map(Card::getTipo)
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.groupingBy(type -> type, java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse("Colorless");
+
+        String level = difficulty == null ? "NORMAL" : difficulty.trim().toUpperCase();
+        String preferredType = "HARD".equals(level) ? counterType(dominantType) : randomPokemonType(pokemon);
+        if ("EASY".equals(level)) preferredType = randomPokemonType(pokemon);
+        final String selectedType = preferredType;
+
+        List<Card> basics = pokemon.stream()
+                .filter(this::esPokemonBasico)
+                .filter(card -> selectedType.equalsIgnoreCase(card.getTipo()))
+                .toList();
+        if (basics.size() < 5) basics = pokemon.stream().filter(this::esPokemonBasico).toList();
+
+        List<Card> result = new ArrayList<>(60);
+        List<Card> shuffledBasics = new ArrayList<>(basics);
+        Collections.shuffle(shuffledBasics);
+        int pokemonTarget = "EASY".equals(level) ? 24 : 28;
+        for (int i = 0; i < pokemonTarget; i++) {
+            result.add(copiarCartaParaPartida(shuffledBasics.get(i % shuffledBasics.size())));
+        }
+
+        List<Card> matchingEnergy = energias.stream()
+                .filter(card -> tipoEnergiaCoincide(card, selectedType))
+                .toList();
+        if (matchingEnergy.isEmpty()) matchingEnergy = energias;
+        for (int i = result.size(); i < 60; i++) {
+            result.add(copiarCartaParaPartida(matchingEnergy.get(i % matchingEnergy.size())));
+        }
+        Collections.shuffle(result);
+        return result;
+    }
+
+    private String randomPokemonType(List<Card> pokemon) {
+        List<String> types = pokemon.stream()
+                .map(Card::getTipo)
+                .filter(type -> type != null && !type.isBlank())
+                .distinct()
+                .toList();
+        return types.isEmpty() ? "Colorless" : types.get(random.nextInt(types.size()));
+    }
+
+    private String counterType(String type) {
+        if (type == null) return "Colorless";
+        return switch (normalizarTexto(type)) {
+            case "fire" -> "Water";
+            case "water" -> "Lightning";
+            case "grass" -> "Fire";
+            case "lightning" -> "Fighting";
+            case "fighting" -> "Psychic";
+            case "psychic" -> "Darkness";
+            case "darkness" -> "Grass";
+            case "metal" -> "Fire";
+            default -> "Colorless";
+        };
+    }
+
+    private boolean tipoEnergiaCoincide(Card energy, String type) {
+        String combined = (energy.getTipo() == null ? "" : energy.getTipo()) + " "
+                + (energy.getNombre() == null ? "" : energy.getNombre());
+        return normalizarTexto(combined).contains(normalizarTexto(type));
+    }
+
     private Card copiarCartaParaPartida(Card source) {
         if (source == null) return null;
 
@@ -1145,6 +1286,15 @@ public class BattleEngineService {
     private String sanitizarLog(String value) {
         if (value == null) return "";
         return value.replace(':', '-').replace('\n', ' ').replace('\r', ' ').trim();
+    }
+
+    private boolean coincideTipo(List<CardAttribute> atributos, String tipo) {
+        if (atributos == null || tipo == null) return false;
+        return atributos.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(CardAttribute::getType)
+                .filter(java.util.Objects::nonNull)
+                .anyMatch(valor -> valor.equalsIgnoreCase(tipo));
     }
 
     private void inicializarGrafoCartas(List<Card> cartas) {

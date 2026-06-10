@@ -43,6 +43,7 @@ com\pokemon\tcg\repository\MazoRepository.class
 com\pokemon\tcg\repository\CardRepository.class
 com\pokemon\tcg\dto\RegisterRequest.class
 com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBenchExtra.class
+com\pokemon\tcg\model\battle\command\SequenceCommand.class
 com\pokemon\tcg\controller\MazoController.class
 com\pokemon\tcg\model\battle\command\BattleCommand.class
 com\pokemon\tcg\service\battle\chain\EfectoDanioBanca.class
@@ -55,6 +56,7 @@ com\pokemon\tcg\service\battle\command\ComandoEvolucionar.class
 com\pokemon\tcg\model\Jugador.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaBasica.class
 com\pokemon\tcg\model\battle\Ataque.class
+com\pokemon\tcg\model\battle\command\MultiCoinDamageCommand$CountMode.class
 com\pokemon\tcg\service\BattleAttackService$KoResolver.class
 com\pokemon\tcg\dto\TradeExecutionRequest.class
 com\pokemon\tcg\model\battle\command\SelfDamageCommand.class
@@ -65,6 +67,7 @@ com\pokemon\tcg\model\battle\ResultadoAtaque.class
 com\pokemon\tcg\controller\CardController.class
 com\pokemon\tcg\service\BotAIService.class
 com\pokemon\tcg\service\battle\chain\EfectoEscalaPorEnergias.class
+com\pokemon\tcg\service\battle\strategy\EstrategiaBasica$EnergyPlan.class
 com\pokemon\tcg\model\battle\state\EstadoTurnoNormal.class
 com\pokemon\tcg\model\battle\state\EstadoSetupInitialDraw.class
 com\pokemon\tcg\service\battle\chain\EfectoVeneno.class
@@ -90,12 +93,14 @@ com\pokemon\tcg\controller\SobreController.class
 com\pokemon\tcg\service\BattleTurnService.class
 com\pokemon\tcg\service\BattleAttackService.class
 com\pokemon\tcg\model\battle\CartaEnJuego.class
+com\pokemon\tcg\model\battle\command\SetInvulnerableCommand.class
 com\pokemon\tcg\repository\JugadorRepository.class
 com\pokemon\tcg\model\CardAttribute.class
 com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBench.class
 com\pokemon\tcg\dto\JugadorDTO.class
 com\pokemon\tcg\service\battle\chain\EfectoMonedaExtraDanio.class
 com\pokemon\tcg\dto\StartBattleOnlineRequest.class
+com\pokemon\tcg\model\battle\command\MultiCoinDamageCommand.class
 com\pokemon\tcg\model\battle\state\EstadoSetupMulliganReveal.class
 com\pokemon\tcg\dto\LobbyMessage.class
 com\pokemon\tcg\exception\GlobalExceptionHandler.class
@@ -114,6 +119,7 @@ com\pokemon\tcg\service\MazoService.class
 com\pokemon\tcg\dto\EvolveRequest.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
+com\pokemon\tcg\model\battle\PendingBattleAction$Option.class
 com\pokemon\tcg\service\battle\chain\EfectoDescartarEnergiaPropia.class
 com\pokemon\tcg\dto\lobby\LobbyRoomSnapshot.class
 com\pokemon\tcg\dto\lobby\LobbyRoomStartResponse.class
@@ -122,6 +128,7 @@ com\pokemon\tcg\service\battle\chain\ManejadorEfecto.class
 com\pokemon\tcg\BackendApplication.class
 com\pokemon\tcg\controller\AuthController.class
 com\pokemon\tcg\dto\ForgotPasswordRequest.class
+com\pokemon\tcg\model\battle\PendingBattleAction.class
 com\pokemon\tcg\service\battle\chain\ContextoAtaque.class
 com\pokemon\tcg\config\DataLoader.class
 com\pokemon\tcg\dto\JugadorDatosResponse.class

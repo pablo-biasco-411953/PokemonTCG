@@ -72,6 +72,23 @@ interface CampusNpc {
   active?: THREE.AnimationAction;
 }
 
+interface AmbientFlyer {
+  root: THREE.Group;
+  mixer?: THREE.AnimationMixer;
+  mode: 'cross' | 'circle';
+  horizonAngle: number;
+  horizonDistance: number;
+  altitude: number;
+  progress: number;
+  duration: number;
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  center: THREE.Vector3;
+  radius: number;
+  turns: number;
+  nextFlightAt: number;
+}
+
 type SantoroDialogState = 'intro' | 'thanks' | 'forced' | 'gift' | 'afterGift' | 'repeat';
 type FloatingLobbyPanel = 'chat' | 'decks' | 'help';
 
@@ -113,6 +130,7 @@ export interface OtherPlayerNPC {
 export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('hubCanvas', { static: true }) hubCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('previewCanvas') previewCanvas?: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pokedexTransitionCanvas') pokedexTransitionCanvas?: ElementRef<HTMLCanvasElement>;
 
   // WebSocket Multiplayer
   private socket?: WebSocket;
@@ -196,6 +214,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   roomsLoading = false;
   roomActionLoading = false;
   roomError = '';
+  roomTab: 'browse' | 'create' | 'mine' = 'browse';
+  roomPasswordModalOpen = false;
+  botConfigOpen = false;
+  botConfigContext: 'offline' | 'room' = 'offline';
+  botDifficulty: 'EASY' | 'NORMAL' | 'HARD' = 'NORMAL';
   roomCountdownValue: number | null = null;
   private roomCountdownMatchId: string | null = null;
   private roomCountdownTimer?: ReturnType<typeof setInterval>;
@@ -204,7 +227,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   kioskShopOpen = false;
   vendorCameraFocus = false;
   deckBuilderOpen = false;
+  pokedexTransitionOpen = false;
   mazoBuilderInicial: Mazo | null = null;
+  private pendingDeckBuilderMazo: Mazo | null = null;
+  private pokedexTransitionRenderer?: THREE.WebGLRenderer;
+  private pokedexTransitionScene?: THREE.Scene;
+  private pokedexTransitionCamera?: THREE.PerspectiveCamera;
+  private pokedexTransitionMixer?: THREE.AnimationMixer;
+  private pokedexTransitionModel?: THREE.Group;
+  private pokedexTransitionFrame = 0;
+  private pokedexTransitionLastTime = 0;
+  private pokedexTransitionFallback?: ReturnType<typeof setTimeout>;
   santoroDialogOpen = false;
   kiosqueraDialogOpen = false;
   santoroDialogState: SantoroDialogState = 'intro';
@@ -214,7 +247,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   santoroQuestState = 'AVAILABLE';
   santoroRewardLoading = false;
   characterMenuOpen = false;
-  selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
+  selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'ash';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
   dayPhaseLabel = 'lobby.phase.morning';
   currentInteraction: HubSpot | null = null;
@@ -288,8 +321,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   customizationModalOpen = false;
   showFirstTimeSetup = false;
   
-  customizerGender: 'pibe' | 'piba' = 'piba';
-  customizerSelectedId = 'hilda-sygna';
+  customizerGender: 'pibe' | 'piba' = 'pibe';
+  customizerSelectedId = 'ash';
   customizerHeight = 1.0;
   customizerSkinColor = '#ffe0bd';
   customizerHairColor = '#5c4033';
@@ -505,6 +538,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private pikachu?: CampusNpc;
   private kioskVendor?: CampusNpc;
   private santoroNpc?: CampusNpc;
+  private kioskEevee?: CampusNpc;
+  private ambientFlyers: AmbientFlyer[] = [];
   private santoroPathGroup?: THREE.Group;
   private santoroBones: {
     spine?: THREE.Bone;
@@ -647,8 +682,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         const setupCompleted = localStorage.getItem('firstTimeSetup');
         if (!setupCompleted) {
           this.showFirstTimeSetup = true;
-          this.customizerGender = 'piba'; // Piba por defecto
-          this.customizerSelectedId = 'hilda-sygna';
+          this.customizerGender = 'pibe';
+          this.customizerSelectedId = 'ash';
           this.customizerHeight = 1.0;
           this.customizerSkinColor = '#ffe0bd';
           this.customizerHairColor = '#5c4033';
@@ -1018,6 +1053,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.lobbyDestroyed = true;
+    this.cleanupPokedexTransition();
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
@@ -1481,23 +1517,174 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Navega al editor de mazos.
   irAlDeckBuilder(mazo?: Mazo | null) {
-    this.mazoBuilderInicial = mazo
+    if (this.pokedexTransitionOpen || this.deckBuilderOpen) return;
+    this.pendingDeckBuilderMazo = mazo
       ? { ...mazo, cartas: [...(mazo.cartas || [])] }
       : null;
-    this.deckBuilderOpen = true;
+    this.pokedexTransitionOpen = true;
     this.keys.clear();
     this.playerVelocity.set(0, 0, 0);
     this.setPlayerAnimation('idle');
     this.cdr.detectChanges();
+    requestAnimationFrame(() => this.initPokedexTransition());
   }
 
   cerrarDeckBuilder(refresh = false) {
     this.deckBuilderOpen = false;
     this.mazoBuilderInicial = null;
+    this.pendingDeckBuilderMazo = null;
     if (refresh) {
       this.refrescarTodo(true);
     }
     this.cdr.detectChanges();
+  }
+
+  private initPokedexTransition() {
+    const canvas = this.pokedexTransitionCanvas?.nativeElement;
+    if (!canvas || !this.pokedexTransitionOpen) {
+      this.finishPokedexTransition();
+      return;
+    }
+
+    this.cleanupPokedexTransition(false);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 50);
+    camera.position.set(0, 0.1, 7.4);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: this.graphicsQuality !== 'low',
+      powerPreference: 'high-performance'
+    });
+    const size = Math.min(window.innerWidth * 0.72, window.innerHeight * 0.76, 720);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+    renderer.setSize(size, size, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
+
+    scene.add(new THREE.HemisphereLight(0xbfe9ff, 0x101426, 2.6));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 4.2);
+    keyLight.position.set(3.5, 5, 5);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x35d9ff, 3);
+    rimLight.position.set(-4, 1.5, -2);
+    scene.add(rimLight);
+
+    this.pokedexTransitionScene = scene;
+    this.pokedexTransitionCamera = camera;
+    this.pokedexTransitionRenderer = renderer;
+    this.pokedexTransitionLastTime = performance.now();
+
+    const loader = this.createGltfLoader();
+    loader.load('/models-optimized/pokedex.glb', (gltf) => {
+      if (!this.pokedexTransitionOpen || this.pokedexTransitionScene !== scene) return;
+      const model = gltf.scene;
+      const toRemove: THREE.Object3D[] = [];
+      model.traverse((child) => {
+        if (
+          child instanceof THREE.Camera ||
+          child instanceof THREE.Light ||
+          child instanceof THREE.Line ||
+          child instanceof THREE.Points
+        ) {
+          toRemove.push(child);
+        }
+      });
+      toRemove.forEach((child) => child.parent?.remove(child));
+
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      const dimensions = box.getSize(new THREE.Vector3());
+      model.position.sub(center);
+      model.scale.setScalar(3.05 / (Math.max(dimensions.x, dimensions.y, dimensions.z) || 1));
+      model.rotation.set(-0.04, -0.72, 0);
+      scene.add(model);
+      this.pokedexTransitionModel = model;
+
+      const clip = gltf.animations.find((item) =>
+        item.name.toLowerCase().includes('base_dxaction')
+      );
+      if (clip) {
+        const mixer = new THREE.AnimationMixer(model);
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopOnce, 1);
+        action.clampWhenFinished = true;
+        action.reset().play();
+        mixer.addEventListener('finished', () => {
+          setTimeout(() => this.finishPokedexTransition(), 260);
+        });
+        this.pokedexTransitionMixer = mixer;
+      } else {
+        setTimeout(() => this.finishPokedexTransition(), 1250);
+      }
+    }, undefined, () => this.finishPokedexTransition());
+
+    this.pokedexTransitionFallback = setTimeout(() => this.finishPokedexTransition(), 2400);
+    this.animatePokedexTransition();
+  }
+
+  private animatePokedexTransition = () => {
+    if (
+      !this.pokedexTransitionOpen ||
+      !this.pokedexTransitionRenderer ||
+      !this.pokedexTransitionScene ||
+      !this.pokedexTransitionCamera
+    ) return;
+
+    const now = performance.now();
+    const delta = Math.min((now - this.pokedexTransitionLastTime) / 1000, 0.05);
+    this.pokedexTransitionLastTime = now;
+    this.pokedexTransitionMixer?.update(delta);
+    this.pokedexTransitionRenderer.render(
+      this.pokedexTransitionScene,
+      this.pokedexTransitionCamera
+    );
+    this.pokedexTransitionFrame = requestAnimationFrame(this.animatePokedexTransition);
+  };
+
+  private finishPokedexTransition() {
+    if (!this.pokedexTransitionOpen) return;
+    const pendingMazo = this.pendingDeckBuilderMazo;
+    this.cleanupPokedexTransition();
+    this.ngZone.run(() => {
+      this.pokedexTransitionOpen = false;
+      this.mazoBuilderInicial = pendingMazo;
+      this.deckBuilderOpen = true;
+      this.cdr.detectChanges();
+    });
+  }
+
+  private cleanupPokedexTransition(clearState = true) {
+    cancelAnimationFrame(this.pokedexTransitionFrame);
+    this.pokedexTransitionFrame = 0;
+    if (this.pokedexTransitionFallback) {
+      clearTimeout(this.pokedexTransitionFallback);
+      this.pokedexTransitionFallback = undefined;
+    }
+    this.pokedexTransitionMixer?.stopAllAction();
+    this.pokedexTransitionMixer = undefined;
+    this.pokedexTransitionModel?.traverse((child) => {
+      const mesh = child as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry?.dispose();
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      materials.forEach((material) => {
+        Object.values(material).forEach((value) => {
+          if (value instanceof THREE.Texture) value.dispose();
+        });
+        material.dispose();
+      });
+    });
+    this.pokedexTransitionRenderer?.dispose();
+    this.pokedexTransitionRenderer = undefined;
+    this.pokedexTransitionScene?.clear();
+    this.pokedexTransitionScene = undefined;
+    this.pokedexTransitionCamera = undefined;
+    this.pokedexTransitionModel = undefined;
+    if (clearState) this.pendingDeckBuilderMazo = null;
   }
 
   editarMazo(mazo: Mazo, event?: Event) {
@@ -1525,9 +1712,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Crea una partida usando el mazo elegido.
-  buscarPartida(mazoId: number) {
+  buscarPartida(mazoId: number, botDifficulty: 'EASY' | 'NORMAL' | 'HARD' = 'NORMAL') {
     if (!this.jugador?.username) return;
-    this.battleService.startBattle(this.jugador!.username, mazoId).subscribe({
+    this.battleService.startBattle(this.jugador!.username, mazoId, botDifficulty).subscribe({
       next: (partida: Partida) => {
         if (partida && partida.id) {
           this.beginRoomCountdown(partida.id);
@@ -1565,6 +1752,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         if (userRoom) {
           this.currentRoom = userRoom;
           this.selectedRoom = userRoom;
+          this.roomTab = 'mine';
           this.roomError = '';
         }
         if (this.currentRoom) {
@@ -1586,8 +1774,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   selectLobbyRoom(room: LobbyRoomSnapshot) {
     this.selectedRoom = room;
     this.roomJoinPassword = '';
+    this.roomTab = this.currentRoom?.id === room.id ? 'mine' : 'browse';
     if (this.currentRoom?.id === room.id) {
       this.currentRoom = room;
+    } else if (room.locked) {
+      this.roomPasswordModalOpen = true;
     }
   }
 
@@ -1602,6 +1793,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (room) => {
         this.currentRoom = room;
         this.selectedRoom = room;
+        this.roomPasswordModalOpen = false;
+        this.roomTab = 'mine';
         this.roomCreateName = '';
         this.clearRoomPin();
         this.roomError = '';
@@ -1665,7 +1858,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.roomError = 'Elegí un mazo de 60 cartas para jugar contra bot.';
       return;
     }
-    this.buscarPartida(deck.id);
+    this.botConfigContext = 'offline';
+    this.botConfigOpen = true;
+  }
+
+  confirmBotConfiguration() {
+    if (this.botConfigContext === 'room') {
+      this.confirmAddBotToCurrentRoom();
+      return;
+    }
+    const deck = this.selectedBattleDeck;
+    if (!deck) return;
+    this.botConfigOpen = false;
+    this.buscarPartida(deck.id, this.botDifficulty);
   }
 
   joinSelectedRoom() {
@@ -1680,6 +1885,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (room) => {
         this.currentRoom = room;
         this.selectedRoom = room;
+        this.roomTab = 'mine';
         this.roomError = '';
         this.roomActionLoading = false;
         this.loadLobbyRooms();
@@ -1694,6 +1900,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lobbyRoomService.leaveRoom(this.currentRoom.id).subscribe({
       next: () => {
         this.currentRoom = null;
+        this.selectedRoom = null;
+        this.roomPasswordModalOpen = false;
+        this.roomJoinPassword = '';
+        this.roomTab = 'browse';
         this.roomActionLoading = false;
         this.loadLobbyRooms();
       },
@@ -1717,8 +1927,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   addBotToCurrentRoom() {
     if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.botConfigContext = 'room';
+    this.botConfigOpen = true;
+  }
+
+  private confirmAddBotToCurrentRoom() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.botConfigOpen = false;
     this.roomActionLoading = true;
-    this.lobbyRoomService.addBot(this.currentRoom.id).subscribe({
+    this.lobbyRoomService.addBot(this.currentRoom.id, this.botDifficulty).subscribe({
       next: (room) => {
         this.currentRoom = room;
         this.selectedRoom = room;
@@ -1783,12 +2000,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.currentRoom = response.room;
         this.selectedRoom = response.room;
+        this.roomTab = 'mine';
+        this.roomPasswordModalOpen = false;
         this.roomJoinPassword = '';
         this.roomError = '';
         this.loadLobbyRooms();
       },
       error: (err) => this.handleRoomError(err)
     });
+  }
+
+  closeRoomPasswordModal() {
+    this.roomPasswordModalOpen = false;
+    this.roomJoinPassword = '';
   }
 
   sendRoomChat() {
@@ -2069,6 +2293,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Aplicar rasgos elegidos en vivo
         this.applyPreviewCustomizationsDirect(model);
+        this.centerModelPivot(model);
+        this.normalizeVisibleCharacterHeight(model, 1.62 * this.customizerHeight);
 
         this.previewModelGroup.add(model);
         this.previewMixer = new THREE.AnimationMixer(model);
@@ -2082,7 +2308,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         const candidates = option.idleHints ?? ['idle', 'standing'];
         let idleAction: THREE.AnimationAction | undefined;
         for (const name of candidates) {
-          const act = this.previewActions.get(name.toLowerCase());
+          const normalizedName = name.toLowerCase();
+          const act = this.previewActions.get(normalizedName)
+            || Array.from(this.previewActions.entries())
+              .find(([clipName]) => clipName.includes(normalizedName))?.[1];
           if (act) {
             idleAction = act;
             break;
@@ -2105,7 +2334,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const heightFactor = this.customizerHeight;
 
     const option = this.characterOptions.find(o => o.id === this.customizerSelectedId) || this.characterOptions[0];
-    model.scale.setScalar(option.scale * heightFactor);
+    model.scale.setScalar(option.scale);
+    this.normalizeVisibleCharacterHeight(model, 1.62 * heightFactor);
     this.tintCharacterParts(model, { skinHex, hairHex, eyeHex });
   }
 
@@ -2123,8 +2353,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       (gltf) => {
         const model = gltf.scene;
         model.name = 'PreviewPikachu';
-        
-        model.scale.setScalar(0.016);
+
+        this.fitModelToHeight(model, 0.38);
+        this.centerModelPivot(model);
+        this.alignModelBottom(model, 0);
         model.position.set(-0.35, 0, 0.15);
         model.rotation.y = Math.PI / 6;
         
@@ -2629,6 +2861,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.createTrainerAvatar();
     this.createHubSpots();
     this.createSantoroNpc();
+    this.createAmbientFlyers();
     this.updateSantoroQuestPath();
     this.createFloatingCards();
     this.resizeHub();
@@ -2787,6 +3020,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.kioskVendor) {
       this.setNpcAnimation(this.kioskVendor, ['mouth_01', 'speak_1', 'greeting_1']);
     }
+    this.playKioskEeveeAnimation();
     this.cdr.detectChanges();
   }
 
@@ -2813,6 +3047,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.kioskVendor) {
       this.setNpcAnimation(this.kioskVendor, ['mouth_01', 'speak_1', 'greeting_1']);
     }
+    this.playKioskEeveeAnimation();
     this.cdr.detectChanges();
   }
 
@@ -2850,6 +3085,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.debugSobresCantidad = this.sobresDisponibles;
         this.jugador = { ...this.jugador!, ...res };
         this.playVendorPurchaseAnimation();
+        this.playKioskEeveeAnimation();
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error comprando sobres en kiosco', err)
@@ -3158,7 +3394,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private updateSantoroNpc(delta: number) {
     if (!this.santoroNpc) return;
     this.santoroNpc.mixer?.update(delta);
-
     // Animación de huesos en cada frame
     this.animateSantoroBones(delta);
 
@@ -4024,6 +4259,174 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       this.setNpcAnimation(npc, ['idle'], 0);
+      this.createKioskEevee();
+    });
+  }
+
+  private createKioskEevee() {
+    if (!this.scene || this.kioskEevee) return;
+    const root = new THREE.Group();
+    root.position.set(-19.28, 0, -15.28);
+    root.rotation.y = 0;
+    this.scene.add(root);
+    const npc: CampusNpc = { root, actions: new Map() };
+    this.kioskEevee = npc;
+
+    this.loadSceneAsset('/models-optimized/ambient/eevee.glb', (model, animations) => {
+      this.fitModelToHeight(model, 1.05);
+      this.centerModelPivot(model);
+      this.alignModelBottom(model, 1.24);
+      root.add(model);
+      npc.mixer = new THREE.AnimationMixer(model);
+      animations.forEach((clip) => npc.actions.set(clip.name.toLowerCase(), npc.mixer!.clipAction(clip)));
+    });
+  }
+
+  private playKioskEeveeAnimation() {
+    if (!this.kioskEevee) return;
+    const action = Array.from(this.kioskEevee.actions.entries())
+      .find(([name]) => name.includes('armatureaction'))?.[1];
+    if (!action) return;
+    action.stop().reset();
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+    action.play();
+    this.kioskEevee.active = action;
+  }
+
+  private createAmbientFlyers() {
+    if (!this.scene || this.ambientFlyers.length > 0) return;
+    const configs = [
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2.2, sector: 0, distance: 34, altitude: 13 },
+      { path: '/models-optimized/ambient/ho_oh.glb', clip: 'take 001', size: 3.1, sector: 1, distance: 52, altitude: 22 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 1.5, sector: 2, distance: 68, altitude: 28 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 3, sector: 3, distance: 42, altitude: 17 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2.6, sector: 4, distance: 34, altitude: 25 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 1.8, sector: 5, distance: 58, altitude: 15 },
+      { path: '/models-optimized/ambient/ho_oh.glb', clip: 'take 001', size: 2.3, sector: 6, distance: 70, altitude: 30 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2.4, sector: 7, distance: 38, altitude: 20 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2.1, sector: 8, distance: 62, altitude: 26 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 1.6, sector: 9, distance: 72, altitude: 12 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2.8, sector: 10, distance: 36, altitude: 29 },
+      { path: '/models-optimized/ambient/birds.glb', clip: 'scene', size: 2, sector: 11, distance: 50, altitude: 18 },
+    ];
+
+    configs.forEach((config, index) => {
+      this.loadSceneAsset(config.path, (model, animations) => {
+        this.fitModelToMaxDimension(model, config.size);
+        this.centerModelPivot(model);
+        model.traverse((child) => {
+          const mesh = child as THREE.Mesh;
+          if (mesh.isMesh) {
+            mesh.castShadow = false;
+            mesh.receiveShadow = false;
+          }
+        });
+
+        const root = new THREE.Group();
+        root.visible = false;
+        root.add(model);
+        this.scene!.add(root);
+        const mixer = new THREE.AnimationMixer(model);
+        const clip = animations.find((item) => item.name.toLowerCase().includes(config.clip));
+        clip && mixer.clipAction(clip).play();
+        this.ambientFlyers.push({
+          root,
+          mixer,
+          mode: 'cross',
+          horizonAngle: (config.sector / 12) * Math.PI * 2,
+          horizonDistance: config.distance,
+          altitude: config.altitude,
+          progress: 0,
+          duration: 20,
+          start: new THREE.Vector3(),
+          end: new THREE.Vector3(),
+          center: new THREE.Vector3(),
+          radius: 20,
+          turns: 1,
+          nextFlightAt: this.clock.elapsedTime + (index % 4) * 0.7,
+        });
+      }, { castShadow: false, receiveShadow: false });
+    });
+  }
+
+  private beginAmbientFlight(flyer: AmbientFlyer, elapsed: number) {
+    const sectorAngle = flyer.horizonAngle + (Math.random() - 0.5) * 0.32;
+    const radialX = Math.cos(sectorAngle);
+    const radialZ = Math.sin(sectorAngle);
+    const tangentX = -radialZ;
+    const tangentZ = radialX;
+    const distance = flyer.horizonDistance + (Math.random() - 0.5) * 8;
+    const altitude = flyer.altitude + (Math.random() - 0.5) * 5;
+    const pathHalfWidth = 20 + distance * 0.28;
+    flyer.mode = Math.random() < 0.24 ? 'circle' : 'cross';
+    flyer.progress = 0;
+    flyer.duration = flyer.mode === 'circle' ? 30 + Math.random() * 16 : 24 + Math.random() * 18;
+    flyer.turns = 0.65 + Math.random() * 0.8;
+    flyer.radius = 8 + Math.random() * 11;
+    flyer.center.set(
+      radialX * distance,
+      altitude,
+      radialZ * distance
+    );
+    flyer.start.set(
+      flyer.center.x - tangentX * pathHalfWidth,
+      altitude,
+      flyer.center.z - tangentZ * pathHalfWidth
+    );
+    flyer.end.set(
+      flyer.center.x + tangentX * pathHalfWidth,
+      altitude + 2 + Math.random() * 4,
+      flyer.center.z + tangentZ * pathHalfWidth
+    );
+    flyer.root.position.copy(flyer.mode === 'circle' ? flyer.center : flyer.start);
+    flyer.root.visible = true;
+    flyer.root.scale.setScalar(0.08);
+    flyer.nextFlightAt = elapsed + flyer.duration;
+  }
+
+  private updateAmbientFlyers(delta: number, elapsed: number, reduced: boolean) {
+    this.ambientFlyers.forEach((flyer, index) => {
+      if (!flyer.root.visible) {
+        if (elapsed >= flyer.nextFlightAt) this.beginAmbientFlight(flyer, elapsed);
+        return;
+      }
+
+      if (!reduced || (this.frameCounter + index) % 2 === 0) {
+        flyer.mixer?.update(delta * (reduced ? 2 : 1));
+      }
+      flyer.progress += delta / flyer.duration;
+      const t = Math.min(1, flyer.progress);
+      let nextX: number;
+      let nextZ: number;
+
+      if (flyer.mode === 'circle') {
+        const angle = t * Math.PI * 2 * flyer.turns;
+        const nextAngle = (t + 0.01) * Math.PI * 2 * flyer.turns;
+        const expandingRadius = flyer.radius + t * 18;
+        flyer.root.position.set(
+          flyer.center.x + Math.cos(angle) * expandingRadius,
+          flyer.center.y + Math.sin(t * Math.PI * 2) * 2.4 + t * 5,
+          flyer.center.z + Math.sin(angle) * expandingRadius,
+        );
+        nextX = flyer.center.x + Math.cos(nextAngle) * expandingRadius;
+        nextZ = flyer.center.z + Math.sin(nextAngle) * expandingRadius;
+      } else {
+        flyer.root.position.lerpVectors(flyer.start, flyer.end, t);
+        flyer.root.position.y += Math.sin(t * Math.PI) * 5;
+        nextX = flyer.end.x;
+        nextZ = flyer.end.z;
+      }
+
+      this.tempLookAt.set(nextX, flyer.root.position.y, nextZ);
+      flyer.root.lookAt(this.tempLookAt);
+      const horizonFade = Math.min(t / 0.12, (1 - t) / 0.12, 1);
+      flyer.root.scale.setScalar(Math.max(0.08, horizonFade));
+
+      if (t >= 1) {
+        flyer.root.visible = false;
+        flyer.nextFlightAt = elapsed + 0.8 + Math.random() * 4.2;
+      }
     });
   }
 
@@ -4641,8 +5044,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           if (
             child instanceof THREE.Camera || 
             child instanceof THREE.Light || 
+            child instanceof THREE.Line ||
+            child instanceof THREE.Points ||
             child.type.includes('Light') || 
-            child.type.includes('Camera')
+            child.type.includes('Camera') ||
+            child.type.includes('Helper')
           ) {
             toRemove.push(child);
           }
@@ -4854,6 +5260,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateKioskVendor(delta: number) {
     if (!this.kioskVendor) return;
+    this.kioskEevee?.mixer?.update(delta);
 
     const dx = this.player.position.x + 18;
     const dz = this.player.position.z + 18;
@@ -5352,6 +5759,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.updatePikachu(delta);
     this.updateKioskVendor(delta);
     this.updateSantoroNpc(delta);
+    this.updateAmbientFlyers(delta, elapsed, reduceDecorativeWork);
     this.updateSantoroPathArrows(elapsed);
     this.updateLobbyAudio(delta);
     this.updateRemoteDetailBudget();
@@ -5797,8 +6205,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (this.vendorCameraFocus) {
       // Apuntar al centro de Hilda re-ubicada en X=-19.6 para que no la tape la estanterÃ­a
-      const targetPosition = this.tempVec3.set(-17.8, 1.8, -14.5);
-      const lookAt = this.tempVec3b.set(-19.6, 1.5, -17.2);
+      const targetPosition = this.tempVec3.set(-16.95, 1.72, -14.2);
+      const lookAt = this.tempVec3b.set(-18.95, 1.32, -16.86);
       this.camera.position.lerp(targetPosition, 1 - Math.pow(0.0008, delta));
       this.camera.lookAt(lookAt);
       return;
@@ -6039,6 +6447,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!room || !this.jugador?.username) return;
 
     const username = this.jugador.username;
+    if (room.status === 'FINISHED') {
+      this.lobbyRooms = this.lobbyRooms.filter(item => item.id !== room.id);
+      if (this.currentRoom?.id === room.id) {
+        this.currentRoom = null;
+        this.roomTab = 'browse';
+      }
+      if (this.selectedRoom?.id === room.id) {
+        this.selectedRoom = null;
+      }
+      return;
+    }
     const userIsParticipant = room.ownerUsername === username || room.guestUsername === username;
     const userIsSpectator = this.currentRoom?.id === room.id && this.currentRoom.currentUserSpectator;
     const roomForCurrentUser = userIsSpectator ? { ...room, currentUserSpectator: true } : room;

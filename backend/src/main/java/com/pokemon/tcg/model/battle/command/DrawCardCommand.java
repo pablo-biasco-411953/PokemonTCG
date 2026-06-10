@@ -23,10 +23,16 @@ public class DrawCardCommand implements BattleCommand {
     @Override
     public void execute(Partida partida, TableroJugador atacante, TableroJugador defensor) {
         TableroJugador targetBoard = (target == Target.SELF) ? atacante : defensor;
+        int drawn = 0;
         for (int i = 0; i < amount; i++) {
             if (!targetBoard.getMazo().isEmpty()) {
                 targetBoard.getMano().add(targetBoard.getMazo().remove(0));
+                drawn++;
             }
+        }
+        if (drawn > 0) {
+            String actor = atacante == partida.getJugador() ? partida.getJugadorUsername() : "BOT";
+            partida.getTurnLogs().add("CARDS_DRAWN:" + (actor == null ? "JUGADOR" : actor) + ":" + drawn);
         }
     }
 }

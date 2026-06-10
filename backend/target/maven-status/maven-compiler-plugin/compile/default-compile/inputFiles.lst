@@ -1,4 +1,5 @@
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\MazoRepository.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\MultiCoinDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\AuthService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\strategy\EstrategiaBot.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ResetPasswordRequest.java
@@ -29,6 +30,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugadorDatosResponse.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\SobreController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\BattleSpectatorGuardInterceptor.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetInvulnerableCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\MazoController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoSubirActivo.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DamageCommand.java
@@ -42,6 +44,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\s
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\MazoBackupService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\BackendApplication.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoDanioPropio.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SequenceCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleAttackService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoQuemadura.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ActualizarMazoRequest.java
@@ -78,6 +81,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleSe
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoRetirarse.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoEvolucionar.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoUnirEnergia.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\PendingBattleAction.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LobbyMessage.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SearchDeckCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPrizePlacement.java

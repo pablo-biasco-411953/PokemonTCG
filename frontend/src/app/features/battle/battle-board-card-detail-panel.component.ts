@@ -33,6 +33,25 @@ export class BattleBoardCardDetailPanelComponent {
     return this.getEnergyColor ? this.getEnergyColor(tipo) : '#cccccc';
   }
 
+  resolveEnergyLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      Grass: 'PLA', Fire: 'FUE', Water: 'AGU', Lightning: 'ELE', Psychic: 'PSI',
+      Fighting: 'LUC', Darkness: 'SIN', Metal: 'MET', Fairy: 'HAD',
+      Dragon: 'DRA', Colorless: 'INC'
+    };
+    return labels[tipo] || tipo.slice(0, 2).toUpperCase();
+  }
+
+  resolveEnergyName(tipo: string): string {
+    const names: Record<string, string> = {
+      Grass: 'Energia Planta', Fire: 'Energia Fuego', Water: 'Energia Agua',
+      Lightning: 'Energia Electrica', Psychic: 'Energia Psiquica', Fighting: 'Energia Lucha',
+      Darkness: 'Energia Siniestra', Metal: 'Energia Metal', Fairy: 'Energia Hada',
+      Dragon: 'Energia Dragon', Colorless: 'Energia Incolora: se paga con cualquier tipo'
+    };
+    return names[tipo] || tipo;
+  }
+
   resolveAttackText(texto: string): SafeHtml | string {
     return this.formatTextoAtaque ? this.formatTextoAtaque(texto) : texto;
   }

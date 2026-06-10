@@ -55,6 +55,17 @@ export interface Partida {
   cartasMulliganExtraPendientesBot?: number;
   setupJugadorRoboExtraMulligan?: boolean;
   setupBotRoboExtraMulligan?: boolean;
+  pendingAction?: PendingBattleAction | null;
+}
+
+export interface PendingBattleAction {
+  actor: string;
+  type: string;
+  prompt: string;
+  destination: string;
+  minSelections: number;
+  maxSelections: number;
+  options: Array<{ id: string; nombre: string; imagen?: string }>;
 }
 
 export interface StartBattleResponse extends Partida {}

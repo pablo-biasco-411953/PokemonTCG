@@ -18,6 +18,7 @@ public class LobbyRoom {
     private String guestDeckName;
     private boolean guestReady;
     private boolean guestBot;
+    private String botDifficulty = "NORMAL";
     private boolean hasPassword;
     private String passwordHash;
     private LobbyRoomStatus status = LobbyRoomStatus.OPEN;
@@ -50,6 +51,8 @@ public class LobbyRoom {
     public void setGuestReady(boolean guestReady) { this.guestReady = guestReady; }
     public boolean isGuestBot() { return guestBot; }
     public void setGuestBot(boolean guestBot) { this.guestBot = guestBot; }
+    public String getBotDifficulty() { return botDifficulty; }
+    public void setBotDifficulty(String botDifficulty) { this.botDifficulty = botDifficulty; }
     public boolean isHasPassword() { return hasPassword; }
     public void setHasPassword(boolean hasPassword) { this.hasPassword = hasPassword; }
     public String getPasswordHash() { return passwordHash; }

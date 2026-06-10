@@ -31,6 +31,7 @@ export interface LobbyRoomSnapshot {
   guestDeckName?: string | null;
   guestReady: boolean;
   guestBot: boolean;
+  botDifficulty?: 'EASY' | 'NORMAL' | 'HARD';
   playerCount: number;
   spectatorCount: number;
   matchId?: string | null;
@@ -77,8 +78,8 @@ export class LobbyRoomService {
     return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/kick`, {}, this.headers());
   }
 
-  addBot(roomId: string): Observable<LobbyRoomSnapshot> {
-    return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/bot`, {}, this.headers());
+  addBot(roomId: string, botDifficulty: 'EASY' | 'NORMAL' | 'HARD'): Observable<LobbyRoomSnapshot> {
+    return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/bot`, { botDifficulty }, this.headers());
   }
 
   setReady(roomId: string, ready: boolean, mazoId: number | null): Observable<LobbyRoomSnapshot> {

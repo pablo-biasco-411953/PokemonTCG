@@ -46,6 +46,29 @@ class BattleAttackServiceTest {
 
         assertEquals(50, atacante.getHpActual());
         assertEquals(1, partida.getJugador().getMano().size());
+        assertTrue(partida.getTurnLogs().stream().anyMatch(log -> log.startsWith("CARDS_DRAWN:")));
+    }
+
+    @Test
+    void resolveAttackConBusquedaDejaUnaDecisionGuiadaParaElJugador() {
+        Partida partida = partidaBasica();
+        partida.setJugadorUsername("Pablo");
+        Card grass = card("grass-1", "Chespin", "60");
+        grass.setSupertype("Pokemon");
+        grass.setTipo("Grass");
+        partida.getJugador().getMazo().add(grass);
+
+        Ataque ataque = attack(
+                "Pheromotion",
+                0,
+                "Search your deck for a Grass Pokemon, reveal it, and put it into your hand. Shuffle your deck afterward."
+        );
+
+        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {});
+
+        assertEquals(Partida.Fase.ESPERANDO_INTERACCION, partida.getFaseActual());
+        assertEquals("SEARCH_DECK", partida.getPendingAction().getType());
+        assertEquals("grass-1", partida.getPendingAction().getOptions().getFirst().getId());
     }
 
     @Test

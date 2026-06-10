@@ -36,8 +36,18 @@ public class BattleKoService {
                 || c.getCard().getId().equals(idADescartar));
         tableroVictima.getPilaDescarte().add(defensor.getCard());
 
-        if (!tableroGanador.getPremios().isEmpty()) {
+        int premiosATomar = esPokemonEx(defensor) ? 2 : 1;
+        int premiosTomados = 0;
+        while (premiosTomados < premiosATomar && !tableroGanador.getPremios().isEmpty()) {
             tableroGanador.getMano().add(tableroGanador.getPremios().remove(0));
+            premiosTomados++;
+        }
+        String ganador = tableroGanador == partida.getJugador()
+                ? partida.getJugadorUsername()
+                : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT");
+        partida.getTurnLogs().add("KNOCK_OUT:" + limpiar(ganador) + ":" + limpiar(defensor.getCard().getNombre()));
+        if (premiosTomados > 0) {
+            partida.getTurnLogs().add("PRIZE_TAKEN:" + limpiar(ganador) + ":" + premiosTomados);
         }
 
         boolean sinPremios = tableroGanador.getPremios().isEmpty();
@@ -160,6 +170,17 @@ public class BattleKoService {
         if (!"pokemon".equals(supertype)) return false;
         return c.getSubtypes() != null && c.getSubtypes().stream()
                 .anyMatch(s -> "Basic".equalsIgnoreCase(s));
+    }
+
+    private boolean esPokemonEx(CartaEnJuego carta) {
+        return carta != null
+                && carta.getCard() != null
+                && carta.getCard().getSubtypes() != null
+                && carta.getCard().getSubtypes().stream().anyMatch(s -> "EX".equalsIgnoreCase(s));
+    }
+
+    private String limpiar(String value) {
+        return value == null ? "" : value.replace(':', '-').replace('\n', ' ').replace('\r', ' ').trim();
     }
 
     private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}
