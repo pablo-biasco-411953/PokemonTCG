@@ -8,6 +8,7 @@ public class LobbyRoomRequest {
     private String password;
     private boolean ready;
     private String text;
+    private String botDifficulty;
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
@@ -23,4 +24,6 @@ public class LobbyRoomRequest {
     public void setReady(boolean ready) { this.ready = ready; }
     public String getText() { return text; }
     public void setText(String text) { this.text = text; }
+    public String getBotDifficulty() { return botDifficulty; }
+    public void setBotDifficulty(String botDifficulty) { this.botDifficulty = botDifficulty; }
 }

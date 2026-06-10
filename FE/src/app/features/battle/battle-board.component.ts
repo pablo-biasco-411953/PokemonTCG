@@ -208,6 +208,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   particulasJugador: ParticleVisualState[] = [];
   animandoBotDanio = false;
   animandoJugadorDanio = false;
+  impactCalloutBot: 'effective' | 'resisted' | null = null;
+  impactCalloutPlayer: 'effective' | 'resisted' | null = null;
+  battlefieldDamagePulse = false;
+  prizeRevealCard: Card | null = null;
+  pendingEffectSelection = new Set<string>();
 
   handshakePower = 0;
   opponentHandshakePower = 0;
@@ -263,6 +268,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private opponentTrainerActions = new Map<string, THREE.AnimationAction>();
   private currentTrainerAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
   private trainersClock = new THREE.Clock();
+  private battleAtmosphereRenderer?: THREE.WebGLRenderer;
+  private battleAtmosphereScene?: THREE.Scene;
+  private battleAtmosphereCamera?: THREE.PerspectiveCamera;
+  private battleAtmosphereFrame = 0;
+  private battleAtmosphereResize?: ResizeObserver;
+  private battleAtmosphereClock = new THREE.Clock();
+  private battleAtmosphereRings: THREE.Mesh[] = [];
+  private battleAtmosphereParticles?: THREE.Points;
+  private battleAtmosphereShards?: THREE.InstancedMesh;
+  private battleAtmosphereBeams: THREE.Mesh[] = [];
   private trainersAnimationId?: number;
   private handshakeParticleGeometry?: THREE.SphereGeometry;
   private handshakeSpotlight?: THREE.SpotLight;
@@ -321,6 +336,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
+    this.cleanupBattleAtmosphere();
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
     this.cleanupHandshakeScene();
@@ -835,6 +851,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
 
       switch (event) {
+        case 'SUPER_EFFECTIVE':
+          this.mostrarFeedbackImpacto(actor, 'effective');
+          break;
+        case 'RESISTED':
+          this.mostrarFeedbackImpacto(actor, 'resisted');
+          break;
+        case 'PRIZE_TAKEN':
+          this.mostrarNotificacion(
+            `${esMiAccion ? 'Tomaste' : 'El rival tomo'} ${parts[2] || '1'} carta(s) de Premio.`,
+            'info',
+          );
+          break;
         case 'ENERGY_DISCARDED':
           this.mostrarNotificacion(`${esMiAccion ? 'Descartaste' : 'El rival descartó'} una energía al ataque.`, 'warning');
           break;
@@ -849,8 +877,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.lastProcessedLogIndex = this.partida.turnLogs.length;
   }
 
+  getOpponentHandStep(total: number): number {
+    if (total <= 1) return 0;
+    return Math.max(7, Math.min(21, 610 / (total - 1)));
+  }
+
+  get pendingAction() {
+    const pending = this.partida?.pendingAction;
+    return pending?.actor === this.jugadorNombre ? pending : null;
+  }
+
   get visualBattleLog(): Array<{ kind: string; title: string; detail: string }> {
-    const logs = (this.partida?.turnLogs || []).slice(-7).map(log => this.formatBattleLog(log));
+    const logs = (this.partida?.turnLogs || []).slice().reverse().map(log => this.formatBattleLog(log));
     if (logs.length) return logs;
     if (!this.partida) return [];
     return [
@@ -872,20 +910,25 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const second = parts[3] || '';
     const third = parts[4] || '';
     const map: Record<string, { title: string; detail: string; kind: string }> = {
-      ENERGY_DISCARDED: { title: 'Energia descartada', detail: `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
-      DECK_SEARCHED: { title: 'Busqueda en mazo', detail: `${subject} busco cartas en el mazo.`, kind: 'search' },
-      ENERGY_MOVED: { title: 'Energia movida', detail: `${subject} movio una energia en el campo.`, kind: 'energy' },
-      POKEMON_PLAYED: { title: 'Pokemon en banca', detail: `${subject} bajo a ${first || 'un Pokemon'} a la banca.`, kind: 'bench' },
-      ACTIVE_PLACED: { title: 'Activo preparado', detail: `${subject} preparo su Pokemon activo.`, kind: 'setup' },
-      BENCH_PLACED: { title: 'Banca preparada', detail: `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
-      PRIZES_PLACED: { title: 'Premios colocados', detail: `${subject} coloco sus premios.`, kind: 'setup' },
-      ENERGY_ATTACHED: { title: 'Energia unida', detail: `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
-      ATTACK_USED: { title: 'Ataque', detail: `${subject} uso ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.`, kind: 'attack' },
+      ENERGY_DISCARDED: { title: 'Energia descartada', detail: esMiAccion ? 'Descartaste energia para resolver un ataque.' : `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
+      DECK_SEARCHED: { title: 'Busqueda en mazo', detail: esMiAccion ? 'Buscaste cartas en el mazo.' : `${subject} busco cartas en el mazo.`, kind: 'search' },
+      ENERGY_MOVED: { title: 'Energia movida', detail: esMiAccion ? 'Moviste una energia en el campo.' : `${subject} movio una energia en el campo.`, kind: 'energy' },
+      POKEMON_PLAYED: { title: 'Pokemon en banca', detail: esMiAccion ? `Bajaste a ${first || 'un Pokemon'} a la banca.` : `${subject} bajo a ${first || 'un Pokemon'} a la banca.`, kind: 'bench' },
+      ACTIVE_PLACED: { title: 'Activo preparado', detail: esMiAccion ? 'Preparaste tu Pokemon activo.' : `${subject} preparo su Pokemon activo.`, kind: 'setup' },
+      BENCH_PLACED: { title: 'Banca preparada', detail: esMiAccion ? 'Preparaste un Pokemon en banca.' : `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
+      PRIZES_PLACED: { title: 'Premios colocados', detail: esMiAccion ? 'Colocaste tus premios.' : `${subject} coloco sus premios.`, kind: 'setup' },
+      PRIZE_TAKEN: { title: 'Premio tomado', detail: esMiAccion ? `Tomaste ${first || '1'} carta(s) de Premio.` : `${subject} tomo ${first || '1'} carta(s) de Premio.`, kind: 'prize' },
+      KNOCK_OUT: { title: 'Fuera de combate', detail: `${first || 'Un Pokemon'} quedo fuera de combate.`, kind: 'ko' },
+      ENERGY_ATTACHED: { title: 'Energia unida', detail: esMiAccion ? `Uniste energia a ${first || 'tu Pokemon'}.` : `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
+      CARDS_DRAWN: { title: 'Cartas robadas', detail: esMiAccion ? `Robaste ${first || '1'} carta(s).` : `${subject} robo ${first || '1'} carta(s).`, kind: 'draw' },
+      ATTACK_USED: { title: 'Ataque', detail: esMiAccion ? `Usaste ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.` : `${subject} uso ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.`, kind: 'attack' },
+      SUPER_EFFECTIVE: { title: 'Super efectivo', detail: `El ataque de ${subject} aprovecho la debilidad de ${first || 'su objetivo'}.`, kind: 'effective' },
+      RESISTED: { title: 'Ataque resistido', detail: `${first || 'El objetivo'} resistio parte del ataque de ${subject}.`, kind: 'resisted' },
       STATUS_APPLIED: { title: 'Estado aplicado', detail: `${subject} dejo a ${first || 'un Pokemon'} ${this.traducirCondicionLog(second)}.`, kind: 'status' },
-      TURN_PASSED: { title: 'Turno terminado', detail: `${subject} termino su turno.`, kind: 'phase' },
-      TURN_STARTED: { title: 'Nuevo turno', detail: `Comienza el turno de ${subject}.`, kind: 'phase' },
-      SURRENDERED: { title: 'Rendicion', detail: `${subject} se rindio.`, kind: 'system' },
-      DISCONNECTED: { title: 'Desconexion', detail: `${subject} se desconecto.`, kind: 'system' }
+      TURN_PASSED: { title: 'Turno terminado', detail: esMiAccion ? 'Terminaste tu turno.' : `${subject} termino su turno.`, kind: 'phase' },
+      TURN_STARTED: { title: 'Nuevo turno', detail: esMiAccion ? 'Comienza tu turno.' : `Comienza el turno de ${subject}.`, kind: 'phase' },
+      SURRENDERED: { title: 'Rendicion', detail: esMiAccion ? 'Te rendiste.' : `${subject} se rindio.`, kind: 'system' },
+      DISCONNECTED: { title: 'Desconexion', detail: esMiAccion ? 'Te desconectaste.' : `${subject} se desconecto.`, kind: 'system' }
     };
     return map[event] || {
       title: event.replaceAll('_', ' ').toLowerCase(),
@@ -904,6 +947,66 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       CantRetreat: 'sin retirada'
     };
     return map[condition] || condition || 'afectado';
+  }
+
+  togglePendingEffectCard(cardId: string): void {
+    const pending = this.partida?.pendingAction;
+    if (!pending) return;
+    if (this.pendingEffectSelection.has(cardId)) {
+      this.pendingEffectSelection.delete(cardId);
+      return;
+    }
+    if (this.pendingEffectSelection.size < pending.maxSelections) {
+      this.pendingEffectSelection.add(cardId);
+    }
+  }
+
+  isPendingEffectCardSelected(cardId: string): boolean {
+    return this.pendingEffectSelection.has(cardId);
+  }
+
+  canConfirmPendingEffect(): boolean {
+    const pending = this.partida?.pendingAction;
+    if (!pending) return false;
+    return this.pendingEffectSelection.size >= pending.minSelections
+      && this.pendingEffectSelection.size <= pending.maxSelections;
+  }
+
+  confirmPendingEffect(): void {
+    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+    this.cargandoAccion = true;
+    this.battleService.resolverEfecto(this.matchId, [...this.pendingEffectSelection]).subscribe({
+      next: estado => {
+        this.pendingEffectSelection.clear();
+        this.aplicarEstadoRefrescado(estado);
+        this.cargandoAccion = false;
+        this.cdr.detectChanges();
+      },
+      error: error => {
+        this.cargandoAccion = false;
+        this.mostrarNotificacion(error?.error || 'No se pudo resolver el efecto.', 'warning');
+      },
+    });
+  }
+
+  private mostrarFeedbackImpacto(actor: string, kind: 'effective' | 'resisted'): void {
+    const atacanteEsJugador = actor === this.jugadorNombre || actor === 'JUGADOR';
+    const objetivo = atacanteEsJugador ? 'bot' : 'jugador';
+    if (objetivo === 'bot') {
+      this.impactCalloutBot = kind;
+      this.dispararParticulas('bot', kind === 'effective' ? 'Fire' : 'Metal');
+    } else {
+      this.impactCalloutPlayer = kind;
+      this.dispararParticulas('jugador', kind === 'effective' ? 'Fire' : 'Metal');
+    }
+    this.battlefieldDamagePulse = kind === 'effective';
+    this.cdr.detectChanges();
+    window.setTimeout(() => {
+      if (objetivo === 'bot') this.impactCalloutBot = null;
+      else this.impactCalloutPlayer = null;
+      this.battlefieldDamagePulse = false;
+      this.cdr.detectChanges();
+    }, 1100);
   }
 
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
@@ -926,7 +1029,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             return;
           }
 
-          if (data.faseActual === 'TURNO_NORMAL' || data.faseActual === 'SETUP_INITIAL_DRAW') {
+          if (data.faseActual !== 'LANZAMIENTO_MONEDA') {
             this.finalizarCoinFlip();
             return;
           }
@@ -1320,6 +1423,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       terminado: false,
       progreso: 0,
       esSoloEstado,
+      tipoEfecto: 'damage',
     };
 
     this.cdr.detectChanges();
@@ -1495,18 +1599,41 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ): string {
     const numStr = monedas === 1 ? 'una moneda' : `${monedas} monedas`;
 
+    if (textoOriginal.includes('prevent all effects of attacks')) {
+      return `Lanza ${numStr}. Si sale CARA, este Pokemon queda protegido de todo efecto y dano de ataques durante el proximo turno rival.`;
+    }
+    if (textoOriginal.includes('prevent all damage done')) {
+      return `Lanza ${numStr}. Si sale CARA, este Pokemon no recibe dano de ataques durante el proximo turno rival.`;
+    }
+    if (textoOriginal.includes('if tails') && textoOriginal.includes('damage to itself')) {
+      const recoil = textoOriginal.match(/does (\d+) damage to itself/)?.[1] || '';
+      return `Lanza ${numStr}. El ataque hace su dano normal. Si sale CRUZ, este Pokemon recibe ${recoil} de dano.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('discard') && textoOriginal.includes('energy')) {
+      return `Lanza ${numStr}. Si sale CARA, descarta una Energia del Pokemon indicado.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('switch this pok')) {
+      return `Lanza ${numStr}. Si sale CARA, cambia este Pokemon por uno de tu banca.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('search your deck')) {
+      return `Lanza ${numStr}. Si sale CARA, busca la carta indicada en tu mazo.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('asleep') && textoOriginal.includes('if tails') && textoOriginal.includes('confused')) {
+      return `Lanza ${numStr}. CARA duerme al rival; CRUZ lo confunde.`;
+    }
     if (esSoloEstado) {
       if (textoOriginal.includes('paralyzed'))
         return `Lanzá ${numStr}. Si sale CARA, el rival queda paralizado.`;
       if (textoOriginal.includes('asleep'))
         return `Lanzá ${numStr}. Si sale CARA, el rival queda dormido.`;
-      return `Lanzá ${numStr} para aplicar un efecto especial.`;
+      return `Lanza ${numStr} para resolver el efecto indicado en la carta.`;
     }
 
     if (esFalloCruz) return `Lanzá ${numStr}. Si sale CRUZ, el ataque falla.`;
     if (esMultiplicador) return `Lanzá ${numStr}. Hace ${danio} de daño por cada CARA.`;
 
-    return `Lanzá ${numStr}. Hace ${danio} de daño extra por cada CARA.`;
+    if (danio > 0) return `Lanza ${numStr}. Hace ${danio} de dano extra por cada CARA.`;
+    return `Lanza ${numStr} para resolver el efecto indicado en la carta.`;
   }
 
   cargarEstado(): void {
@@ -1548,7 +1675,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
 
-        this.procesarFasesSetup(data);
+        if (!this.isSpectator) {
+          this.procesarFasesSetup(data);
+        } else {
+          this.estadoSetupMulligan = null;
+        }
 
         this.procesarTurnLogs();
 
@@ -1587,6 +1718,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   cartasExtraPermitidas: number = 0;
   setupAccionEnCurso = false;
   private setupAutoActionKey = '';
+  private initialBotTurnInFlight = false;
   setupMulliganJugadorCartas: any[] = [];
   setupMulliganRivalCartas: any[] = [];
   setupMulliganJugadorDebeMostrar = false;
@@ -1699,7 +1831,35 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.setupMulliganRevealKey = '';
       this.setupAutoActionKey = '';
       this.setupAccionEnCurso = false;
+      this.iniciarPrimerTurnoBotSiHaceFalta(data);
     }
+  }
+
+  private iniciarPrimerTurnoBotSiHaceFalta(data: Partida): void {
+    if (
+      this.esPartidaOnline(data) ||
+      data.turnoActual !== 'BOT' ||
+      data.numeroTurno !== 1 ||
+      this.initialBotTurnInFlight ||
+      this.isSpectator ||
+      !this.matchId
+    ) {
+      return;
+    }
+
+    this.initialBotTurnInFlight = true;
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion = true;
+    this.cdr.detectChanges();
+
+    this.iniciarTurnoBot(data)
+      .catch((err) => console.error('No se pudo iniciar el primer turno del bot:', err))
+      .finally(() => {
+        this.initialBotTurnInFlight = false;
+        this.cargandoAccion = false;
+        this.bloqueadoPorAnimacion = false;
+        this.cdr.detectChanges();
+      });
   }
 
   enviarCartasExtra(cantidad: number) {
@@ -2045,6 +2205,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
 
       if (coinConfig) {
+        const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+        if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
         const carasReales = this.contarCarasServidor(estadoFinal)
           ?? this.battleBoardTurn.resolverCarasBot(
             coinConfig,
@@ -2415,6 +2577,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       terminado: false,
       progreso: 0,
       esSoloEstado: esSoloEstado,
+      tipoEfecto: config.tipoEfecto,
     };
     this.cdr.detectChanges();
     await this.delay(120);
@@ -2707,11 +2870,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getSpriteBack(nombreCarta: string): string {
-    return this.battleBoardUi.getSpriteBack(nombreCarta);
+  getSpriteBack(carta: any): string {
+    return this.battleBoardUi.getSpriteBack(carta);
   }
-  getSpriteFront(nombreCarta: string): string {
-    return this.battleBoardUi.getSpriteFront(nombreCarta);
+  getSpriteFront(carta: any): string {
+    return this.battleBoardUi.getSpriteFront(carta);
   }
 
   onSpriteError(event: Event, cardId: string): void {
@@ -2888,11 +3051,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     
     // Check if cards were drawn
     if (this.partida) {
+      const previousPrizes = this.partida.jugador?.premios?.length || 0;
+      const nextPrizes = estado.jugador?.premios?.length || 0;
       const prevHandSizeJugador = this.partida.jugador?.mano?.length || 0;
       const newHandSizeJugador = estado.jugador?.mano?.length || 0;
       if (newHandSizeJugador > prevHandSizeJugador) {
         const drawn = newHandSizeJugador - prevHandSizeJugador;
         this.mostrarNotificacion(`Has robado ${drawn} carta(s).`, 'info');
+        if (nextPrizes < previousPrizes) {
+          const revealed = estado.jugador.mano[newHandSizeJugador - 1];
+          if (revealed) {
+            this.prizeRevealCard = revealed;
+            window.setTimeout(() => {
+              this.prizeRevealCard = null;
+              this.cdr.detectChanges();
+            }, 1900);
+          }
+        }
       }
 
       const prevHandSizeBot = this.partida.bot?.mano?.length || 0;
@@ -2994,6 +3169,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ): Promise<void> {
     const coinConfig = this.detectarCoinFlipAtaque(habilidad);
     if (!coinConfig) return;
+    const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     const hpBotAntes = this.partida?.bot?.activo?.hpActual || 0;
     const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
@@ -3254,11 +3431,241 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  @ViewChild('battleAtmosphereCanvas') set battleAtmosphereCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element && !this.battleAtmosphereRenderer) {
+      setTimeout(() => this.initBattleAtmosphere(element.nativeElement), 0);
+    }
+  }
+
   @ViewChild('handshakeCanvas') set handshakeCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
     if (element && !this.canvasInitialized) {
       this.canvasInitialized = true;
       setTimeout(() => this.initHandshakeScene(element.nativeElement), 0);
     }
+  }
+
+  private initBattleAtmosphere(canvas: HTMLCanvasElement): void {
+    const width = Math.max(1, canvas.clientWidth);
+    const height = Math.max(1, canvas.clientHeight);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !this.isPotato,
+      powerPreference: this.isPotato ? 'low-power' : 'high-performance'
+    });
+    renderer.setPixelRatio(this.isPotato ? 1 : Math.min(window.devicePixelRatio, 1.35));
+    renderer.setSize(width, height, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.battleAtmosphereRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020711, 0.115);
+    this.battleAtmosphereScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 60);
+    camera.position.set(0, 2.8, 8.8);
+    camera.lookAt(0, 0, 0);
+    this.battleAtmosphereCamera = camera;
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(18, 12, 18, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0x07131d,
+        emissive: 0x06131d,
+        emissiveIntensity: 0.5,
+        roughness: 0.78,
+        metalness: 0.28,
+        transparent: true,
+        opacity: 0.92
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.65;
+    scene.add(floor);
+
+    const grid = new THREE.GridHelper(18, 30, 0x38bdf8, 0x173b4f);
+    grid.position.y = -1.62;
+    const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
+    gridMaterials.forEach(material => {
+      material.transparent = true;
+      material.opacity = 0.22;
+    });
+    scene.add(grid);
+
+    this.battleAtmosphereRings = [];
+    const ringGeometry = new THREE.TorusGeometry(2.25, 0.026, 6, 72);
+    const ringConfigs = [
+      { z: -2.35, color: 0x38bdf8, radius: 1 },
+      { z: -2.35, color: 0x67e8f9, radius: 0.72 },
+      { z: 2.35, color: 0xfacc15, radius: 1 },
+      { z: 2.35, color: 0xf59e0b, radius: 0.72 }
+    ];
+    ringConfigs.forEach((config, index) => {
+      const material = new THREE.MeshBasicMaterial({
+        color: config.color,
+        transparent: true,
+        opacity: index % 2 === 0 ? 0.32 : 0.18,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const ring = new THREE.Mesh(ringGeometry, material);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, -1.56 + index * 0.006, config.z);
+      ring.scale.setScalar(config.radius);
+      ring.userData['phase'] = index * 1.35;
+      ring.userData['baseScale'] = config.radius;
+      scene.add(ring);
+      this.battleAtmosphereRings.push(ring);
+    });
+
+    this.battleAtmosphereBeams = [];
+    const beamGeometry = new THREE.CylinderGeometry(0.016, 0.055, 4.6, 6, 1, true);
+    [-6.8, 6.8].forEach((x, sideIndex) => {
+      [-2.6, 0, 2.6].forEach((z, laneIndex) => {
+        const material = new THREE.MeshBasicMaterial({
+          color: sideIndex === 0 ? 0x38bdf8 : 0xfacc15,
+          transparent: true,
+          opacity: 0.07 + laneIndex * 0.018,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        });
+        const beam = new THREE.Mesh(beamGeometry, material);
+        beam.position.set(x, 0.55, z);
+        beam.userData['phase'] = sideIndex * 1.7 + laneIndex * 0.8;
+        scene.add(beam);
+        this.battleAtmosphereBeams.push(beam);
+      });
+    });
+
+    const shardCount = this.isPotato ? 8 : 22;
+    const shardGeometry = new THREE.IcosahedronGeometry(0.055, 0);
+    const shardMaterial = new THREE.MeshBasicMaterial({
+      color: 0x9ae6ff,
+      transparent: true,
+      opacity: 0.32,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const shards = new THREE.InstancedMesh(shardGeometry, shardMaterial, shardCount);
+    const shardMatrix = new THREE.Matrix4();
+    const shardPosition = new THREE.Vector3();
+    const shardQuaternion = new THREE.Quaternion();
+    const shardScale = new THREE.Vector3();
+    for (let index = 0; index < shardCount; index++) {
+      const side = index % 2 === 0 ? -1 : 1;
+      shardPosition.set(
+        side * (5.2 + Math.random() * 2.4),
+        -0.8 + Math.random() * 4.8,
+        (Math.random() - 0.5) * 8
+      );
+      shardQuaternion.setFromEuler(new THREE.Euler(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      ));
+      const scale = 0.55 + Math.random() * 1.25;
+      shardScale.set(scale, scale * (1.2 + Math.random()), scale);
+      shardMatrix.compose(shardPosition, shardQuaternion, shardScale);
+      shards.setMatrixAt(index, shardMatrix);
+    }
+    shards.instanceMatrix.needsUpdate = true;
+    this.battleAtmosphereShards = shards;
+    scene.add(shards);
+
+    const particleCount = this.isPotato ? 18 : 36;
+    const positions = new Float32Array(particleCount * 3);
+    for (let index = 0; index < particleCount; index++) {
+      positions[index * 3] = (Math.random() - 0.5) * 16;
+      positions[index * 3 + 1] = Math.random() * 7 - 1.2;
+      positions[index * 3 + 2] = (Math.random() - 0.5) * 8;
+    }
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.battleAtmosphereParticles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0x8be9ff,
+        size: this.isPotato ? 0.025 : 0.038,
+        transparent: true,
+        opacity: 0.26,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    scene.add(this.battleAtmosphereParticles);
+
+    scene.add(new THREE.HemisphereLight(0x8be9ff, 0x030712, 1.45));
+    const rivalLight = new THREE.PointLight(0x38bdf8, 8, 14, 2);
+    rivalLight.position.set(0, 2.8, 1.8);
+    scene.add(rivalLight);
+    const playerLight = new THREE.PointLight(0xfacc15, 7, 14, 2);
+    playerLight.position.set(0, -1.1, 3.8);
+    scene.add(playerLight);
+
+    this.battleAtmosphereResize = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect;
+      if (!rect || !this.battleAtmosphereRenderer || !this.battleAtmosphereCamera) return;
+      const nextWidth = Math.max(1, rect.width);
+      const nextHeight = Math.max(1, rect.height);
+      this.battleAtmosphereRenderer.setSize(nextWidth, nextHeight, false);
+      this.battleAtmosphereCamera.aspect = nextWidth / nextHeight;
+      this.battleAtmosphereCamera.updateProjectionMatrix();
+    });
+    this.battleAtmosphereResize.observe(canvas);
+
+    const animate = () => {
+      if (!this.battleAtmosphereRenderer || !this.battleAtmosphereScene || !this.battleAtmosphereCamera) return;
+      this.battleAtmosphereFrame = requestAnimationFrame(animate);
+      const elapsed = this.battleAtmosphereClock.getElapsedTime();
+      if (this.battleAtmosphereParticles) {
+        this.battleAtmosphereParticles.rotation.y = elapsed * 0.018;
+        this.battleAtmosphereParticles.position.y = Math.sin(elapsed * 0.22) * 0.08;
+      }
+      this.battleAtmosphereRings.forEach((ring, index) => {
+        const phase = ring.userData['phase'] || 0;
+        const baseScale = ring.userData['baseScale'] || 1;
+        const pulse = 1 + Math.sin(elapsed * 1.15 + phase) * 0.035;
+        ring.scale.setScalar(baseScale * pulse);
+        ring.rotation.z = elapsed * (index % 2 === 0 ? 0.035 : -0.045);
+        (ring.material as THREE.MeshBasicMaterial).opacity =
+          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * 1.4 + phase) * 0.055;
+      });
+      this.battleAtmosphereBeams.forEach((beam) => {
+        const phase = beam.userData['phase'] || 0;
+        (beam.material as THREE.MeshBasicMaterial).opacity =
+          0.045 + (Math.sin(elapsed * 0.85 + phase) + 1) * 0.025;
+      });
+      if (this.battleAtmosphereShards) {
+        this.battleAtmosphereShards.rotation.y = elapsed * 0.025;
+        this.battleAtmosphereShards.position.y = Math.sin(elapsed * 0.3) * 0.1;
+      }
+      this.battleAtmosphereCamera.position.x = Math.sin(elapsed * 0.12) * 0.12;
+      this.battleAtmosphereCamera.lookAt(0, -0.1, 0);
+      this.battleAtmosphereRenderer.render(this.battleAtmosphereScene, this.battleAtmosphereCamera);
+    };
+    animate();
+  }
+
+  private cleanupBattleAtmosphere(): void {
+    if (this.battleAtmosphereFrame) cancelAnimationFrame(this.battleAtmosphereFrame);
+    this.battleAtmosphereResize?.disconnect();
+    this.battleAtmosphereScene?.traverse(object => {
+      const mesh = object as THREE.Mesh;
+      mesh.geometry?.dispose();
+      const materials = mesh.material
+        ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material])
+        : [];
+      materials.forEach(material => material.dispose());
+    });
+    this.battleAtmosphereRenderer?.dispose();
+    this.battleAtmosphereRenderer = undefined;
+    this.battleAtmosphereScene = undefined;
+    this.battleAtmosphereCamera = undefined;
+    this.battleAtmosphereParticles = undefined;
+    this.battleAtmosphereShards = undefined;
+    this.battleAtmosphereBeams = [];
+    this.battleAtmosphereRings = [];
   }
 
   private initHandshakeScene(canvas: HTMLCanvasElement): void {
@@ -3467,12 +3874,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     loader.load(option.path, (gltf) => {
+      const animations = gltf.animations || [];
       HANDSHAKE_GLTF_CACHE.set(option.path, {
         scene: gltf.scene,
-        animations: gltf.animations || []
+        animations
       });
       const clonedScene = cloneSkeleton(gltf.scene);
-      onSuccess(clonedScene, gltf.animations || []);
+      onSuccess(clonedScene, animations);
     }, undefined, (err) => {
       console.error('Error loading handshake model:', option.path, err);
     });
@@ -3499,7 +3907,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
 
     const option = CHARACTER_OPTIONS.find(o => o.id === optionId) || CHARACTER_OPTIONS[0];
-    const baseHeight = 1.72 * (heightVal || 1.0) * (option.scale || 1.0);
+    const baseHeight = 1.38 * (option.scale || 1.0);
 
     model.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(model);

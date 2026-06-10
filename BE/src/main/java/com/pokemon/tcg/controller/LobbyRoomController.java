@@ -102,7 +102,11 @@ public class LobbyRoomController {
                                     @RequestHeader(value = "X-Username", required = false) String headerUsername,
                                     @RequestBody(required = false) LobbyRoomRequest request) {
         try {
-            LobbyRoomSnapshot room = lobbyRoomService.addBot(roomId, resolveUsername(headerUsername, request));
+            LobbyRoomSnapshot room = lobbyRoomService.addBot(
+                    roomId,
+                    resolveUsername(headerUsername, request),
+                    request == null ? null : request.getBotDifficulty()
+            );
             broadcastRoomsUpdated(room);
             return ResponseEntity.ok(room);
         } catch (Exception e) {

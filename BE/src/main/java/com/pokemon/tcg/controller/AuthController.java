@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
-@Tag(name = "Autenticación", description = "Endpoints para registro, login y recuperación de contraseña")
+@Tag(name = "Autenticacion", description = "Endpoints para registro, login y recuperacion de contrasena")
 public class AuthController {
 
     private final AuthService authService;
@@ -31,13 +31,14 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Iniciar sesión", description = "Autentica un jugador con sus credenciales y retorna sus datos básicos")
+    @Operation(summary = "Iniciar sesion", description = "Autentica un jugador con sus credenciales")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        Jugador jugador = authService.login(request.getUsername(), request.getPassword());
-        if (jugador == null) {
-            return ResponseEntity.status(401).body("Usuario no válido");
+        try {
+            Jugador jugador = authService.login(request.getUsername(), request.getPassword());
+            return ResponseEntity.ok(toAuthResponse(jugador));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body(e.getMessage());
         }
-        return ResponseEntity.ok(toAuthResponse(jugador));
     }
 
     @PostMapping("/register")
@@ -53,16 +54,16 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    @Operation(summary = "Solicitar recuperación de contraseña", description = "Envía un token de recuperación al email del jugador")
+    @Operation(summary = "Solicitar recuperacion de contrasena", description = "Envia un token de recuperacion al email")
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequest request) {
         return ResponseEntity.ok(passwordRecoveryService.requestReset(request.getUsername(), request.getEmail()));
     }
 
     @PostMapping("/reset-password")
-    @Operation(summary = "Restablecer contraseña", description = "Cambia la contraseña utilizando el token de recuperación recibido")
+    @Operation(summary = "Restablecer contrasena", description = "Cambia la contrasena utilizando el token recibido")
     public ResponseEntity<?> resetPassword(@RequestBody ResetPasswordRequest request) {
         passwordRecoveryService.resetPassword(request.getToken(), request.getPassword(), request.getConfirmPassword());
-        return ResponseEntity.ok("Password actualizado. Ya podés iniciar sesión.");
+        return ResponseEntity.ok("Password actualizado. Ya podes iniciar sesion.");
     }
 
     private JugadorDTO toAuthResponse(Jugador jugador) {

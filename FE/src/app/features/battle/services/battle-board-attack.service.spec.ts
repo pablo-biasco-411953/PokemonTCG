@@ -20,7 +20,22 @@ describe('BattleBoardAttackService', () => {
       danioExtraPorCara: 30,
       descripcion: traduccion,
       esSoloEstado: false,
+      tipoEfecto: 'damage',
     });
+  });
+
+  it('describe Dig como proteccion y no como dano extra', () => {
+    const result = service.detectarCoinFlipAtaque(
+      {
+        texto: "Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn.",
+        danio: 10,
+      },
+      () => 'proteccion',
+    );
+
+    expect(result?.danioExtraPorCara).toBe(0);
+    expect(result?.esSoloEstado).toBe(true);
+    expect(result?.tipoEfecto).toBe('protection');
   });
 
   it('valida costos mixtos de energia incluyendo colorless', () => {

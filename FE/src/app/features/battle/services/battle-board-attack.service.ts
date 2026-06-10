@@ -7,6 +7,7 @@ export interface CoinFlipConfig {
   danioExtraPorCara: number;
   descripcion: string;
   esSoloEstado: boolean;
+  tipoEfecto?: 'damage' | 'status' | 'protection' | 'self-damage' | 'discard' | 'switch' | 'search' | 'restriction' | 'other';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -34,25 +35,50 @@ export class BattleBoardAttackService {
     let esMultiplicador = false;
     let esFalloCruz = false;
     let esSoloEstado = false;
+    let tipoEfecto: CoinFlipConfig['tipoEfecto'] = 'other';
 
     if (texto.includes('paralyzed') || texto.includes('asleep') || texto.includes('confused') || texto.includes('poisoned')) {
       if (!texto.includes('more damage') && !texto.includes('damage times')) {
         esSoloEstado = true;
+        tipoEfecto = 'status';
       }
     }
 
     if (texto.includes('does nothing')) {
+      tipoEfecto = 'damage';
       esFalloCruz = true;
       danioExtraPorCara = danioBase;
       danioBase = 0;
     } else if (texto.includes('times the number of heads') || texto.includes('x the number of heads') || texto.includes('for each heads')) {
+      tipoEfecto = 'damage';
       esMultiplicador = true;
       const multiMatch = texto.match(/does (\d+) damage times/i);
       danioExtraPorCara = multiMatch ? parseInt(multiMatch[1], 10) : (danioBase > 0 ? danioBase : 10);
       danioBase = 0;
     } else if (texto.includes('more damage') || texto.includes('additional damage')) {
+      tipoEfecto = 'damage';
       const damageMatch = texto.match(/(\d+)\s*(?:more|extra|additional)/i);
       danioExtraPorCara = damageMatch ? parseInt(damageMatch[1], 10) : 10;
+    }
+
+    if (texto.includes('prevent all effects of attacks') || texto.includes('prevent all damage done')) {
+      tipoEfecto = 'protection';
+      esSoloEstado = true;
+    } else if (texto.includes('damage to itself')) {
+      tipoEfecto = 'self-damage';
+      esSoloEstado = true;
+    } else if (texto.includes('discard') && texto.includes('energy')) {
+      tipoEfecto = 'discard';
+      esSoloEstado = true;
+    } else if (texto.includes('switch this pok')) {
+      tipoEfecto = 'switch';
+      esSoloEstado = true;
+    } else if (texto.includes('search your deck')) {
+      tipoEfecto = 'search';
+      esSoloEstado = true;
+    } else if (texto.includes("can't attack") || texto.includes("can't play any supporter")) {
+      tipoEfecto = 'restriction';
+      esSoloEstado = true;
     }
 
     const descripcion = traducirDescripcion(
@@ -64,7 +90,7 @@ export class BattleBoardAttackService {
       esSoloEstado
     );
 
-    return { cantidadMonedas, danioBase, danioExtraPorCara, descripcion, esSoloEstado };
+    return { cantidadMonedas, danioBase, danioExtraPorCara, descripcion, esSoloEstado, tipoEfecto };
   }
 
   // Comprueba si el activo puede pagar el costo de un ataque.

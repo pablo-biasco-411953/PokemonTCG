@@ -76,6 +76,36 @@ class BotAIServiceTest {
     }
 
     @Test
+    void ejecutarTurnoDejaDeSobrecargarActivoYPreparaLaBanca() {
+        TableroJugador jugador = new TableroJugador();
+        jugador.setActivo(new CartaEnJuego(basicPokemon("enemy-5", "Bunnelby", "60", "Colorless")));
+
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego activo = new CartaEnJuego(basicPokemon(
+                "bot-3", "Phantump", "60", "Psychic",
+                attack("Hook", 30, List.of("Psychic", "Colorless", "Colorless"), "")
+        ));
+        activo.getEnergiasUnidas().add(energy("psy-1", "Psychic Energy"));
+        activo.getEnergiasUnidas().add(energy("fire-ready", "Fire Energy"));
+        activo.getEnergiasUnidas().add(energy("water-ready", "Water Energy"));
+        bot.setActivo(activo);
+
+        CartaEnJuego banca = new CartaEnJuego(basicPokemon(
+                "bench-4", "Chespin", "60", "Grass",
+                attack("Vine Whip", 20, List.of("Grass"), "")
+        ));
+        bot.getBanca().add(banca);
+        bot.getMano().add(energy("grass-useful", "Grass Energy"));
+        bot.getMano().add(energy("metal-useless", "Metal Energy"));
+
+        service.ejecutarTurno(new Partida(jugador, bot));
+
+        assertEquals(3, activo.getEnergiasUnidas().size());
+        assertEquals(1, banca.getEnergiasUnidas().size());
+        assertEquals("grass-useful", banca.getEnergiasUnidas().getFirst().getId());
+    }
+
+    @Test
     void ejecutarTurnoHaceRetiradaEstrategicaCuandoElActivoVaAMorir() {
         TableroJugador jugador = new TableroJugador();
         CartaEnJuego rivalActivo = new CartaEnJuego(basicPokemon("enemy-4", "Blastoise", "120", "Water", attack("Hydro Pump", 60, List.of("Water"), "")));

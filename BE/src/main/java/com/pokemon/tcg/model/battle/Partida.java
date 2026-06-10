@@ -52,6 +52,7 @@ public class Partida {
     private boolean setupBotListo = false;
 
     private List<String> turnLogs = new ArrayList<>();
+    private PendingBattleAction pendingAction;
 
     private java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue = new java.util.LinkedList<>();
 
@@ -89,6 +90,8 @@ public class Partida {
     
     public List<String> getTurnLogs() { return turnLogs; }
     public void setTurnLogs(List<String> turnLogs) { this.turnLogs = turnLogs; }
+    public PendingBattleAction getPendingAction() { return pendingAction; }
+    public void setPendingAction(PendingBattleAction pendingAction) { this.pendingAction = pendingAction; }
 
     public TableroJugador getJugador() { return jugador; }
     public void setJugador(TableroJugador jugador) { this.jugador = jugador; }

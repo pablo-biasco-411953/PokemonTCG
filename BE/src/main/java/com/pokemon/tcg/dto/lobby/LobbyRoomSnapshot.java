@@ -18,6 +18,7 @@ public class LobbyRoomSnapshot {
     private String guestDeckName;
     private boolean guestReady;
     private boolean guestBot;
+    private String botDifficulty;
     private int playerCount;
     private int spectatorCount;
     private String matchId;
@@ -50,6 +51,8 @@ public class LobbyRoomSnapshot {
     public void setGuestReady(boolean guestReady) { this.guestReady = guestReady; }
     public boolean isGuestBot() { return guestBot; }
     public void setGuestBot(boolean guestBot) { this.guestBot = guestBot; }
+    public String getBotDifficulty() { return botDifficulty; }
+    public void setBotDifficulty(String botDifficulty) { this.botDifficulty = botDifficulty; }
     public int getPlayerCount() { return playerCount; }
     public void setPlayerCount(int playerCount) { this.playerCount = playerCount; }
     public int getSpectatorCount() { return spectatorCount; }

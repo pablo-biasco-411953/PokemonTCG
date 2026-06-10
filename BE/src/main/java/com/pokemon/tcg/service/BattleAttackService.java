@@ -42,7 +42,12 @@ public class BattleAttackService {
         partida.getExecutionQueue().clear();
         partida.getUltimasMonedasLanzadas().clear();
 
-        int damageToDeal = ataque.getDanio();
+        String effectText = ataque.getTexto() == null ? "" : ataque.getTexto().toLowerCase();
+        boolean damageComesOnlyFromHeads =
+                effectText.contains("damage times the number of heads")
+                || (effectText.contains("damage for each heads") && !effectText.contains("more damage"));
+        boolean attackFailsOnTails = effectText.contains("if tails, this attack does nothing");
+        int damageToDeal = damageComesOnlyFromHeads || attackFailsOnTails ? 0 : ataque.getDanio();
         
         // 1. Base damage command
         if (damageToDeal > 0) {
@@ -67,16 +72,26 @@ public class BattleAttackService {
             defensorTablero = partida.getJugador();
         }
 
-        int totalDamage = 0;
+        int rawDamage = 0;
 
         // 3. Process queue iteratively
         while (!partida.getExecutionQueue().isEmpty()) {
             com.pokemon.tcg.model.battle.command.BattleCommand command = partida.getExecutionQueue().poll();
-            command.execute(partida, atacanteTablero, defensorTablero);
-
             if (command instanceof com.pokemon.tcg.model.battle.command.DamageCommand) {
-                totalDamage += ((com.pokemon.tcg.model.battle.command.DamageCommand) command).getAmount();
+                rawDamage += ((com.pokemon.tcg.model.battle.command.DamageCommand) command).getAmount();
+            } else {
+                command.execute(partida, atacanteTablero, defensorTablero);
             }
+        }
+        if (attackFailsOnTails && ataque.getDanio() > 0) {
+            partida.getExecutionQueue().addFirst(new com.pokemon.tcg.model.battle.command.CoinFlipCommand(
+                    new com.pokemon.tcg.model.battle.command.DamageCommand(ataque.getDanio())
+            ));
+        }
+
+        int totalDamage = defensor.isInvulnerable() ? 0 : calcularDanioConTipo(rawDamage, atacante, defensor);
+        if (totalDamage > 0) {
+            defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
         }
 
         System.out.println("⚔️ [BATTLE] " + atacante.getCard().getNombre()
@@ -100,5 +115,28 @@ public class BattleAttackService {
                 new ResultadoAtaque(totalDamage, caras),
                 new java.util.ArrayList<>(partida.getUltimasMonedasLanzadas())
         );
+    }
+
+    private int calcularDanioConTipo(int damage, CartaEnJuego atacante, CartaEnJuego defensor) {
+        if (damage <= 0 || atacante == null || defensor == null) return Math.max(0, damage);
+        String attackType = atacante.getCard().getTipo();
+        int result = damage;
+
+        if (matchesType(defensor.getCard().getDebilidades(), attackType)) {
+            result *= 2;
+        }
+        if (matchesType(defensor.getCard().getResistencias(), attackType)) {
+            result = Math.max(0, result - 20);
+        }
+        return result;
+    }
+
+    private boolean matchesType(List<com.pokemon.tcg.model.CardAttribute> attributes, String attackType) {
+        if (attributes == null || attackType == null) return false;
+        return attributes.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(com.pokemon.tcg.model.CardAttribute::getType)
+                .filter(java.util.Objects::nonNull)
+                .anyMatch(type -> type.equalsIgnoreCase(attackType));
     }
 }

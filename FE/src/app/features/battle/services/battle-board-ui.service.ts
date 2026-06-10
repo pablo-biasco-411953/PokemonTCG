@@ -97,7 +97,27 @@ export class BattleBoardUiService {
     smoochum: 238, elekid: 239, magby: 240, miltank: 241,
     blissey: 242, raikou: 243, entei: 244, suicune: 245,
     larvitar: 246, pupitar: 247, tyranitar: 248,
-    lugia: 249, 'ho-oh': 250, celebi: 251
+    lugia: 249, 'ho-oh': 250, celebi: 251,
+    grovyle: 253,
+    wurmple: 265, silcoon: 266, beautifly: 267, cascoon: 268, dustox: 269,
+    lotad: 270, lombre: 271, ludicolo: 272, seedot: 273, nuzleaf: 274, shiftry: 275,
+    surskit: 283, masquerain: 284, shroomish: 285,
+    nincada: 290, ninjask: 291, shedinja: 292,
+    volbeat: 313, illumise: 314, roselia: 315,
+    numel: 322, camerupt: 323, torkoal: 324, cacnea: 331, tropius: 357,
+    spheal: 363, sealeo: 364, walrein: 365, kyogre: 382,
+    kricketot: 401, kricketune: 402, roserade: 407,
+    burmy: 412, wormadam: 413, mothim: 414, combee: 415, vespiquen: 416,
+    yanmega: 469,
+    snivy: 495, servine: 496, serperior: 497,
+    pansage: 511, simisage: 512, pansear: 513,
+    sewaddle: 540, swadloon: 541, leavanny: 542, maractus: 556,
+    deerling: 585, karrablast: 588, foongus: 590, amoonguss: 591,
+    larvesta: 636, volcarona: 637, virizion: 640,
+    chespin: 650, quilladin: 651, chesnaught: 652,
+    fennekin: 653, braixen: 654, delphox: 655, froakie: 656,
+    fletchinder: 662, talonflame: 663, litleo: 667, pyroar: 668,
+    sylveon: 700, xerneas: 716, yveltal: 717
   };
 
   constructor(private sanitizer: DomSanitizer) {}
@@ -142,15 +162,21 @@ export class BattleBoardUiService {
   }
 
   // Devuelve el sprite trasero animado del Pokemon.
-  getSpriteBack(nombreCarta: string): string {
-    const num = this.getPokemonNum(nombreCarta);
-    return num ? `/sprites/pokemon/showdown/back/${num}.gif` : '';
+  getSpriteBack(carta: string | { nombre?: string; pokemonId?: number }): string {
+    const num = this.getPokemonNum(carta);
+    if (!num) return '';
+    return num > 649
+      ? `/sprites/pokemon/static/${num}.png`
+      : `/sprites/pokemon/showdown/back/${num}.gif`;
   }
 
   // Devuelve el sprite frontal animado del Pokemon.
-  getSpriteFront(nombreCarta: string): string {
-    const num = this.getPokemonNum(nombreCarta);
-    return num ? `/sprites/pokemon/showdown/${num}.gif` : '';
+  getSpriteFront(carta: string | { nombre?: string; pokemonId?: number }): string {
+    const num = this.getPokemonNum(carta);
+    if (!num) return '';
+    return num > 649
+      ? `/sprites/pokemon/static/${num}.png`
+      : `/sprites/pokemon/showdown/${num}.gif`;
   }
 
   // Convierte los HP actuales en porcentaje para la barra de vida.
@@ -231,8 +257,14 @@ export class BattleBoardUiService {
   }
 
   // Busca el numero de Pokedex a partir del nombre de la carta.
-  private getPokemonNum(nombreCarta: string): number {
-    const norm = this.normalizarNombre(nombreCarta);
+  private getPokemonNum(carta: string | { nombre?: string; pokemonId?: number }): number {
+    if (typeof carta !== 'string' && carta?.pokemonId) return carta.pokemonId;
+    const nombreCarta = typeof carta === 'string' ? carta : carta?.nombre || '';
+    const norm = this.normalizarNombre(nombreCarta)
+      .replace(/^team (aqua|magma)'s /, '')
+      .replace(/^m /, '')
+      .replace(/[- ](?:ex|gx|v|max|vstar|break|lv\.? x)$/i, '')
+      .trim();
     if (this.pokedexNum[norm]) return this.pokedexNum[norm];
 
     const palabras = norm.split(/[\s'']+/).reverse();
