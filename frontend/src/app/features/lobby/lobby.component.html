@@ -1,22 +1,49 @@
 <div
   class="lobby-3d-shell"
   [class.pack-opening]="mostrarAnimacionSobre"
-  [style.--interaction-x.%]="currentInteraction?.screenX ?? 50"
-  [style.--interaction-y.%]="currentInteraction?.screenY ?? 50"
 >
   <canvas #hubCanvas class="hub-canvas" aria-hidden="true"></canvas>
 
   <div class="landscape-guard" *ngIf="!landscapeHintDismissed">
-    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" aria-label="Cerrar aviso">×</button>
+    <button class="landscape-guard-close" type="button" (click)="dismissLandscapeHint()" [aria-label]="'battle.closeWarning' | t">×</button>
     <div class="phone-tilt-icon"></div>
-    <strong>Gira el celular</strong>
-    <span>El lobby 3D se ve mejor en horizontal, pero podés seguir jugando así.</span>
+    <strong>{{ 'lobby.rotatePhone' | t }}</strong>
+    <span>{{ 'lobby.rotateHint' | t }}</span>
+  </div>
+
+  <!-- PANTALLA DE CARGA GLOBAL DE APERTURA DE SOBRES -->
+  <div class="loading-overlay pokedex-chassis pack-loader-overlay" *ngIf="isOpeningPacks" style="z-index: 1000000; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
+    <div class="loading-content">
+      <div class="pokedex-top-bar" style="justify-content: center; margin-bottom: 30px; border-bottom: none;">
+        <div class="led-container">
+          <div class="led main-blue pulsing"></div>
+          <div class="led red"></div>
+          <div class="led yellow"></div>
+          <div class="led green"></div>
+        </div>
+      </div>
+
+      <div class="radar-container">
+        <div class="radar-sweep"></div>
+        <div class="pokeball-center"></div>
+      </div>
+
+      <h2 class="dot-matrix loading-text">Abriendo sobre...</h2>
+    </div>
+  </div>
+
+  <div class="graphics-apply-overlay" *ngIf="graphicsApplying">
+    <div class="graphics-apply-card">
+      <div class="graphics-gear-spinner">&#9881;</div>
+      <strong>{{ graphicsLoadingMessage }}</strong>
+      <span>Recalibrando escena 3D y sombras</span>
+    </div>
   </div>
 
   <!-- FLOATING NAME TAGS FOR MULTIPLAYER -->
-  <div 
-    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername" 
-    class="player-nametag" 
+  <div
+    *ngFor="let other of otherPlayersList; trackBy: trackOtherPlayerByUsername"
+    class="player-nametag"
     [attr.data-player-tag]="other.username"
   >
     <div class="nametag-bubble" (click)="openPlayerMenu($event, other)">
@@ -57,23 +84,33 @@
     CHAT
   </button>
 
-  <div class="lobby-chat-container" [class.mobile-open]="chatActive">
-    <div class="chat-messages">
+  <div
+    class="lobby-chat-container floating-hud-panel"
+    [class.mobile-open]="chatActive"
+    [class.minimized]="chatPanelMinimized"
+    [style.left.px]="chatPanelX"
+    [style.top.px]="chatPanelY"
+  >
+    <div class="floating-panel-header chat-panel-header" (pointerdown)="startFloatingPanelDrag('chat', $event)">
+      <span>Chat</span>
+      <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleChatPanelMinimized($event)">{{ chatPanelMinimized ? '+' : '-' }}</button>
+    </div>
+    <div class="chat-messages" *ngIf="!chatPanelMinimized">
       <div *ngFor="let msg of chatLog" class="chat-message" [class.system]="msg.system">
         <span class="chat-sender" *ngIf="!msg.system">{{ msg.sender }}:</span>
         <span class="chat-text">{{ msg.text }}</span>
       </div>
       <div *ngIf="chatLog.length === 0" class="chat-empty">
-        Presioná ENTER para chatear en el lobby
+        {{ 'lobby.chatHint' | t }}
       </div>
     </div>
-    <div class="chat-input-wrapper" [class.active]="chatActive">
+    <div class="chat-input-wrapper" *ngIf="!chatPanelMinimized" [class.active]="chatActive">
       <input
         #chatInput
         type="text"
         [(ngModel)]="chatText"
         (keydown.escape)="closeChat()"
-        placeholder="Escribe un mensaje y presiona Enter..."
+        [placeholder]="'lobby.chatPlaceholder' | t"
         maxlength="100"
       />
     </div>
@@ -86,12 +123,12 @@
     [style.top.px]="debugPanelY"
   >
     <div class="ddp-header" (pointerdown)="startDebugPanelDrag($event)">
-      <span>MODO DEBUG LOBBY (F3)</span>
-      <small>Arrastrar</small>
+      <span>{{ 'lobby.debugTitle' | t }}</span>
+      <small>{{ 'lobby.drag' | t }}</small>
     </div>
 
     <div class="ddp-section">
-      <p class="godmode-title">ESTADÍSTICAS</p>
+      <p class="godmode-title">{{ 'lobby.statistics' | t }}</p>
       <div class="debug-stats-grid">
         <div><strong>{{ debugFps }}</strong><span>FPS</span></div>
         <div><strong>{{ debugFrameMs }}</strong><span>MS</span></div>
@@ -100,33 +137,33 @@
         <div><strong>{{ debugPixelRatio }}</strong><span>DPR</span></div>
         <div><strong>{{ debugAdaptiveScale }}%</strong><span>SCALE</span></div>
       </div>
-      <p><span>Geometrías:</span> {{ debugGeometries }} · <span>Texturas:</span> {{ debugTextures }}</p>
-      <p><span>Online:</span> {{ otherPlayersList.length + 1 }} · <span>Remotos:</span> {{ otherPlayersList.length }}</p>
-      <p><span>Calidad:</span> {{ graphicsQualityLabel }} · <span>Ciclo:</span> {{ dayPhaseLabel }}</p>
+      <p><span>{{ 'lobby.geometries' | t }}</span> {{ debugGeometries }} · <span>{{ 'lobby.textures' | t }}</span> {{ debugTextures }}</p>
+      <p><span>{{ 'lobby.online' | t }}</span> {{ otherPlayersList.length + 1 }} · <span>{{ 'lobby.remotes' | t }}</span> {{ otherPlayersList.length }}</p>
+      <p><span>{{ 'lobby.quality' | t }}</span> {{ graphicsQualityLabel }} · <span>{{ 'lobby.cycle' | t }}</span> {{ dayPhaseLabel | t }}</p>
     </div>
 
     <div class="ddp-section">
-      <p><span>Jugador:</span> {{ jugador?.username || 'Ninguno' }}</p>
-      <p><span>Sobres actuales:</span> {{ sobresDisponibles }}</p>
-      <p><span>Mazos:</span> {{ mazos.length }}</p>
+      <p><span>{{ 'lobby.playerLabel' | t }}</span> {{ jugador?.username || ('lobby.noneLabel' | t) }}</p>
+      <p><span>{{ 'lobby.currentPacks' | t }}</span> {{ sobresDisponibles }}</p>
+      <p><span>{{ 'lobby.decksLabel' | t }}</span> {{ mazos.length }}</p>
     </div>
 
     <div class="ddp-section">
       <p class="godmode-title">SOBRES</p>
       <div class="gm-row">
         <input type="number" min="0" class="gm-input" [(ngModel)]="debugSobresCantidad">
-        <button class="gm-btn" (click)="debugSetSobres()" [disabled]="debugAccionEnCurso">Aplicar</button>
+        <button class="gm-btn" (click)="debugSetSobres()" [disabled]="debugAccionEnCurso">{{ 'lobby.apply' | t }}</button>
       </div>
     </div>
 
     <div class="ddp-section">
-      <p class="godmode-title">INYECTAR CARTA A MAZO</p>
+      <p class="godmode-title">{{ 'lobby.injectCard' | t }}</p>
 
       <div class="gm-filters">
         <input
           type="text"
           class="gm-input gm-search"
-          placeholder="Buscar carta o ataque..."
+          [placeholder]="'lobby.searchPlaceholder' | t"
           (input)="actualizarFiltroTexto($event)">
       </div>
 
@@ -135,8 +172,8 @@
           <button class="gm-btn arrow" (click)="prevDebugCard()">◀</button>
 
           <div class="preview-card">
-            <img *ngIf="debugSelectedCard" [src]="getImagenDebugCarta(debugSelectedCard.id)" [alt]="debugSelectedCard.nombre">
-            <div *ngIf="!debugSelectedCard" class="no-results">No hay cartas</div>
+            <img *ngIf="debugSelectedCard" [src]="getImagenDebugCarta(debugSelectedCard.id)" [alt]="debugSelectedCard.nombre" (error)="onCardImageError($event)">
+            <div *ngIf="!debugSelectedCard" class="no-results">{{ 'lobby.noCards' | t }}</div>
           </div>
 
           <button class="gm-btn arrow" (click)="nextDebugCard()">▶</button>
@@ -148,20 +185,20 @@
         </div>
 
         <p class="gm-results-count">
-          {{ debugCatalogoFiltrado.length ? (debugSelectedIndex + 1) : 0 }} / {{ debugCatalogoFiltrado.length }} resultados
+          {{ 'lobby.resultsCount' | t:{current: (debugCatalogoFiltrado.length ? (debugSelectedIndex + 1) : 0), total: debugCatalogoFiltrado.length} }}
         </p>
       </div>
 
       <div class="gm-row">
         <select class="gm-select" [value]="debugTargetMazoId || ''" (change)="onDebugMazoChange($event)">
-          <option value="">Elegir mazo...</option>
+          <option value="">{{ 'lobby.chooseDeck' | t }}</option>
           <option *ngFor="let mazo of mazos" [value]="mazo.id">{{ mazo.nombre }}</option>
         </select>
       </div>
 
       <div class="gm-row" *ngIf="debugMazoSeleccionado">
         <select class="gm-select" [value]="debugReplaceCardId || ''" (change)="onDebugReplaceChange($event)">
-          <option value="">Carta a reemplazar...</option>
+          <option value="">{{ 'lobby.cardToReplace' | t }}</option>
           <option *ngFor="let carta of debugMazoSeleccionado.cartas; let i = index" [value]="carta.id">
             {{ i + 1 }}. {{ carta.nombre }}
           </option>
@@ -172,69 +209,197 @@
         class="gm-btn draw-btn"
         [disabled]="!debugSelectedCard || !debugMazoSeleccionado || debugAccionEnCurso"
         (click)="debugInyectarCartaEnMazo()">
-        Inyectar en mazo
+        {{ 'lobby.injectBtn' | t }}
       </button>
     </div>
   </div>
 
   <header class="hub-top-hud">
-    <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
-      <span class="avatar-dot"></span>
-      <div>
-        <small>TRAINER</small>
-        <strong>{{ jugador?.username || 'PLAYER' }}</strong>
-        <em>{{ selectedCharacterLabel }}</em>
-      </div>
-    </button>
-
-    <div class="hub-title">
-      <span>POKÉFETCH HUB</span>
-      <strong>Third Person Arena</strong>
-    </div>
-
-    <div class="resource-chip cycle-chip">
-      <small>CICLO</small>
-      <strong>{{ dayPhaseLabel }}</strong>
-    </div>
-
-    <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
-      <small>PIKACHU</small>
-      <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
-    </button>
-
-    <button class="resource-chip graphics-chip" type="button" (click)="cycleGraphicsQuality()">
-      <small>GRÁFICOS</small>
-      <strong>{{ graphicsQualityLabel }}</strong>
-    </button>
-
-    <div class="resource-chip audio-chip" [class.muted]="!audioEnabled">
-      <button type="button" (click)="toggleLobbyAudio()" title="Activar o silenciar audio del lobby">
-        <small>AUDIO</small>
-        <strong>{{ audioEnabled ? 'ON' : 'OFF' }}</strong>
+    <div class="hud-left">
+      <button class="trainer-chip trainer-chip-button" type="button" (click)="openCustomizationModal()">
+        <span class="avatar-dot"></span>
+        <div>
+          <small>{{ 'lobby.trainer' | t | uppercase }}</small>
+          <strong>{{ jugador?.username || 'PLAYER' }}</strong>
+          <em>{{ selectedCharacterLabel }}</em>
+        </div>
       </button>
-      <div class="audio-mini-controls">
-        <button type="button" [class.enabled]="musicEnabled" (click)="toggleLobbyMusic()" title="Musica ambiental">MUS</button>
-        <button type="button" [class.enabled]="sfxEnabled" (click)="toggleLobbySfx()" title="Pasos y efectos">SFX</button>
-        <button type="button" (click)="cycleLobbyVolume()" title="Volumen">{{ audioVolumeLabel }}</button>
+
+      <div class="resource-chip santocoins-chip">
+        <small>SANTOCOINS</small>
+        <strong>{{ santoCoins }}</strong>
+      </div>
+
+      <div class="resource-chip packs-available-chip">
+        <small>{{ 'lobby.openPack' | t }}</small>
+        <strong>{{ sobresDisponibles }}</strong>
       </div>
     </div>
 
-    <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
-      <small>ACCIONES</small>
-      <strong>EMOTES</strong>
-    </button>
+    <div class="hud-center">
+      <div class="hub-title">
+        <span>POKÉFETCH HUB</span>
+        <strong>Third Person Arena</strong>
+      </div>
 
-    <div class="resource-chip">
-      <small>{{ 'lobby.openPack' | t }}</small>
-      <strong>{{ sobresDisponibles }}</strong>
+      <div class="resource-chip cycle-chip">
+        <small>{{ 'lobby.cycle' | t | uppercase }}</small>
+        <strong>{{ dayPhaseLabel | t | uppercase }}</strong>
+      </div>
+
+      <button class="resource-chip companion-chip" type="button" [class.enabled]="pikachuEnabled" (click)="togglePikachuCompanion()">
+        <small>PIKACHU</small>
+        <strong>{{ pikachuEnabled ? 'ON' : 'OFF' }}</strong>
+      </button>
+
+    </div>
+
+    <div class="hud-right">
+      <button class="resource-chip emote-chip-hud" type="button" (click)="toggleEmoteMenu()">
+        <small>{{ 'lobby.actions' | t | uppercase }}</small>
+        <strong>{{ 'lobby.emotes' | t | uppercase }}</strong>
+      </button>
+
+      <button class="settings-gear" type="button" [class.open]="settingsOpen" (click)="toggleSettings()" title="Opciones">
+        <span class="gear-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false">
+            <path d="M19.4 13.5c.1-.5.1-1 .1-1.5s0-1-.1-1.5l2-1.5-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.6A8 8 0 0 0 7 6.6l-2.4-1-2 3.4 2 1.5c-.1.5-.1 1-.1 1.5s0 1 .1 1.5l-2 1.5 2 3.4 2.4-1a8 8 0 0 0 2.6 1.5l.4 2.6h4l.4-2.6a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.5ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"></path>
+          </svg>
+        </span>
+      </button>
     </div>
   </header>
 
-  <aside class="hub-help-panel">
-    <div class="help-key"><kbd>W</kbd><kbd>S</kbd><span>mover</span></div>
-    <div class="help-key"><kbd>A</kbd><kbd>D</kbd><span>rotar</span></div>
-    <div class="help-key"><kbd>Shift</kbd><span>correr</span></div>
-    <div class="help-key"><kbd>E</kbd><span>interactuar</span></div>
+  <div class="settings-backdrop" *ngIf="settingsOpen" (click)="closeSettings()"></div>
+  <section class="settings-panel" *ngIf="settingsOpen" (click)="$event.stopPropagation()">
+    <div class="settings-header">
+      <div>
+        <small>Opciones</small>
+        <h2>Centro de ajustes</h2>
+      </div>
+      <button type="button" class="settings-close" (click)="closeSettings()">X</button>
+    </div>
+
+    <nav class="settings-tabs">
+      <button type="button" [class.active]="settingsSection === 'graphics'" (click)="setSettingsSection('graphics')">Graficos</button>
+      <button type="button" [class.active]="settingsSection === 'audio'" (click)="setSettingsSection('audio')">Audio</button>
+      <button type="button" [class.active]="settingsSection === 'language'" (click)="setSettingsSection('language')">Idioma</button>
+    </nav>
+
+    <div class="settings-body" *ngIf="settingsSection === 'graphics'">
+      <div class="settings-presets">
+        <button type="button" (click)="applyGraphicsPreset('performance')" [class.active]="graphicsQuality === 'low' && shadowQuality === 'off' && remote3dQuality === 'low'">
+          <strong>Rendimiento</strong>
+          <span>Mas FPS, menos sombras y 3D remoto.</span>
+        </button>
+        <button type="button" (click)="applyGraphicsPreset('balanced')" [class.active]="graphicsQuality === 'medium' && shadowQuality === 'balanced' && remote3dQuality === 'medium'">
+          <strong>Balanceado</strong>
+          <span>Recomendado para jugar fluido.</span>
+        </button>
+        <button type="button" (click)="applyGraphicsPreset('ultra')" [class.active]="graphicsQuality === 'high' && shadowQuality === 'high' && remote3dQuality === 'high'">
+          <strong>Ultra</strong>
+          <span>Mas detalle, sombras y avatares 3D.</span>
+        </button>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <strong>Calidad base</strong>
+          <span>Resolucion interna, texturas y antialias.</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="graphicsQuality === 'low'" (click)="setGraphicsQuality('low')">Baja</button>
+          <button type="button" [class.active]="graphicsQuality === 'medium'" (click)="setGraphicsQuality('medium')">Media</button>
+          <button type="button" [class.active]="graphicsQuality === 'high'" (click)="setGraphicsQuality('high')">Alta</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <strong>Sombras</strong>
+          <span>Apaga o sube el detalle de sombras dinamicas.</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="shadowQuality === 'off'" (click)="setShadowQuality('off')">Off</button>
+          <button type="button" [class.active]="shadowQuality === 'balanced'" (click)="setShadowQuality('balanced')">Medias</button>
+          <button type="button" [class.active]="shadowQuality === 'high'" (click)="setShadowQuality('high')">Altas</button>
+        </div>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <strong>Jugadores 3D</strong>
+          <span>Cuantos modelos remotos cargan en alta calidad.</span>
+        </div>
+        <div class="segmented">
+          <button type="button" [class.active]="remote3dQuality === 'low'" (click)="setRemote3dQuality('low')">Ligero</button>
+          <button type="button" [class.active]="remote3dQuality === 'medium'" (click)="setRemote3dQuality('medium')">Normal</button>
+          <button type="button" [class.active]="remote3dQuality === 'high'" (click)="setRemote3dQuality('high')">Full</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-body" *ngIf="settingsSection === 'audio'">
+      <div class="settings-row">
+        <div>
+          <strong>Audio general</strong>
+          <span>Activa o silencia todo el lobby.</span>
+        </div>
+        <button type="button" class="toggle-pill" [class.active]="audioEnabled" (click)="toggleLobbyAudio()">{{ audioEnabled ? 'ON' : 'OFF' }}</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <strong>Musica</strong>
+          <span>Ambiente y musica de fondo.</span>
+        </div>
+        <button type="button" class="toggle-pill" [class.active]="musicEnabled" (click)="toggleLobbyMusic()">{{ musicEnabled ? 'ON' : 'OFF' }}</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <strong>Efectos SFX</strong>
+          <span>Pasos, interacciones y sonidos cortos.</span>
+        </div>
+        <button type="button" class="toggle-pill" [class.active]="sfxEnabled" (click)="toggleLobbySfx()">{{ sfxEnabled ? 'ON' : 'OFF' }}</button>
+      </div>
+      <div class="settings-row">
+        <div>
+          <strong>Volumen</strong>
+          <span>Nivel actual: {{ audioVolumeLabel }}</span>
+        </div>
+        <button type="button" class="settings-action" (click)="cycleLobbyVolume()">{{ audioVolumeLabel }}</button>
+      </div>
+    </div>
+
+    <div class="settings-body" *ngIf="settingsSection === 'language'">
+      <button
+        type="button"
+        class="language-option"
+        *ngFor="let lang of i18n.languages"
+        [class.active]="currentLanguageCode === lang.code"
+        (click)="selectLanguage(lang.code)">
+        <span>{{ lang.short }}</span>
+        <strong>{{ lang.nativeName }}</strong>
+        <small>{{ lang.label }}</small>
+      </button>
+    </div>
+  </section>
+
+  <aside
+    class="hub-help-panel floating-hud-panel"
+    [class.minimized]="helpPanelMinimized"
+    [style.left.px]="helpPanelX"
+    [style.top.px]="helpPanelY"
+  >
+    <div class="floating-panel-header help-panel-header" (pointerdown)="startFloatingPanelDrag('help', $event)">
+      <span>Teclas</span>
+      <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleHelpPanelMinimized($event)">{{ helpPanelMinimized ? '+' : '-' }}</button>
+    </div>
+    <div class="help-panel-body" *ngIf="!helpPanelMinimized">
+      <div class="help-key"><kbd>W</kbd><kbd>S</kbd><span>{{ 'lobby.move' | t }}</span></div>
+      <div class="help-key"><kbd>A</kbd><kbd>D</kbd><span>{{ 'lobby.rotation3dLabel' | t }}</span></div>
+      <div class="help-key"><kbd>Shift</kbd><span>{{ 'lobby.run' | t }}</span></div>
+      <div class="help-key"><kbd>E</kbd><span>{{ 'lobby.interactKey' | t }}</span></div>
+    </div>
   </aside>
 
   <div
@@ -251,7 +416,7 @@
       [class.active]="mobileJoystickActive"
       [style.transform]="'translate(calc(-50% + ' + (mobileJoystickX * 34) + 'px), calc(-50% + ' + (mobileJoystickY * 34) + 'px))'"
     ></div>
-    <span>MOVER</span>
+    <span>{{ 'lobby.move' | t | uppercase }}</span>
   </div>
 
   <div class="mobile-action-pad" aria-label="Acciones tactiles">
@@ -285,32 +450,188 @@
   </div>
 
   <div class="quest-tracker" *ngIf="!santoroGiftClaimed || santoroQuestTracking">
-    <small>MISION PRINCIPAL</small>
+    <small>{{ 'lobby.mainQuest' | t | uppercase }}</small>
     <strong>{{ santoroQuestTitle }}</strong>
     <p>{{ santoroQuestCopy }}</p>
     <div class="quest-actions">
-      <button type="button" *ngIf="!santoroQuestTracking && !santoroGiftClaimed" (click)="toggleSantoroTracking()">Seguir</button>
-      <button type="button" *ngIf="santoroQuestTracking" (click)="stopSantoroTracking()">Dejar de seguir</button>
+      <button type="button" *ngIf="!santoroQuestTracking && !santoroGiftClaimed" (click)="toggleSantoroTracking()">{{ 'lobby.follow' | t }}</button>
+      <button type="button" *ngIf="santoroQuestTracking" (click)="stopSantoroTracking()">{{ 'lobby.unfollow' | t }}</button>
     </div>
   </div>
 
-  <div class="battle-select-panel" *ngIf="battlePanelOpen">
+  <div class="room-browser-scrim" *ngIf="battlePanelOpen"></div>
+  <div class="battle-select-panel room-browser-panel" *ngIf="battlePanelOpen">
     <div class="panel-glow"></div>
     <button class="close-panel" type="button" (click)="battlePanelOpen = false">×</button>
-    <small>BATTLE GATE</small>
-    <h2>{{ 'lobby.findMatch' | t }}</h2>
+    <small>{{ 'lobby.battleGate' | t | uppercase }}</small>
+    <h2>Salas de combate</h2>
 
-    <ng-container *ngIf="mazos.length; else noDecks">
-      <label for="hubDeckSelect">Mazo sincronizado</label>
-      <select id="hubDeckSelect" [(ngModel)]="selectedBattleDeckId">
-        <option *ngFor="let mazo of mazos" [ngValue]="mazo.id">
-          {{ mazo.nombre }} - {{ mazo.cartas.length }}/60
-        </option>
-      </select>
+    <ng-container *ngIf="validBattleDecks.length; else noDecks">
+      <div class="room-countdown-overlay" *ngIf="roomCountdownValue !== null">
+        <span>{{ roomCountdownValue }}</span>
+        <small>Preparando batalla</small>
+      </div>
+      <div class="room-browser">
+        <section class="room-list-panel">
+          <div class="room-toolbar">
+            <div>
+              <strong>Salas disponibles</strong>
+              <small>{{ lobbyRooms.length }} online</small>
+            </div>
+            <button type="button" (click)="loadLobbyRooms()" [disabled]="roomsLoading">{{ roomsLoading ? 'SYNC' : 'REFRESH' }}</button>
+          </div>
+          <div class="room-list">
+            <button
+              type="button"
+              class="room-card"
+              *ngFor="let room of lobbyRooms"
+              [class.selected]="selectedRoom?.id === room.id"
+              [class.in-progress]="room.status === 'IN_PROGRESS'"
+              (click)="selectLobbyRoom(room)"
+            >
+              <span class="room-status-flame" *ngIf="room.status === 'IN_PROGRESS'"></span>
+              <span class="room-lock">{{ room.locked ? 'LOCK' : 'OPEN' }}</span>
+              <strong>{{ room.name }}</strong>
+              <small>{{ room.ownerUsername }} vs {{ room.guestUsername || 'esperando rival' }}</small>
+              <em>{{ room.playerCount }}/2 jugadores · {{ room.spectatorCount }} mirando</em>
+            </button>
+            <div class="room-empty" *ngIf="!roomsLoading && lobbyRooms.length === 0">
+              No hay salas abiertas. Crea una y espera rival.
+            </div>
+          </div>
+        </section>
 
-      <button class="primary-action" type="button" (click)="startSelectedBattle()">
-        {{ 'lobby.findMatch' | t }}
-      </button>
+        <section class="room-control-panel">
+          <div class="room-deck-strip">
+            <label for="roomDeckSelect">Mazo</label>
+            <select id="roomDeckSelect" [(ngModel)]="selectedBattleDeckId">
+              <option *ngFor="let mazo of validBattleDecks" [ngValue]="mazo.id">
+                {{ mazo.nombre }} - {{ mazo.cartas.length }}/60
+              </option>
+            </select>
+            <button type="button" class="room-offline-bot" [disabled]="roomActionLoading || roomCountdownValue !== null" (click)="startOfflineBotBattle()">
+              Offline vs bot
+            </button>
+          </div>
+
+          <div class="room-create-grid" *ngIf="!currentRoom">
+            <input class="room-name-input" [(ngModel)]="roomCreateName" placeholder="Nombre de sala">
+            <div class="room-pin-lock" [class.complete]="roomPinComplete" (click)="roomPinInput.focus()">
+              <span>Codigo secreto</span>
+              <input
+                #roomPinInput
+                class="room-pin-hidden-input"
+                inputmode="numeric"
+                maxlength="6"
+                autocomplete="off"
+                [value]="roomPassword"
+                (input)="onRoomPinInput($event)"
+              >
+              <div class="room-pin-digits">
+                <b
+                  *ngFor="let digit of roomPinDigits; let i = index"
+                  [class.filled]="roomPinDigits[i]"
+                >{{ getRoomPinDisplay(i) }}</b>
+              </div>
+            </div>
+            <button type="button" class="primary-action" [disabled]="roomActionLoading || !!currentRoom" (click)="createLobbyRoom()">
+              Crear sala
+            </button>
+          </div>
+
+          <p class="room-error" *ngIf="roomError">{{ roomError }}</p>
+
+          <div class="room-detail" *ngIf="selectedRoomDetail as room">
+            <div class="room-detail-head">
+              <div>
+                <small>{{ room.locked ? 'Sala con clave' : 'Sala abierta' }}</small>
+                <h3>{{ room.name }}</h3>
+              </div>
+              <span [class.live]="room.status === 'IN_PROGRESS'">{{ room.status === 'IN_PROGRESS' ? roomStatusLabel : 'Lobby' }}</span>
+            </div>
+            <div class="room-players">
+              <div [class.ready]="room.ownerReady">
+                <strong>{{ room.ownerUsername }}</strong>
+                <small>{{ room.ownerDeckName || 'Mazo listo' }}</small>
+              </div>
+              <div [class.ready]="room.guestReady">
+                <strong>{{ room.guestUsername || 'Buscando rival' }}</strong>
+                <small>{{ room.guestBot ? 'Bot listo' : (room.guestDeckName || 'Slot disponible') }}</small>
+              </div>
+            </div>
+            <div class="room-spectator-bar">
+              <div class="room-spectator-counter">
+                <strong>{{ room.spectatorCount }}</strong>
+                <span>mirando</span>
+                <i *ngFor="let reaction of getRoomReactions(room.id)" class="room-reaction-float" [style.left.%]="reaction.x">{{ reaction.icon }}</i>
+              </div>
+              <div class="room-reaction-buttons">
+                <button type="button" (click)="sendRoomReaction('heart')">♥</button>
+                <button type="button" (click)="sendRoomReaction('fire')">🔥</button>
+                <button type="button" (click)="sendRoomReaction('spark')">✦</button>
+              </div>
+            </div>
+            <input *ngIf="room.locked && !currentRoom" [(ngModel)]="roomJoinPassword" placeholder="Clave de sala">
+            <div class="room-actions" *ngIf="!currentRoom">
+              <button type="button" [disabled]="!room.canJoin || roomActionLoading" (click)="joinSelectedRoom()">Entrar</button>
+              <button type="button" [disabled]="!room.canSpectate || roomActionLoading" (click)="spectateSelectedRoom()">
+                {{ i18n.currentLanguage() === 'en' ? 'Spectate' : 'Espectear' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="room-detail current-room" *ngIf="currentRoom as room">
+            <div class="room-detail-head">
+              <div>
+                <small>Tu sala</small>
+                <h3>{{ room.name }}</h3>
+              </div>
+              <span [class.ready]="isCurrentUserReady">{{ isCurrentRoomSpectator ? 'MIRANDO' : (isCurrentUserReady ? 'LISTO' : 'NO LISTO') }}</span>
+            </div>
+            <div class="room-players">
+              <div [class.ready]="room.ownerReady">
+                <strong>{{ room.ownerUsername }}</strong>
+                <small>{{ room.ownerDeckName || 'Mazo listo' }}</small>
+              </div>
+              <div [class.ready]="room.guestReady">
+                <strong>{{ room.guestUsername || 'Buscando rival' }}</strong>
+                <small>{{ room.guestBot ? 'Bot listo' : (room.guestDeckName || 'Slot disponible') }}</small>
+              </div>
+            </div>
+            <div class="room-spectator-bar">
+              <div class="room-spectator-counter">
+                <strong>{{ room.spectatorCount }}</strong>
+                <span>mirando</span>
+                <i *ngFor="let reaction of getRoomReactions(room.id)" class="room-reaction-float" [style.left.%]="reaction.x">{{ reaction.icon }}</i>
+              </div>
+              <div class="room-reaction-buttons">
+                <button type="button" (click)="sendRoomReaction('heart')">♥</button>
+                <button type="button" (click)="sendRoomReaction('fire')">🔥</button>
+                <button type="button" (click)="sendRoomReaction('spark')">✦</button>
+              </div>
+            </div>
+            <div class="room-actions">
+              <button type="button" class="primary-action" *ngIf="room.status === 'IN_PROGRESS' && room.matchId" (click)="continueCurrentRoomBattle()" [disabled]="roomActionLoading">{{ isCurrentRoomSpectator ? 'Ver batalla' : 'Continuar batalla' }}</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator" (click)="toggleRoomReady()" [disabled]="roomActionLoading">{{ isCurrentUserReady ? 'Cancelar listo' : 'Estoy listo' }}</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner && !room.guestUsername" (click)="addBotToCurrentRoom()" [disabled]="roomActionLoading">Añadir bot</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner" (click)="startCurrentRoomBattle()" [disabled]="!canStartCurrentRoom || roomActionLoading">Iniciar partida</button>
+              <button type="button" *ngIf="room.status === 'OPEN' && !isCurrentRoomSpectator && isCurrentRoomOwner && room.guestUsername && !room.guestBot" (click)="kickRoomGuest()" [disabled]="roomActionLoading">Echar rival</button>
+              <button type="button" class="danger" (click)="leaveCurrentRoom()" [disabled]="roomActionLoading">Salir</button>
+            </div>
+            <div class="room-chat-box" [class.compact]="room.status === 'IN_PROGRESS'">
+              <div class="room-chat-log">
+                <p *ngFor="let msg of room.chat" [class.system]="msg.system">
+                  <strong>{{ msg.system ? '' : msg.sender + ':' }}</strong> {{ msg.text }}
+                </p>
+              </div>
+              <div class="room-chat-input">
+                <input [(ngModel)]="roomChatText" placeholder="Mensaje de sala" (keydown.enter)="sendRoomChat()">
+                <button type="button" (click)="sendRoomChat()">Enviar</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </ng-container>
 
     <ng-template #noDecks>
@@ -324,27 +645,27 @@
   <div class="kiosk-shop-panel" *ngIf="kioskShopOpen">
     <div class="kiosk-panel-glow"></div>
     <button class="close-panel" type="button" (click)="closeKioskShop()">×</button>
-    <small>KIOSCO UTN</small>
-    <h2>Sobrecitos Pokémon TCG</h2>
-    <p>La vendedora tiene una tanda recién llegada. Comprá sobres o abrí uno de los que ya tenés.</p>
+    <small>{{ 'lobby.utnKiosk' | t | uppercase }}</small>
+    <h2>{{ 'lobby.packsTitle' | t }}</h2>
+    <p>{{ 'lobby.kioskDesc' | t }}</p>
 
     <div class="pack-bundles">
-      <button type="button" (click)="buyPackBundle(1)">
-        <span>1 sobre</span>
-        <strong>Gratis demo</strong>
+      <button type="button" [disabled]="!canBuyPackBundle(1)" (click)="buyPackBundle(1)">
+        <span>{{ 'lobby.pack' | t }}</span>
+        <strong>{{ getPackBundlePrice(1) }} SC</strong>
       </button>
-      <button type="button" (click)="buyPackBundle(3)">
-        <span>3 sobres</span>
-        <strong>Combo recreo</strong>
+      <button type="button" [disabled]="!canBuyPackBundle(3)" (click)="buyPackBundle(3)">
+        <span>{{ 'lobby.packs3' | t }}</span>
+        <strong>{{ getPackBundlePrice(3) }} SC</strong>
       </button>
-      <button type="button" (click)="buyPackBundle(6)">
-        <span>6 sobres</span>
-        <strong>Full kiosco</strong>
+      <button type="button" [disabled]="!canBuyPackBundle(5)" (click)="buyPackBundle(5)">
+        <span>{{ 'lobby.packs5' | t }}</span>
+        <strong>{{ getPackBundlePrice(5) }} SC</strong>
       </button>
     </div>
 
     <button class="primary-action" type="button" [disabled]="sobresDisponibles <= 0" (click)="abrirSobres()">
-      Abrir sobre disponible · {{ sobresDisponibles }}
+      {{ 'lobby.openAvailablePack' | t:{count: sobresDisponibles.toString()} }}
     </button>
   </div>
 
@@ -352,11 +673,11 @@
   <div class="santoro-dialog-overlay-blocker" *ngIf="kiosqueraDialogOpen"></div>
   <div class="santoro-dialog-stage" *ngIf="kiosqueraDialogOpen">
     <div class="santoro-dialog-card">
-      <small class="challenge-kicker">KIOSQUERA</small>
-      <h3>¡Hola! ¿Cómo estás? ¿Necesitás comprar algo en la cantina?</h3>
+      <small class="challenge-kicker">{{ 'lobby.dialogKiosqueraTitle' | t }}</small>
+      <h3>{{ 'lobby.dialogKiosqueraText' | t }}</h3>
       <div class="challenge-actions">
-        <button class="btn-accept" type="button" (click)="kiosqueraVerProductos()">Ver productos</button>
-        <button class="btn-reject" type="button" (click)="closeKiosqueraDialog()">No, gracias</button>
+        <button class="btn-accept" type="button" (click)="kiosqueraVerProductos()">{{ 'lobby.seeProducts' | t }}</button>
+        <button class="btn-reject" type="button" (click)="closeKiosqueraDialog()">{{ 'lobby.noThanks' | t }}</button>
       </div>
     </div>
   </div>
@@ -364,44 +685,40 @@
   <div class="santoro-dialog-overlay-blocker" *ngIf="santoroDialogOpen"></div>
   <div class="santoro-dialog-stage" *ngIf="santoroDialogOpen">
     <div class="santoro-dialog-card">
-      <small class="challenge-kicker">PROFE SANTORO</small>
+      <small class="challenge-kicker">{{ 'lobby.profeSantoro' | t }}</small>
       <ng-container [ngSwitch]="santoroDialogState">
         <ng-container *ngSwitchCase="'intro'">
-          <h3>Hola {{ santoroNickname }}, bienvenido a Pokefetch.</h3>
-          <p>Te regalo 10 sobrecitos para que empieces tu aventura como corresponde.</p>
+          <h3>{{ 'lobby.santoroIntroText' | t:{nickname: santoroNickname} }}</h3>
+          <p>{{ 'lobby.santoroGiftText' | t }}</p>
           <div class="challenge-actions">
-            <button class="btn-accept" type="button" (click)="chooseSantoroAnswer('thanks')">Gracias profe</button>
-            <button class="btn-reject" type="button" (click)="chooseSantoroAnswer('reject')">No, no los quiero</button>
+            <button class="btn-accept" type="button" (click)="chooseSantoroAnswer('thanks')">{{ 'lobby.thanksProfe' | t }}</button>
+            <button class="btn-reject" type="button" (click)="chooseSantoroAnswer('reject')">{{ 'lobby.rejectGift' | t }}</button>
           </div>
         </ng-container>
 
         <ng-container *ngSwitchCase="'thanks'">
-          <h3>Asi me gusta.</h3>
-          <p>Agarralos tranqui, que con esos sobrecitos capaz armas algo mas peligroso que un parcial sorpresa un lunes a las ocho.</p>
-          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+          <p>{{ 'lobby.santoroThanksAnswer' | t }}</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">{{ 'lobby.acceptGift' | t }}</button>
         </ng-container>
 
         <ng-container *ngSwitchCase="'forced'">
-          <h3>Nadie te pregunto si querias.</h3>
-          <p>Agarralos o te pongo un 2.</p>
-          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">Aceptar regalo</button>
+          <p>{{ 'lobby.santoroForcedText' | t }}</p>
+          <button class="btn-accept full-dialog-action" type="button" [disabled]="santoroRewardLoading" (click)="acceptSantoroGift()">{{ 'lobby.acceptGift' | t }}</button>
         </ng-container>
 
         <ng-container *ngSwitchCase="'afterGift'">
-          <h3>Ah, {{ santoroNickname | lowercase }}, me olvide de decirte.</h3>
-          <p>Conmigo vas a poder gestionar tu mazo cuando quieras. Veni, tocame gestionar y tratemos de que esa estrategia no sea puro corazon y cero energia.</p>
+          <p>{{ 'lobby.santoroAfterGiftText' | t:{nickname: (santoroNickname | lowercase)} }}</p>
           <div class="challenge-actions">
-            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
-            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Despues</button>
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">{{ 'lobby.manageDeck' | t }}</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">{{ 'lobby.later' | t }}</button>
           </div>
         </ng-container>
 
         <ng-container *ngSwitchDefault>
-          <h3>Que haces, {{ santoroNickname | lowercase }}?</h3>
-          <p>Si queres ajustar el mazo, te abro la Pokedex. Misiones nuevas todavia no tengo, pero ya se viene algo picante.</p>
+          <p>{{ 'lobby.santoroDefaultText' | t:{nickname: (santoroNickname | lowercase)} }}</p>
           <div class="challenge-actions">
-            <button class="btn-accept" type="button" (click)="santoroManageDeck()">Gestionar mazo</button>
-            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">Cerrar</button>
+            <button class="btn-accept" type="button" (click)="santoroManageDeck()">{{ 'lobby.manageDeck' | t }}</button>
+            <button class="btn-reject" type="button" (click)="closeSantoroDialog()">{{ 'lobby.close' | t }}</button>
           </div>
         </ng-container>
       </ng-container>
@@ -413,31 +730,50 @@
       <div class="gift-pack-3d">
         <img src="/images/cards/sobre.png" alt="Sobre Pokemon TCG">
       </div>
-      <small class="challenge-kicker">RECOMPENSA RECIBIDA</small>
-      <h3>Sobres recibidos x10</h3>
-      <p>El inventario fue actualizado. Santoro acaba de salvar tu early game.</p>
-      <button class="btn-accept full-dialog-action" type="button" (click)="continueSantoroAfterGift()">Continuar</button>
+      <small class="challenge-kicker">{{ 'lobby.rewardReceived' | t }}</small>
+      <h3>{{ 'lobby.packsReceived' | t }}</h3>
+      <p>{{ 'lobby.giftInventoryUpdated' | t }}</p>
+      <button class="btn-accept full-dialog-action" type="button" (click)="continueSantoroAfterGift()">{{ 'lobby.continue' | t }}</button>
     </div>
   </div>
 
-  <div class="deck-preview-strip" *ngIf="mazos.length">
-    <button
-      *ngFor="let mazo of mazos"
-      type="button"
-      class="deck-preview"
-      (click)="selectedBattleDeckId = mazo.id; battlePanelOpen = true"
-    >
-      <span>{{ mazo.nombre | uppercase }}</span>
-      <small>{{ mazo.cartas.length }}/60 LOADED</small>
-    </button>
+  <div
+    class="deck-preview-strip floating-hud-panel"
+    *ngIf="mazos.length && !battlePanelOpen && !kioskShopOpen && !santoroDialogOpen && !kiosqueraDialogOpen && !deckBuilderOpen"
+    [class.minimized]="deckDockMinimized"
+    [style.left.px]="deckDockX"
+    [style.top.px]="deckDockY"
+  >
+    <div class="deck-dock-header floating-panel-header" (pointerdown)="startFloatingPanelDrag('decks', $event)">
+      <span>Mazos</span>
+      <strong>{{ mazos.length }}</strong>
+      <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleDeckDockMinimized($event)">{{ deckDockMinimized ? '+' : '-' }}</button>
+    </div>
+    <ng-container *ngIf="!deckDockMinimized">
+      <div
+        *ngFor="let mazo of mazos"
+        class="deck-preview"
+        [class.selected]="selectedBattleDeckId === mazo.id"
+        role="button"
+        tabindex="0"
+        (click)="selectedBattleDeckId = mazo.id; openBattleRooms()"
+      >
+        <span class="deck-preview-name">{{ mazo.nombre | uppercase }}</span>
+        <small>{{ mazo.cartas.length }}/60 LOADED</small>
+        <div class="deck-preview-actions">
+          <button type="button" class="deck-action edit" title="Editar mazo" (click)="editarMazo(mazo, $event)">EDIT</button>
+          <button type="button" class="deck-action delete" title="Borrar mazo" (click)="borrarMazo(mazo, $event)">DEL</button>
+        </div>
+      </div>
+    </ng-container>
   </div>
 
   <div class="transicion-cielo" [class.activo]="mostrarAnimacionSobre">
     <div class="speed-lines"></div>
     @if (mostrarAnimacionSobre) {
       <div class="sobre-apertura-wrapper">
-        <app-apertura-sobre 
-          [cartas]="cartasNuevas" 
+        <app-apertura-sobre
+          [cartas]="cartasNuevas"
           [sobresRestantes]="sobresDisponibles"
           (finalizado)="finalizarApertura()"
           (abrirOtro)="abrirOtroSobre()">
@@ -449,12 +785,12 @@
   <!-- ================= FIRST-TIME SETUP (ONBOARDING) / STANDARD CUSTOMIZATION MODAL ================= -->
   <div class="customizer-overlay" *ngIf="showFirstTimeSetup || customizationModalOpen" [class.onboarding]="showFirstTimeSetup">
     <div class="customizer-card two-columns">
-      
+
       <!-- COLUMNA 1: PREVISUALIZADOR 3D EN VIVO -->
       <div class="customizer-preview-pane">
         <div class="canvas-wrapper">
-          <canvas 
-            #previewCanvas 
+          <canvas
+            #previewCanvas
             class="customizer-preview-canvas"
             (pointerdown)="onPreviewPointerDown($event)"
             (pointermove)="onPreviewPointerMove($event)"
@@ -470,11 +806,11 @@
             <strong>{{ previewRotationDegrees }}°</strong>
           </div>
           <input
-            type="range" 
-            min="0" 
-            max="6.283" 
-            step="0.05" 
-            class="customizer-slider" 
+            type="range"
+            min="0"
+            max="6.283"
+            step="0.05"
+            class="customizer-slider"
             [(ngModel)]="customizerRotationY"
             (input)="onRotationSliderChange()">
         </div>
@@ -482,84 +818,84 @@
 
       <!-- COLUMNA 2: FORMULARIO DE PERSONALIZACIÓN -->
       <div class="customizer-form-pane">
-        
+
         <!-- HEADER -->
         <div class="customizer-header">
-          <span class="customizer-kicker">{{ showFirstTimeSetup ? '¡BIENVENIDO ENTRENADOR!' : 'LABORATORIO DE ESTILO' }}</span>
-          <h2>{{ showFirstTimeSetup ? 'Crea tu Avatar' : 'Personalizar Entrenador' }}</h2>
+          <span class="customizer-kicker">{{ showFirstTimeSetup ? ('lobby.welcomeTrainer' | t) : ('lobby.styleLab' | t) }}</span>
+          <h2>{{ showFirstTimeSetup ? ('lobby.createAvatar' | t) : ('lobby.customizeTrainer' | t) }}</h2>
           <p class="customizer-subtitle">
-            {{ showFirstTimeSetup ? 'Antes de explorar el campus, definí tus rasgos y estilo único:' : 'Modificá tu aspecto y equipamiento en tiempo real:' }}
+            {{ showFirstTimeSetup ? ('lobby.onboardingSubtitle' | t) : ('lobby.customizeSubtitle' | t) }}
           </p>
         </div>
 
         <!-- ONBOARDING GENDER SELECTION -->
         <div class="customizer-section">
-          <label class="section-label">¿CÓMO TE DEFINÍS?</label>
+          <label class="section-label">{{ 'lobby.genderLabel' | t }}</label>
           <div class="gender-toggle-container">
-            <button 
-              type="button" 
-              class="gender-btn piba" 
-              [class.active]="customizerGender === 'piba'" 
+            <button
+              type="button"
+              class="gender-btn piba"
+              [class.active]="customizerGender === 'piba'"
               (click)="changeCustomizerGender('piba')">
-              <span class="gender-symbol">♀</span> PIBA
+              <span class="gender-symbol">♀</span> {{ 'lobby.genderPiba' | t }}
             </button>
-            <button 
-              type="button" 
-              class="gender-btn pibe" 
-              [class.active]="customizerGender === 'pibe'" 
+            <button
+              type="button"
+              class="gender-btn pibe"
+              [class.active]="customizerGender === 'pibe'"
               (click)="changeCustomizerGender('pibe')">
-              <span class="gender-symbol">♂</span> PIBE
+              <span class="gender-symbol">♂</span> {{ 'lobby.genderPibe' | t }}
             </button>
           </div>
         </div>
 
         <!-- CHARACTER MODEL SELECTOR -->
         <div class="customizer-section">
-          <label class="section-label">ELEGÍ TU MODELO BASE</label>
+          <label class="section-label">{{ 'lobby.chooseBaseModel' | t }}</label>
           <div class="character-grid">
-            <button 
-              *ngFor="let option of filteredCharacterOptions" 
-              type="button" 
-              class="char-card" 
+            <button
+              *ngFor="let option of filteredCharacterOptions"
+              type="button"
+              class="char-card"
               [class.active]="customizerSelectedId === option.id"
               (click)="onCustomizerModelSelect(option.id)">
               <div class="char-avatar-placeholder">
                 <span class="avatar-dot small-dot"></span>
               </div>
               <strong>{{ option.label }}</strong>
-              <small>Disponible</small>
+              <small>{{ 'lobby.available' | t }}</small>
             </button>
           </div>
         </div>
 
         <!-- TRAITS CUSTOMIZATION -->
         <div class="customizer-section">
-          <label class="section-label">RASGOS BÁSICOS</label>
-          
+          <label class="section-label">{{ 'lobby.basicTraits' | t }}</label>
+
           <!-- Altura (Scale slider) -->
           <div class="trait-row slider-row">
             <div class="trait-header">
-              <span>Estatura (Altura)</span>
+              <span>{{ 'lobby.heightLabel' | t }}</span>
               <strong>x{{ customizerHeight.toFixed(2) }}</strong>
             </div>
-            <input 
-              type="range" 
-              min="0.82" 
-              max="1.18" 
-              step="0.02" 
-              class="customizer-slider" 
+            <input
+              type="range"
+              min="0.82"
+              max="1.18"
+              step="0.02"
+              class="customizer-slider"
               [(ngModel)]="customizerHeight"
               (input)="applyLivePreviewCustomizations()">
           </div>
 
           <!-- Color de Piel -->
           <div class="trait-row">
-            <span>Tono de Piel</span>
+            <span>{{ 'lobby.skinTone' | t }}</span>
             <div class="swatch-grid">
-              <button 
-                *ngFor="let color of skinColors" 
-                type="button" 
-                class="swatch-btn" 
+              <button
+                *ngFor="let color of skinColors"
+                type="button"
+                class="swatch-btn"
                 [style.background-color]="color.value"
                 [class.active]="customizerSkinColor === color.value"
                 [title]="color.name"
@@ -570,12 +906,12 @@
 
           <!-- Color de Ojos -->
           <div class="trait-row">
-            <span>Color de Ojos</span>
+            <span>{{ 'lobby.eyeColor' | t }}</span>
             <div class="swatch-grid">
-              <button 
-                *ngFor="let color of eyeColors" 
-                type="button" 
-                class="swatch-btn" 
+              <button
+                *ngFor="let color of eyeColors"
+                type="button"
+                class="swatch-btn"
                 [style.background-color]="color.value"
                 [class.active]="customizerEyeColor === color.value"
                 [title]="color.name"
@@ -586,12 +922,12 @@
 
           <!-- Color de Pelo -->
           <div class="trait-row">
-            <span>Color de Pelo</span>
+            <span>{{ 'lobby.hairColor' | t }}</span>
             <div class="swatch-grid">
-              <button 
-                *ngFor="let color of hairColors" 
-                type="button" 
-                class="swatch-btn" 
+              <button
+                *ngFor="let color of hairColors"
+                type="button"
+                class="swatch-btn"
                 [style.background-color]="color.value"
                 [class.active]="customizerHairColor === color.value"
                 [title]="color.name"
@@ -605,33 +941,33 @@
         <div class="customizer-section companion-section">
           <div class="companion-toggle-header">
             <div>
-              <label class="section-label">ACOMPAÑANTE</label>
-              <p class="section-desc">Equipar compañero de aventuras (Pikachu)</p>
+              <label class="section-label">{{ 'lobby.companionLabel' | t }}</label>
+              <p class="section-desc">{{ 'lobby.companionDesc' | t }}</p>
             </div>
-            <button 
-              type="button" 
-              class="comp-toggle-btn" 
+            <button
+              type="button"
+              class="comp-toggle-btn"
               [class.enabled]="customizerPikachu"
               (click)="customizerPikachu = !customizerPikachu; applyLivePreviewCustomizations()">
-              <strong>{{ customizerPikachu ? 'EQUIPADO' : 'DESACTIVADO' }}</strong>
+              <strong>{{ customizerPikachu ? ('lobby.equipped' | t) : ('lobby.disabled' | t) }}</strong>
             </button>
           </div>
         </div>
 
         <!-- FOOTER ACTIONS -->
         <div class="customizer-actions">
-          <button 
-            *ngIf="!showFirstTimeSetup" 
-            type="button" 
-            class="cancel-btn" 
+          <button
+            *ngIf="!showFirstTimeSetup"
+            type="button"
+            class="cancel-btn"
             (click)="cancelCustomizations()">
-            Cancelar
+            {{ 'lobby.cancel' | t }}
           </button>
-          <button 
-            type="button" 
-            class="save-btn" 
+          <button
+            type="button"
+            class="save-btn"
             (click)="saveCustomizations()">
-            {{ showFirstTimeSetup ? '¡COMENZAR AVENTURA!' : 'GUARDAR RASGOS' }}
+            {{ showFirstTimeSetup ? ('lobby.startAdventure' | t) : ('lobby.saveTraits' | t) }}
           </button>
         </div>
 
@@ -657,7 +993,7 @@
 
       <!-- Loading statistics and status message -->
       <div class="loading-stats">
-        <span class="loading-status-text">CARGANDO CAMPUS UTN...</span>
+        <span class="loading-status-text">{{ 'lobby.loadingCampus' | t }}</span>
         <span class="loading-percentage">{{ hubLoadingProgress }}%</span>
       </div>
     </div>
@@ -675,13 +1011,13 @@
       <strong>{{ selectedPlayerForMenu.username }}</strong>
     </div>
     <button type="button" class="menu-item" (click)="agregarAmigo(selectedPlayerForMenu.username)">
-      Agregar Amigo
+      {{ 'lobby.addFriend' | t }}
     </button>
     <button type="button" class="menu-item highlight" (click)="retarADuelo(selectedPlayerForMenu.username)">
-      Retar a Duelo
+      {{ 'lobby.challengeDuel' | t }}
     </button>
     <button type="button" class="menu-item highlight" (click)="invitarIntercambio(selectedPlayerForMenu.username)">
-      Invitar a Intercambiar
+      {{ 'lobby.inviteTrade' | t }}
     </button>
   </div>
 
@@ -703,13 +1039,13 @@
         <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
       </div>
       <div class="challenge-body">
-        <span class="challenge-kicker">¡PETICIÓN DE DUELO!</span>
-        <h3>{{ incomingChallenge.username }} te ha retado a un duelo</h3>
-        <p>¿Aceptás el desafío online en la arena de combate?</p>
+        <span class="challenge-kicker">{{ 'lobby.incomingChallenge' | t }}</span>
+        <h3>{{ 'lobby.challengeText' | t:{username: incomingChallenge.username} }}</h3>
+        <p>{{ 'lobby.acceptChallengeText' | t }}</p>
       </div>
       <div class="challenge-actions">
-        <button type="button" class="btn-reject" (click)="responderDuelo(false)">RECHAZAR</button>
-        <button type="button" class="btn-accept" (click)="responderDuelo(true)">ACEPTAR</button>
+        <button type="button" class="btn-reject" (click)="responderDuelo(false)">{{ 'lobby.reject' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderDuelo(true)">{{ 'lobby.accept' | t }}</button>
       </div>
     </div>
   </div>
@@ -732,12 +1068,12 @@
         <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
       </div>
       <div class="challenge-body">
-        <span class="challenge-kicker">ESPERANDO OPONENTE</span>
-        <h3>Retando a {{ challengedUsername }}</h3>
-        <p>Esperando a que acepte o rechace el duelo...</p>
+        <span class="challenge-kicker">{{ 'lobby.waitingOpponent' | t }}</span>
+        <h3>{{ 'lobby.challengingText' | t:{username: challengedUsername} }}</h3>
+        <p>{{ 'lobby.waitingChallengeResponse' | t }}</p>
       </div>
       <div class="challenge-actions">
-        <button type="button" class="btn-reject full-width" (click)="cancelarRetoDuelo()">CANCELAR</button>
+        <button type="button" class="btn-reject full-width" (click)="cancelarRetoDuelo()">{{ 'lobby.cancelBtn' | t }}</button>
       </div>
     </div>
   </div>
@@ -760,13 +1096,13 @@
         <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
       </div>
       <div class="challenge-body">
-        <span class="challenge-kicker">PROPUESTA DE INTERCAMBIO</span>
-        <h3>{{ incomingTradeInvite.username }} te invita a intercambiar cartas</h3>
-        <p>¿Deseas abrir la sala de comercio?</p>
+        <span class="challenge-kicker">{{ 'lobby.tradeProposal' | t }}</span>
+        <h3>{{ 'lobby.tradeInviteText' | t:{username: incomingTradeInvite.username} }}</h3>
+        <p>{{ 'lobby.openTradeRoomText' | t }}</p>
       </div>
       <div class="challenge-actions">
-        <button type="button" class="btn-reject" (click)="responderTrade(false)">RECHAZAR</button>
-        <button type="button" class="btn-accept" (click)="responderTrade(true)">ACEPTAR</button>
+        <button type="button" class="btn-reject" (click)="responderTrade(false)">{{ 'lobby.reject' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderTrade(true)">{{ 'lobby.accept' | t }}</button>
       </div>
     </div>
   </div>
@@ -789,12 +1125,12 @@
         <span class="timer-seconds">{{ challengeSecondsLeft }}</span>
       </div>
       <div class="challenge-body">
-        <span class="challenge-kicker">SALA DE COMERCIO</span>
-        <h3>Invitando a {{ tradeInvitedUsername }}</h3>
-        <p>Esperando a que acepte o rechace la invitación de intercambio...</p>
+        <span class="challenge-kicker">{{ 'lobby.tradingRoom' | t }}</span>
+        <h3>{{ 'lobby.invitingTradeText' | t:{username: tradeInvitedUsername} }}</h3>
+        <p>{{ 'lobby.waitingTradeResponse' | t }}</p>
       </div>
       <div class="challenge-actions">
-        <button type="button" class="btn-reject full-width" (click)="cancelarTradeInvite()">CANCELAR</button>
+        <button type="button" class="btn-reject full-width" (click)="cancelarTradeInvite()">{{ 'lobby.cancelBtn' | t }}</button>
       </div>
     </div>
   </div>
@@ -803,8 +1139,8 @@
   <div class="trade-modal-overlay" *ngIf="activeTradeSession" (click)="$event.stopPropagation()">
     <div class="trade-modal-card">
       <header class="trade-header">
-        <span class="trade-kicker">CENTRO DE INTERCAMBIO UTN</span>
-        <h2>Intercambiar Cartas</h2>
+        <span class="trade-kicker">{{ 'lobby.tradeUtnCenter' | t }}</span>
+        <h2>{{ 'lobby.tradeCardsTitle' | t }}</h2>
         <button class="close-trade-btn" (click)="cerrarTradeSala()">×</button>
       </header>
 
@@ -812,19 +1148,19 @@
         <!-- PLAYER 1 (ME) OFFER ZONE -->
         <div class="trade-offer-pane my-offer">
           <div class="pane-header">
-            <strong>TU OFERTA</strong>
+            <strong>{{ 'lobby.yourOffer' | t }}</strong>
             <span class="ready-badge" [class.ready]="tradeLeftReady">
-              {{ tradeLeftReady ? 'LISTO' : 'PREPARANDO' }}
+              {{ tradeLeftReady ? ('lobby.readyLabel' | t) : ('lobby.preparingLabel' | t) }}
             </span>
           </div>
 
           <div class="trade-slots">
             <div class="trade-slot-card" *ngFor="let card of tradeLeftCards" (click)="removeCardFromTrade(card)">
-              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
-              <span class="remove-hint">Quitar</span>
+              <img [src]="getImagenCarta(card.id)" [alt]="card.nombre" (error)="onCardImageError($event)">
+              <span class="remove-hint">{{ 'lobby.quitar' | t }}</span>
             </div>
             <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeLeftCards.length)">
-              <span>Vacío</span>
+              <span>{{ 'lobby.vacas' | t }}</span>
             </div>
           </div>
 
@@ -837,7 +1173,7 @@
               [disabled]="tradeLeftCards.length === 0"
               (click)="toggleTradeReady()"
             >
-              {{ tradeLeftReady ? 'CONFIRMADO' : 'CONFIRMAR OFERTA (O)' }}
+              {{ tradeLeftReady ? ('lobby.confirmed' | t) : ('lobby.confirmOffer' | t) }}
             </button>
           </div>
         </div>
@@ -868,24 +1204,24 @@
         <!-- PLAYER 2 (OPPONENT) OFFER ZONE -->
         <div class="trade-offer-pane opponent-offer">
           <div class="pane-header">
-            <strong>OFERTA DE {{ tradeOpponentUsername }}</strong>
+            <strong>{{ 'lobby.opponentOffer' | t:{username: tradeOpponentUsername} }}</strong>
             <span class="ready-badge" [class.ready]="tradeRightReady">
-              {{ tradeRightReady ? 'LISTO' : 'PREPARANDO' }}
+              {{ tradeRightReady ? ('lobby.readyLabel' | t) : ('lobby.preparingLabel' | t) }}
             </span>
           </div>
 
           <div class="trade-slots">
             <div class="trade-slot-card" *ngFor="let card of tradeRightCards">
-              <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+              <img [src]="getImagenCarta(card.id)" [alt]="card.nombre" (error)="onCardImageError($event)">
             </div>
             <div class="trade-slot-empty" *ngFor="let empty of getEmptySlots(tradeRightCards.length)">
-              <span>Vacío</span>
+              <span>{{ 'lobby.vacas' | t }}</span>
             </div>
           </div>
 
           <div class="ready-controls">
             <div class="opponent-ready-status" [class.ready]="tradeRightReady">
-              <strong>{{ tradeRightReady ? 'OPONENTE CONFIRMÓ' : 'OPONENTE PREPARANDO...' }}</strong>
+              <strong>{{ tradeRightReady ? ('lobby.opponentConfirmed' | t) : ('lobby.opponentPreparing' | t) }}</strong>
             </div>
           </div>
         </div>
@@ -894,43 +1230,43 @@
       <!-- MY COLLECTION TO CHOOSE CARDS FROM -->
       <div class="trade-collection-area">
         <div class="collection-filter-bar">
-          <h3>Tu Colección</h3>
+          <h3>{{ 'lobby.yourCollection' | t }}</h3>
           <div class="collection-title-block">
-            <h3>Tu ColecciÃ³n</h3>
-            <small>{{ tradeCollectionFiltrada.length }}/{{ userTradeCollection.length }} cartas</small>
+            <h3>{{ 'lobby.yourCollection' | t }}</h3>
+            <small>{{ 'lobby.cardsCountLobby' | t:{current: tradeCollectionFiltrada.length, total: userTradeCollection.length} }}</small>
           </div>
           <input
             type="text"
-            placeholder="Nombre, ID o ataque..."
+            [placeholder]="'lobby.filterSearchPlaceholder' | t"
             [(ngModel)]="tradeCollectionSearchText"
             (input)="filtrarColeccionTrade()"
           >
           <select [(ngModel)]="tradeCollectionFilterRarity" (change)="filtrarColeccionTrade()">
-            <option value="">Todas las rarezas</option>
+            <option value="">{{ 'lobby.allRarities' | t }}</option>
             <option *ngFor="let rarity of tradeCollectionRarities" [value]="rarity">{{ rarity }}</option>
           </select>
           <select [(ngModel)]="tradeCollectionFilterType" (change)="filtrarColeccionTrade()">
-            <option value="">Todos los tipos</option>
+            <option value="">{{ 'lobby.allTypes' | t }}</option>
             <option *ngFor="let type of tradeCollectionTypes" [value]="type">{{ type }}</option>
           </select>
           <select [(ngModel)]="tradeCollectionFilterSupertype" (change)="filtrarColeccionTrade()">
-            <option value="">Todas las clases</option>
+            <option value="">{{ 'lobby.allClasses' | t }}</option>
             <option *ngFor="let supertype of tradeCollectionSupertypes" [value]="supertype">{{ supertype }}</option>
           </select>
           <select [(ngModel)]="tradeCollectionFilterSubtype" (change)="filtrarColeccionTrade()">
-            <option value="">Todos los subtipos</option>
+            <option value="">{{ 'lobby.allSubtypes' | t }}</option>
             <option *ngFor="let subtype of tradeCollectionSubtypes" [value]="subtype">{{ subtype }}</option>
           </select>
-          <button type="button" class="btn-clear-trade-filters" (click)="limpiarFiltrosTrade()">Limpiar</button>
+          <button type="button" class="btn-clear-trade-filters" (click)="limpiarFiltrosTrade()">{{ 'lobby.clearFilters' | t }}</button>
         </div>
 
         <div class="trade-collection-state" *ngIf="tradeCollectionLoading">
           <span class="trade-loader"></span>
-          Sincronizando colecciÃ³n...
+          {{ 'lobby.syncingCollection' | t }}
         </div>
         <div class="trade-collection-state error" *ngIf="!tradeCollectionLoading && tradeCollectionError">
           {{ tradeCollectionError }}
-          <button type="button" (click)="precargarColeccionTrade(true)">Reintentar</button>
+          <button type="button" (click)="precargarColeccionTrade(true)">{{ 'lobby.retry' | t }}</button>
         </div>
 
         <div class="trade-collection-grid" *ngIf="!tradeCollectionLoading && !tradeCollectionError">
@@ -940,7 +1276,7 @@
             (click)="addCardToTrade(card)"
             [class.already-in-trade]="isCardInTrade(card)"
           >
-            <img [src]="'/images/cards/' + card.id + '.png'" [alt]="card.nombre">
+            <img [src]="getImagenCarta(card.id)" [alt]="card.nombre" (error)="onCardImageError($event)">
             <div class="card-overlay-info">
               <strong>{{ card.nombre }}</strong>
               <small>{{ card.rarity || 'Common' }}</small>
@@ -948,7 +1284,7 @@
             </div>
           </div>
           <div class="collection-empty" *ngIf="tradeCollectionFiltrada.length === 0">
-            No se encontraron cartas en tu colección.
+            {{ 'lobby.noCardsInCollection' | t }}
           </div>
         </div>
       </div>
@@ -959,11 +1295,11 @@
   <div class="lobby-dialog-overlay warning-dialog" *ngIf="tradeShowValueWarning">
     <div class="lobby-dialog-card warning-card">
       <span class="warning-icon">⚠</span>
-      <h3>¿Estás seguro del intercambio?</h3>
-      <p>La carta o cartas que vas a entregar son significativamente más valiosas (rareza superior) que las que vas a recibir.</p>
+      <h3>{{ 'lobby.sureAboutTrade' | t }}</h3>
+      <p>{{ 'lobby.valueWarningText' | t }}</p>
       <div class="warning-actions">
-        <button type="button" class="btn-reject" (click)="confirmarAdvertenciaValor(false)">NO, CANCELAR</button>
-        <button type="button" class="btn-accept" (click)="confirmarAdvertenciaValor(true)">SÍ, ESTOY SEGURO</button>
+        <button type="button" class="btn-reject" (click)="confirmarAdvertenciaValor(false)">{{ 'lobby.noCancel' | t }}</button>
+        <button type="button" class="btn-accept" (click)="confirmarAdvertenciaValor(true)">{{ 'lobby.yesSure' | t }}</button>
       </div>
     </div>
   </div>
@@ -972,11 +1308,11 @@
   <div class="lobby-dialog-overlay" *ngIf="tradeShowContinuationPrompt">
     <div class="lobby-dialog-card challenge-card continuation-card">
       <div class="continuation-icon">🤝</div>
-      <h3>¡Intercambio completado con éxito!</h3>
-      <p>Las cartas ya fueron transferidas a las respectivas colecciones. ¿Quieren seguir intercambiando?</p>
+      <h3>{{ 'lobby.tradeCompletedSuccess' | t }}</h3>
+      <p>{{ 'lobby.transferCompletedText' | t }}</p>
       <div class="challenge-actions">
-        <button type="button" class="btn-reject" (click)="responderSeguirTrading(false)">SALIR</button>
-        <button type="button" class="btn-accept" (click)="responderSeguirTrading(true)">SEGUIR TRADEANDO</button>
+        <button type="button" class="btn-reject" (click)="responderSeguirTrading(false)">{{ 'lobby.exit' | t }}</button>
+        <button type="button" class="btn-accept" (click)="responderSeguirTrading(true)">{{ 'lobby.keepTrading' | t }}</button>
       </div>
     </div>
   </div>
@@ -985,8 +1321,8 @@
   <div class="lobby-dialog-overlay" *ngIf="tradeWaitingForContinuation">
     <div class="lobby-dialog-card challenge-card waiting-card">
       <div class="continuation-icon waiting-icon">⏳</div>
-      <h3>Esperando respuesta...</h3>
-      <p>Esperando a que {{ tradeOpponentUsername }} decida si quiere seguir intercambiando...</p>
+      <h3>{{ 'lobby.waitingTradeContinuation' | t }}</h3>
+      <p>{{ 'lobby.waitingOpponentContinuationText' | t:{username: tradeOpponentUsername} }}</p>
     </div>
   </div>
 
@@ -995,9 +1331,9 @@
     <div class="emote-menu-card" (click)="$event.stopPropagation()">
       <button class="close-emote-menu" (click)="closeEmoteMenu()">×</button>
       <div class="emote-header">
-        <span class="emote-kicker">GESTOS Y ANIMACIONES</span>
-        <h3>Seleccionar Emote</h3>
-        <p class="emote-desc">Hará una acción o pose especial</p>
+        <span class="emote-kicker">{{ 'lobby.gesturesAndAnims' | t }}</span>
+        <h3>{{ 'lobby.selectEmote' | t }}</h3>
+        <p class="emote-desc">{{ 'lobby.emoteDesc' | t }}</p>
       </div>
       <div class="emote-grid" *ngIf="getAvailableEmotes().length > 0; else noEmotes">
         <button
@@ -1013,7 +1349,7 @@
       <ng-template #noEmotes>
         <div class="no-emotes-wrapper">
           <span class="no-emotes-icon">⚠️</span>
-          <p class="no-emotes-copy">Este personaje no posee animaciones adicionales para reproducir.</p>
+          <p class="no-emotes-copy">{{ 'lobby.noEmotesText' | t }}</p>
         </div>
       </ng-template>
     </div>
@@ -1021,6 +1357,11 @@
 
   <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">
     <button type="button" class="deck-builder-close" (click)="cerrarDeckBuilder()">×</button>
-    <app-deck-builder [embedded]="true" (closed)="cerrarDeckBuilder($event)"></app-deck-builder>
+    <app-deck-builder
+      [embedded]="true"
+      [mazosDisponibles]="mazos"
+      [mazoInicial]="mazoBuilderInicial"
+      (closed)="cerrarDeckBuilder($event)"
+    ></app-deck-builder>
   </div>
 </div>

@@ -3,6 +3,7 @@ package com.pokemon.tcg.service;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.model.battle.state.EstadoFinPartida;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,9 +41,16 @@ public class BattleKoService {
         }
 
         boolean sinPremios = tableroGanador.getPremios().isEmpty();
-        boolean sinPokemon = tableroVictima.getActivo() == null && tableroVictima.getBanca().isEmpty();
+        boolean sinPokemon = tableroVictima.getActivo() == null
+                && tableroVictima.getBanca().isEmpty();
         if (sinPremios || sinPokemon) {
-            partida.setFaseActual(Partida.Fase.FIN_PARTIDA);
+            partida.transicionarA(new EstadoFinPartida());
+            partida.setGanador(tableroGanador == partida.getJugador()
+                    ? partida.getJugadorUsername()
+                    : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT"));
+            partida.setRazonFinPartida(sinPremios
+                    ? "El ganador tomo todos sus premios."
+                    : "El rival se quedo sin Pokemon en juego.");
             return;
         }
 
@@ -116,7 +124,7 @@ public class BattleKoService {
 
         if (candidato.getCard().getDebilidades() != null) {
             boolean esDebil = candidato.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoRival));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(tipoRival));
             if (esDebil) {
                 puntaje -= 1000;
             }
@@ -124,7 +132,7 @@ public class BattleKoService {
 
         if (candidato.getCard().getResistencias() != null) {
             boolean esResistente = candidato.getCard().getResistencias().stream()
-                    .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoRival));
+                    .anyMatch(r -> r.getType().equalsIgnoreCase(tipoRival));
             if (esResistente) {
                 puntaje += 300;
             }
@@ -132,13 +140,26 @@ public class BattleKoService {
 
         if (rival.getCard().getDebilidades() != null && miTipo != null) {
             boolean rivalEsDebil = rival.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(miTipo));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(miTipo));
             if (rivalEsDebil) {
                 puntaje += 500;
             }
         }
 
         return puntaje;
+    }
+
+    private boolean tienePokemonBasicoEnMano(TableroJugador tablero) {
+        return tablero.getMano().stream().anyMatch(this::esPokemonBasico);
+    }
+
+    private boolean esPokemonBasico(com.pokemon.tcg.model.Card c) {
+        if (c == null || c.getSupertype() == null) return false;
+        String supertype = java.text.Normalizer.normalize(c.getSupertype(), java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase();
+        if (!"pokemon".equals(supertype)) return false;
+        return c.getSubtypes() != null && c.getSubtypes().stream()
+                .anyMatch(s -> "Basic".equalsIgnoreCase(s));
     }
 
     private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}

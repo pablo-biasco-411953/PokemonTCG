@@ -30,6 +30,11 @@ export class MazoService {
     return this.http.put<Mazo>(`${this.apiUrl}/actualizar/${idMazo}`, body);
   }
 
+  // Elimina un mazo guardado.
+  eliminarMazo(idMazo: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/eliminar/${idMazo}`);
+  }
+
   // Guarda un mazo nuevo.
   guardarMazo(nombre: string, username: string, cartas: string[]): Observable<Mazo> {
     const body = { nombre, username, cartas };

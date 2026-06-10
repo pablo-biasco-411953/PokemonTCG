@@ -32,37 +32,27 @@ public class Card {
     @JsonProperty("evolvesFrom")
     private String evolvesFrom;
 
-    @Column(length = 500, name = "subtypes")
-    private String subtypesJson;
-
-    @Column(length = 2000, name = "rules")
-    private String rulesJson;
-
-    @Column(length = 2000, name = "attacks")
-    private String attacksJson;
-
-    @Column(length = 1000, name = "weakness")
-    private String weaknessJson;
-
-    @Column(length = 1000, name = "resistance")
-    private String resistanceJson;
-
-    @Transient
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "card_subtypes", joinColumns = @JoinColumn(name = "card_id"))
+    @Column(name = "subtype")
     private List<String> subtypes = new ArrayList<>();
 
-    @Transient
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "card_rules", joinColumns = @JoinColumn(name = "card_id"))
+    @Column(name = "rule", length = 2000)
     private List<String> reglas = new ArrayList<>();
 
-    @Transient
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JoinColumn(name = "card_id")
     private List<Ataque> ataques = new ArrayList<>();
 
-    @Transient
-    private List<Map<String, String>> debilidades = new ArrayList<>();
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "card_debilidades", joinColumns = @JoinColumn(name = "card_id"))
+    private List<CardAttribute> debilidades = new ArrayList<>();
 
-    @Transient
-    private List<Map<String, String>> resistencias = new ArrayList<>();
-
-    private static final ObjectMapper mapper = new ObjectMapper();
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "card_resistencias", joinColumns = @JoinColumn(name = "card_id"))
+    private List<CardAttribute> resistencias = new ArrayList<>();
 
     public Card() {}
 
@@ -101,58 +91,26 @@ public class Card {
             }
         }
         this.ataques = nuevaLista;
-        try {
-            this.attacksJson = mapper.writeValueAsString(this.ataques);
-        } catch(Exception e) { this.attacksJson = "[]"; }
     }
 
     @JsonProperty("subtypes")
     public void setSubtypes(List<String> lista) {
         this.subtypes = (lista != null) ? lista : new ArrayList<>();
-        try {
-            this.subtypesJson = mapper.writeValueAsString(this.subtypes);
-        } catch (Exception e) { this.subtypesJson = "[]"; }
     }
 
     @JsonProperty("reglas")
     public void setReglas(List<String> lista) {
         this.reglas = (lista != null) ? lista : new ArrayList<>();
-        try {
-            this.rulesJson = mapper.writeValueAsString(this.reglas);
-        } catch (Exception e) { this.rulesJson = "[]"; }
     }
 
     @JsonProperty("debilidades")
-    public void setDebilidades(List<Map<String, String>> lista) {
+    public void setDebilidades(List<CardAttribute> lista) {
         this.debilidades = (lista != null) ? lista : new ArrayList<>();
-        try {
-            this.weaknessJson = mapper.writeValueAsString(this.debilidades);
-        } catch (Exception e) { this.weaknessJson = "[]"; }
     }
 
     @JsonProperty("resistencias")
-    public void setResistencias(List<Map<String, String>> lista) {
+    public void setResistencias(List<CardAttribute> lista) {
         this.resistencias = (lista != null) ? lista : new ArrayList<>();
-        try {
-            this.resistanceJson = mapper.writeValueAsString(this.resistencias);
-        } catch (Exception e) { this.resistanceJson = "[]"; }
-    }
-
-    // ─── CARGA DESDE DB (Hidratación) ───
-    @PostLoad
-    private void onLoad() {
-        try {
-            if (this.attacksJson != null && !this.attacksJson.isEmpty())
-                this.ataques = mapper.readValue(this.attacksJson, new TypeReference<List<Ataque>>() {});
-            if (this.weaknessJson != null && !this.weaknessJson.isEmpty())
-                this.debilidades = mapper.readValue(this.weaknessJson, new TypeReference<List<Map<String, String>>>() {});
-            if (this.resistanceJson != null && !this.resistanceJson.isEmpty())
-                this.resistencias = mapper.readValue(this.resistanceJson, new TypeReference<List<Map<String, String>>>() {});
-            if (this.subtypesJson != null && !this.subtypesJson.isEmpty())
-                this.subtypes = mapper.readValue(this.subtypesJson, new TypeReference<List<String>>() {});
-            if (this.rulesJson != null && !this.rulesJson.isEmpty())
-                this.reglas = mapper.readValue(this.rulesJson, new TypeReference<List<String>>() {});
-        } catch (Exception e) { e.printStackTrace(); }
     }
 
     // ─── GETTERS Y SETTERS ───
@@ -174,15 +132,11 @@ public class Card {
     public void setEvolvesFrom(String evolvesFrom) { this.evolvesFrom = evolvesFrom; }
 
     public List<String> getSubtypes() { return subtypes; }
+    public List<String> getReglas() { return reglas; }
     public List<Ataque> getAtaques() { return ataques; }
-    public List<Map<String, String>> getDebilidades() { return debilidades; }
-    public List<Map<String, String>> getResistencias() { return resistencias; }
-
-    @JsonIgnore public String getSubtypesJson() { return subtypesJson; }
-    @JsonIgnore public String getAttacksJson() { return attacksJson; }
-    @JsonIgnore public String getWeaknessJson() { return weaknessJson; }
-    @JsonIgnore public String getResistanceJson() { return resistanceJson; }
-    @JsonIgnore public String getRulesJson() { return rulesJson; }
+    public void reemplazarAtaques(List<Ataque> ataques) { this.ataques = ataques != null ? ataques : new ArrayList<>(); }
+    public List<CardAttribute> getDebilidades() { return debilidades; }
+    public List<CardAttribute> getResistencias() { return resistencias; }
 
     public int getCostoRetirada() { return costoRetirada; }
     public void setCostoRetirada(int costoRetirada) { this.costoRetirada = costoRetirada; }

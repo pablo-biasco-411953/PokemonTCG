@@ -169,6 +169,26 @@ public class LobbyWebSocketHandler extends TextWebSocketHandler {
     /**
      * Reenvía un mensaje JSON a todas las sesiones activas, excepto a la del emisor.
      */
+    public void broadcastToAll(Object payload) {
+        try {
+            String jsonPayload = payload instanceof String stringPayload
+                    ? stringPayload
+                    : objectMapper.writeValueAsString(payload);
+            TextMessage textMessage = new TextMessage(jsonPayload);
+            sessions.forEach((username, session) -> {
+                if (session.isOpen()) {
+                    try {
+                        session.sendMessage(textMessage);
+                    } catch (IOException e) {
+                        System.err.println("Falla al difundir socket a " + username + ": " + e.getMessage());
+                    }
+                }
+            });
+        } catch (IOException e) {
+            System.err.println("Error serializando broadcast de lobby: " + e.getMessage());
+        }
+    }
+
     private void broadcastToOthers(String senderUsername, String jsonPayload) {
         TextMessage textMessage = new TextMessage(jsonPayload);
         sessions.forEach((username, session) -> {

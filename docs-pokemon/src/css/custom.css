@@ -1,0 +1,280 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* Tema Pokémon - Colores temáticos */
+:root {
+  /* Color primario: Amarillo Pokémon */
+  --ifm-color-primary: #FFCC00;
+  --ifm-color-primary-dark: #E6B800;
+  --ifm-color-primary-darker: #CC9900;
+  --ifm-color-primary-darkest: #B38600;
+  --ifm-color-primary-light: #FFD700;
+  --ifm-color-primary-lighter: #FFE066;
+  --ifm-color-primary-lightest: #FFEB99;
+
+  /* Colores secundarios */
+  --ifm-color-secondary: #0066CC; /* Azul Pokémon */
+  --ifm-color-info: #FF3333; /* Rojo */
+  --ifm-color-success: #22BB22; /* Verde */
+  --ifm-color-warning: #FF9900; /* Naranja */
+  --ifm-color-danger: #EE0000; /* Rojo oscuro */
+
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 204, 0, 0.1);
+
+  /* Fuente temática */
+  --ifm-font-family-base: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Tema oscuro Pokémon */
+[data-theme='dark'] {
+  --ifm-color-primary: #FFD700;
+  --ifm-color-primary-dark: #FFC700;
+  --ifm-color-primary-darker: #FFB700;
+  --ifm-color-primary-darkest: #FFA700;
+  --ifm-color-primary-light: #FFDE59;
+  --ifm-color-primary-lighter: #FFEA7A;
+  --ifm-color-primary-lightest: #FFF5A0;
+
+  --ifm-color-secondary: #66CCFF;
+  --ifm-color-info: #FF6666;
+  --ifm-color-success: #66FF66;
+  --ifm-color-warning: #FFCC66;
+  --ifm-color-danger: #FF5555;
+
+  --docusaurus-highlighted-code-line-bg: rgba(255, 204, 0, 0.15);
+}
+
+/* Estilos adicionales temáticos */
+.navbar {
+  background: linear-gradient(135deg, #0066CC 0%, #FFCC00 100%);
+}
+
+.footer {
+  background: linear-gradient(135deg, #1a1a1a 0%, #0066CC 100%);
+}
+
+/* ⚡ Animaciones Pokémon - Efectos Dinámicos Sutiles */
+
+/* Fade-in al cargar página */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Brillo sutil Pokémon */
+@keyframes pokemonGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 204, 0, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(255, 204, 0, 0.6);
+  }
+}
+
+/* Pulse suave */
+@keyframes softPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Aplicar animaciones */
+
+/* Documentos: fade-in suave */
+.markdown {
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+/* Titles brillan suavemente */
+h1, h2, h3 {
+  transition: color 0.3s ease;
+}
+
+h1 {
+  animation: pokemonGlow 3s ease-in-out infinite;
+}
+
+/* Links: transición suave */
+a {
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-decoration-color: #FFCC00;
+  text-decoration-thickness: 2px;
+}
+
+/* Botones: efecto hover elegante */
+button,
+.button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+button:hover,
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 102, 204, 0.2);
+}
+
+button:active,
+.button:active {
+  transform: translateY(0);
+}
+
+/* Cards: hover effect */
+.card,
+[class*='card'] {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(255, 204, 0, 0.15);
+}
+
+/* Sidebar: transiciones suaves */
+.sidebar-toggle {
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  color: #FFCC00;
+  transform: scale(1.1);
+}
+
+/* Items de navegación */
+.navbar__item {
+  transition: all 0.2s ease;
+}
+
+.navbar__link:hover {
+  color: #FFEB99;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
+/* Code blocks: scroll smooth */
+pre {
+  transition: all 0.3s ease;
+}
+
+pre:hover {
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+}
+
+/* Blockquotes: efecto destacado */
+blockquote {
+  transition: all 0.3s ease;
+  border-left: 4px solid #FFCC00;
+  padding-left: 16px;
+  margin-left: 0;
+}
+
+blockquote:hover {
+  border-left-color: #FFD700;
+  box-shadow: -4px 0 12px rgba(255, 204, 0, 0.1);
+  transform: translateX(4px);
+}
+
+/* Tables: row hover */
+table tbody tr {
+  transition: all 0.2s ease;
+}
+
+table tbody tr:hover {
+  background-color: rgba(255, 204, 0, 0.08);
+  transform: scale(1.01);
+}
+
+/* Admonitions (info, warning, etc) */
+.admonition {
+  animation: fadeIn 0.5s ease-in-out;
+  transition: all 0.3s ease;
+}
+
+.admonition:hover {
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.15);
+}
+
+/* TOC items: highlight suave */
+.table-of-contents a {
+  transition: all 0.2s ease;
+}
+
+.table-of-contents a:hover {
+  color: #FFCC00;
+  padding-left: 8px;
+}
+
+/* Badge/Tag animations */
+.badge,
+[class*='badge'] {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: softPulse 2s ease-in-out infinite;
+  animation-delay: var(--animation-delay, 0s);
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* Loading spinner (si lo hay) */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+[class*='loading'],
+[class*='spinner'] {
+  animation: spin 1s linear infinite;
+}
+
+/* Hero section fade-in */
+.hero {
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Responsive: reducir animaciones en mobile */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode adjustments para animaciones */
+[data-theme='dark'] a:hover {
+  text-decoration-color: #FFD700;
+}
+
+[data-theme='dark'] .navbar__link:hover {
+  color: #FFDE59;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+[data-theme='dark'] .card:hover {
+  box-shadow: 0 12px 24px rgba(255, 215, 0, 0.15);
+}
+
+[data-theme='dark'] table tbody tr:hover {
+  background-color: rgba(255, 215, 0, 0.08);
+}

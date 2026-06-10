@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { SafeHtml } from '@angular/platform-browser';
-import { BattleActionCard } from '../../shared/models/battle';
+import { BattleActionCard, CartaEnJuego } from '../../shared/models/battle';
 import { Card } from '../../shared/models/card';
 import { BattleBoardAttack, CardGlossaryEntry } from './battle-board.types';
 
@@ -14,6 +14,7 @@ import { BattleBoardAttack, CardGlossaryEntry } from './battle-board.types';
 })
 export class BattleBoardCardDetailPanelComponent {
   @Input() hoveredCard: Card | BattleActionCard | null = null;
+  @Input() hoveredInPlayCard: CartaEnJuego | null = null;
   @Input() hoveredCardStatuses: CardGlossaryEntry[] = [];
   @Input() mostrarHintMano = false;
   @Input() getImagenCarta: ((id: string) => string) | null = null;
@@ -44,5 +45,23 @@ export class BattleBoardCardDetailPanelComponent {
     return 'costoRetirada' in card && typeof card.costoRetirada === 'number'
       ? card.costoRetirada
       : null;
+  }
+
+  getAttachedEnergies(): Card[] {
+    return this.hoveredInPlayCard?.energiasUnidas ?? [];
+  }
+
+  getAttachedStatuses(): string[] {
+    const raw = this.hoveredInPlayCard?.condicionesEspeciales ?? [];
+    return Array.isArray(raw) ? raw : Array.from(raw as any);
+  }
+
+  getEvolutionInfo(card: Card | BattleActionCard): string | null {
+    const evolvesFrom = 'evolvesFrom' in card ? card.evolvesFrom : null;
+    return evolvesFrom ? `Evoluciona de ${evolvesFrom}` : null;
+  }
+
+  getCurrentHp(): number | null {
+    return typeof this.hoveredInPlayCard?.hpActual === 'number' ? this.hoveredInPlayCard.hpActual : null;
   }
 }

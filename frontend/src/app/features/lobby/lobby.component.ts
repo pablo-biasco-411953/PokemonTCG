@@ -1,15 +1,19 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, HostListener, NgZone, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { SobreService } from './services/sobre.service';
+import { LobbyRoomService, LobbyRoomSnapshot } from './services/lobby-room.service';
 import { MazoService } from '../deck-builder/services/mazo.service';
 import { DeckBuilderComponent } from '../deck-builder/deck-builder.component';
 import { JugadorService } from '../../core/services/jugador.service';
 import { BattleService } from '../battle/services/battle.service';
 import { CardService } from '../../core/services/card.service';
+import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { Router } from '@angular/router';
 import { AperturaSobreComponent } from './components/apertura-sobre/apertura-sobre';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { I18nService, LanguageCode } from '../../i18n/i18n.service';
 import { Card } from '../../shared/models/card';
 import { Jugador, JugadorDatosResponse } from '../../shared/models/jugador';
 import { Mazo } from '../../shared/models/mazo';
@@ -69,6 +73,7 @@ interface CampusNpc {
 }
 
 type SantoroDialogState = 'intro' | 'thanks' | 'forced' | 'gift' | 'afterGift' | 'repeat';
+type FloatingLobbyPanel = 'chat' | 'decks' | 'help';
 
 export interface OtherPlayerNPC {
   username: string;
@@ -124,6 +129,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   chatActive = false;
   chatText = '';
   chatLog: Array<{ sender: string; text: string; system?: boolean }> = [];
+  chatPanelMinimized = localStorage.getItem('ptcg_chat_panel_minimized') === 'true';
+  chatPanelX = this.getStoredPanelNumber('ptcg_chat_panel_x', typeof window !== 'undefined' ? Math.max(24, window.innerWidth - 404) : 760);
+  chatPanelY = this.getStoredPanelNumber('ptcg_chat_panel_y', typeof window !== 'undefined' ? Math.max(92, window.innerHeight - 294) : 420);
   localChatBubble: string | null = null;
   localBubbleScreenX?: number;
   localBubbleScreenY?: number;
@@ -143,9 +151,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   mazos: Mazo[] = [];
   slotsVacios: number[] = [];
   sobresDisponibles: number = 0;
+  santoCoins: number = 0;
   cantidadCartas: number = 0;
   cantidadCartasUnicas: number = 0;
   mostrarAnimacionSobre: boolean = false;
+  isOpeningPacks: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
   debugPanelX = 18;
@@ -173,9 +183,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   debugAccionEnCurso: boolean = false;
   selectedBattleDeckId: number | null = null;
   battlePanelOpen = false;
+  lobbyRooms: LobbyRoomSnapshot[] = [];
+  selectedRoom: LobbyRoomSnapshot | null = null;
+  currentRoom: LobbyRoomSnapshot | null = null;
+  roomCreateName = '';
+  roomPassword = '';
+  roomPinDigits = ['', '', '', '', '', ''];
+  roomPinMasked = [false, false, false, false, false, false];
+  private roomPinTimers: Array<ReturnType<typeof setTimeout> | undefined> = [];
+  roomJoinPassword = '';
+  roomChatText = '';
+  roomsLoading = false;
+  roomActionLoading = false;
+  roomError = '';
+  roomCountdownValue: number | null = null;
+  private roomCountdownMatchId: string | null = null;
+  private roomCountdownTimer?: ReturnType<typeof setInterval>;
+  roomReactions: Array<{ id: number; roomId: string; icon: string; username: string; x: number }> = [];
+  private roomReactionSeq = 0;
   kioskShopOpen = false;
   vendorCameraFocus = false;
   deckBuilderOpen = false;
+  mazoBuilderInicial: Mazo | null = null;
   santoroDialogOpen = false;
   kiosqueraDialogOpen = false;
   santoroDialogState: SantoroDialogState = 'intro';
@@ -187,10 +216,26 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   characterMenuOpen = false;
   selectedCharacterId = localStorage.getItem('lobbyCharacter') || 'hilda-sygna';
   pikachuEnabled = localStorage.getItem('pikachuCompanion') !== 'false';
-  dayPhaseLabel = 'MaÃ±ana';
+  dayPhaseLabel = 'lobby.phase.morning';
   currentInteraction: HubSpot | null = null;
   graphicsQuality: 'low' | 'medium' | 'high' = 'medium';
+  shadowQuality: 'off' | 'balanced' | 'high' = (localStorage.getItem('ptcg_shadow_quality') as 'off' | 'balanced' | 'high' | null) || 'balanced';
+  remote3dQuality: 'low' | 'medium' | 'high' = (localStorage.getItem('ptcg_remote_3d_quality') as 'low' | 'medium' | 'high' | null) || 'medium';
+  settingsOpen = false;
+  settingsSection: 'graphics' | 'audio' | 'language' = 'graphics';
+  graphicsApplying = false;
+  graphicsLoadingMessage = 'Aplicando graficos...';
+  deckDockMinimized = localStorage.getItem('ptcg_deck_dock_minimized') === 'true';
+  deckDockX = this.getStoredPanelNumber('ptcg_deck_dock_x', 24);
+  deckDockY = this.getStoredPanelNumber('ptcg_deck_dock_y', typeof window !== 'undefined' ? Math.max(112, Math.round(window.innerHeight * 0.44)) : 320);
+  helpPanelMinimized = localStorage.getItem('ptcg_help_panel_minimized') === 'true';
+  helpPanelX = this.getStoredPanelNumber('ptcg_help_panel_x', 28);
+  helpPanelY = this.getStoredPanelNumber('ptcg_help_panel_y', typeof window !== 'undefined' ? Math.max(120, window.innerHeight - 170) : 520);
+  private floatingPanelDragging: FloatingLobbyPanel | null = null;
+  private floatingPanelDragOffsetX = 0;
+  private floatingPanelDragOffsetY = 0;
   landscapeHintDismissed = localStorage.getItem('lobbyLandscapeHintDismissed') === 'true';
+  readonly packBundlePrices: Record<number, number> = { 1: 80, 3: 200, 5: 300 };
 
   // Interaction & Context Menu State
   selectedPlayerForMenu: OtherPlayerNPC | null = null;
@@ -234,9 +279,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private tradeCollectionLoaded = false;
 
   get graphicsQualityLabel(): string {
-    if (this.graphicsQuality === 'low') return 'BAJO ðŸ”´';
-    if (this.graphicsQuality === 'medium') return 'MEDIO ðŸŸ¡';
-    return 'ALTO ðŸŸ¢';
+    if (this.graphicsQuality === 'low') return this.i18n.translate('lobby.low') + ' 🔴';
+    if (this.graphicsQuality === 'medium') return this.i18n.translate('lobby.medium') + ' 🟡';
+    return this.i18n.translate('lobby.high') + ' 🟢';
   }
 
   // Propiedades para el modal de personalizaciÃ³n y Onboarding
@@ -375,10 +420,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private mazoService: MazoService,
     private jugadorService: JugadorService,
     private battleService: BattleService,
+    private lobbyRoomService: LobbyRoomService,
     private cardService: CardService,
+    private imagePreloader: ImagePreloaderService,
     private router: Router,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public i18n: I18nService
   ) {
     this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
       if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
@@ -487,6 +535,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private skyDome?: THREE.Mesh;
   private clouds: THREE.Group[] = [];
   private mountainMaterials: THREE.MeshBasicMaterial[] = [];
+  private boundaryMesh?: THREE.Mesh;
   keys = new Set<string>();
   mobileJoystickActive = false;
   mobileJoystickX = 0;
@@ -665,15 +714,15 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.graphicsQuality = quality;
     localStorage.setItem('ptcg_graphics_quality', quality);
     if (updateRenderer) {
-      this.updateRendererPixelRatio();
-      this.updateCachedTextureQuality();
-      this.updateShadowQuality();
-      // Force update shadow state immediately
-      if (this.scene && this.sunLight && this.moonLight) {
-        const elapsed = this.clock.elapsedTime;
-        this.updateDayNightCycle(elapsed);
-      }
-      this.cdr.detectChanges();
+      this.runGraphicsChange('Aplicando calidad grafica...', () => {
+        this.updateRendererPixelRatio();
+        this.updateCachedTextureQuality();
+        this.updateShadowQuality();
+        if (this.scene && this.sunLight && this.moonLight) {
+          const elapsed = this.clock.elapsedTime;
+          this.updateDayNightCycle(elapsed);
+        }
+      });
     }
   }
 
@@ -681,6 +730,176 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const qualities: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
     const nextIndex = (qualities.indexOf(this.graphicsQuality) + 1) % qualities.length;
     this.setGraphicsQuality(qualities[nextIndex]);
+  }
+
+  toggleSettings(section: 'graphics' | 'audio' | 'language' = this.settingsSection) {
+    if (this.settingsOpen && this.settingsSection === section) {
+      this.settingsOpen = false;
+      return;
+    }
+    this.settingsSection = section;
+    this.settingsOpen = true;
+    this.showEmoteMenu = false;
+  }
+
+  closeSettings() {
+    this.settingsOpen = false;
+  }
+
+  setSettingsSection(section: 'graphics' | 'audio' | 'language') {
+    this.settingsSection = section;
+  }
+
+  applyGraphicsPreset(preset: 'performance' | 'balanced' | 'ultra') {
+    this.runGraphicsChange('Aplicando preset grafico...', () => {
+      if (preset === 'performance') {
+        this.setGraphicsQuality('low', false);
+        this.setShadowQuality('off', false);
+        this.setRemote3dQuality('low', false);
+      } else if (preset === 'balanced') {
+        this.setGraphicsQuality('medium', false);
+        this.setShadowQuality('balanced', false);
+        this.setRemote3dQuality('medium', false);
+      } else {
+        this.setGraphicsQuality('high', false);
+        this.setShadowQuality('high', false);
+        this.setRemote3dQuality('high', false);
+      }
+
+      this.updateRendererPixelRatio();
+      this.updateCachedTextureQuality();
+      this.updateShadowQuality();
+      this.updateRemoteDetailBudget(true);
+      if (this.scene && this.sunLight && this.moonLight) {
+        this.updateDayNightCycle(this.clock.elapsedTime);
+      }
+    });
+  }
+
+  setShadowQuality(quality: 'off' | 'balanced' | 'high', update = true) {
+    this.shadowQuality = quality;
+    localStorage.setItem('ptcg_shadow_quality', quality);
+    if (update) {
+      this.runGraphicsChange('Actualizando sombras...', () => {
+        this.updateShadowQuality();
+        if (this.scene && this.sunLight && this.moonLight) {
+          this.updateDayNightCycle(this.clock.elapsedTime);
+        }
+      });
+    }
+  }
+
+  setRemote3dQuality(quality: 'low' | 'medium' | 'high', update = true) {
+    this.remote3dQuality = quality;
+    localStorage.setItem('ptcg_remote_3d_quality', quality);
+    if (update) {
+      this.updateRemoteDetailBudget(true);
+      this.cdr.detectChanges();
+    }
+  }
+
+  selectLanguage(language: LanguageCode) {
+    this.i18n.setLanguage(language);
+    this.cdr.detectChanges();
+  }
+
+  get currentLanguageCode(): LanguageCode {
+    return this.i18n.currentLanguage();
+  }
+
+  toggleDeckDockMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.deckDockMinimized = !this.deckDockMinimized;
+    localStorage.setItem('ptcg_deck_dock_minimized', String(this.deckDockMinimized));
+  }
+
+  toggleChatPanelMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.chatPanelMinimized = !this.chatPanelMinimized;
+    if (this.chatPanelMinimized) {
+      this.chatActive = false;
+    }
+    localStorage.setItem('ptcg_chat_panel_minimized', String(this.chatPanelMinimized));
+  }
+
+  toggleHelpPanelMinimized(event?: Event) {
+    event?.stopPropagation();
+    this.helpPanelMinimized = !this.helpPanelMinimized;
+    localStorage.setItem('ptcg_help_panel_minimized', String(this.helpPanelMinimized));
+  }
+
+  startFloatingPanelDrag(panel: FloatingLobbyPanel, event: PointerEvent) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.floatingPanelDragging = panel;
+    const position = this.getFloatingPanelPosition(panel);
+    this.floatingPanelDragOffsetX = event.clientX - position.x;
+    this.floatingPanelDragOffsetY = event.clientY - position.y;
+  }
+
+  private moveFloatingPanel(event: PointerEvent) {
+    if (!this.floatingPanelDragging) return;
+    const panel = this.floatingPanelDragging;
+    const size = this.getFloatingPanelSize(panel);
+    const maxX = Math.max(8, window.innerWidth - size.width - 8);
+    const maxY = Math.max(8, window.innerHeight - size.height - 8);
+    const nextX = Math.max(8, Math.min(maxX, event.clientX - this.floatingPanelDragOffsetX));
+    const nextY = Math.max(8, Math.min(maxY, event.clientY - this.floatingPanelDragOffsetY));
+
+    if (panel === 'chat') {
+      this.chatPanelX = nextX;
+      this.chatPanelY = nextY;
+    } else if (panel === 'decks') {
+      this.deckDockX = nextX;
+      this.deckDockY = nextY;
+    } else {
+      this.helpPanelX = nextX;
+      this.helpPanelY = nextY;
+    }
+  }
+
+  private getFloatingPanelPosition(panel: FloatingLobbyPanel) {
+    if (panel === 'chat') return { x: this.chatPanelX, y: this.chatPanelY };
+    if (panel === 'decks') return { x: this.deckDockX, y: this.deckDockY };
+    return { x: this.helpPanelX, y: this.helpPanelY };
+  }
+
+  private getFloatingPanelSize(panel: FloatingLobbyPanel) {
+    if (panel === 'chat') {
+      return this.chatPanelMinimized ? { width: 190, height: 48 } : { width: 380, height: 250 };
+    }
+    if (panel === 'decks') {
+      return this.deckDockMinimized ? { width: 190, height: 48 } : { width: 270, height: 320 };
+    }
+    return this.helpPanelMinimized ? { width: 210, height: 48 } : { width: 260, height: 170 };
+  }
+
+  private persistFloatingPanelPosition(panel: FloatingLobbyPanel) {
+    const position = this.getFloatingPanelPosition(panel);
+    const prefix = panel === 'decks' ? 'ptcg_deck_dock' : `ptcg_${panel}_panel`;
+    localStorage.setItem(`${prefix}_x`, String(Math.round(position.x)));
+    localStorage.setItem(`${prefix}_y`, String(Math.round(position.y)));
+  }
+
+  private getStoredPanelNumber(key: string, fallback: number): number {
+    const stored = Number(localStorage.getItem(key));
+    return Number.isFinite(stored) ? stored : fallback;
+  }
+
+  private runGraphicsChange(message: string, action: () => void) {
+    this.graphicsLoadingMessage = message;
+    this.graphicsApplying = true;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      action();
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.graphicsApplying = false;
+        this.cdr.detectChanges();
+      }, 520);
+    }, 40);
   }
 
   updateRendererPixelRatio() {
@@ -744,26 +963,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private updateShadowQuality() {
     if (!this.renderer) return;
-    const enabled = this.graphicsQuality !== 'low';
+    const enabled = this.graphicsQuality !== 'low' && this.shadowQuality !== 'off';
     this.renderer.shadowMap.enabled = enabled;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.worldObjects.forEach((object) => {
       if (object instanceof THREE.Mesh && object.userData['radius']) {
-        object.castShadow = this.graphicsQuality === 'high';
+        object.castShadow = enabled;
+        object.receiveShadow = enabled;
       }
     });
 
-    const sunSize = this.graphicsQuality === 'high' ? 2048 : 1024;
-    const moonSize = this.graphicsQuality === 'high' ? 1024 : 512;
+    const highShadows = enabled && this.shadowQuality === 'high' && this.graphicsQuality === 'high';
+    const sunSize = highShadows ? 2048 : 1024;
+    const moonSize = highShadows ? 1024 : 512;
     if (this.sunLight) {
       this.sunLight.castShadow = enabled;
       this.sunLight.shadow.mapSize.set(sunSize, sunSize);
-      this.sunLight.shadow.camera.left = this.graphicsQuality === 'high' ? -58 : -42;
-      this.sunLight.shadow.camera.right = this.graphicsQuality === 'high' ? 58 : 42;
-      this.sunLight.shadow.camera.top = this.graphicsQuality === 'high' ? 58 : 42;
-      this.sunLight.shadow.camera.bottom = this.graphicsQuality === 'high' ? -58 : -42;
-      this.sunLight.shadow.camera.far = this.graphicsQuality === 'high' ? 125 : 95;
-      this.sunLight.shadow.radius = this.graphicsQuality === 'high' ? 3 : 2;
+      this.sunLight.shadow.camera.left = highShadows ? -58 : -42;
+      this.sunLight.shadow.camera.right = highShadows ? 58 : 42;
+      this.sunLight.shadow.camera.top = highShadows ? 58 : 42;
+      this.sunLight.shadow.camera.bottom = highShadows ? -58 : -42;
+      this.sunLight.shadow.camera.far = highShadows ? 125 : 95;
+      this.sunLight.shadow.radius = highShadows ? 3 : 2;
       this.sunLight.shadow.normalBias = 0.018;
       this.sunLight.shadow.map?.dispose();
       this.sunLight.shadow.map = null as any;
@@ -771,7 +992,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.moonLight) {
-      this.moonLight.castShadow = enabled && this.graphicsQuality === 'high';
+      this.moonLight.castShadow = highShadows;
       this.moonLight.shadow.mapSize.set(moonSize, moonSize);
       this.moonLight.shadow.radius = 2;
       this.moonLight.shadow.normalBias = 0.022;
@@ -801,6 +1022,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = undefined;
     }
+    if (this.roomCountdownTimer) {
+      clearInterval(this.roomCountdownTimer);
+      this.roomCountdownTimer = undefined;
+    }
+    this.roomPinTimers.forEach(timer => timer && clearTimeout(timer));
+    this.roomPinTimers = [];
     if (this.cameraHoldTimeout) {
       clearTimeout(this.cameraHoldTimeout);
       this.cameraHoldTimeout = undefined;
@@ -881,6 +1108,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:pointermove', ['$event'])
   onWindowPointerMove(event: PointerEvent) {
+    if (this.floatingPanelDragging) {
+      this.moveFloatingPanel(event);
+      return;
+    }
+
     if (!this.debugPanelDragging) return;
     const maxX = Math.max(12, window.innerWidth - 260);
     const maxY = Math.max(12, window.innerHeight - 120);
@@ -890,6 +1122,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @HostListener('window:pointerup')
   onWindowPointerUp() {
+    if (this.floatingPanelDragging) {
+      this.persistFloatingPanelPosition(this.floatingPanelDragging);
+      this.floatingPanelDragging = null;
+    }
     this.debugPanelDragging = false;
   }
 
@@ -908,6 +1144,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
         this.sobresDisponibles = res.sobresDisponibles ?? 0;
+        this.santoCoins = res.santoCoins ?? 0;
         this.debugSobresCantidad = this.sobresDisponibles;
 
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
@@ -1087,6 +1324,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.mazos.filter((mazo) => (mazo.cartas?.length ?? 0) === 60);
   }
 
+  get validBattleDecks(): Mazo[] {
+    return this.getBattleDeckCandidates();
+  }
+
   private syncSelectedBattleDeck(preferNewestDeck = false): number | null {
     const candidates = this.getBattleDeckCandidates();
     if (!candidates.length) {
@@ -1138,7 +1379,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       tipo: carta.tipo || 'GRASS',
       attacks: carta.attacks || '',
       hpIcon: 'â™¥',
-      typeIcon: 'Ã°Å¸ÂÆ’',
+      typeIcon: 'Ã°Å¸Â Æ’',
       attacksIcon: 'â€¢'
     };
     this.pkmZoom = pkm;
@@ -1161,12 +1402,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     return `/images/cards/${id}.png`;
   }
 
+  getImagenReal(carta: Card): string {
+    return this.getImagenCarta(carta.id);
+  }
+
+  getImagenCarta(id: string): string {
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
+    }
+
+    return `/images/cards/${id}.png`;
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
+  }
+
   // Abre un sobre y dispara la animacion de revelado.
   abrirSobres() {
     if (!this.jugador?.username || this.sobresDisponibles <= 0) return;
+    this.isOpeningPacks = true;
 
     this.sobreService.abrirSobre(this.jugador.username).subscribe({
-      next: (res: Card[]) => {
+      next: async (res: Card[]) => {
+        const imageUrls = res.map(c => this.getImagenReal(c));
+        await this.imagePreloader.preloadImages(imageUrls);
+
+        this.isOpeningPacks = false;
         this.kioskShopOpen = false;
         this.vendorCameraFocus = false;
         this.cartasNuevas = res;
@@ -1174,10 +1438,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.sobresDisponibles--;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Error al abrir sobre', err);
+      error: (err: HttpErrorResponse) => {
+        this.isOpeningPacks = false;
+        this.tradeCollectionLoading = false;
+        const backendMessage = this.getBackendErrorMessage(err);
+        console.error('Error al abrir sobre', backendMessage, err);
+        alert(backendMessage);
+        this.refrescarTodo();
       }
     });
+  }
+
+  private getBackendErrorMessage(err: HttpErrorResponse): string {
+    const fallback = 'No se pudo abrir el sobre. Revisa si el jugador tiene sobres disponibles y si Render cargo el catalogo de cartas.';
+    if (!err) return fallback;
+    if (typeof err.error === 'string' && err.error.trim()) return err.error;
+    if (err.error?.message) return err.error.message;
+    if (err.message) return err.message;
+    return fallback;
   }
 
   // Cierra la experiencia de apertura y refresca el lobby.
@@ -1202,7 +1480,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // Navega al editor de mazos.
-  irAlDeckBuilder() {
+  irAlDeckBuilder(mazo?: Mazo | null) {
+    this.mazoBuilderInicial = mazo
+      ? { ...mazo, cartas: [...(mazo.cartas || [])] }
+      : null;
     this.deckBuilderOpen = true;
     this.keys.clear();
     this.playerVelocity.set(0, 0, 0);
@@ -1212,10 +1493,35 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cerrarDeckBuilder(refresh = false) {
     this.deckBuilderOpen = false;
+    this.mazoBuilderInicial = null;
     if (refresh) {
       this.refrescarTodo(true);
     }
     this.cdr.detectChanges();
+  }
+
+  editarMazo(mazo: Mazo, event?: Event) {
+    event?.stopPropagation();
+    this.irAlDeckBuilder(mazo);
+  }
+
+  borrarMazo(mazo: Mazo, event?: Event) {
+    event?.stopPropagation();
+    const confirmar = confirm(`Eliminar el mazo "${mazo.nombre}"? Esta accion no se puede deshacer.`);
+    if (!confirmar) return;
+
+    this.mazoService.eliminarMazo(mazo.id).subscribe({
+      next: () => {
+        if (this.selectedBattleDeckId === mazo.id) {
+          this.selectedBattleDeckId = null;
+        }
+        this.refrescarTodo(true);
+      },
+      error: (err) => {
+        console.error('Error al eliminar mazo:', err);
+        alert('No se pudo eliminar el mazo.');
+      }
+    });
   }
 
   // Crea una partida usando el mazo elegido.
@@ -1224,7 +1530,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.battleService.startBattle(this.jugador!.username, mazoId).subscribe({
       next: (partida: Partida) => {
         if (partida && partida.id) {
-          this.router.navigate(['/battle', partida.id]);
+          this.beginRoomCountdown(partida.id);
         }
       },
       error: (err) => console.error('Error al iniciar batalla', err)
@@ -1239,6 +1545,370 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     this.buscarPartida(mazoId);
+  }
+
+  openBattleRooms() {
+    this.battlePanelOpen = true;
+    this.roomError = '';
+    this.loadLobbyRooms();
+  }
+
+  loadLobbyRooms() {
+    this.roomsLoading = true;
+    this.lobbyRoomService.listRooms().subscribe({
+      next: (rooms) => {
+        this.lobbyRooms = rooms;
+        const username = this.jugador?.username;
+        const userRoom = username
+          ? rooms.find(room => room.ownerUsername === username || room.guestUsername === username || room.currentUserSpectator)
+          : null;
+        if (userRoom) {
+          this.currentRoom = userRoom;
+          this.selectedRoom = userRoom;
+          this.roomError = '';
+        }
+        if (this.currentRoom) {
+          this.currentRoom = rooms.find(room => room.id === this.currentRoom?.id) || null;
+        }
+        if (this.selectedRoom) {
+          this.selectedRoom = rooms.find(room => room.id === this.selectedRoom?.id) || null;
+        }
+        this.roomsLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.roomError = this.extractErrorMessage(err, 'No se pudieron cargar las salas.');
+        this.roomsLoading = false;
+      }
+    });
+  }
+
+  selectLobbyRoom(room: LobbyRoomSnapshot) {
+    this.selectedRoom = room;
+    this.roomJoinPassword = '';
+    if (this.currentRoom?.id === room.id) {
+      this.currentRoom = room;
+    }
+  }
+
+  createLobbyRoom() {
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para crear sala.';
+      return;
+    }
+    this.roomActionLoading = true;
+    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomCreateName = '';
+        this.clearRoomPin();
+        this.roomError = '';
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  onRoomPinInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const clean = (input.value || '').replace(/\D/g, '').slice(0, 6);
+    input.value = clean;
+
+    for (let i = 0; i < 6; i++) {
+      const nextDigit = clean[i] || '';
+      const changed = this.roomPinDigits[i] !== nextDigit;
+      this.roomPinDigits[i] = nextDigit;
+      if (!nextDigit) {
+        this.roomPinMasked[i] = false;
+        if (this.roomPinTimers[i]) clearTimeout(this.roomPinTimers[i]);
+        continue;
+      }
+      if (changed) {
+        this.roomPinMasked[i] = false;
+        if (this.roomPinTimers[i]) clearTimeout(this.roomPinTimers[i]);
+        this.roomPinTimers[i] = setTimeout(() => {
+          this.roomPinMasked[i] = true;
+          this.cdr.detectChanges();
+        }, 900);
+      }
+    }
+    this.roomPassword = clean;
+  }
+
+  getRoomPinDisplay(index: number): string {
+    const digit = this.roomPinDigits[index] || '';
+    return digit && this.roomPinMasked[index] ? '*' : digit;
+  }
+
+  get roomPinComplete(): boolean {
+    return this.roomPinDigits.every(Boolean);
+  }
+
+  private syncRoomPasswordFromPin() {
+    this.roomPassword = this.roomPinDigits.join('');
+  }
+
+  private clearRoomPin() {
+    this.roomPinTimers.forEach(timer => timer && clearTimeout(timer));
+    this.roomPinTimers = [];
+    this.roomPinDigits = ['', '', '', '', '', ''];
+    this.roomPinMasked = [false, false, false, false, false, false];
+    this.roomPassword = '';
+  }
+
+  startOfflineBotBattle() {
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para jugar contra bot.';
+      return;
+    }
+    this.buscarPartida(deck.id);
+  }
+
+  joinSelectedRoom() {
+    if (!this.selectedRoom) return;
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas para entrar.';
+      return;
+    }
+    this.roomActionLoading = true;
+    this.lobbyRoomService.joinRoom(this.selectedRoom.id, deck.id, deck.nombre, this.roomJoinPassword).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomError = '';
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  leaveCurrentRoom() {
+    if (!this.currentRoom) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.leaveRoom(this.currentRoom.id).subscribe({
+      next: () => {
+        this.currentRoom = null;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  kickRoomGuest() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.kickGuest(this.currentRoom.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  addBotToCurrentRoom() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.addBot(this.currentRoom.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  toggleRoomReady() {
+    if (!this.currentRoom) return;
+    const deck = this.selectedBattleDeck;
+    if (!deck) {
+      this.roomError = 'Elegí un mazo de 60 cartas antes de marcar listo.';
+      return;
+    }
+    const nextReady = this.isCurrentUserReady ? false : true;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.setReady(this.currentRoom.id, nextReady, deck.id).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomActionLoading = false;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  startCurrentRoomBattle() {
+    if (!this.currentRoom || !this.isCurrentRoomOwner) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.startRoom(this.currentRoom.id).subscribe({
+      next: (response) => {
+        this.roomActionLoading = false;
+        if (response.matchId) {
+          this.beginRoomCountdown(response.matchId);
+        }
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  continueCurrentRoomBattle() {
+    if (!this.currentRoom?.matchId) return;
+    this.router.navigate(
+      ['/battle', this.currentRoom.matchId],
+      this.isCurrentRoomSpectator ? { queryParams: { spectate: '1' } } : undefined
+    );
+  }
+
+  spectateSelectedRoom() {
+    if (!this.selectedRoom) return;
+    this.roomActionLoading = true;
+    this.lobbyRoomService.spectateRoom(this.selectedRoom.id, this.roomJoinPassword).subscribe({
+      next: (response) => {
+        this.roomActionLoading = false;
+        if (response.matchId) {
+          this.router.navigate(['/battle', response.matchId], { queryParams: { spectate: '1' } });
+          return;
+        }
+        this.currentRoom = response.room;
+        this.selectedRoom = response.room;
+        this.roomJoinPassword = '';
+        this.roomError = '';
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  sendRoomChat() {
+    if (!this.currentRoom || !this.roomChatText.trim()) return;
+    const text = this.roomChatText.trim();
+    this.roomChatText = '';
+    this.lobbyRoomService.sendChat(this.currentRoom.id, text).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.loadLobbyRooms();
+      },
+      error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  sendRoomReaction(reaction: string) {
+    const room = this.currentRoom || this.selectedRoom;
+    if (!room) return;
+    this.spawnRoomReaction(room.id, reaction, this.jugador?.username || 'Trainer');
+    this.lobbyRoomService.sendReaction(room.id, reaction).subscribe({ error: () => {} });
+  }
+
+  private spawnRoomReaction(roomId: string, reaction: string, username: string) {
+    const iconMap: Record<string, string> = {
+      heart: '♥',
+      fire: '🔥',
+      spark: '✦',
+      coin: '●'
+    };
+    const item = {
+      id: ++this.roomReactionSeq,
+      roomId,
+      icon: iconMap[reaction] || reaction || '✦',
+      username,
+      x: 18 + Math.round(Math.random() * 64)
+    };
+    this.roomReactions = [...this.roomReactions, item].slice(-12);
+    setTimeout(() => {
+      this.roomReactions = this.roomReactions.filter(r => r.id !== item.id);
+      this.cdr.detectChanges();
+    }, 1600);
+  }
+
+  private beginRoomCountdown(matchId: string, spectate = false) {
+    if (this.roomCountdownMatchId === matchId && this.roomCountdownValue !== null) return;
+    if (this.roomCountdownTimer) clearInterval(this.roomCountdownTimer);
+    this.roomCountdownMatchId = matchId;
+    const shouldSpectate = spectate;
+    this.roomCountdownValue = 5;
+    this.cdr.detectChanges();
+    this.roomCountdownTimer = setInterval(() => {
+      if (this.roomCountdownValue === null) return;
+      this.roomCountdownValue -= 1;
+      if (this.roomCountdownValue <= 0) {
+        const target = this.roomCountdownMatchId;
+        clearInterval(this.roomCountdownTimer);
+        this.roomCountdownTimer = undefined;
+        this.roomCountdownValue = null;
+        this.roomCountdownMatchId = null;
+        if (target) {
+          this.router.navigate(['/battle', target], shouldSpectate ? { queryParams: { spectate: '1' } } : undefined);
+        }
+      }
+      this.cdr.detectChanges();
+    }, 1000);
+  }
+
+  get selectedBattleDeck(): Mazo | null {
+    return this.mazos.find(mazo => mazo.id === this.selectedBattleDeckId) || this.validBattleDecks[0] || null;
+  }
+
+  get selectedRoomDetail(): LobbyRoomSnapshot | null {
+    if (!this.selectedRoom) return null;
+    if (this.currentRoom?.id === this.selectedRoom.id) return null;
+    return this.selectedRoom;
+  }
+
+  get isCurrentRoomOwner(): boolean {
+    return !!this.currentRoom && this.currentRoom.ownerUsername === this.jugador?.username;
+  }
+
+  get isCurrentRoomSpectator(): boolean {
+    return !!this.currentRoom?.currentUserSpectator;
+  }
+
+  get isCurrentUserReady(): boolean {
+    if (!this.currentRoom || !this.jugador?.username) return false;
+    if (this.isCurrentRoomSpectator) return false;
+    if (this.currentRoom.ownerUsername === this.jugador.username) return this.currentRoom.ownerReady;
+    if (this.currentRoom.guestUsername === this.jugador.username) return this.currentRoom.guestReady;
+    return false;
+  }
+
+  get canStartCurrentRoom(): boolean {
+    return !!this.currentRoom?.guestUsername
+      && this.currentRoom.status === 'OPEN'
+      && this.currentRoom.ownerReady
+      && this.currentRoom.guestReady
+      && this.isCurrentRoomOwner;
+  }
+
+  getRoomReactions(roomId: string) {
+    return this.roomReactions.filter(reaction => reaction.roomId === roomId);
+  }
+
+  get roomStatusLabel(): string {
+    const status = this.selectedRoom?.status || this.currentRoom?.status;
+    if (status === 'IN_PROGRESS') return this.i18n.currentLanguage() === 'en' ? 'In battle' : 'En combate';
+    if (status === 'FINISHED') return this.i18n.currentLanguage() === 'en' ? 'Finished' : 'Finalizada';
+    return this.i18n.currentLanguage() === 'en' ? 'Waiting' : 'Esperando';
+  }
+
+  private handleRoomError(err: unknown) {
+    this.roomError = this.extractErrorMessage(err, 'No se pudo completar la accion.');
+    this.roomActionLoading = false;
+  }
+
+  private extractErrorMessage(err: any, fallback: string): string {
+    return typeof err?.error === 'string' ? err.error : (err?.message || fallback);
   }
 
   get selectedCharacterLabel(): string {
@@ -1739,12 +2409,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (this.currentInteraction.id === 'battle') {
-      if (this.mazos.length === 1) {
-        this.buscarPartida(this.mazos[0].id);
-      } else {
-        this.selectedBattleDeckId = this.selectedBattleDeckId ?? this.mazos[0]?.id ?? null;
-        this.battlePanelOpen = true;
-      }
+      this.selectedBattleDeckId = this.selectedBattleDeckId ?? this.validBattleDecks[0]?.id ?? null;
+      this.openBattleRooms();
     }
   }
 
@@ -1826,7 +2492,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => {
         this.debugAccionEnCurso = false;
         console.error('Error seteando sobres en God Mode', err);
-        alert(err.error || 'No se pudo setear la cantidad de sobres.');
+        alert(err.error || this.i18n.translate('alert.setPacksError'));
       }
     });
   }
@@ -1839,7 +2505,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const requiereReemplazo = (mazo.cartas?.length || 0) >= 60;
     if (requiereReemplazo && !this.debugReplaceCardId) {
-      alert('ElegÃ­ la carta del mazo que querÃ©s reemplazar.');
+      alert(this.i18n.translate('alert.chooseCardToReplace'));
       return;
     }
 
@@ -1852,7 +2518,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       error: (err) => {
         this.debugAccionEnCurso = false;
         console.error('Error inyectando carta en el mazo', err);
-        alert(err.error || 'No se pudo modificar el mazo.');
+        alert(err.error || this.i18n.translate('alert.modifyDeckError'));
       }
     });
   }
@@ -2174,27 +2840,40 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   buyPackBundle(amount: number) {
     if (!this.jugador?.username) return;
+    const cost = this.getPackBundlePrice(amount);
+    if (this.santoCoins < cost) return;
 
-    const nextAmount = this.sobresDisponibles + amount;
-    this.sobresDisponibles = nextAmount;
-    this.debugSobresCantidad = nextAmount;
-
-    this.playVendorPurchaseAnimation();
-
-    this.jugadorService.debugSetSobres(this.jugador.username, nextAmount).subscribe({
-      next: () => this.refrescarTodo(),
+    this.jugadorService.buyPacks(this.jugador.username, amount).subscribe({
+      next: (res) => {
+        this.sobresDisponibles = res.sobresDisponibles ?? this.sobresDisponibles;
+        this.santoCoins = res.santoCoins ?? this.santoCoins;
+        this.debugSobresCantidad = this.sobresDisponibles;
+        this.jugador = { ...this.jugador!, ...res };
+        this.playVendorPurchaseAnimation();
+        this.cdr.detectChanges();
+      },
       error: (err) => console.error('Error comprando sobres en kiosco', err)
     });
   }
 
+  getPackBundlePrice(amount: number): number {
+    return this.packBundlePrices[amount] ?? 999999;
+  }
+
+  canBuyPackBundle(amount: number): boolean {
+    return this.santoCoins >= this.getPackBundlePrice(amount);
+  }
+
   get santoroQuestTitle(): string {
-    return this.santoroGiftClaimed ? 'Santoro desbloqueado' : 'Busca a Santoro';
+    return this.santoroGiftClaimed
+      ? this.i18n.translate('lobby.quest.santoroUnlocked')
+      : this.i18n.translate('lobby.quest.findSantoro');
   }
 
   get santoroQuestCopy(): string {
     return this.santoroGiftClaimed
-      ? 'Podés volver a hablar con él para gestionar tu mazo.'
-      : 'El profe te espera en el campus con tu primera ayuda.';
+      ? this.i18n.translate('lobby.quest.santoroUnlockedDesc')
+      : this.i18n.translate('lobby.quest.findSantoroDesc');
   }
 
   get santoroNickname(): string {
@@ -2620,10 +3299,11 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     
     // OptimizaciÃ³n de sombras segÃºn la calidad grÃ¡fica activa
     const sunVisible = sunHeight > 0.03;
+    const shadowsEnabled = this.graphicsQuality !== 'low' && this.shadowQuality !== 'off';
     const shadowMode =
-      this.graphicsQuality === 'low'
+      !shadowsEnabled
         ? 'none'
-        : this.graphicsQuality === 'medium'
+        : this.shadowQuality === 'balanced' || this.graphicsQuality === 'medium'
           ? (sunVisible ? 'sun' : 'moon')
           : 'both';
     if (shadowMode !== this.lastShadowMode) {
@@ -2738,13 +3418,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    let nextLabel = 'Mañana';
+    let nextLabel = 'lobby.phase.morning';
     if (t >= 0.08 && t < 0.48) {
-      nextLabel = 'Tarde';
+      nextLabel = 'lobby.phase.afternoon';
     } else if (t >= 0.48 && t < 0.68) {
-      nextLabel = 'Atardecer';
+      nextLabel = 'lobby.phase.sunset';
     } else if (t >= 0.68 && t < 0.96) {
-      nextLabel = 'Noche';
+      nextLabel = 'lobby.phase.night';
     }
     if (nextLabel !== this.dayPhaseLabel) {
       this.ngZone.run(() => {
@@ -2776,6 +3456,21 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.createMountains();
     this.createCampusBackgroundDetails();
     this.createAmbientPokemon();
+    this.createUtnFrcCampusAdditions();
+
+    // Map boundary visual forcefield
+    const boundaryGeom = new THREE.CylinderGeometry(30.5, 30.5, 3.5, 32, 4, true);
+    const boundaryMat = new THREE.MeshBasicMaterial({
+      color: 0x22d3ee, // cyan
+      transparent: true,
+      opacity: 0.0,
+      side: THREE.DoubleSide,
+      wireframe: true
+    });
+    this.boundaryMesh = new THREE.Mesh(boundaryGeom, boundaryMat);
+    this.boundaryMesh.position.set(0, 1.75, 0);
+    this.scene.add(this.boundaryMesh);
+    this.disposable.push(boundaryGeom, boundaryMat);
   }
 
   private createGrassTexture(): THREE.CanvasTexture {
@@ -3503,6 +4198,354 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     // Colocar faroles estratÃ©gicos de alta fidelidad 3D en zonas clave
     this.addStrategicLantern(-11.0, -13.5, 0);       // Cerca del mostrador del kiosco (Hilda)
     this.addStrategicLantern(5.0, -2.0, Math.PI);      // Cerca del sendero de la plaza UTN
+  }
+
+  private createUtnFrcCampusAdditions() {
+    // 1. BENCHES AND TRASH CANS
+    const benchPositions = [
+      { x: -3.5, z: 10, rot: Math.PI / 2 },
+      { x: -3.5, z: -10, rot: Math.PI / 2 },
+      { x: 3.5, z: 5, rot: -Math.PI / 2 },
+      { x: 3.5, z: -15, rot: -Math.PI / 2 }
+    ];
+
+    benchPositions.forEach((pos) => {
+      this.addProceduralBench(pos.x, pos.z, pos.rot);
+    });
+
+    const trashPositions = [
+      { x: -3.6, z: 8 },
+      { x: 3.6, z: -12 }
+    ];
+    trashPositions.forEach((pos) => {
+      this.addProceduralTrashCan(pos.x, pos.z);
+    });
+
+    // 2. SPORTS COURT (Football field, Out of bounds)
+    this.addBox([22, 0.02, 14], [38, 0.01, 20], 0x3f6212, { roughness: 0.95 }); // Grass court
+    this.addBox([22.2, 0.022, 0.12], [38, 0.02, 27], 0xffffff); // Top line
+    this.addBox([22.2, 0.022, 0.12], [38, 0.02, 13], 0xffffff); // Bottom line
+    this.addBox([0.12, 0.022, 14.2], [27, 0.02, 20], 0xffffff); // Left line
+    this.addBox([0.12, 0.022, 14.2], [49, 0.02, 20], 0xffffff); // Right line
+    this.addBox([0.12, 0.022, 14.2], [38, 0.02, 20], 0xffffff); // Center line
+
+    this.addGoalPost(27, 20, Math.PI / 2);
+    this.addGoalPost(49, 20, -Math.PI / 2);
+
+    // 3. PARKING LOTS AND PROCEDURAL CARS
+    // Row 1 (South facing)
+    this.addBox([22, 0.02, 10], [-21.5, 0.01, 36], 0x334155, { roughness: 0.88 });
+    for (let x = -31; x <= -12; x += 3.5) {
+      this.addBox([0.1, 0.022, 8.5], [x, 0.02, 36], 0xeab308);
+    }
+    this.addProceduralCar(-29.5, 36, 0xef4444);
+    this.addProceduralCar(-26.0, 36, 0x3b82f6);
+    this.addProceduralCar(-22.5, 36, 0x94a3b8);
+    this.addProceduralCar(-19.0, 36, 0xffffff);
+    this.addProceduralCar(-15.5, 36, 0xfacc15);
+
+    // Row 2 (North facing)
+    this.addBox([22, 0.02, 10], [-21.5, 0.01, 32], 0x334155, { roughness: 0.88 });
+    for (let x = -31; x <= -12; x += 3.5) {
+      this.addBox([0.1, 0.022, 8.5], [x, 0.02, 32], 0xeab308);
+    }
+    this.addProceduralCar(-29.5, 32, 0x10b981);
+    this.addProceduralCar(-26.0, 32, 0x8b5cf6);
+    this.addProceduralCar(-22.5, 32, 0x111827);
+    this.addProceduralCar(-19.0, 32, 0xf97316);
+
+    // 4. ENTRANCE ARCHWAY / SIGN (Matches Photo 1)
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5, metalness: 0.8 });
+    this.disposable.push(steelMat);
+    const colGeom = new THREE.CylinderGeometry(0.08, 0.08, 4.3, 8);
+    this.disposable.push(colGeom);
+
+    [-0.2, 0, 0.2].forEach((offset) => {
+      const col = new THREE.Mesh(colGeom, steelMat);
+      col.position.set(-5.8, 2.15, 22 + offset);
+      col.castShadow = true;
+      this.scene!.add(col);
+    });
+
+    this.addBox([1.4, 4.3, 0.8], [5.8, 2.15, 22], 0xb5ae9e, { roughness: 0.88 });
+    this.addBox([14, 0.95, 0.4], [0, 4.3, 22], 0xffffff, { roughness: 0.3 });
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 1024, 128);
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 36px "Arial Black", "Montserrat", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('UNIVERSIDAD TECNOLOGICA NACIONAL', 512, 64);
+
+    const signTexture = new THREE.CanvasTexture(canvas);
+    signTexture.colorSpace = THREE.SRGBColorSpace;
+    this.disposable.push(signTexture);
+
+    const signGeom = new THREE.PlaneGeometry(13.8, 0.82);
+    const signMat = new THREE.MeshStandardMaterial({
+      map: signTexture,
+      roughness: 0.2,
+      side: THREE.FrontSide
+    });
+    const signMesh = new THREE.Mesh(signGeom, signMat);
+    signMesh.position.set(0, 4.3, 22.21);
+    this.scene!.add(signMesh);
+    this.disposable.push(signGeom, signMat);
+
+    // Load actual UTN logo image texture
+    const textureLoader = new THREE.TextureLoader();
+    const logoTexture = textureLoader.load('/images/utn-logo.png');
+    logoTexture.colorSpace = THREE.SRGBColorSpace;
+    this.disposable.push(logoTexture);
+
+    const logoMat = new THREE.MeshStandardMaterial({
+      map: logoTexture,
+      roughness: 0.2,
+      transparent: true,
+      side: THREE.FrontSide
+    });
+    this.disposable.push(logoMat);
+
+    const logoGeom = new THREE.PlaneGeometry(0.72, 0.72);
+    this.disposable.push(logoGeom);
+
+    const leftLogo = new THREE.Mesh(logoGeom, logoMat);
+    leftLogo.position.set(-5.1, 4.3, 22.23);
+    this.scene!.add(leftLogo);
+
+    const rightLogo = new THREE.Mesh(logoGeom, logoMat);
+    rightLogo.position.set(5.1, 4.3, 22.23);
+    this.scene!.add(rightLogo);
+
+    this.addBox([2.2, 2.5, 2.0], [-8.8, 1.25, 21.0], 0xd1c7bd, { roughness: 0.8 });
+    this.addBox([2.3, 0.2, 2.1], [-8.8, 2.6, 21.0], 0x334155);
+    this.addBox([1.2, 1.0, 0.12], [-8.8, 1.6, 22.02], 0x1e293b, { opacity: 0.7 });
+
+    // 5. MAIN BUILDING FACADE LETTERS "U T N" (Matches Photo 2)
+    this.addBox([0.22, 8.5, 4.5], [11.24, 5.1, 4.0], 0x9ca3af, { roughness: 0.8 });
+    this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 3.55], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 7.8, 4.45], 0xffffff);
+    this.addBox([0.08, 0.12, 0.92], [11.02, 7.26, 4.0], 0xffffff);
+
+    this.addBox([0.08, 0.12, 0.92], [11.02, 6.1, 4.0], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 5.5, 4.0], 0xffffff);
+
+    this.addBox([0.08, 1.2, 0.12], [11.02, 3.8, 3.55], 0xffffff);
+    this.addBox([0.08, 1.2, 0.12], [11.02, 3.8, 4.45], 0xffffff);
+    const diagGeom = new THREE.BoxGeometry(0.08, 1.35, 0.12);
+    const diagMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const diag = new THREE.Mesh(diagGeom, diagMat);
+    diag.position.set(11.02, 3.8, 4.0);
+    diag.rotation.x = 0.55;
+    this.scene!.add(diag);
+    this.disposable.push(diagGeom, diagMat);
+
+    // 6. GLASS ELEVATOR TOWER (Matches Photo 4)
+    const towerGroup = new THREE.Group();
+    towerGroup.position.set(11.0, 0, -4.0);
+
+    const steelFrameMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.6 });
+    this.disposable.push(steelFrameMat);
+    const vertColGeom = new THREE.BoxGeometry(0.12, 11.2, 0.12);
+    this.disposable.push(vertColGeom);
+
+    const steelOffsets = [
+      [-1.3, -1.3],
+      [-1.3, 1.3],
+      [1.3, -1.3],
+      [1.3, 1.3]
+    ];
+    steelOffsets.forEach(([ox, oz]) => {
+      const col = new THREE.Mesh(vertColGeom, steelFrameMat);
+      col.position.set(ox, 5.6, oz);
+      col.castShadow = true;
+      towerGroup.add(col);
+    });
+
+    const horizFrameGeomX = new THREE.BoxGeometry(2.6, 0.12, 0.12);
+    const horizFrameGeomZ = new THREE.BoxGeometry(0.12, 0.12, 2.6);
+    this.disposable.push(horizFrameGeomX, horizFrameGeomZ);
+
+    [2.8, 5.6, 8.4, 11.2].forEach((h) => {
+      const beamX1 = new THREE.Mesh(horizFrameGeomX, steelFrameMat);
+      beamX1.position.set(0, h, -1.3);
+      towerGroup.add(beamX1);
+      const beamX2 = new THREE.Mesh(horizFrameGeomX, steelFrameMat);
+      beamX2.position.set(0, h, 1.3);
+      towerGroup.add(beamX2);
+
+      const beamZ1 = new THREE.Mesh(horizFrameGeomZ, steelFrameMat);
+      beamZ1.position.set(-1.3, h, 0);
+      towerGroup.add(beamZ1);
+      const beamZ2 = new THREE.Mesh(horizFrameGeomZ, steelFrameMat);
+      beamZ2.position.set(1.3, h, 0);
+      towerGroup.add(beamZ2);
+    });
+
+    const towerGlassMat = new THREE.MeshStandardMaterial({
+      color: 0x8ecae6,
+      roughness: 0.1,
+      metalness: 0.1,
+      transparent: true,
+      opacity: 0.35
+    });
+    this.disposable.push(towerGlassMat);
+
+    const glassPaneFrontGeom = new THREE.PlaneGeometry(2.5, 11.0);
+    this.disposable.push(glassPaneFrontGeom);
+
+    const glassPaneFront = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneFront.position.set(-1.3, 5.6, 0);
+    glassPaneFront.rotation.y = -Math.PI / 2;
+    towerGroup.add(glassPaneFront);
+
+    const glassPaneLeft = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneLeft.position.set(0, 5.6, -1.3);
+    towerGroup.add(glassPaneLeft);
+
+    const glassPaneRight = new THREE.Mesh(glassPaneFrontGeom, towerGlassMat);
+    glassPaneRight.position.set(0, 5.6, 1.3);
+    towerGroup.add(glassPaneRight);
+
+    const liftShaftMat = new THREE.MeshStandardMaterial({ color: 0x78716c, roughness: 0.8 });
+    const liftShaftGeom = new THREE.BoxGeometry(0.8, 11.2, 0.8);
+    const liftShaft = new THREE.Mesh(liftShaftGeom, liftShaftMat);
+    liftShaft.position.set(0.6, 5.6, 0);
+    liftShaft.castShadow = true;
+    towerGroup.add(liftShaft);
+    this.disposable.push(liftShaftGeom, liftShaftMat);
+
+    const cabinGroup = new THREE.Group();
+    cabinGroup.position.set(-0.25, 4.2, 0);
+    const cabinBodyMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.5, metalness: 0.8 });
+    const cabinBodyGeom = new THREE.BoxGeometry(1.2, 2.0, 1.2);
+    const cabinBody = new THREE.Mesh(cabinBodyGeom, cabinBodyMat);
+    cabinBody.castShadow = true;
+    cabinGroup.add(cabinBody);
+
+    const cabinLight = new THREE.PointLight(0xfff7ad, 1.5, 3);
+    cabinLight.position.set(0, 0.8, 0);
+    cabinGroup.add(cabinLight);
+
+    towerGroup.add(cabinGroup);
+    this.disposable.push(cabinBodyGeom, cabinBodyMat);
+    this.scene!.add(towerGroup);
+  }
+
+  private addGoalPost(x: number, z: number, rotationY: number) {
+    const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 });
+    const postGroup = new THREE.Group();
+    postGroup.position.set(x, 0, z);
+    postGroup.rotation.y = rotationY;
+
+    const barLeft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), postMat);
+    barLeft.position.set(0, 0.8, -1.4);
+    barLeft.castShadow = true;
+    postGroup.add(barLeft);
+
+    const barRight = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.6), postMat);
+    barRight.position.set(0, 0.8, 1.4);
+    barRight.castShadow = true;
+    postGroup.add(barRight);
+
+    const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.8), postMat);
+    crossbar.rotation.x = Math.PI / 2;
+    crossbar.position.set(0, 1.6, 0);
+    crossbar.castShadow = true;
+    postGroup.add(crossbar);
+
+    this.scene!.add(postGroup);
+    this.disposable.push(postMat);
+  }
+
+  private addProceduralCar(x: number, z: number, color: number) {
+    const carGroup = new THREE.Group();
+    carGroup.position.set(x, 0, z);
+
+    const bodyMat = new THREE.MeshStandardMaterial({ color: color, roughness: 0.2, metalness: 0.5 });
+    const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1, metalness: 0.9 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.9 });
+
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.48, 0.95), bodyMat);
+    body.position.set(0, 0.34, 0);
+    body.castShadow = true;
+    carGroup.add(body);
+
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.34, 0.82), cabinMat);
+    cabin.position.set(-0.1, 0.75, 0);
+    cabin.castShadow = true;
+    carGroup.add(cabin);
+
+    const wheelGeom = new THREE.CylinderGeometry(0.18, 0.18, 0.15, 12);
+    wheelGeom.rotateX(Math.PI / 2);
+
+    const wheelFL = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelFL.position.set(0.5, 0.18, 0.42);
+    carGroup.add(wheelFL);
+
+    const wheelFR = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelFR.position.set(0.5, 0.18, -0.42);
+    carGroup.add(wheelFR);
+
+    const wheelBL = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelBL.position.set(-0.5, 0.18, 0.42);
+    carGroup.add(wheelBL);
+
+    const wheelBR = new THREE.Mesh(wheelGeom, wheelMat);
+    wheelBR.position.set(-0.5, 0.18, -0.42);
+    carGroup.add(wheelBR);
+
+    this.scene!.add(carGroup);
+    this.disposable.push(bodyMat, cabinMat, wheelMat, wheelGeom);
+  }
+
+  private addProceduralBench(x: number, z: number, rotationY: number) {
+    const seatMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.6 });
+    const metalMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.4 });
+
+    const bench = new THREE.Group();
+    bench.position.set(x, 0, z);
+    bench.rotation.y = rotationY;
+
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.08, 0.48), seatMat);
+    seat.position.set(0, 0.45, 0);
+    seat.castShadow = true;
+    bench.add(seat);
+
+    const back = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.32, 0.08), seatMat);
+    back.position.set(0, 0.82, -0.2);
+    back.rotation.x = -0.15;
+    back.castShadow = true;
+    bench.add(back);
+
+    const legLeft = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.48), metalMat);
+    legLeft.position.set(-0.65, 0.4, 0);
+    legLeft.castShadow = true;
+    bench.add(legLeft);
+
+    const legRight = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.8, 0.48), metalMat);
+    legRight.position.set(0.65, 0.4, 0);
+    legRight.castShadow = true;
+    bench.add(legRight);
+
+    this.scene!.add(bench);
+    this.disposable.push(seatMat, metalMat);
+  }
+
+  private addProceduralTrashCan(x: number, z: number) {
+    const binMat = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 });
+    const binGeom = new THREE.CylinderGeometry(0.22, 0.18, 0.65, 12);
+    const bin = new THREE.Mesh(binGeom, binMat);
+    bin.position.set(x, 0.325, z);
+    bin.castShadow = true;
+    this.scene!.add(bin);
+    this.disposable.push(binMat, binGeom);
   }
 
   private addLampPost(x: number, z: number) {
@@ -4667,6 +5710,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (dist > maxRadius) {
       this.player.position.multiplyScalar(maxRadius / dist);
     }
+    if (this.boundaryMesh) {
+      const boundaryOpacity = Math.max(0, Math.min(0.48, (dist - 19.5) / (30.5 - 19.5)));
+      (this.boundaryMesh.material as THREE.MeshBasicMaterial).opacity = boundaryOpacity;
+    }
 
     if (!this.playerMixer) {
       const bob = Math.sin(this.clock.elapsedTime * (forwardPressed || backPressed ? 11 : 3)) * (forwardPressed || backPressed ? 0.045 : 0.015);
@@ -4828,10 +5875,13 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.jugador?.username) return;
 
     try {
+
       const wsUrl = this.getWsUrl();
       console.log('Conectando a WebSocket del Lobby:', wsUrl);
       this.socket = new WebSocket(wsUrl);
 
+
+      
       this.socket.onopen = () => {
         console.log('ConexiÃ³n WebSocket establecida con Ã©xito.');
         if (this.personalizationSynced) {
@@ -4927,9 +5977,25 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private handleWebSocketMessage(dataStr: string) {
     try {
       const msg = JSON.parse(dataStr);
-      if (!msg || !msg.username || msg.username === this.jugador?.username) return;
+      if (!msg) return;
 
       const type = msg.type;
+      if (type === 'ROOMS_UPDATED') {
+        this.handleRoomSocketUpdate(msg.room);
+        if (this.battlePanelOpen) {
+          this.loadLobbyRooms();
+        }
+        return;
+      }
+
+      if (type === 'ROOM_REACTION') {
+        if (msg.username !== this.jugador?.username) {
+          this.spawnRoomReaction(msg.roomId, msg.reaction, msg.username || 'Trainer');
+        }
+        return;
+      }
+
+      if (!msg.username || msg.username === this.jugador?.username) return;
       const username = msg.username;
 
       if (type === 'JOIN') {
@@ -4966,6 +6032,27 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     } catch (e) {
       console.error('Error parseando mensaje WebSocket:', e);
+    }
+  }
+
+  private handleRoomSocketUpdate(room: LobbyRoomSnapshot | undefined) {
+    if (!room || !this.jugador?.username) return;
+
+    const username = this.jugador.username;
+    const userIsParticipant = room.ownerUsername === username || room.guestUsername === username;
+    const userIsSpectator = this.currentRoom?.id === room.id && this.currentRoom.currentUserSpectator;
+    const roomForCurrentUser = userIsSpectator ? { ...room, currentUserSpectator: true } : room;
+    if (this.currentRoom?.id === room.id) {
+      if (!userIsParticipant && !userIsSpectator) {
+        this.currentRoom = null;
+      } else {
+        this.currentRoom = roomForCurrentUser;
+      }
+      this.selectedRoom = roomForCurrentUser;
+    }
+
+    if ((userIsParticipant || userIsSpectator) && room.status === 'IN_PROGRESS' && room.matchId) {
+      this.beginRoomCountdown(room.matchId, userIsSpectator);
     }
   }
 
@@ -5347,6 +6434,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getRemoteFullModelBudget(): number {
+    if (this.remote3dQuality === 'low') return this.isMobileViewport ? 0 : 1;
+    if (this.remote3dQuality === 'high' && this.graphicsQuality !== 'low') return this.isMobileViewport ? 3 : 8;
     if (this.graphicsQuality === 'low') return this.isMobileViewport ? 1 : 3;
     if (this.adaptivePixelRatioScale < 0.82) return this.isMobileViewport ? 1 : 2;
     if (this.graphicsQuality === 'medium') return this.isMobileViewport ? 2 : 5;
@@ -5361,6 +6450,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private shouldAllowRemoteCompanion(p: OtherPlayerNPC): boolean {
     if (!p.pikachuEnabled) return false;
+    if (this.remote3dQuality === 'low') return false;
     if (this.graphicsQuality === 'low' || this.adaptivePixelRatioScale < 0.86) return false;
     if (this.otherPlayers.size > (this.isMobileViewport ? 3 : 6)) return false;
     return this.getRemoteDistanceSq(p) < this.remoteCompanionDistanceSq;
@@ -5655,6 +6745,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   toggleChat() {
     this.ngZone.run(() => {
+      if (this.chatPanelMinimized) {
+        this.chatPanelMinimized = false;
+        localStorage.setItem('ptcg_chat_panel_minimized', 'false');
+      }
       if (!this.chatActive) {
         this.chatActive = true;
         this.keys.clear(); // Limpiar teclas activas para no moverse mientras se chatea
@@ -6028,7 +7122,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         error: (err) => {
           console.error('Error al arrancar batalla online:', err);
           const backendMessage = typeof err.error === 'string' ? err.error : err.message;
-          alert('Error al iniciar combate online: ' + backendMessage);
+          alert(this.i18n.translate('alert.startOnlineBattleError', { error: backendMessage }));
         }
       });
     } else {
@@ -6178,7 +7272,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   addCardToTrade(card: Card) {
     if (this.tradeLeftReady) return;
     if (this.tradeLeftCards.length >= 3) {
-      alert('MÃ¡ximo 3 cartas por intercambio.');
+      alert(this.i18n.translate('alert.maxExchangeCards'));
       return;
     }
     this.tradeLeftCards.push(card);
@@ -6262,7 +7356,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al realizar el trade:', err);
-        alert('TransacciÃ³n de intercambio fallida: ' + err.message);
+        alert(this.i18n.translate('alert.exchangeFailed', { error: err.message }));
         this.tradeLeftReady = false;
         this.notifyTradeUpdate();
         this.cdr.detectChanges();
@@ -6373,19 +7467,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getMyOfferFairnessText(): string {
-    if (this.tradeLeftCards.length === 0) return 'VacÃ­o';
+    if (this.tradeLeftCards.length === 0) return this.i18n.translate('lobby.vacas');
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
-    return 'Oferta Sincronizada';
+    if (myValue > oppValue + 2 && this.tradeRightCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
+    return this.i18n.translate('lobby.fairOffer');
   }
 
   getOpponentOfferFairnessText(): string {
-    if (this.tradeRightCards.length === 0) return 'VacÃ­o';
+    if (this.tradeRightCards.length === 0) return this.i18n.translate('lobby.vacas');
     const myValue = this.tradeLeftCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
-    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return 'Poco conveniente (MonÃ³logo)';
-    return 'Oferta Sincronizada';
+    if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
+    return this.i18n.translate('lobby.fairOffer');
   }
 }
 

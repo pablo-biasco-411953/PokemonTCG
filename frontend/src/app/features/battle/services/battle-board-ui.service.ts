@@ -166,6 +166,10 @@ export class BattleBoardUiService {
 
   // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
+    }
+
     return `/images/cards/${id}.png`;
   }
 

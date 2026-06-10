@@ -421,17 +421,48 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
     }, 700);
   }
 
+  getImagenCarta(id: string): string {
+    if (/^xy/i.test(id)) {
+      return `/images/cards/${id}.png`;
+    }
+
+    return `/images/cards/${id}.png`;
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (!img || img.src.endsWith('/images/cards/back.png')) return;
+    img.src = '/images/cards/back.png';
+  }
+
   private crearCartasAntiBug() {
     const loader = new THREE.TextureLoader();
     const backTex = loader.load('images/cards/back.png');
 
     this.cartas.forEach((c, i) => {
       const group = new THREE.Group();
-      const matFront = new THREE.MeshPhysicalMaterial({ 
-        map: loader.load(`images/cards/${c.id}.png`), 
-        metalness: 0.5, roughness: 0.3, iridescence: 0.4, iridescenceIOR: 1.3,
-        side: THREE.FrontSide 
+      const matFront = new THREE.MeshPhysicalMaterial({
+        map: backTex,
+        metalness: 0.5,
+        roughness: 0.3,
+        iridescence: 0.4,
+        iridescenceIOR: 1.3,
+        side: THREE.FrontSide
       });
+
+      loader.load(
+        this.getImagenCarta(c.id),
+        (tex) => {
+          matFront.map = tex;
+          matFront.needsUpdate = true;
+        },
+        undefined,
+        () => {
+          matFront.map = backTex;
+          matFront.needsUpdate = true;
+        }
+      );
+
       const front = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 3.1), matFront);
       const back = new THREE.Mesh(
         new THREE.PlaneGeometry(2.2, 3.1),
