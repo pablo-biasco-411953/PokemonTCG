@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/patrones-diseño",
+  "title": "🏛️ Patrones de Diseño",
+  "description": "---",
+  "source": "@site/docs/tecnica/06-patrones-diseño.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/patrones-diseño",
+  "permalink": "/docs/tecnica/patrones-diseño",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/06-patrones-diseño.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🏛️ Patrones de Diseño"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📡 API Endpoints - REST",
+    "permalink": "/docs/tecnica/api-endpoints"
+  },
+  "next": {
+    "title": "⚙️ Battle Engine",
+    "permalink": "/docs/tecnica/batalla-engine"
+  }
+}

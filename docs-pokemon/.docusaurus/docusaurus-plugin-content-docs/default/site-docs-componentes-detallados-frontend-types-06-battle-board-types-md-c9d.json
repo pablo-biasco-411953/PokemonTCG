@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/battle-board-types",
+  "title": "🖥️ BattleBoard Types",
+  "description": "Tipos de estado visual para el tablero de batalla: monedas, overlays, partículas y cartas hovereadas",
+  "source": "@site/docs/componentes-detallados/frontend/types/06-battle-board-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/battle-board-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/battle-board-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/06-battle-board-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🖥️ BattleBoard Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ Battle Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/battle-types"
+  },
+  "next": {
+    "title": "🏟️ Lobby Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/lobby-types"
+  }
+}

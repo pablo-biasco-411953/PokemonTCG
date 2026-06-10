@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/modelo-datos",
+  "title": "📊 Modelo de Datos",
+  "description": "Esquema completo de la base de datos generado por Hibernate/JPA",
+  "source": "@site/docs/diagramas/03-modelo-datos.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/modelo-datos",
+  "permalink": "/docs/diagramas/modelo-datos",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/03-modelo-datos.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "📊 Modelo de Datos"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ Flujo de Batalla",
+    "permalink": "/docs/diagramas/flujo-batalla"
+  },
+  "next": {
+    "title": "🔑 Flujo de Autenticacion",
+    "permalink": "/docs/diagramas/flujo-autenticacion"
+  }
+}

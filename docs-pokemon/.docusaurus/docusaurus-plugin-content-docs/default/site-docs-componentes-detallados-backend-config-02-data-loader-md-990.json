@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/config/data-loader",
+  "title": "📦 DataLoader",
+  "description": "Carga datos iniciales al arrancar la aplicacion (usuarios test, colecciones, mazos)",
+  "source": "@site/docs/componentes-detallados/backend/config/02-data-loader.md",
+  "sourceDirName": "componentes-detallados/backend/config",
+  "slug": "/componentes-detallados/backend/config/data-loader",
+  "permalink": "/docs/componentes-detallados/backend/config/data-loader",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/config/02-data-loader.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "📦 DataLoader"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🌐 CORS Config",
+    "permalink": "/docs/componentes-detallados/backend/config/cors-config"
+  },
+  "next": {
+    "title": "🔌 WebSocket & Security Config",
+    "permalink": "/docs/componentes-detallados/backend/config/websocket-config"
+  }
+}

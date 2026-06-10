@@ -1,0 +1,28 @@
+{
+  "id": "algoritmos/validador-mazos",
+  "title": "✅ Validador de Mazos",
+  "description": "Reglas de validacion de mazos y sistema de interpretacion de efectos de ataque",
+  "source": "@site/docs/algoritmos/validador-mazos.md",
+  "sourceDirName": "algoritmos",
+  "slug": "/algoritmos/validador-mazos",
+  "permalink": "/docs/algoritmos/validador-mazos",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/algoritmos/validador-mazos.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "✅ Validador de Mazos"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎴 Selector de Cartas (Sobres)",
+    "permalink": "/docs/algoritmos/selector-cartas"
+  },
+  "next": {
+    "title": "⚔️ Matchmaking y Salas",
+    "permalink": "/docs/algoritmos/matchmaking"
+  }
+}

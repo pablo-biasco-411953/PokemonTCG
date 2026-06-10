@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/troubleshooting",
+  "title": "🔥 Troubleshooting",
+  "description": "Soluciones a los errores mas frecuentes durante desarrollo y deployment",
+  "source": "@site/docs/operaciones/06-troubleshooting.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/troubleshooting",
+  "permalink": "/docs/operaciones/troubleshooting",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/06-troubleshooting.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🔥 Troubleshooting"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📜 Scripts Utiles",
+    "permalink": "/docs/operaciones/scripts-utiles"
+  },
+  "next": {
+    "title": "⚡ Performance Tips",
+    "permalink": "/docs/operaciones/performance-tips"
+  }
+}

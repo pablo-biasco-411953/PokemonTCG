@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/flujo-websocket",
+  "title": "🔌 Flujo WebSocket",
+  "description": "Conexion WebSocket para sincronizar jugadores en el lobby 3D",
+  "source": "@site/docs/diagramas/05-flujo-websocket.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/flujo-websocket",
+  "permalink": "/docs/diagramas/flujo-websocket",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/05-flujo-websocket.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "🔌 Flujo WebSocket"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔑 Flujo de Autenticacion",
+    "permalink": "/docs/diagramas/flujo-autenticacion"
+  },
+  "next": {
+    "title": "🧩 Componentes y Dependencias",
+    "permalink": "/docs/diagramas/componentes-dependencias"
+  }
+}

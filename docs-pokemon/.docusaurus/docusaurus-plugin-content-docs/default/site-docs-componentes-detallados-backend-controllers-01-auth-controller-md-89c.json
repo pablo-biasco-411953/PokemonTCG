@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/auth-controller",
+  "title": "🔐 AuthController",
+  "description": "Endpoints para registro, login y recuperación de contraseña",
+  "source": "@site/docs/componentes-detallados/backend/controllers/01-auth-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/auth-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/auth-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/01-auth-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🔐 AuthController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔍 Componentes Detallados",
+    "permalink": "/docs/category/-componentes-detallados"
+  },
+  "next": {
+    "title": "⚔️ BattleController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/battle-controller"
+  }
+}

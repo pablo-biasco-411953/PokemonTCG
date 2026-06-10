@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/evolucion-pokemon",
+  "title": "📈 Evolución de Pokémon",
+  "description": "Guía completa del sistema de evolución",
+  "source": "@site/docs/jugabilidad/04-evolucion-pokemon.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/evolucion-pokemon",
+  "permalink": "/docs/jugabilidad/evolucion-pokemon",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/04-evolucion-pokemon.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "📈 Evolución de Pokémon"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 Cartas, Tipos y Energía",
+    "permalink": "/docs/jugabilidad/cartas-tipos-energia"
+  },
+  "next": {
+    "title": "🛠️ Construcción de Mazos",
+    "permalink": "/docs/jugabilidad/construccion-mazos"
+  }
+}

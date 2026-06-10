@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/battle-controller",
+  "title": "⚔️ BattleController",
+  "description": "Endpoints para iniciar, gestionar y controlar batallas",
+  "source": "@site/docs/componentes-detallados/backend/controllers/02-battle-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/battle-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/battle-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/02-battle-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "⚔️ BattleController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔐 AuthController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/auth-controller"
+  },
+  "next": {
+    "title": "🃏 CardController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/card-controller"
+  }
+}

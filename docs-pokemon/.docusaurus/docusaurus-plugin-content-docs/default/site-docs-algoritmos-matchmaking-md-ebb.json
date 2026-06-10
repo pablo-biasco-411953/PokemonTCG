@@ -1,0 +1,28 @@
+{
+  "id": "algoritmos/matchmaking",
+  "title": "⚔️ Matchmaking y Salas",
+  "description": "Gestion de salas, emparejamiento de jugadores y espectadores",
+  "source": "@site/docs/algoritmos/matchmaking.md",
+  "sourceDirName": "algoritmos",
+  "slug": "/algoritmos/matchmaking",
+  "permalink": "/docs/algoritmos/matchmaking",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/algoritmos/matchmaking.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "⚔️ Matchmaking y Salas"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "✅ Validador de Mazos",
+    "permalink": "/docs/algoritmos/validador-mazos"
+  },
+  "next": {
+    "title": "🚀 Setup Local - Guía de Instalación",
+    "permalink": "/docs/operaciones/setup-local"
+  }
+}

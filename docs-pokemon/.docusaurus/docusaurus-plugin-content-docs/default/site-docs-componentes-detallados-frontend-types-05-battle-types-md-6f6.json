@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/battle-types",
+  "title": "⚔️ Battle Types",
+  "description": "Interfaces del sistema de batalla: CartaEnJuego, TableroJugador, Partida, BattleActionCard",
+  "source": "@site/docs/componentes-detallados/frontend/types/05-battle-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/battle-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/battle-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/05-battle-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "⚔️ Battle Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🗃️ Mazo Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/mazo-types"
+  },
+  "next": {
+    "title": "🖥️ BattleBoard Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/battle-board-types"
+  }
+}

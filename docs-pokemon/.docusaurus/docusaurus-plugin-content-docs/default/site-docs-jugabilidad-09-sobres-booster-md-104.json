@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/sobres-booster",
+  "title": "🎁 Sobres y Booster Packs",
+  "description": "Cómo funcionan los sobres en el juego",
+  "source": "@site/docs/jugabilidad/09-sobres-booster.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/sobres-booster",
+  "permalink": "/docs/jugabilidad/sobres-booster",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/09-sobres-booster.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 9,
+  "frontMatter": {
+    "sidebar_position": 9,
+    "title": "🎁 Sobres y Booster Packs"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "✨ Efectos y Habilidades",
+    "permalink": "/docs/jugabilidad/efectos-habilidades"
+  },
+  "next": {
+    "title": "🛡️ Items y Equipamiento",
+    "permalink": "/docs/jugabilidad/items-equipamiento"
+  }
+}

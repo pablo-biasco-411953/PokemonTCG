@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/card-controller",
+  "title": "🃏 CardController",
+  "description": "Endpoints para obtener información completa del catálogo de cartas",
+  "source": "@site/docs/componentes-detallados/backend/controllers/03-card-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/card-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/card-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/03-card-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🃏 CardController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/battle-controller"
+  },
+  "next": {
+    "title": "👤 JugadorController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/jugador-controller"
+  }
+}

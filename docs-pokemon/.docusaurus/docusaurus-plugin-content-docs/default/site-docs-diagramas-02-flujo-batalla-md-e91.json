@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/flujo-batalla",
+  "title": "⚔️ Flujo de Batalla",
+  "description": "Ciclo completo de una batalla Pokemon desde inicio hasta fin",
+  "source": "@site/docs/diagramas/02-flujo-batalla.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/flujo-batalla",
+  "permalink": "/docs/diagramas/flujo-batalla",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/02-flujo-batalla.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "⚔️ Flujo de Batalla"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🏗️ Arquitectura General",
+    "permalink": "/docs/diagramas/arquitectura-general"
+  },
+  "next": {
+    "title": "📊 Modelo de Datos",
+    "permalink": "/docs/diagramas/modelo-datos"
+  }
+}

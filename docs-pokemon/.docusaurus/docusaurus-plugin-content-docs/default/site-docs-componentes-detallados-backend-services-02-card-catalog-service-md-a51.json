@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/services/card-catalog-service",
+  "title": "🃏 CardCatalogService",
+  "description": "Servicio de carga, caché y normalización del catálogo de cartas",
+  "source": "@site/docs/componentes-detallados/backend/services/02-card-catalog-service.md",
+  "sourceDirName": "componentes-detallados/backend/services",
+  "slug": "/componentes-detallados/backend/services/card-catalog-service",
+  "permalink": "/docs/componentes-detallados/backend/services/card-catalog-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/services/02-card-catalog-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "🃏 CardCatalogService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔐 AuthService",
+    "permalink": "/docs/componentes-detallados/backend/services/auth-service"
+  },
+  "next": {
+    "title": "🎴 MazoService",
+    "permalink": "/docs/componentes-detallados/backend/services/mazo-service"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/arquitectura-general",
+  "title": "🏗️ Arquitectura General",
+  "description": "Vista completa de la arquitectura full-stack del Pokemon TCG",
+  "source": "@site/docs/diagramas/01-arquitectura-general.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/arquitectura-general",
+  "permalink": "/docs/diagramas/arquitectura-general",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/01-arquitectura-general.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🏗️ Arquitectura General"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚡ Performance Tips",
+    "permalink": "/docs/operaciones/performance-tips"
+  },
+  "next": {
+    "title": "⚔️ Flujo de Batalla",
+    "permalink": "/docs/diagramas/flujo-batalla"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/jugador-types",
+  "title": "👤 Jugador Types",
+  "description": "Interfaces del modelo de jugador: Jugador, JugadorDatosResponse",
+  "source": "@site/docs/componentes-detallados/frontend/types/03-jugador-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/jugador-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/jugador-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/03-jugador-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "👤 Jugador Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 Card Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/card-types"
+  },
+  "next": {
+    "title": "🗃️ Mazo Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/mazo-types"
+  }
+}

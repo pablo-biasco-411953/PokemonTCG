@@ -1,0 +1,28 @@
+{
+  "id": "algoritmos/selector-cartas",
+  "title": "🎴 Selector de Cartas (Sobres)",
+  "description": "Logica de seleccion aleatoria de cartas al abrir un sobre",
+  "source": "@site/docs/algoritmos/selector-cartas.md",
+  "sourceDirName": "algoritmos",
+  "slug": "/algoritmos/selector-cartas",
+  "permalink": "/docs/algoritmos/selector-cartas",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/algoritmos/selector-cartas.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "🎴 Selector de Cartas (Sobres)"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🤖 IA de Batalla (Bot)",
+    "permalink": "/docs/algoritmos/batalla-ia"
+  },
+  "next": {
+    "title": "✅ Validador de Mazos",
+    "permalink": "/docs/algoritmos/validador-mazos"
+  }
+}

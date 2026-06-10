@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/scripts-utiles",
+  "title": "📜 Scripts Utiles",
+  "description": "Comandos frecuentes para desarrollo, build y deployment",
+  "source": "@site/docs/operaciones/05-scripts-utiles.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/scripts-utiles",
+  "permalink": "/docs/operaciones/scripts-utiles",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/05-scripts-utiles.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "📜 Scripts Utiles"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🗄️ Base de Datos",
+    "permalink": "/docs/operaciones/database-setup"
+  },
+  "next": {
+    "title": "🔥 Troubleshooting",
+    "permalink": "/docs/operaciones/troubleshooting"
+  }
+}

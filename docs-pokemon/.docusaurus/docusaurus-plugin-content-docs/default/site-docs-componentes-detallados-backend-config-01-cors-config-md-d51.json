@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/config/cors-config",
+  "title": "🌐 CORS Config",
+  "description": "Permite al frontend Angular comunicarse con el backend Spring Boot",
+  "source": "@site/docs/componentes-detallados/backend/config/01-cors-config.md",
+  "sourceDirName": "componentes-detallados/backend/config",
+  "slug": "/componentes-detallados/backend/config/cors-config",
+  "permalink": "/docs/componentes-detallados/backend/config/cors-config",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/config/01-cors-config.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🌐 CORS Config"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🗄️ Repositories Overview",
+    "permalink": "/docs/componentes-detallados/backend/repositories/repositories-overview"
+  },
+  "next": {
+    "title": "📦 DataLoader",
+    "permalink": "/docs/componentes-detallados/backend/config/data-loader"
+  }
+}

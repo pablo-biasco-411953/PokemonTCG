@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/api-endpoints",
+  "title": "📡 API Endpoints - REST",
+  "description": "---",
+  "source": "@site/docs/tecnica/05-api-endpoints.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/api-endpoints",
+  "permalink": "/docs/tecnica/api-endpoints",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/05-api-endpoints.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "📡 API Endpoints - REST"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🗄️ Diseño de Base de Datos",
+    "permalink": "/docs/tecnica/database-design"
+  },
+  "next": {
+    "title": "🏛️ Patrones de Diseño",
+    "permalink": "/docs/tecnica/patrones-diseño"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/database-design",
+  "title": "🗄️ Diseño de Base de Datos",
+  "description": "---",
+  "source": "@site/docs/tecnica/04-database-design.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/database-design",
+  "permalink": "/docs/tecnica/database-design",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/04-database-design.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🗄️ Diseño de Base de Datos"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎨 Arquitectura Frontend",
+    "permalink": "/docs/tecnica/arquitectura-frontend"
+  },
+  "next": {
+    "title": "📡 API Endpoints - REST",
+    "permalink": "/docs/tecnica/api-endpoints"
+  }
+}

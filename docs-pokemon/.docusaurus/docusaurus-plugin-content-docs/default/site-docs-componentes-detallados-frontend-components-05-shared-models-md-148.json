@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/components/shared-models",
+  "title": "📦 Shared Models",
+  "description": "Interfaces TypeScript que definen la estructura de datos compartida entre componentes",
+  "source": "@site/docs/componentes-detallados/frontend/components/05-shared-models.md",
+  "sourceDirName": "componentes-detallados/frontend/components",
+  "slug": "/componentes-detallados/frontend/components/shared-models",
+  "permalink": "/docs/componentes-detallados/frontend/components/shared-models",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/components/05-shared-models.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "📦 Shared Models"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 DeckBuilderComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/deck-builder"
+  },
+  "next": {
+    "title": "📐 TypeScript Models — Índice",
+    "permalink": "/docs/componentes-detallados/frontend/types/models"
+  }
+}

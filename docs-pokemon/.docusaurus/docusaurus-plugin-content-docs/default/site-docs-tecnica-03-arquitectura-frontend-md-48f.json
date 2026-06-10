@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/arquitectura-frontend",
+  "title": "🎨 Arquitectura Frontend",
+  "description": "---",
+  "source": "@site/docs/tecnica/03-arquitectura-frontend.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/arquitectura-frontend",
+  "permalink": "/docs/tecnica/arquitectura-frontend",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/03-arquitectura-frontend.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🎨 Arquitectura Frontend"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔧 Arquitectura Backend",
+    "permalink": "/docs/tecnica/arquitectura-backend"
+  },
+  "next": {
+    "title": "🗄️ Diseño de Base de Datos",
+    "permalink": "/docs/tecnica/database-design"
+  }
+}

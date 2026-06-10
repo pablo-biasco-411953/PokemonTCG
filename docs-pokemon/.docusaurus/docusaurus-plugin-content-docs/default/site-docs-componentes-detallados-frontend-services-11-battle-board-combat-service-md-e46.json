@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/battle-board-combat-service",
+  "title": "⚔️ BattleBoardCombatService",
+  "description": "Resolución de combate, confusión, turno del bot y cálculo de daño real",
+  "source": "@site/docs/componentes-detallados/frontend/services/11-battle-board-combat-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/battle-board-combat-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/battle-board-combat-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/11-battle-board-combat-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 11,
+  "frontMatter": {
+    "sidebar_position": 11,
+    "title": "⚔️ BattleBoardCombatService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleBoardAttackService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-attack-service"
+  },
+  "next": {
+    "title": "⚔️ BattleBoardTurnService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-turn-service"
+  }
+}

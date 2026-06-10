@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/batalla-engine",
+  "title": "⚙️ Battle Engine",
+  "description": "---",
+  "source": "@site/docs/tecnica/07-batalla-engine.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/batalla-engine",
+  "permalink": "/docs/tecnica/batalla-engine",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/07-batalla-engine.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "title": "⚙️ Battle Engine"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🏛️ Patrones de Diseño",
+    "permalink": "/docs/tecnica/patrones-diseño"
+  },
+  "next": {
+    "title": "📡 WebSocket y Lobby",
+    "permalink": "/docs/tecnica/websocket-lobby"
+  }
+}

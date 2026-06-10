@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/websocket-lobby",
+  "title": "📡 WebSocket y Lobby",
+  "description": "---",
+  "source": "@site/docs/tecnica/08-websocket-lobby.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/websocket-lobby",
+  "permalink": "/docs/tecnica/websocket-lobby",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/08-websocket-lobby.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "sidebar_position": 8,
+    "title": "📡 WebSocket y Lobby"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚙️ Battle Engine",
+    "permalink": "/docs/tecnica/batalla-engine"
+  },
+  "next": {
+    "title": "🔐 Autenticación",
+    "permalink": "/docs/tecnica/autenticacion"
+  }
+}

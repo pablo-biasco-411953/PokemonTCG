@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/cartas-tipos-energia",
+  "title": "🃏 Cartas, Tipos y Energía",
+  "description": "Guía completa sobre los diferentes tipos de cartas y sus características",
+  "source": "@site/docs/jugabilidad/03-cartas-tipos-energia.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/cartas-tipos-energia",
+  "permalink": "/docs/jugabilidad/cartas-tipos-energia",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/03-cartas-tipos-energia.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🃏 Cartas, Tipos y Energía"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎮 Mecánicas Básicas",
+    "permalink": "/docs/jugabilidad/mecanicas-basicas"
+  },
+  "next": {
+    "title": "📈 Evolución de Pokémon",
+    "permalink": "/docs/jugabilidad/evolucion-pokemon"
+  }
+}

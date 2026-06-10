@@ -1,0 +1,28 @@
+{
+  "id": "algoritmos/batalla-ia",
+  "title": "🤖 IA de Batalla (Bot)",
+  "description": "Algoritmos de evaluacion estrategica para el oponente controlado por IA",
+  "source": "@site/docs/algoritmos/batalla-ia.md",
+  "sourceDirName": "algoritmos",
+  "slug": "/algoritmos/batalla-ia",
+  "permalink": "/docs/algoritmos/batalla-ia",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/algoritmos/batalla-ia.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🤖 IA de Batalla (Bot)"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔧 Hooks, Pipes & Utilidades",
+    "permalink": "/docs/componentes-detallados/frontend/hooks-utils/hooks-utilities"
+  },
+  "next": {
+    "title": "🎴 Selector de Cartas (Sobres)",
+    "permalink": "/docs/algoritmos/selector-cartas"
+  }
+}

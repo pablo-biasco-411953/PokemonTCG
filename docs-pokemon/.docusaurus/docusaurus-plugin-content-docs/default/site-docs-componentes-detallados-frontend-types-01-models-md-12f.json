@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/models",
+  "title": "📐 TypeScript Models — Índice",
+  "description": "Índice de todas las interfaces y tipos TypeScript del frontend",
+  "source": "@site/docs/componentes-detallados/frontend/types/01-models.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/models",
+  "permalink": "/docs/componentes-detallados/frontend/types/models",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/01-models.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "📐 TypeScript Models — Índice"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📦 Shared Models",
+    "permalink": "/docs/componentes-detallados/frontend/components/shared-models"
+  },
+  "next": {
+    "title": "🃏 Card Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/card-types"
+  }
+}

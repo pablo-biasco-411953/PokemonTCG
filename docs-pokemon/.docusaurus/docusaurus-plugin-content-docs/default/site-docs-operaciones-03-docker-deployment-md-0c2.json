@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/docker-deployment",
+  "title": "🐳 Docker & Deployment",
+  "description": "Contenedores Docker y deployment a Render",
+  "source": "@site/docs/operaciones/03-docker-deployment.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/docker-deployment",
+  "permalink": "/docs/operaciones/docker-deployment",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/03-docker-deployment.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🐳 Docker & Deployment"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔐 Variables de Entorno",
+    "permalink": "/docs/operaciones/variables-entorno"
+  },
+  "next": {
+    "title": "🗄️ Base de Datos",
+    "permalink": "/docs/operaciones/database-setup"
+  }
+}

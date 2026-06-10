@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/stack-tecnologico",
+  "title": "📦 Stack Tecnológico",
+  "description": "Tecnologías, versiones y justificación de cada elección",
+  "source": "@site/docs/tecnica/01-stack-tecnologico.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/stack-tecnologico",
+  "permalink": "/docs/tecnica/stack-tecnologico",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/01-stack-tecnologico.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "📦 Stack Tecnológico"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚙️ Arquitectura Técnica",
+    "permalink": "/docs/category/️-arquitectura-técnica"
+  },
+  "next": {
+    "title": "🔧 Arquitectura Backend",
+    "permalink": "/docs/tecnica/arquitectura-backend"
+  }
+}

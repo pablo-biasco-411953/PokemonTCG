@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/performance-tips",
+  "title": "⚡ Performance Tips",
+  "description": "Optimizaciones implementadas y recomendaciones de rendimiento",
+  "source": "@site/docs/operaciones/07-performance-tips.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/performance-tips",
+  "permalink": "/docs/operaciones/performance-tips",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/07-performance-tips.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "title": "⚡ Performance Tips"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔥 Troubleshooting",
+    "permalink": "/docs/operaciones/troubleshooting"
+  },
+  "next": {
+    "title": "🏗️ Arquitectura General",
+    "permalink": "/docs/diagramas/arquitectura-general"
+  }
+}

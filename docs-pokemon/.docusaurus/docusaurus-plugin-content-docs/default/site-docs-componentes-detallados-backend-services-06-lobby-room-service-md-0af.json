@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/services/lobby-room-service",
+  "title": "🏟️ LobbyRoomService",
+  "description": "Servicio para crear, administrar y sincronizar salas de matchmaking multijugador",
+  "source": "@site/docs/componentes-detallados/backend/services/06-lobby-room-service.md",
+  "sourceDirName": "componentes-detallados/backend/services",
+  "slug": "/componentes-detallados/backend/services/lobby-room-service",
+  "permalink": "/docs/componentes-detallados/backend/services/lobby-room-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/services/06-lobby-room-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🏟️ LobbyRoomService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleEngineService",
+    "permalink": "/docs/componentes-detallados/backend/services/battle-engine-service"
+  },
+  "next": {
+    "title": "👤 Jugador Entity",
+    "permalink": "/docs/componentes-detallados/backend/models/jugador-entity"
+  }
+}

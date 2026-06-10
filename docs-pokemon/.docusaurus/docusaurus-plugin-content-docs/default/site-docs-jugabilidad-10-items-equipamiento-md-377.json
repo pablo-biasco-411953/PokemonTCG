@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/items-equipamiento",
+  "title": "🛡️ Items y Equipamiento",
+  "description": "Cartas Entrenador que modifican el juego",
+  "source": "@site/docs/jugabilidad/10-items-equipamiento.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/items-equipamiento",
+  "permalink": "/docs/jugabilidad/items-equipamiento",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/10-items-equipamiento.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 10,
+  "frontMatter": {
+    "sidebar_position": 10,
+    "title": "🛡️ Items y Equipamiento"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎁 Sobres y Booster Packs",
+    "permalink": "/docs/jugabilidad/sobres-booster"
+  },
+  "next": {
+    "title": "⚙️ Arquitectura Técnica",
+    "permalink": "/docs/category/️-arquitectura-técnica"
+  }
+}

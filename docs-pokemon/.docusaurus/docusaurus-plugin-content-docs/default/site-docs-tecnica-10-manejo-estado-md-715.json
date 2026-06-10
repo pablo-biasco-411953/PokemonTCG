@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/manejo-estado",
+  "title": "🔄 Manejo de Estado",
+  "description": "---",
+  "source": "@site/docs/tecnica/10-manejo-estado.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/manejo-estado",
+  "permalink": "/docs/tecnica/manejo-estado",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/10-manejo-estado.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 10,
+  "frontMatter": {
+    "sidebar_position": 10,
+    "title": "🔄 Manejo de Estado"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔐 Autenticación",
+    "permalink": "/docs/tecnica/autenticacion"
+  },
+  "next": {
+    "title": "🧠 Algoritmos Clave",
+    "permalink": "/docs/tecnica/algoritmos-clave"
+  }
+}

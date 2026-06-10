@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/database-setup",
+  "title": "🗄️ Base de Datos",
+  "description": "MySQL con esquema auto-generado por Hibernate y seed automatico de datos",
+  "source": "@site/docs/operaciones/04-database-setup.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/database-setup",
+  "permalink": "/docs/operaciones/database-setup",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/04-database-setup.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🗄️ Base de Datos"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🐳 Docker & Deployment",
+    "permalink": "/docs/operaciones/docker-deployment"
+  },
+  "next": {
+    "title": "📜 Scripts Utiles",
+    "permalink": "/docs/operaciones/scripts-utiles"
+  }
+}

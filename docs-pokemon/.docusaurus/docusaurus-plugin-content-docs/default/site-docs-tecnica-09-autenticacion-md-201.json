@@ -1,0 +1,28 @@
+{
+  "id": "tecnica/autenticacion",
+  "title": "🔐 Autenticación",
+  "description": "---",
+  "source": "@site/docs/tecnica/09-autenticacion.md",
+  "sourceDirName": "tecnica",
+  "slug": "/tecnica/autenticacion",
+  "permalink": "/docs/tecnica/autenticacion",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/tecnica/09-autenticacion.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 9,
+  "frontMatter": {
+    "sidebar_position": 9,
+    "title": "🔐 Autenticación"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📡 WebSocket y Lobby",
+    "permalink": "/docs/tecnica/websocket-lobby"
+  },
+  "next": {
+    "title": "🔄 Manejo de Estado",
+    "permalink": "/docs/tecnica/manejo-estado"
+  }
+}

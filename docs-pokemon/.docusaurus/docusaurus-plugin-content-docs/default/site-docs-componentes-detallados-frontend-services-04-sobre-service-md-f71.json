@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/sobre-service",
+  "title": "🎁 SobreService",
+  "description": "Servicio Angular para abrir sobres (booster packs) y obtener cartas aleatorias",
+  "source": "@site/docs/componentes-detallados/frontend/services/04-sobre-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/sobre-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/sobre-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/04-sobre-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🎁 SobreService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "👤 JugadorService",
+    "permalink": "/docs/componentes-detallados/frontend/services/jugador-service"
+  },
+  "next": {
+    "title": "🎴 MazoService",
+    "permalink": "/docs/componentes-detallados/frontend/services/mazo-service"
+  }
+}

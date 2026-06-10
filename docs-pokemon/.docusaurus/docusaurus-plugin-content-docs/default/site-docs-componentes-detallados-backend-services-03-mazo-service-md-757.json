@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/services/mazo-service",
+  "title": "🎴 MazoService",
+  "description": "Servicio de CRUD y validación de mazos",
+  "source": "@site/docs/componentes-detallados/backend/services/03-mazo-service.md",
+  "sourceDirName": "componentes-detallados/backend/services",
+  "slug": "/componentes-detallados/backend/services/mazo-service",
+  "permalink": "/docs/componentes-detallados/backend/services/mazo-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/services/03-mazo-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🎴 MazoService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 CardCatalogService",
+    "permalink": "/docs/componentes-detallados/backend/services/card-catalog-service"
+  },
+  "next": {
+    "title": "🎁 SobreService",
+    "permalink": "/docs/componentes-detallados/backend/services/sobre-service"
+  }
+}

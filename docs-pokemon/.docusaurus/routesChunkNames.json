@@ -1,0 +1,398 @@
+{
+  "/blog-98b": {
+    "__comp": "a6aa9e1f",
+    "__context": {
+      "plugin": "36994c47"
+    },
+    "sidebar": "814f3328",
+    "items": [],
+    "__props": "c15d9823"
+  },
+  "/markdown-page-53a": {
+    "__comp": "1f391b9e",
+    "__context": {
+      "plugin": "a7456010"
+    },
+    "content": "4c678320"
+  },
+  "/docs-c5c": {
+    "__comp": "5e95c892",
+    "__context": {
+      "plugin": "aba21aa0"
+    }
+  },
+  "/docs-f86": {
+    "__comp": "a7bd4aaa",
+    "__props": "0058b4c6"
+  },
+  "/docs-8c5": {
+    "__comp": "a94703ab"
+  },
+  "/docs/algoritmos/batalla-ia-3fe": {
+    "__comp": "17896441",
+    "content": "c6a66516"
+  },
+  "/docs/algoritmos/matchmaking-f06": {
+    "__comp": "17896441",
+    "content": "ebb8e872"
+  },
+  "/docs/algoritmos/selector-cartas-6bf": {
+    "__comp": "17896441",
+    "content": "70b8f4a5"
+  },
+  "/docs/algoritmos/validador-mazos-27f": {
+    "__comp": "17896441",
+    "content": "992bdc79"
+  },
+  "/docs/category/️-arquitectura-técnica-002": {
+    "__comp": "14eb3368",
+    "__props": "c5ff6536"
+  },
+  "/docs/category/-componentes-detallados-c45": {
+    "__comp": "14eb3368",
+    "__props": "4cf2ef6d"
+  },
+  "/docs/category/-jugabilidad--reglas-88b": {
+    "__comp": "14eb3368",
+    "__props": "42e78d62"
+  },
+  "/docs/componentes-detallados/backend/config/cors-config-c57": {
+    "__comp": "17896441",
+    "content": "d51d2ae6"
+  },
+  "/docs/componentes-detallados/backend/config/data-loader-fc3": {
+    "__comp": "17896441",
+    "content": "990bb9a9"
+  },
+  "/docs/componentes-detallados/backend/config/websocket-config-f6a": {
+    "__comp": "17896441",
+    "content": "55506f36"
+  },
+  "/docs/componentes-detallados/backend/controllers/auth-controller-662": {
+    "__comp": "17896441",
+    "content": "89cffe72"
+  },
+  "/docs/componentes-detallados/backend/controllers/battle-controller-d08": {
+    "__comp": "17896441",
+    "content": "7ac1d9f0"
+  },
+  "/docs/componentes-detallados/backend/controllers/card-controller-613": {
+    "__comp": "17896441",
+    "content": "0d68e6db"
+  },
+  "/docs/componentes-detallados/backend/controllers/jugador-controller-b05": {
+    "__comp": "17896441",
+    "content": "aa000b7f"
+  },
+  "/docs/componentes-detallados/backend/controllers/mazo-controller-95b": {
+    "__comp": "17896441",
+    "content": "f8cf7ede"
+  },
+  "/docs/componentes-detallados/backend/controllers/sobre-controller-d3e": {
+    "__comp": "17896441",
+    "content": "5d0b9864"
+  },
+  "/docs/componentes-detallados/backend/models/card-entity-029": {
+    "__comp": "17896441",
+    "content": "9ef5f565"
+  },
+  "/docs/componentes-detallados/backend/models/enums-commands-16f": {
+    "__comp": "17896441",
+    "content": "02ed877a"
+  },
+  "/docs/componentes-detallados/backend/models/jugador-entity-cd9": {
+    "__comp": "17896441",
+    "content": "273276b0"
+  },
+  "/docs/componentes-detallados/backend/models/mazo-entity-ff9": {
+    "__comp": "17896441",
+    "content": "f1663a38"
+  },
+  "/docs/componentes-detallados/backend/models/partida-battle-models-75d": {
+    "__comp": "17896441",
+    "content": "bbc3fd05"
+  },
+  "/docs/componentes-detallados/backend/repositories/repositories-overview-2bf": {
+    "__comp": "17896441",
+    "content": "a8e64a09"
+  },
+  "/docs/componentes-detallados/backend/services/auth-service-26e": {
+    "__comp": "17896441",
+    "content": "8994ce03"
+  },
+  "/docs/componentes-detallados/backend/services/battle-engine-service-ec1": {
+    "__comp": "17896441",
+    "content": "c10b2d55"
+  },
+  "/docs/componentes-detallados/backend/services/card-catalog-service-62b": {
+    "__comp": "17896441",
+    "content": "a51dca53"
+  },
+  "/docs/componentes-detallados/backend/services/lobby-room-service-b44": {
+    "__comp": "17896441",
+    "content": "0af9b563"
+  },
+  "/docs/componentes-detallados/backend/services/mazo-service-76b": {
+    "__comp": "17896441",
+    "content": "757f3d82"
+  },
+  "/docs/componentes-detallados/backend/services/sobre-service-6d3": {
+    "__comp": "17896441",
+    "content": "1c0e34a0"
+  },
+  "/docs/componentes-detallados/frontend/components/apertura-sobre-f35": {
+    "__comp": "17896441",
+    "content": "73515086"
+  },
+  "/docs/componentes-detallados/frontend/components/battle-board-202": {
+    "__comp": "17896441",
+    "content": "f834954b"
+  },
+  "/docs/componentes-detallados/frontend/components/deck-builder-e8f": {
+    "__comp": "17896441",
+    "content": "d7a40cec"
+  },
+  "/docs/componentes-detallados/frontend/components/lobby-95e": {
+    "__comp": "17896441",
+    "content": "29528fd5"
+  },
+  "/docs/componentes-detallados/frontend/components/shared-models-4dc": {
+    "__comp": "17896441",
+    "content": "148aaae5"
+  },
+  "/docs/componentes-detallados/frontend/hooks-utils/hooks-utilities-2e8": {
+    "__comp": "17896441",
+    "content": "c5b4227d"
+  },
+  "/docs/componentes-detallados/frontend/services/auth-service-efa": {
+    "__comp": "17896441",
+    "content": "7263d9ce"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-action-service-4c5": {
+    "__comp": "17896441",
+    "content": "335c00ed"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-attack-service-59c": {
+    "__comp": "17896441",
+    "content": "8aaf2642"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-combat-service-a61": {
+    "__comp": "17896441",
+    "content": "e46a1044"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-state-service-26e": {
+    "__comp": "17896441",
+    "content": "9e87e379"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-turn-service-89e": {
+    "__comp": "17896441",
+    "content": "6e0e5a13"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-board-ui-service-896": {
+    "__comp": "17896441",
+    "content": "748c12bb"
+  },
+  "/docs/componentes-detallados/frontend/services/battle-service-5f4": {
+    "__comp": "17896441",
+    "content": "e138dff3"
+  },
+  "/docs/componentes-detallados/frontend/services/card-service-162": {
+    "__comp": "17896441",
+    "content": "28514743"
+  },
+  "/docs/componentes-detallados/frontend/services/jugador-service-5d2": {
+    "__comp": "17896441",
+    "content": "a0336339"
+  },
+  "/docs/componentes-detallados/frontend/services/lobby-room-service-176": {
+    "__comp": "17896441",
+    "content": "81625cc7"
+  },
+  "/docs/componentes-detallados/frontend/services/mazo-service-d6d": {
+    "__comp": "17896441",
+    "content": "f47f1fb8"
+  },
+  "/docs/componentes-detallados/frontend/services/sobre-service-e47": {
+    "__comp": "17896441",
+    "content": "f719235c"
+  },
+  "/docs/componentes-detallados/frontend/types/battle-board-types-efd": {
+    "__comp": "17896441",
+    "content": "c9d7c8bf"
+  },
+  "/docs/componentes-detallados/frontend/types/battle-types-de2": {
+    "__comp": "17896441",
+    "content": "6f6d9060"
+  },
+  "/docs/componentes-detallados/frontend/types/card-types-bf8": {
+    "__comp": "17896441",
+    "content": "f7787047"
+  },
+  "/docs/componentes-detallados/frontend/types/jugador-types-fd4": {
+    "__comp": "17896441",
+    "content": "5dbe940a"
+  },
+  "/docs/componentes-detallados/frontend/types/lobby-types-100": {
+    "__comp": "17896441",
+    "content": "098677f3"
+  },
+  "/docs/componentes-detallados/frontend/types/mazo-types-9f0": {
+    "__comp": "17896441",
+    "content": "92a76053"
+  },
+  "/docs/componentes-detallados/frontend/types/models-c01": {
+    "__comp": "17896441",
+    "content": "12febd0d"
+  },
+  "/docs/diagramas/arquitectura-general-4e6": {
+    "__comp": "17896441",
+    "content": "57cfd907"
+  },
+  "/docs/diagramas/componentes-dependencias-e3e": {
+    "__comp": "17896441",
+    "content": "126e8f3d"
+  },
+  "/docs/diagramas/flujo-autenticacion-6a1": {
+    "__comp": "17896441",
+    "content": "8d048723"
+  },
+  "/docs/diagramas/flujo-batalla-4c7": {
+    "__comp": "17896441",
+    "content": "e9187cd8"
+  },
+  "/docs/diagramas/flujo-websocket-dda": {
+    "__comp": "17896441",
+    "content": "1ca27b24"
+  },
+  "/docs/diagramas/modelo-datos-e17": {
+    "__comp": "17896441",
+    "content": "132032a9"
+  },
+  "/docs/glosario-132": {
+    "__comp": "17896441",
+    "content": "3281e433"
+  },
+  "/docs/intro-61d": {
+    "__comp": "17896441",
+    "content": "0e384e19"
+  },
+  "/docs/jugabilidad/batalla-reglas-2ec": {
+    "__comp": "17896441",
+    "content": "dbb6949e"
+  },
+  "/docs/jugabilidad/cartas-tipos-energia-e41": {
+    "__comp": "17896441",
+    "content": "27267bf6"
+  },
+  "/docs/jugabilidad/construccion-mazos-934": {
+    "__comp": "17896441",
+    "content": "8321e0b4"
+  },
+  "/docs/jugabilidad/efectos-habilidades-f7b": {
+    "__comp": "17896441",
+    "content": "c6d983b6"
+  },
+  "/docs/jugabilidad/evolucion-pokemon-946": {
+    "__comp": "17896441",
+    "content": "05b34d30"
+  },
+  "/docs/jugabilidad/fases-turno-e57": {
+    "__comp": "17896441",
+    "content": "34e08e8a"
+  },
+  "/docs/jugabilidad/items-equipamiento-faa": {
+    "__comp": "17896441",
+    "content": "377c1ebe"
+  },
+  "/docs/jugabilidad/mecanicas-basicas-860": {
+    "__comp": "17896441",
+    "content": "72ca6da1"
+  },
+  "/docs/jugabilidad/overview-juego-508": {
+    "__comp": "17896441",
+    "content": "a1cdb2dd"
+  },
+  "/docs/jugabilidad/sobres-booster-e94": {
+    "__comp": "17896441",
+    "content": "1041ff68"
+  },
+  "/docs/operaciones/database-setup-94e": {
+    "__comp": "17896441",
+    "content": "a895bae8"
+  },
+  "/docs/operaciones/docker-deployment-052": {
+    "__comp": "17896441",
+    "content": "0c29c883"
+  },
+  "/docs/operaciones/performance-tips-4e7": {
+    "__comp": "17896441",
+    "content": "07865910"
+  },
+  "/docs/operaciones/scripts-utiles-40e": {
+    "__comp": "17896441",
+    "content": "3daf8394"
+  },
+  "/docs/operaciones/setup-local-d2f": {
+    "__comp": "17896441",
+    "content": "4a2790cf"
+  },
+  "/docs/operaciones/troubleshooting-b6a": {
+    "__comp": "17896441",
+    "content": "579e128a"
+  },
+  "/docs/operaciones/variables-entorno-015": {
+    "__comp": "17896441",
+    "content": "a84d7eeb"
+  },
+  "/docs/tecnica/algoritmos-clave-b7d": {
+    "__comp": "17896441",
+    "content": "3ed412ad"
+  },
+  "/docs/tecnica/api-endpoints-423": {
+    "__comp": "17896441",
+    "content": "120459ab"
+  },
+  "/docs/tecnica/arquitectura-backend-c50": {
+    "__comp": "17896441",
+    "content": "de32df74"
+  },
+  "/docs/tecnica/arquitectura-frontend-a0e": {
+    "__comp": "17896441",
+    "content": "48f9c8cc"
+  },
+  "/docs/tecnica/autenticacion-9c0": {
+    "__comp": "17896441",
+    "content": "201f5578"
+  },
+  "/docs/tecnica/batalla-engine-2ab": {
+    "__comp": "17896441",
+    "content": "93fdd582"
+  },
+  "/docs/tecnica/database-design-06b": {
+    "__comp": "17896441",
+    "content": "3a8e8f6f"
+  },
+  "/docs/tecnica/manejo-estado-f18": {
+    "__comp": "17896441",
+    "content": "7153fda4"
+  },
+  "/docs/tecnica/patrones-diseño-368": {
+    "__comp": "17896441",
+    "content": "89eeface"
+  },
+  "/docs/tecnica/stack-tecnologico-d2f": {
+    "__comp": "17896441",
+    "content": "298395de"
+  },
+  "/docs/tecnica/websocket-lobby-38b": {
+    "__comp": "17896441",
+    "content": "f32633e7"
+  },
+  "/-e5f": {
+    "__comp": "1df93b7f",
+    "__context": {
+      "plugin": "a7456010"
+    },
+    "config": "5e9f5e1a"
+  }
+}

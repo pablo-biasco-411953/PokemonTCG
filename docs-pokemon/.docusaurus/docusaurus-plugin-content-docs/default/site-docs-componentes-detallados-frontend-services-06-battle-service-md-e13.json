@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/battle-service",
+  "title": "⚔️ BattleService",
+  "description": "Servicio Angular para todas las operaciones de combate: inicio, setup, turnos, ataques y sincronización",
+  "source": "@site/docs/componentes-detallados/frontend/services/06-battle-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/battle-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/battle-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/06-battle-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "⚔️ BattleService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎴 MazoService",
+    "permalink": "/docs/componentes-detallados/frontend/services/mazo-service"
+  },
+  "next": {
+    "title": "🏟️ LobbyRoomService",
+    "permalink": "/docs/componentes-detallados/frontend/services/lobby-room-service"
+  }
+}

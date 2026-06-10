@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/lobby-types",
+  "title": "🏟️ Lobby Types",
+  "description": "Tipos de sala multijugador: LobbyRoomSnapshot, LobbyRoomStatus, LobbyRoomChatMessage, LobbyRoomReaction, LobbyRoomStartResponse",
+  "source": "@site/docs/componentes-detallados/frontend/types/07-lobby-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/lobby-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/lobby-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/07-lobby-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "title": "🏟️ Lobby Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🖥️ BattleBoard Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/battle-board-types"
+  },
+  "next": {
+    "title": "🔧 Hooks, Pipes & Utilidades",
+    "permalink": "/docs/componentes-detallados/frontend/hooks-utils/hooks-utilities"
+  }
+}

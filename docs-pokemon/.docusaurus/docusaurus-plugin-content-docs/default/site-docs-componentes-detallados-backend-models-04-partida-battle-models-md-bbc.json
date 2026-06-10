@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/models/partida-battle-models",
+  "title": "⚔️ Partida & Battle Models",
+  "description": "Clases POJO que representan el estado completo de una partida en memoria",
+  "source": "@site/docs/componentes-detallados/backend/models/04-partida-battle-models.md",
+  "sourceDirName": "componentes-detallados/backend/models",
+  "slug": "/componentes-detallados/backend/models/partida-battle-models",
+  "permalink": "/docs/componentes-detallados/backend/models/partida-battle-models",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/models/04-partida-battle-models.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "⚔️ Partida & Battle Models"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎴 Mazo Entity",
+    "permalink": "/docs/componentes-detallados/backend/models/mazo-entity"
+  },
+  "next": {
+    "title": "🎯 Enums & Commands",
+    "permalink": "/docs/componentes-detallados/backend/models/enums-commands"
+  }
+}

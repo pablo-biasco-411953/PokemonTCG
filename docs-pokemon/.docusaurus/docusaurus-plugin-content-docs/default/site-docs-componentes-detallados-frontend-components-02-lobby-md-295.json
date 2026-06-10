@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/components/lobby",
+  "title": "🏟️ LobbyComponent",
+  "description": "Lobby interactivo 3D con Three.js donde los jugadores se mueven, chatean y acceden a funcionalidades",
+  "source": "@site/docs/componentes-detallados/frontend/components/02-lobby.md",
+  "sourceDirName": "componentes-detallados/frontend/components",
+  "slug": "/componentes-detallados/frontend/components/lobby",
+  "permalink": "/docs/componentes-detallados/frontend/components/lobby",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/components/02-lobby.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "🏟️ LobbyComponent"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleBoardComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/battle-board"
+  },
+  "next": {
+    "title": "🎁 AperturaSobreComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/apertura-sobre"
+  }
+}

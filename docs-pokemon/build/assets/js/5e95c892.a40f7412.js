@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_pokemon=self.webpackChunkdocs_pokemon||[]).push([["1668"],{6569(e,s,r){r.r(s),r.d(s,{default:()=>p});var c=r(4848);r(6540);var o=r(4164),a=r(4308),n=r(8287),u=r(2831),d=r(1085);function p(e){return(0,c.jsx)(a.e3,{className:(0,o.A)(n.G.wrapper.docsPages),children:(0,c.jsx)(d.A,{children:(0,u.v)(e.route.routes)})})}}}]);

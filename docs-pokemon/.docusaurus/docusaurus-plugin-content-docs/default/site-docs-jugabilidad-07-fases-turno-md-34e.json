@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/fases-turno",
+  "title": "🔄 Fases del Turno - Desglose Completo",
+  "description": "Paso a paso de cada fase del turno",
+  "source": "@site/docs/jugabilidad/07-fases-turno.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/fases-turno",
+  "permalink": "/docs/jugabilidad/fases-turno",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/07-fases-turno.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "title": "🔄 Fases del Turno - Desglose Completo"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ Batalla - Reglas Esenciales",
+    "permalink": "/docs/jugabilidad/batalla-reglas"
+  },
+  "next": {
+    "title": "✨ Efectos y Habilidades",
+    "permalink": "/docs/jugabilidad/efectos-habilidades"
+  }
+}

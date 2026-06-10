@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/components/deck-builder",
+  "title": "🃏 DeckBuilderComponent",
+  "description": "Componente para buscar cartas, construir y validar mazos de 60 cartas",
+  "source": "@site/docs/componentes-detallados/frontend/components/04-deck-builder.md",
+  "sourceDirName": "componentes-detallados/frontend/components",
+  "slug": "/componentes-detallados/frontend/components/deck-builder",
+  "permalink": "/docs/componentes-detallados/frontend/components/deck-builder",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/components/04-deck-builder.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🃏 DeckBuilderComponent"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎁 AperturaSobreComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/apertura-sobre"
+  },
+  "next": {
+    "title": "📦 Shared Models",
+    "permalink": "/docs/componentes-detallados/frontend/components/shared-models"
+  }
+}

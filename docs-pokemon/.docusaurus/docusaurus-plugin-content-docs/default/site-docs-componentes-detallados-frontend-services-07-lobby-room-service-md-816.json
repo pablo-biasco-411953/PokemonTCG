@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/lobby-room-service",
+  "title": "🏟️ LobbyRoomService",
+  "description": "Gestión completa de salas multijugador: creación, unión, chat, reacciones y arranque de partidas",
+  "source": "@site/docs/componentes-detallados/frontend/services/07-lobby-room-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/lobby-room-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/lobby-room-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/07-lobby-room-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 7,
+  "frontMatter": {
+    "sidebar_position": 7,
+    "title": "🏟️ LobbyRoomService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-service"
+  },
+  "next": {
+    "title": "⚔️ BattleBoardStateService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-state-service"
+  }
+}

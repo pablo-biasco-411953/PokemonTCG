@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/repositories/repositories-overview",
+  "title": "🗄️ Repositories Overview",
+  "description": "Interfaces Spring Data JPA que abstraen el acceso a la base de datos H2",
+  "source": "@site/docs/componentes-detallados/backend/repositories/01-repositories-overview.md",
+  "sourceDirName": "componentes-detallados/backend/repositories",
+  "slug": "/componentes-detallados/backend/repositories/repositories-overview",
+  "permalink": "/docs/componentes-detallados/backend/repositories/repositories-overview",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/repositories/01-repositories-overview.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🗄️ Repositories Overview"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎯 Enums & Commands",
+    "permalink": "/docs/componentes-detallados/backend/models/enums-commands"
+  },
+  "next": {
+    "title": "🌐 CORS Config",
+    "permalink": "/docs/componentes-detallados/backend/config/cors-config"
+  }
+}

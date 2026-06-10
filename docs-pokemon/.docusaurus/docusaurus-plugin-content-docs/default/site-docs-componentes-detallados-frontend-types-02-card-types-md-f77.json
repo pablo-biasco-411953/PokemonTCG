@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/card-types",
+  "title": "🃏 Card Types",
+  "description": "Interfaces base del sistema de cartas: Card, Ataque, CardWeakness",
+  "source": "@site/docs/componentes-detallados/frontend/types/02-card-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/card-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/card-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/02-card-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "🃏 Card Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📐 TypeScript Models — Índice",
+    "permalink": "/docs/componentes-detallados/frontend/types/models"
+  },
+  "next": {
+    "title": "👤 Jugador Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/jugador-types"
+  }
+}

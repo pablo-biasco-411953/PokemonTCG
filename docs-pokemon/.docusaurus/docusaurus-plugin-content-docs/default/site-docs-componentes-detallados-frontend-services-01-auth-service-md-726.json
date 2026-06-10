@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/auth-service",
+  "title": "🔐 AuthService",
+  "description": "Servicio Angular para login, registro y manejo de autenticación",
+  "source": "@site/docs/componentes-detallados/frontend/services/01-auth-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/auth-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/auth-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/01-auth-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🔐 AuthService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔌 WebSocket & Security Config",
+    "permalink": "/docs/componentes-detallados/backend/config/websocket-config"
+  },
+  "next": {
+    "title": "🃏 CardService",
+    "permalink": "/docs/componentes-detallados/frontend/services/card-service"
+  }
+}

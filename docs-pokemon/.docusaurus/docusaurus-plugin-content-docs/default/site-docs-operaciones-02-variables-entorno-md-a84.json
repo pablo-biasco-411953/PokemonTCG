@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/variables-entorno",
+  "title": "🔐 Variables de Entorno",
+  "description": "Configuracion de entorno para backend y frontend",
+  "source": "@site/docs/operaciones/02-variables-entorno.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/variables-entorno",
+  "permalink": "/docs/operaciones/variables-entorno",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/02-variables-entorno.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 2,
+  "frontMatter": {
+    "sidebar_position": 2,
+    "title": "🔐 Variables de Entorno"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🚀 Setup Local - Guía de Instalación",
+    "permalink": "/docs/operaciones/setup-local"
+  },
+  "next": {
+    "title": "🐳 Docker & Deployment",
+    "permalink": "/docs/operaciones/docker-deployment"
+  }
+}

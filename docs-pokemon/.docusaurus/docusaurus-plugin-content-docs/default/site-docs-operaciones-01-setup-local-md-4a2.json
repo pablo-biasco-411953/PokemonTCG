@@ -1,0 +1,28 @@
+{
+  "id": "operaciones/setup-local",
+  "title": "🚀 Setup Local - Guía de Instalación",
+  "description": "Guía completa para instalar y ejecutar Pokémon TCG en tu máquina local",
+  "source": "@site/docs/operaciones/01-setup-local.md",
+  "sourceDirName": "operaciones",
+  "slug": "/operaciones/setup-local",
+  "permalink": "/docs/operaciones/setup-local",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/operaciones/01-setup-local.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "🚀 Setup Local - Guía de Instalación"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ Matchmaking y Salas",
+    "permalink": "/docs/algoritmos/matchmaking"
+  },
+  "next": {
+    "title": "🔐 Variables de Entorno",
+    "permalink": "/docs/operaciones/variables-entorno"
+  }
+}

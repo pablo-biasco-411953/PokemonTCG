@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/jugador-controller",
+  "title": "👤 JugadorController",
+  "description": "Endpoints para consultar y administrar datos, monedas, sobres y personalización de jugadores",
+  "source": "@site/docs/componentes-detallados/backend/controllers/04-jugador-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/jugador-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/jugador-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/04-jugador-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "👤 JugadorController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 CardController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/card-controller"
+  },
+  "next": {
+    "title": "🎴 MazoController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/mazo-controller"
+  }
+}

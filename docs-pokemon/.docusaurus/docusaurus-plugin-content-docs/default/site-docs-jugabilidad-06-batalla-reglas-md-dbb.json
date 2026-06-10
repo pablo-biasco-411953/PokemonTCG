@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/batalla-reglas",
+  "title": "⚔️ Batalla - Reglas Esenciales",
+  "description": "Las 10 reglas de oro para jugar correctamente",
+  "source": "@site/docs/jugabilidad/06-batalla-reglas.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/batalla-reglas",
+  "permalink": "/docs/jugabilidad/batalla-reglas",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/06-batalla-reglas.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "⚔️ Batalla - Reglas Esenciales"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🛠️ Construcción de Mazos",
+    "permalink": "/docs/jugabilidad/construccion-mazos"
+  },
+  "next": {
+    "title": "🔄 Fases del Turno - Desglose Completo",
+    "permalink": "/docs/jugabilidad/fases-turno"
+  }
+}

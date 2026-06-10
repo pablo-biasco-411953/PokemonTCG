@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/battle-board-attack-service",
+  "title": "⚔️ BattleBoardAttackService",
+  "description": "Análisis de ataques: detección de coin flips, validación de energías y cálculo de faltantes",
+  "source": "@site/docs/componentes-detallados/frontend/services/10-battle-board-attack-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/battle-board-attack-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/battle-board-attack-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/10-battle-board-attack-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 10,
+  "frontMatter": {
+    "sidebar_position": 10,
+    "title": "⚔️ BattleBoardAttackService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleBoardActionService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-action-service"
+  },
+  "next": {
+    "title": "⚔️ BattleBoardCombatService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-combat-service"
+  }
+}

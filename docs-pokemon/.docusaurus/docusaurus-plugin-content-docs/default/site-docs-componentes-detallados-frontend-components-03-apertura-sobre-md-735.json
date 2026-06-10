@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/components/apertura-sobre",
+  "title": "🎁 AperturaSobreComponent",
+  "description": "Componente 3D con Three.js que simula la apertura fisica de un sobre de cartas Pokemon",
+  "source": "@site/docs/componentes-detallados/frontend/components/03-apertura-sobre.md",
+  "sourceDirName": "componentes-detallados/frontend/components",
+  "slug": "/componentes-detallados/frontend/components/apertura-sobre",
+  "permalink": "/docs/componentes-detallados/frontend/components/apertura-sobre",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/components/03-apertura-sobre.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🎁 AperturaSobreComponent"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🏟️ LobbyComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/lobby"
+  },
+  "next": {
+    "title": "🃏 DeckBuilderComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/deck-builder"
+  }
+}

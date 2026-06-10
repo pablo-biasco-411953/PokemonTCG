@@ -1,0 +1,478 @@
+{
+  "docusaurus-plugin-content-docs": {
+    "default": {
+      "path": "/docs",
+      "versions": [
+        {
+          "name": "current",
+          "label": "Next",
+          "isLast": true,
+          "path": "/docs",
+          "mainDocId": "intro",
+          "docs": [
+            {
+              "id": "algoritmos/batalla-ia",
+              "path": "/docs/algoritmos/batalla-ia",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "algoritmos/matchmaking",
+              "path": "/docs/algoritmos/matchmaking",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "algoritmos/selector-cartas",
+              "path": "/docs/algoritmos/selector-cartas",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "algoritmos/validador-mazos",
+              "path": "/docs/algoritmos/validador-mazos",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/config/cors-config",
+              "path": "/docs/componentes-detallados/backend/config/cors-config",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/config/data-loader",
+              "path": "/docs/componentes-detallados/backend/config/data-loader",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/config/websocket-config",
+              "path": "/docs/componentes-detallados/backend/config/websocket-config",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/auth-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/auth-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/battle-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/battle-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/card-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/card-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/jugador-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/jugador-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/mazo-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/mazo-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/controllers/sobre-controller",
+              "path": "/docs/componentes-detallados/backend/controllers/sobre-controller",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/models/card-entity",
+              "path": "/docs/componentes-detallados/backend/models/card-entity",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/models/enums-commands",
+              "path": "/docs/componentes-detallados/backend/models/enums-commands",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/models/jugador-entity",
+              "path": "/docs/componentes-detallados/backend/models/jugador-entity",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/models/mazo-entity",
+              "path": "/docs/componentes-detallados/backend/models/mazo-entity",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/models/partida-battle-models",
+              "path": "/docs/componentes-detallados/backend/models/partida-battle-models",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/repositories/repositories-overview",
+              "path": "/docs/componentes-detallados/backend/repositories/repositories-overview",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/auth-service",
+              "path": "/docs/componentes-detallados/backend/services/auth-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/battle-engine-service",
+              "path": "/docs/componentes-detallados/backend/services/battle-engine-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/card-catalog-service",
+              "path": "/docs/componentes-detallados/backend/services/card-catalog-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/lobby-room-service",
+              "path": "/docs/componentes-detallados/backend/services/lobby-room-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/mazo-service",
+              "path": "/docs/componentes-detallados/backend/services/mazo-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/backend/services/sobre-service",
+              "path": "/docs/componentes-detallados/backend/services/sobre-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/components/apertura-sobre",
+              "path": "/docs/componentes-detallados/frontend/components/apertura-sobre",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/components/battle-board",
+              "path": "/docs/componentes-detallados/frontend/components/battle-board",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/components/deck-builder",
+              "path": "/docs/componentes-detallados/frontend/components/deck-builder",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/components/lobby",
+              "path": "/docs/componentes-detallados/frontend/components/lobby",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/components/shared-models",
+              "path": "/docs/componentes-detallados/frontend/components/shared-models",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/hooks-utils/hooks-utilities",
+              "path": "/docs/componentes-detallados/frontend/hooks-utils/hooks-utilities",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/auth-service",
+              "path": "/docs/componentes-detallados/frontend/services/auth-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-action-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-action-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-attack-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-attack-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-combat-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-combat-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-state-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-state-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-turn-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-turn-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-board-ui-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-board-ui-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/battle-service",
+              "path": "/docs/componentes-detallados/frontend/services/battle-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/card-service",
+              "path": "/docs/componentes-detallados/frontend/services/card-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/jugador-service",
+              "path": "/docs/componentes-detallados/frontend/services/jugador-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/lobby-room-service",
+              "path": "/docs/componentes-detallados/frontend/services/lobby-room-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/mazo-service",
+              "path": "/docs/componentes-detallados/frontend/services/mazo-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/services/sobre-service",
+              "path": "/docs/componentes-detallados/frontend/services/sobre-service",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/battle-board-types",
+              "path": "/docs/componentes-detallados/frontend/types/battle-board-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/battle-types",
+              "path": "/docs/componentes-detallados/frontend/types/battle-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/card-types",
+              "path": "/docs/componentes-detallados/frontend/types/card-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/jugador-types",
+              "path": "/docs/componentes-detallados/frontend/types/jugador-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/lobby-types",
+              "path": "/docs/componentes-detallados/frontend/types/lobby-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/mazo-types",
+              "path": "/docs/componentes-detallados/frontend/types/mazo-types",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "componentes-detallados/frontend/types/models",
+              "path": "/docs/componentes-detallados/frontend/types/models",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/arquitectura-general",
+              "path": "/docs/diagramas/arquitectura-general",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/componentes-dependencias",
+              "path": "/docs/diagramas/componentes-dependencias",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/flujo-autenticacion",
+              "path": "/docs/diagramas/flujo-autenticacion",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/flujo-batalla",
+              "path": "/docs/diagramas/flujo-batalla",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/flujo-websocket",
+              "path": "/docs/diagramas/flujo-websocket",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "diagramas/modelo-datos",
+              "path": "/docs/diagramas/modelo-datos",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "glosario",
+              "path": "/docs/glosario",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "intro",
+              "path": "/docs/intro",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/batalla-reglas",
+              "path": "/docs/jugabilidad/batalla-reglas",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/cartas-tipos-energia",
+              "path": "/docs/jugabilidad/cartas-tipos-energia",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/construccion-mazos",
+              "path": "/docs/jugabilidad/construccion-mazos",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/efectos-habilidades",
+              "path": "/docs/jugabilidad/efectos-habilidades",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/evolucion-pokemon",
+              "path": "/docs/jugabilidad/evolucion-pokemon",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/fases-turno",
+              "path": "/docs/jugabilidad/fases-turno",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/items-equipamiento",
+              "path": "/docs/jugabilidad/items-equipamiento",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/mecanicas-basicas",
+              "path": "/docs/jugabilidad/mecanicas-basicas",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/overview-juego",
+              "path": "/docs/jugabilidad/overview-juego",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "jugabilidad/sobres-booster",
+              "path": "/docs/jugabilidad/sobres-booster",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/database-setup",
+              "path": "/docs/operaciones/database-setup",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/docker-deployment",
+              "path": "/docs/operaciones/docker-deployment",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/performance-tips",
+              "path": "/docs/operaciones/performance-tips",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/scripts-utiles",
+              "path": "/docs/operaciones/scripts-utiles",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/setup-local",
+              "path": "/docs/operaciones/setup-local",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/troubleshooting",
+              "path": "/docs/operaciones/troubleshooting",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "operaciones/variables-entorno",
+              "path": "/docs/operaciones/variables-entorno",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/algoritmos-clave",
+              "path": "/docs/tecnica/algoritmos-clave",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/api-endpoints",
+              "path": "/docs/tecnica/api-endpoints",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/arquitectura-backend",
+              "path": "/docs/tecnica/arquitectura-backend",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/arquitectura-frontend",
+              "path": "/docs/tecnica/arquitectura-frontend",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/autenticacion",
+              "path": "/docs/tecnica/autenticacion",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/batalla-engine",
+              "path": "/docs/tecnica/batalla-engine",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/database-design",
+              "path": "/docs/tecnica/database-design",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/manejo-estado",
+              "path": "/docs/tecnica/manejo-estado",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/patrones-diseño",
+              "path": "/docs/tecnica/patrones-diseño",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/stack-tecnologico",
+              "path": "/docs/tecnica/stack-tecnologico",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "tecnica/websocket-lobby",
+              "path": "/docs/tecnica/websocket-lobby",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/-jugabilidad--reglas",
+              "path": "/docs/category/-jugabilidad--reglas",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/️-arquitectura-técnica",
+              "path": "/docs/category/️-arquitectura-técnica",
+              "sidebar": "tutorialSidebar"
+            },
+            {
+              "id": "/category/-componentes-detallados",
+              "path": "/docs/category/-componentes-detallados",
+              "sidebar": "tutorialSidebar"
+            }
+          ],
+          "draftIds": [],
+          "sidebars": {
+            "tutorialSidebar": {
+              "link": {
+                "path": "/docs/intro",
+                "label": "intro"
+              }
+            }
+          }
+        }
+      ],
+      "breadcrumbs": true
+    }
+  }
+}

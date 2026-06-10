@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/services/battle-engine-service",
+  "title": "⚔️ BattleEngineService",
+  "description": "Orquesta toda la partida: setup, turnos, acciones, mulligan, ataques, desconexion y debug",
+  "source": "@site/docs/componentes-detallados/backend/services/05-battle-engine-service.md",
+  "sourceDirName": "componentes-detallados/backend/services",
+  "slug": "/componentes-detallados/backend/services/battle-engine-service",
+  "permalink": "/docs/componentes-detallados/backend/services/battle-engine-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/services/05-battle-engine-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "⚔️ BattleEngineService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎁 SobreService",
+    "permalink": "/docs/componentes-detallados/backend/services/sobre-service"
+  },
+  "next": {
+    "title": "🏟️ LobbyRoomService",
+    "permalink": "/docs/componentes-detallados/backend/services/lobby-room-service"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/mazo-controller",
+  "title": "🎴 MazoController",
+  "description": "Endpoints para crear, actualizar, eliminar y listar mazos (decks) de batalla",
+  "source": "@site/docs/componentes-detallados/backend/controllers/05-mazo-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/mazo-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/mazo-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/05-mazo-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "🎴 MazoController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "👤 JugadorController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/jugador-controller"
+  },
+  "next": {
+    "title": "🎁 SobreController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/sobre-controller"
+  }
+}

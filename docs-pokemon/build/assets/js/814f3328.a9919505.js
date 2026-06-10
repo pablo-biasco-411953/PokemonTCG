@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkdocs_pokemon=self.webpackChunkdocs_pokemon||[]).push([["1833"],{5513(e){e.exports=JSON.parse('{"title":"Recent posts","items":[]}')}}]);

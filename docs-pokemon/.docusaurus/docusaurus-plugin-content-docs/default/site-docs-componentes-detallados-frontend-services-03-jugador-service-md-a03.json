@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/jugador-service",
+  "title": "👤 JugadorService",
+  "description": "Servicio Angular para obtener datos del perfil, gestionar colección, monedas, misiones y customización",
+  "source": "@site/docs/componentes-detallados/frontend/services/03-jugador-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/jugador-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/jugador-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/03-jugador-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "👤 JugadorService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 CardService",
+    "permalink": "/docs/componentes-detallados/frontend/services/card-service"
+  },
+  "next": {
+    "title": "🎁 SobreService",
+    "permalink": "/docs/componentes-detallados/frontend/services/sobre-service"
+  }
+}

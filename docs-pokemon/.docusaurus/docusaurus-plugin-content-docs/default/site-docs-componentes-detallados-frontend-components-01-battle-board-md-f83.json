@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/components/battle-board",
+  "title": "⚔️ BattleBoardComponent",
+  "description": "Componente principal que renderiza toda la interfaz de batalla Pokemon TCG",
+  "source": "@site/docs/componentes-detallados/frontend/components/01-battle-board.md",
+  "sourceDirName": "componentes-detallados/frontend/components",
+  "slug": "/componentes-detallados/frontend/components/battle-board",
+  "permalink": "/docs/componentes-detallados/frontend/components/battle-board",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/components/01-battle-board.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 1,
+  "frontMatter": {
+    "sidebar_position": 1,
+    "title": "⚔️ BattleBoardComponent"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🖥️ BattleBoardUiService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-ui-service"
+  },
+  "next": {
+    "title": "🏟️ LobbyComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/lobby"
+  }
+}

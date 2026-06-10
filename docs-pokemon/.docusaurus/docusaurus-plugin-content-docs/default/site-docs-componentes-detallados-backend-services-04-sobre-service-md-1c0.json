@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/services/sobre-service",
+  "title": "🎁 SobreService",
+  "description": "Servicio de apertura de sobres y generación de cartas aleatorias",
+  "source": "@site/docs/componentes-detallados/backend/services/04-sobre-service.md",
+  "sourceDirName": "componentes-detallados/backend/services",
+  "slug": "/componentes-detallados/backend/services/sobre-service",
+  "permalink": "/docs/componentes-detallados/backend/services/sobre-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/services/04-sobre-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🎁 SobreService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎴 MazoService",
+    "permalink": "/docs/componentes-detallados/backend/services/mazo-service"
+  },
+  "next": {
+    "title": "⚔️ BattleEngineService",
+    "permalink": "/docs/componentes-detallados/backend/services/battle-engine-service"
+  }
+}

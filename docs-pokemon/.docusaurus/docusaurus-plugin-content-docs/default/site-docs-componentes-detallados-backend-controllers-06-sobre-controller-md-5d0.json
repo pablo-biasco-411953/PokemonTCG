@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/controllers/sobre-controller",
+  "title": "🎁 SobreController",
+  "description": "Endpoints para abrir sobres y obtener cartas",
+  "source": "@site/docs/componentes-detallados/backend/controllers/06-sobre-controller.md",
+  "sourceDirName": "componentes-detallados/backend/controllers",
+  "slug": "/componentes-detallados/backend/controllers/sobre-controller",
+  "permalink": "/docs/componentes-detallados/backend/controllers/sobre-controller",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/controllers/06-sobre-controller.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🎁 SobreController"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🎴 MazoController",
+    "permalink": "/docs/componentes-detallados/backend/controllers/mazo-controller"
+  },
+  "next": {
+    "title": "🔐 AuthService",
+    "permalink": "/docs/componentes-detallados/backend/services/auth-service"
+  }
+}

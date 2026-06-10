@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/construccion-mazos",
+  "title": "🛠️ Construcción de Mazos",
+  "description": "Guía para construir mazos válidos y competitivos",
+  "source": "@site/docs/jugabilidad/05-construccion-mazos.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/construccion-mazos",
+  "permalink": "/docs/jugabilidad/construccion-mazos",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/05-construccion-mazos.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 5,
+  "frontMatter": {
+    "sidebar_position": 5,
+    "title": "🛠️ Construcción de Mazos"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📈 Evolución de Pokémon",
+    "permalink": "/docs/jugabilidad/evolucion-pokemon"
+  },
+  "next": {
+    "title": "⚔️ Batalla - Reglas Esenciales",
+    "permalink": "/docs/jugabilidad/batalla-reglas"
+  }
+}

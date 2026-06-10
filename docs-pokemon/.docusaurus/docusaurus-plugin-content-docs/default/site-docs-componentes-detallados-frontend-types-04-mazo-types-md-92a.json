@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/types/mazo-types",
+  "title": "🗃️ Mazo Types",
+  "description": "Interfaces del modelo de mazo: Mazo, MazoJugadorResumen",
+  "source": "@site/docs/componentes-detallados/frontend/types/04-mazo-types.md",
+  "sourceDirName": "componentes-detallados/frontend/types",
+  "slug": "/componentes-detallados/frontend/types/mazo-types",
+  "permalink": "/docs/componentes-detallados/frontend/types/mazo-types",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/types/04-mazo-types.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🗃️ Mazo Types"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "👤 Jugador Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/jugador-types"
+  },
+  "next": {
+    "title": "⚔️ Battle Types",
+    "permalink": "/docs/componentes-detallados/frontend/types/battle-types"
+  }
+}

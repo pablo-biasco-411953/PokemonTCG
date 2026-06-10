@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/flujo-autenticacion",
+  "title": "🔑 Flujo de Autenticacion",
+  "description": "Registro, login y recuperacion de password",
+  "source": "@site/docs/diagramas/04-flujo-autenticacion.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/flujo-autenticacion",
+  "permalink": "/docs/diagramas/flujo-autenticacion",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/04-flujo-autenticacion.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 4,
+  "frontMatter": {
+    "sidebar_position": 4,
+    "title": "🔑 Flujo de Autenticacion"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "📊 Modelo de Datos",
+    "permalink": "/docs/diagramas/modelo-datos"
+  },
+  "next": {
+    "title": "🔌 Flujo WebSocket",
+    "permalink": "/docs/diagramas/flujo-websocket"
+  }
+}

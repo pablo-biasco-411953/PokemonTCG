@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/frontend/services/battle-board-ui-service",
+  "title": "🖥️ BattleBoardUiService",
+  "description": "Métodos de presentación: sprites, barras de HP, colores de energía, glosario de estados y formato de textos de ataque",
+  "source": "@site/docs/componentes-detallados/frontend/services/13-battle-board-ui-service.md",
+  "sourceDirName": "componentes-detallados/frontend/services",
+  "slug": "/componentes-detallados/frontend/services/battle-board-ui-service",
+  "permalink": "/docs/componentes-detallados/frontend/services/battle-board-ui-service",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/frontend/services/13-battle-board-ui-service.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 13,
+  "frontMatter": {
+    "sidebar_position": 13,
+    "title": "🖥️ BattleBoardUiService"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "⚔️ BattleBoardTurnService",
+    "permalink": "/docs/componentes-detallados/frontend/services/battle-board-turn-service"
+  },
+  "next": {
+    "title": "⚔️ BattleBoardComponent",
+    "permalink": "/docs/componentes-detallados/frontend/components/battle-board"
+  }
+}

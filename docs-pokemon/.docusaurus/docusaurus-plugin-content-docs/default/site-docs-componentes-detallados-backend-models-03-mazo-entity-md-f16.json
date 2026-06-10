@@ -1,0 +1,28 @@
+{
+  "id": "componentes-detallados/backend/models/mazo-entity",
+  "title": "🎴 Mazo Entity",
+  "description": "Entidad JPA que representa un deck (mazo) construido por un jugador",
+  "source": "@site/docs/componentes-detallados/backend/models/03-mazo-entity.md",
+  "sourceDirName": "componentes-detallados/backend/models",
+  "slug": "/componentes-detallados/backend/models/mazo-entity",
+  "permalink": "/docs/componentes-detallados/backend/models/mazo-entity",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/componentes-detallados/backend/models/03-mazo-entity.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 3,
+  "frontMatter": {
+    "sidebar_position": 3,
+    "title": "🎴 Mazo Entity"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🃏 Card Entity",
+    "permalink": "/docs/componentes-detallados/backend/models/card-entity"
+  },
+  "next": {
+    "title": "⚔️ Partida & Battle Models",
+    "permalink": "/docs/componentes-detallados/backend/models/partida-battle-models"
+  }
+}

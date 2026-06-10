@@ -1,0 +1,28 @@
+{
+  "id": "jugabilidad/efectos-habilidades",
+  "title": "✨ Efectos y Habilidades",
+  "description": "Los efectos especiales que hacen el juego interesante",
+  "source": "@site/docs/jugabilidad/08-efectos-habilidades.md",
+  "sourceDirName": "jugabilidad",
+  "slug": "/jugabilidad/efectos-habilidades",
+  "permalink": "/docs/jugabilidad/efectos-habilidades",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/jugabilidad/08-efectos-habilidades.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 8,
+  "frontMatter": {
+    "sidebar_position": 8,
+    "title": "✨ Efectos y Habilidades"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔄 Fases del Turno - Desglose Completo",
+    "permalink": "/docs/jugabilidad/fases-turno"
+  },
+  "next": {
+    "title": "🎁 Sobres y Booster Packs",
+    "permalink": "/docs/jugabilidad/sobres-booster"
+  }
+}

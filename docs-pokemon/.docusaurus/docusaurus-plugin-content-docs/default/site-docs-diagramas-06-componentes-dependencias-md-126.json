@@ -1,0 +1,28 @@
+{
+  "id": "diagramas/componentes-dependencias",
+  "title": "🧩 Componentes y Dependencias",
+  "description": "Arbol de componentes Angular y sus servicios inyectados",
+  "source": "@site/docs/diagramas/06-componentes-dependencias.md",
+  "sourceDirName": "diagramas",
+  "slug": "/diagramas/componentes-dependencias",
+  "permalink": "/docs/diagramas/componentes-dependencias",
+  "draft": false,
+  "unlisted": false,
+  "editUrl": "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/docs/diagramas/06-componentes-dependencias.md",
+  "tags": [],
+  "version": "current",
+  "sidebarPosition": 6,
+  "frontMatter": {
+    "sidebar_position": 6,
+    "title": "🧩 Componentes y Dependencias"
+  },
+  "sidebar": "tutorialSidebar",
+  "previous": {
+    "title": "🔌 Flujo WebSocket",
+    "permalink": "/docs/diagramas/flujo-websocket"
+  },
+  "next": {
+    "title": "📖 Glosario - Términos Pokémon + Técnicos",
+    "permalink": "/docs/glosario"
+  }
+}
