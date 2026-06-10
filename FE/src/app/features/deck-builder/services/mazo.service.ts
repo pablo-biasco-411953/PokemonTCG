@@ -24,7 +24,7 @@ export class MazoService {
     const body = {
       id: idMazo,
       nombre,
-      cartasIds
+      cartas: cartasIds
     };
 
     return this.http.put<Mazo>(`${this.apiUrl}/actualizar/${idMazo}`, body);

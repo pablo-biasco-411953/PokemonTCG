@@ -26,6 +26,8 @@ public class ConditionalDamageMultiplierCommand implements BattleCommand {
             if (defensor.getActivo() != null && defensor.getActivo().getCard().getTipo().equalsIgnoreCase(conditionValue)) {
                 finalDamage += multiplier;
             }
+        } else if ("BENCHED_POKEMON".equals(conditionType)) {
+            finalDamage += (atacante.getBanca().size() * multiplier);
         }
 
         if (finalDamage > 0 && defensor.getActivo() != null) {

@@ -9,6 +9,7 @@ import com.pokemon.tcg.repository.CardRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.ArrayList;
+import java.text.Normalizer;
 
 @Service
 /**
@@ -51,6 +52,7 @@ public class MazoService {
             }
             cartas.add(card);
         }
+        validarMazo(cartas);
 
         // Crear y guardar el mazo
         Mazo mazo = new Mazo(nombre, jugador);
@@ -72,9 +74,7 @@ public class MazoService {
 
         // Buscamos las cartas usando cardRepo
         List<Card> nuevasCartas = cardRepo.findAllById(cartasIds);
-
-        if (nuevasCartas.size() != 60) {
-        }
+        validarMazo(nuevasCartas);
 
         mazo.setCartas(nuevasCartas);
 
@@ -146,5 +146,34 @@ public class MazoService {
         Mazo guardado = mazoRepo.save(mazo);
         mazoBackupService.backupAll();
         return guardado;
+    }
+
+    private void validarMazo(List<Card> cartas) {
+        if (cartas == null || cartas.size() != 60) {
+            throw new IllegalArgumentException("Un mazo debe contener exactamente 60 cartas.");
+        }
+        boolean tieneBasico = cartas.stream().anyMatch(this::esPokemonBasico);
+        if (!tieneBasico) {
+            throw new IllegalArgumentException("El mazo debe incluir al menos 1 Pokemon Basico.");
+        }
+    }
+
+    private boolean esPokemonBasico(Card card) {
+        if (card == null || card.getSupertype() == null) {
+            return false;
+        }
+        boolean esPokemon = "pokemon".equals(normalizar(card.getSupertype()));
+        boolean esBasico = card.getSubtypes() != null
+                && card.getSubtypes().stream().anyMatch(subtype -> "basic".equals(normalizar(subtype)));
+        return esPokemon && esBasico;
+    }
+
+    private String normalizar(String text) {
+        if (text == null) {
+            return "";
+        }
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase();
     }
 }

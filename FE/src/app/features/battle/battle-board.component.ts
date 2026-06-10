@@ -146,6 +146,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
   private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
+  private pendingEndGameTimeout: ReturnType<typeof setTimeout> | null = null;
   showEndGameOverlay = false;
   isVictory = false;
   coinsEarned = 0;
@@ -286,6 +287,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private canvasInitialized = false;
   private effectsTriggered = false;
 
+  private playerShieldGroup?: THREE.Group;
+  private botShieldGroup?: THREE.Group;
+  public floatingTextsPlayer: Array<{ id: number; text: string; type: string }> = [];
+  public floatingTextsBot: Array<{ id: number; text: string; type: string }> = [];
+  private nextFloatingTextId = 0;
+  switchFxBot = false;
+  switchFxPlayer = false;
+  public mostrarExplosionEnergiaPlayer = false;
+  public mostrarExplosionEnergiaBot = false;
+  public particulasEnergiaPlayer: Array<{ color: string; size: number; duracion: number; tx: number; ty: number }> = [];
+  public particulasEnergiaBot: Array<{ color: string; size: number; duracion: number; tx: number; ty: number }> = [];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -336,6 +349,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
+    if (this.pendingEndGameTimeout) clearTimeout(this.pendingEndGameTimeout);
     this.cleanupBattleAtmosphere();
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
@@ -350,7 +364,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     this.battleService.heartbeat(this.matchId).subscribe({
       next: (data) => {
-        if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+        if (data?.faseActual === 'FIN_PARTIDA') {
+          this.aplicarEstadoRefrescado(data);
+        }
       },
       error: (err) => console.warn('No se pudo enviar heartbeat inicial de batalla', err)
     });
@@ -359,7 +375,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (!this.matchId || this.showEndGameOverlay) return;
       this.battleService.heartbeat(this.matchId).subscribe({
         next: (data) => {
-          if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+          if (data?.faseActual === 'FIN_PARTIDA') {
+            this.aplicarEstadoRefrescado(data);
+          }
         },
         error: (err) => console.warn('No se pudo enviar heartbeat de batalla', err)
       });
@@ -578,6 +596,59 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.battleReactions = this.battleReactions.filter(r => r.id !== item.id);
         this.cdr.detectChanges();
       }, 1700);
+    }
+  }
+
+  mostrarTextoFlotante(objetivo: 'jugador' | 'bot', texto: string, tipo = 'info'): void {
+    const id = this.nextFloatingTextId++;
+    const item = { id, text: texto, type: tipo };
+    if (objetivo === 'jugador') {
+      this.floatingTextsPlayer.push(item);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.floatingTextsPlayer = this.floatingTextsPlayer.filter(t => t.id !== id);
+        this.cdr.detectChanges();
+      }, 2000);
+    } else {
+      this.floatingTextsBot.push(item);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.floatingTextsBot = this.floatingTextsBot.filter(t => t.id !== id);
+        this.cdr.detectChanges();
+      }, 2000);
+    }
+  }
+
+  generarExplosionEnergia(objetivo: 'jugador' | 'bot'): void {
+    const colores = ['#ff4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#f97316', '#6b7280'];
+    const particles = [];
+    for (let i = 0; i < 20; i++) {
+      const angulo = Math.random() * Math.PI * 2;
+      const distancia = 50 + Math.random() * 90;
+      particles.push({
+        color: colores[Math.floor(Math.random() * colores.length)],
+        size: 8 + Math.random() * 10,
+        duracion: 0.5 + Math.random() * 0.4,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia
+      });
+    }
+    if (objetivo === 'jugador') {
+      this.particulasEnergiaPlayer = particles;
+      this.mostrarExplosionEnergiaPlayer = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.mostrarExplosionEnergiaPlayer = false;
+        this.cdr.detectChanges();
+      }, 800);
+    } else {
+      this.particulasEnergiaBot = particles;
+      this.mostrarExplosionEnergiaBot = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.mostrarExplosionEnergiaBot = false;
+        this.cdr.detectChanges();
+      }, 800);
     }
   }
 
@@ -857,21 +928,169 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         case 'RESISTED':
           this.mostrarFeedbackImpacto(actor, 'resisted');
           break;
-        case 'PRIZE_TAKEN':
+        case 'PRIZE_TAKEN': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '¡PREMIO OBTENIDO!', 'prize');
           this.mostrarNotificacion(
             `${esMiAccion ? 'Tomaste' : 'El rival tomo'} ${parts[2] || '1'} carta(s) de Premio.`,
             'info',
           );
           break;
-        case 'ENERGY_DISCARDED':
+        }
+        case 'DISCARD_TOP_DECK': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.discardTopDeck.selfDetail', { card: cardNombre }) :
+              this.i18nService.translate('battle.discardTopDeck.oppDetail', { card: cardNombre }),
+            'warning'
+          );
+          break;
+        }
+        case 'ATTACHED_FROM_DISCARD': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          const activePokemon = parts[3] || 'Active';
+          const target = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(target, '+1 ENERGÍA', 'energy-add');
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.attachedFromDiscard.selfDetail', { card: cardNombre, active: activePokemon }) :
+              this.i18nService.translate('battle.attachedFromDiscard.oppDetail', { card: cardNombre, active: activePokemon }),
+            'info'
+          );
+          break;
+        }
+        case 'MAGMA_MANTLE_BOOST': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          const target = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(target, '+50 DAÑO', 'attack');
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.magmaMantle.selfBoost', { card: cardNombre }) :
+              this.i18nService.translate('battle.magmaMantle.oppBoost', { card: cardNombre }),
+            'info'
+          );
+          break;
+        }
+        case 'ENERGY_DISCARDED': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '-1 ENERGÍA', 'energy-remove');
+          this.generarExplosionEnergia(objetivo);
           this.mostrarNotificacion(`${esMiAccion ? 'Descartaste' : 'El rival descartó'} una energía al ataque.`, 'warning');
           break;
+        }
         case 'DECK_SEARCHED':
           this.mostrarNotificacion(`${esMiAccion ? 'Buscaste' : 'El rival buscó'} cartas en el mazo.`, 'info');
           break;
         case 'ENERGY_MOVED':
           this.mostrarNotificacion(`${esMiAccion ? 'Moviste' : 'El rival movió'} una energía.`, 'info');
           break;
+        case 'STATUS_APPLIED': {
+          const condicion = parts[3];
+          const objetivo = esMiAccion ? 'bot' : 'jugador';
+          let textoCondicion = condicion ? condicion.toUpperCase() : 'ESTADO';
+          if (condicion === 'Poisoned') textoCondicion = 'ENVENENADO';
+          else if (condicion === 'Asleep') textoCondicion = 'DORMIDO';
+          else if (condicion === 'Burned') textoCondicion = 'QUEMADO';
+          else if (condicion === 'Paralyzed') textoCondicion = 'PARALIZADO';
+          else if (condicion === 'Confused') textoCondicion = 'CONFUNDIDO';
+          else if (condicion === 'CantRetreat') textoCondicion = 'RETIRADA BLOQUEADA';
+          this.mostrarTextoFlotante(objetivo, `¡${textoCondicion}!`, 'status');
+          break;
+        }
+        case 'ATTACK_USED': {
+          const atacante = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(atacante, `¡${parts[2].toUpperCase()}!`, 'attack');
+          break;
+        }
+        case 'ENERGY_ATTACHED': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '+1 ENERGÍA', 'energy-add');
+          break;
+        }
+        case 'KNOCK_OUT': {
+          const objetivo = esMiAccion ? 'bot' : 'jugador';
+          this.mostrarTextoFlotante(objetivo, '¡FUERA DE COMBATE!', 'ko');
+          break;
+        }
+        case 'POISON_DAMAGE': {
+          const targetOwner = parts[1];
+          const damageAmount = parseInt(parts[3], 10) || 10;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(
+            objetivo,
+            `${this.getLocalizedStatusLabel('Poisoned')} -${damageAmount}`,
+            'status-poisoned',
+          );
+          break;
+        }
+        case 'BURN_DAMAGE': {
+          const targetOwner = parts[1];
+          const damageAmount = parseInt(parts[3], 10) || 20;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(
+            objetivo,
+            `${this.getLocalizedStatusLabel('Burned')} -${damageAmount}`,
+            'status-burned',
+          );
+          break;
+        }
+        case 'ASTONISH_REVEALED': {
+          const cardId = (parts[2] || '').trim();
+          const cardNombre = parts[3];
+          const targetIsMe = esMiAccion;
+
+          this.astonishReveal = {
+            visible: true,
+            cardId,
+            cardNombre,
+            esMiAccion: !targetIsMe,
+            isFlipped: false
+          };
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            if (this.astonishReveal) {
+              this.astonishReveal.isFlipped = true;
+              this.cdr.detectChanges();
+            }
+          }, 800);
+
+          setTimeout(() => {
+            this.cerrarAstonishReveal();
+          }, 6500);
+
+          const objetivo = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '¡ASTONISH!', 'attack');
+
+          const detailMsg = targetIsMe ?
+            this.i18nService.translate('battle.astonish.oppDetail', { card: cardNombre }) :
+            this.i18nService.translate('battle.astonish.selfDetail', { card: cardNombre });
+
+          this.mostrarNotificacion(detailMsg, 'warning');
+          break;
+        }
+        case 'BENCH_DAMAGE': {
+          const targetOwner = parts[1];
+          const cardId = (parts[2] || '').trim();
+          const cardNombre = parts[3];
+          const damageAmount = parseInt(parts[4], 10);
+          const isMyBench = targetOwner === 'JUGADOR' || targetOwner === this.jugadorNombre;
+          const targetSide = isMyBench ? 'jugador' : 'bot';
+          
+          this.mostrarTextoFlotante(targetSide, `-${damageAmount} banca`, 'damage');
+          
+          const detailMsg = isMyBench ?
+            this.i18nService.translate('battle.benchDamage.selfDetail', { name: cardNombre, damage: damageAmount.toString() }) :
+            this.i18nService.translate('battle.benchDamage.oppDetail', { name: cardNombre, damage: damageAmount.toString() });
+          this.mostrarNotificacion(detailMsg, 'warning');
+          break;
+        }
       }
     }
     this.lastProcessedLogIndex = this.partida.turnLogs.length;
@@ -910,6 +1129,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const second = parts[3] || '';
     const third = parts[4] || '';
     const map: Record<string, { title: string; detail: string; kind: string }> = {
+      ASTONISH_REVEALED: { 
+        title: this.i18nService.translate('battle.astonish.title'), 
+        detail: esMiAccion ? 
+          this.i18nService.translate('battle.astonish.oppDetail', { card: second }) : 
+          this.i18nService.translate('battle.astonish.selfDetail', { card: second }), 
+        kind: 'search' 
+      },
+      BENCH_DAMAGE: {
+        title: this.i18nService.translate('battle.benchDamage.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.benchDamage.selfDetail', { name: second, damage: third }) :
+          this.i18nService.translate('battle.benchDamage.oppDetail', { name: second, damage: third }),
+        kind: 'damage'
+      },
       ENERGY_DISCARDED: { title: 'Energia descartada', detail: esMiAccion ? 'Descartaste energia para resolver un ataque.' : `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
       DECK_SEARCHED: { title: 'Busqueda en mazo', detail: esMiAccion ? 'Buscaste cartas en el mazo.' : `${subject} busco cartas en el mazo.`, kind: 'search' },
       ENERGY_MOVED: { title: 'Energia movida', detail: esMiAccion ? 'Moviste una energia en el campo.' : `${subject} movio una energia en el campo.`, kind: 'energy' },
@@ -928,7 +1161,33 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       TURN_PASSED: { title: 'Turno terminado', detail: esMiAccion ? 'Terminaste tu turno.' : `${subject} termino su turno.`, kind: 'phase' },
       TURN_STARTED: { title: 'Nuevo turno', detail: esMiAccion ? 'Comienza tu turno.' : `Comienza el turno de ${subject}.`, kind: 'phase' },
       SURRENDERED: { title: 'Rendicion', detail: esMiAccion ? 'Te rendiste.' : `${subject} se rindio.`, kind: 'system' },
-      DISCONNECTED: { title: 'Desconexion', detail: esMiAccion ? 'Te desconectaste.' : `${subject} se desconecto.`, kind: 'system' }
+      DISCONNECTED: { title: 'Desconexion', detail: esMiAccion ? 'Te desconectaste.' : `${subject} se desconecto.`, kind: 'system' },
+      DISCARD_TOP_DECK: {
+        title: this.i18nService.translate('battle.discardTopDeck.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.discardTopDeck.selfDetail', { card: first }) :
+          this.i18nService.translate('battle.discardTopDeck.oppDetail', { card: first }),
+        kind: 'discard'
+      },
+      ATTACHED_FROM_DISCARD: {
+        title: this.i18nService.translate('battle.attachedFromDiscard.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.attachedFromDiscard.selfDetail', { card: first, active: second }) :
+          this.i18nService.translate('battle.attachedFromDiscard.oppDetail', { card: first, active: second }),
+        kind: 'energy'
+      },
+      MAD_MOUNTAIN_DISCARDED: {
+        title: this.i18nService.translate('battle.madMountain.title'),
+        detail: this.i18nService.translate('battle.madMountain.detail', { subject, flip1: first, flip2: second, count: third }),
+        kind: 'attack'
+      },
+      MAGMA_MANTLE_BOOST: {
+        title: this.i18nService.translate('battle.magmaMantle.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.magmaMantle.selfBoost', { card: first }) :
+          this.i18nService.translate('battle.magmaMantle.oppBoost', { card: first }),
+        kind: 'attack'
+      }
     };
     return map[event] || {
       title: event.replaceAll('_', ' ').toLowerCase(),
@@ -1493,6 +1752,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.mostrarKOAnim();
     }
 
+    const botCambioActivo =
+      botActivoAntes &&
+      botActivoAhora &&
+      this.obtenerFirmaActivo(botActivoAntes) !== this.obtenerFirmaActivo(botActivoAhora);
+    if (botCambioActivo) {
+      this.activarEfectoCambio('bot');
+    }
+
+    const playerCambioActivo =
+      playerActivoAntes &&
+      playerActivoAhora &&
+      this.obtenerFirmaActivo(playerActivoAntes) !== this.obtenerFirmaActivo(playerActivoAhora);
+    if (playerCambioActivo) {
+      this.activarEfectoCambio('jugador');
+    }
+
     const hpBotAntes = botActivoAntes?.hpActual ?? 0;
     const hpBotAhora = botActivoAhora?.hpActual ?? 0;
     if (botActivoAntes && botActivoAhora && hpBotAhora < hpBotAntes) {
@@ -1643,7 +1918,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => {
         const dataOnline = this.esPartidaOnline(data);
         if (data?.faseActual === 'FIN_PARTIDA') {
-          this.handleGameEnd(data);
+          this.aplicarEstadoRefrescado(data);
           return;
         }
         if (!dataOnline && (this.bloqueadoPorAnimacion || this.botEstaAtacando)) {
@@ -1672,8 +1947,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
 
         const turnoAnterior = this.partida?.turnoActual;
+        const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
+
+        if (estadoAnterior) {
+          this.procesarEventosPostEstado(estadoAnterior, data);
+        }
 
         if (!this.isSpectator) {
           this.procesarFasesSetup(data);
@@ -1712,6 +1992,72 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
 
   estadoSetupMulligan: 'REVEAL' | 'EXTRA_DRAW' | 'PLACE_ACTIVE' | 'PLACE_BENCH' | 'PLACE_BENCH_EXTRA' | 'PRIZES' | 'FINAL_REVEAL' | null = null;
+  astonishReveal: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    esMiAccion: boolean;
+    isFlipped: boolean;
+  } | null = null;
+
+  cerrarAstonishReveal(): void {
+    this.astonishReveal = null;
+    this.cdr.detectChanges();
+  }
+
+  modoSeleccionUnionEnergia = false;
+  energiaAUnir: any = null;
+
+  iniciarModoUnionEnergia(cartaEnergia: any): void {
+    if (this.cargandoAccion || this.partida?.turnoActual !== 'JUGADOR') return;
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir?.id === cartaEnergia.id) {
+      this.cancelarModoUnionEnergia();
+      return;
+    }
+    this.modoSeleccionUnionEnergia = true;
+    this.energiaAUnir = cartaEnergia;
+    const msg = this.i18nService.translate('battle.selectTargetForEnergy');
+    this.mostrarNotificacion(msg, 'info');
+    this.cdr.detectChanges();
+  }
+
+  cancelarModoUnionEnergia(): void {
+    this.modoSeleccionUnionEnergia = false;
+    this.energiaAUnir = null;
+    this.cdr.detectChanges();
+  }
+
+  async completarUnionEnergia(targetPokemon: any) {
+    if (!targetPokemon || !this.energiaAUnir) return;
+    this.cargandoAccion = true;
+    this.modoSeleccionUnionEnergia = false;
+    const energia = this.energiaAUnir;
+    this.energiaAUnir = null;
+    
+    try {
+      const nuevoEstado = await this.battleBoardAction.unirEnergiaYRecargar(
+        this.matchId!,
+        targetPokemon.card.id,
+        energia.id
+      );
+      this.aplicarEstadoRefrescado(nuevoEstado);
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      this.cargandoAccion = false;
+      console.error(err);
+      alert(err.error || this.i18n.translate('alert.cannotAttachEnergy'));
+    }
+  }
+
+  clickEnActivo(): void {
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
+      this.completarUnionEnergia(this.partida?.jugador?.activo);
+    } else {
+      this.intentarAbrirHabilidades();
+    }
+  }
+
   mulliganCartasRival: any[] = [];
   mulliganOponenteCount: number = 0;
   mulliganJugadorCount: number = 0;
@@ -1975,6 +2321,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private handleGameEnd(partida: Partida): void {
     if (this.showEndGameOverlay) return;
+    if (this.pendingEndGameTimeout) {
+      clearTimeout(this.pendingEndGameTimeout);
+      this.pendingEndGameTimeout = null;
+    }
 
     this.partida = partida;
     this.lastAppliedStateSignature = this.crearFirmaPartida(partida);
@@ -2068,14 +2418,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   getCardFanTransform(index: number, total: number): string {
-    const maxAngle = Math.min(4 * total, 35);
+    const maxAngle = Math.min(2.8 * total, 26);
     const angleStep = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
     const angle = total > 1 ? -maxAngle + angleStep * index : 0;
-    const cardSpacing = Math.min(80, 480 / Math.max(total, 1));
+    const cardSpacing = Math.max(30, Math.min(72, 440 / Math.max(total - 1, 1)));
     const totalWidth = cardSpacing * (total - 1);
     const offsetX = -totalWidth / 2 + cardSpacing * index;
     const normalizedPos = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
-    const offsetY = normalizedPos * normalizedPos * 20;
+    const curveDepth = total <= 7 ? 18 : total <= 10 ? 11 : 7;
+    const baseLift = total <= 7 ? 0 : total <= 10 ? -6 : -10;
+    const offsetY = normalizedPos * normalizedPos * curveDepth + baseLift;
     return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
   }
 
@@ -2652,7 +3004,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     switch (decision.tipo) {
       case 'unir-energia':
-        this.gestionarUnionEnergia(carta);
+        this.iniciarModoUnionEnergia(carta);
         return;
       case 'evolucionar':
         if (decision.target) {
@@ -2703,6 +3055,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async seleccionarBanca(p: any) {
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
+      this.completarUnionEnergia(p);
+      return;
+    }
     if (this.modoSeleccionRetirada) {
       this.cargandoAccion = true;
       try {
@@ -2962,6 +3318,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   getHpMax(pokemon: any): number {
     return this.battleBoardUi.getHpMax(pokemon);
   }
+  getDamageCounters(pokemon: any): number {
+    if (!pokemon) return 0;
+    const maxHp = this.getHpMax(pokemon);
+    const currentHp = pokemon.hpActual ?? maxHp;
+    return Math.max(0, maxHp - currentHp) / 10;
+  }
   getImagenCarta(id: string): string {
     return this.battleBoardUi.getImagenCarta(id);
   }
@@ -3044,11 +3406,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
     if (!estado) return;
-    if (estado.faseActual === 'FIN_PARTIDA') {
-      this.handleGameEnd(estado);
-      return;
-    }
-    
+    const debeMostrarFinal = estado.faseActual === 'FIN_PARTIDA';
+    const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
+
     // Check if cards were drawn
     if (this.partida) {
       const previousPrizes = this.partida.jugador?.premios?.length || 0;
@@ -3081,6 +3441,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
+
+    if (estadoAnterior) {
+      void this.procesarEventosPostEstado(estadoAnterior, estado).then(() => {
+        if (debeMostrarFinal) {
+          this.programarFinDePartida(estado, 550);
+        }
+      });
+    } else if (debeMostrarFinal) {
+      this.programarFinDePartida(estado);
+    }
+    if (estado.jugador?.mano) {
+      this.detectarCartasNuevas(estado.jugador.mano);
+    }
+    if (estado.bot?.mano) {
+      this.detectarCartasNuevasBot(estado.bot.mano);
+    }
+    this.procesarTurnLogs();
   }
 
   private async reproducirChequeoDespertar(
@@ -3229,7 +3606,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private async finalizarSecuenciaAtaque(estadoFinal: Partida): Promise<void> {
     if (estadoFinal.faseActual === 'FIN_PARTIDA') {
-      this.handleGameEnd(estadoFinal);
+      this.aplicarEstadoRefrescado(estadoFinal);
       return;
     }
     if (estadoFinal.turnoActual === 'BOT') {
@@ -3449,12 +3826,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const height = Math.max(1, canvas.clientHeight);
     const renderer = new THREE.WebGLRenderer({
       canvas,
-      alpha: true,
+      alpha: false,
       antialias: !this.isPotato,
       powerPreference: this.isPotato ? 'low-power' : 'high-performance'
     });
     renderer.setPixelRatio(this.isPotato ? 1 : Math.min(window.devicePixelRatio, 1.35));
     renderer.setSize(width, height, false);
+    renderer.setClearColor(0x020711, 1);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.battleAtmosphereRenderer = renderer;
 
@@ -3595,6 +3973,58 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     );
     scene.add(this.battleAtmosphereParticles);
 
+    // Shield groups initialization
+    this.playerShieldGroup = new THREE.Group();
+    this.playerShieldGroup.position.set(0, -0.5, 2.35);
+    scene.add(this.playerShieldGroup);
+
+    this.botShieldGroup = new THREE.Group();
+    this.botShieldGroup.position.set(0, -0.5, -2.35);
+    scene.add(this.botShieldGroup);
+
+    const buildShield = (group: THREE.Group, colorHex: number) => {
+      // 1. Transparent pulsing bubble sphere
+      const sphereGeom = new THREE.SphereGeometry(1.0, 24, 24);
+      const bubbleMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.12,
+        wireframe: true,
+        blending: THREE.AdditiveBlending
+      });
+      const bubble = new THREE.Mesh(sphereGeom, bubbleMat);
+      group.add(bubble);
+
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.04,
+        blending: THREE.AdditiveBlending
+      });
+      const glow = new THREE.Mesh(sphereGeom, glowMat);
+      group.add(glow);
+
+      // 2. Rotating hexagonal outer shield
+      const ringGeom = new THREE.RingGeometry(1.05, 1.15, 6);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+      });
+      const ring1 = new THREE.Mesh(ringGeom, ringMat);
+      ring1.rotation.x = Math.PI / 4;
+      group.add(ring1);
+
+      const ring2 = new THREE.Mesh(ringGeom, ringMat);
+      ring2.rotation.y = Math.PI / 4;
+      group.add(ring2);
+    };
+
+    buildShield(this.playerShieldGroup, 0xf59e0b); // gold/amber for player
+    buildShield(this.botShieldGroup, 0x3b82f6);    // blue for bot
+
     scene.add(new THREE.HemisphereLight(0x8be9ff, 0x030712, 1.45));
     const rivalLight = new THREE.PointLight(0x38bdf8, 8, 14, 2);
     rivalLight.position.set(0, 2.8, 1.8);
@@ -3618,30 +4048,106 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (!this.battleAtmosphereRenderer || !this.battleAtmosphereScene || !this.battleAtmosphereCamera) return;
       this.battleAtmosphereFrame = requestAnimationFrame(animate);
       const elapsed = this.battleAtmosphereClock.getElapsedTime();
-      if (this.battleAtmosphereParticles) {
-        this.battleAtmosphereParticles.rotation.y = elapsed * 0.018;
-        this.battleAtmosphereParticles.position.y = Math.sin(elapsed * 0.22) * 0.08;
+
+      // Dynamic game state tension (Danger Level) based on remaining prize cards
+      const playerPrizes = this.partida?.jugador?.premios?.length ?? 6;
+      const botPrizes = this.partida?.bot?.premios?.length ?? 6;
+      const minPrizes = Math.min(playerPrizes, botPrizes);
+      const dangerLevel = Math.min(1.0, Math.max(0.0, (6 - minPrizes) / 5.0)); // 0.0 at 6 prizes, 1.0 at 1 prize remaining
+
+      // 1. Dynamic background clear color and fog color interpolation (shifting to crimson)
+      const baseColor = new THREE.Color(0x020711);
+      const dangerClearColor = new THREE.Color(0x150103);
+      const currentClearColor = baseColor.clone().lerp(dangerClearColor, dangerLevel);
+      this.battleAtmosphereRenderer.setClearColor(currentClearColor);
+
+      if (this.battleAtmosphereScene.fog) {
+        const expFog = this.battleAtmosphereScene.fog as THREE.FogExp2;
+        const dangerFogColor = new THREE.Color(0x1a0305);
+        expFog.color.copy(baseColor).lerp(dangerFogColor, dangerLevel);
       }
+
+      // 2. Falling particles physics (raining effect that speeds up with higher danger)
+      if (this.battleAtmosphereParticles) {
+        const geo = this.battleAtmosphereParticles.geometry as THREE.BufferGeometry;
+        const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+        if (posAttr) {
+          const positions = posAttr.array as Float32Array;
+          const fallSpeed = 0.005 + dangerLevel * 0.015; // particles speed up with danger
+          for (let i = 0; i < positions.length / 3; i++) {
+            positions[i * 3 + 1] -= fallSpeed; // move down Y
+            positions[i * 3] += Math.sin(elapsed * 0.5 + i) * 0.0012; // gentle sway on X
+            
+            // Reset if they fall below floor limit
+            if (positions[i * 3 + 1] < -1.65) {
+              positions[i * 3 + 1] = 5.5 + Math.random() * 2.0; // spawn above top
+              positions[i * 3] = (Math.random() - 0.5) * 16.0;  // spread out X
+            }
+          }
+          posAttr.needsUpdate = true;
+        }
+        this.battleAtmosphereParticles.rotation.y = elapsed * (0.018 + dangerLevel * 0.012);
+      }
+
+      // 3. Dynamic atmosphere rings and beams animation
       this.battleAtmosphereRings.forEach((ring, index) => {
         const phase = ring.userData['phase'] || 0;
         const baseScale = ring.userData['baseScale'] || 1;
-        const pulse = 1 + Math.sin(elapsed * 1.15 + phase) * 0.035;
+        const pulse = 1 + Math.sin(elapsed * (1.15 + dangerLevel * 1.5) + phase) * (0.035 + dangerLevel * 0.02);
         ring.scale.setScalar(baseScale * pulse);
-        ring.rotation.z = elapsed * (index % 2 === 0 ? 0.035 : -0.045);
+        ring.rotation.z = elapsed * (index % 2 === 0 ? (0.035 + dangerLevel * 0.05) : -(0.045 + dangerLevel * 0.05));
         (ring.material as THREE.MeshBasicMaterial).opacity =
-          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * 1.4 + phase) * 0.055;
+          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * 1.4 + phase) * 0.055 + dangerLevel * 0.15;
       });
+
       this.battleAtmosphereBeams.forEach((beam) => {
         const phase = beam.userData['phase'] || 0;
         (beam.material as THREE.MeshBasicMaterial).opacity =
-          0.045 + (Math.sin(elapsed * 0.85 + phase) + 1) * 0.025;
+          0.045 + (Math.sin(elapsed * 0.85 + phase) + 1) * 0.025 + dangerLevel * 0.04;
       });
+
+      // 4. Shards (asteroids) rotation, sway, and shake
       if (this.battleAtmosphereShards) {
-        this.battleAtmosphereShards.rotation.y = elapsed * 0.025;
-        this.battleAtmosphereShards.position.y = Math.sin(elapsed * 0.3) * 0.1;
+        this.battleAtmosphereShards.rotation.y = elapsed * (0.025 + dangerLevel * 0.08);
+        this.battleAtmosphereShards.position.y = Math.sin(elapsed * (0.3 + dangerLevel * 0.5)) * (0.1 + dangerLevel * 0.12);
+        
+        // Minor earthquake jitter to floating shards under high game tension
+        if (dangerLevel > 0.6) {
+          this.battleAtmosphereShards.position.x = (Math.random() - 0.5) * 0.016 * dangerLevel;
+        } else {
+          this.battleAtmosphereShards.position.x = 0;
+        }
       }
+
       this.battleAtmosphereCamera.position.x = Math.sin(elapsed * 0.12) * 0.12;
       this.battleAtmosphereCamera.lookAt(0, -0.1, 0);
+
+      // Update visibility & animation of shields
+      const playerActive = this.partida?.jugador?.activo;
+      const botActive = this.partida?.bot?.activo;
+
+      const playerHasShield = !!(playerActive && (playerActive.invulnerable || (playerActive.reduccionDanioRecibido && playerActive.reduccionDanioRecibido > 0)));
+      const botHasShield = !!(botActive && (botActive.invulnerable || (botActive.reduccionDanioRecibido && botActive.reduccionDanioRecibido > 0)));
+
+      if (this.playerShieldGroup) {
+        this.playerShieldGroup.visible = playerHasShield;
+        if (playerHasShield) {
+          this.playerShieldGroup.rotation.y = elapsed * 0.6;
+          this.playerShieldGroup.rotation.z = elapsed * 0.25;
+          const scale = 1.0 + Math.sin(elapsed * 3.5) * 0.04;
+          this.playerShieldGroup.scale.setScalar(scale);
+        }
+      }
+      if (this.botShieldGroup) {
+        this.botShieldGroup.visible = botHasShield;
+        if (botHasShield) {
+          this.botShieldGroup.rotation.y = -elapsed * 0.6;
+          this.botShieldGroup.rotation.z = -elapsed * 0.25;
+          const scale = 1.0 + Math.sin(elapsed * 3.5) * 0.04;
+          this.botShieldGroup.scale.setScalar(scale);
+        }
+      }
+
       this.battleAtmosphereRenderer.render(this.battleAtmosphereScene, this.battleAtmosphereCamera);
     };
     animate();
@@ -3666,6 +4172,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleAtmosphereShards = undefined;
     this.battleAtmosphereBeams = [];
     this.battleAtmosphereRings = [];
+    this.playerShieldGroup = undefined;
+    this.botShieldGroup = undefined;
   }
 
   private initHandshakeScene(canvas: HTMLCanvasElement): void {
@@ -4574,6 +5082,71 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         active.action.fadeOut(0.25);
       }
       this.currentTrainerAnims.set(mixer, { state: 'idle', action: chosenAction });
+    }
+  }
+
+  private programarFinDePartida(partida: Partida, delayMs = 0): void {
+    if (this.showEndGameOverlay) return;
+    if (this.pendingEndGameTimeout) {
+      clearTimeout(this.pendingEndGameTimeout);
+    }
+    this.pendingEndGameTimeout = setTimeout(() => {
+      this.pendingEndGameTimeout = null;
+      this.handleGameEnd(partida);
+    }, Math.max(0, delayMs));
+  }
+
+  private activarEfectoCambio(objetivo: 'bot' | 'jugador'): void {
+    if (objetivo === 'bot') {
+      this.switchFxBot = true;
+      setTimeout(() => {
+        this.switchFxBot = false;
+        this.cdr.detectChanges();
+      }, 1050);
+    } else {
+      this.switchFxPlayer = true;
+      setTimeout(() => {
+        this.switchFxPlayer = false;
+        this.cdr.detectChanges();
+      }, 1050);
+    }
+    this.cdr.detectChanges();
+  }
+
+  private obtenerFirmaActivo(carta: CartaEnJuego | null | undefined): string {
+    if (!carta?.card) return '';
+    return [
+      carta.card.id,
+      carta.hpActual,
+      carta.energiasUnidas?.length || 0,
+      (carta.condicionesEspeciales || []).join(','),
+    ].join('|');
+  }
+
+  private getLocalizedStatusLabel(status: 'Poisoned' | 'Burned'): string {
+    const language = this.i18n.currentLanguage();
+    if (status === 'Poisoned') {
+      switch (language) {
+        case 'en':
+          return 'POISONED';
+        case 'pt':
+          return 'ENVENENADO';
+        case 'ja':
+          return 'どく';
+        default:
+          return 'ENVENENADO';
+      }
+    }
+
+    switch (language) {
+      case 'en':
+        return 'BURNED';
+      case 'pt':
+        return 'QUEIMADO';
+      case 'ja':
+        return 'やけど';
+      default:
+        return 'QUEMADO';
     }
   }
 

@@ -50,7 +50,11 @@ public class BattleAttackService {
         int damageToDeal = damageComesOnlyFromHeads || attackFailsOnTails ? 0 : ataque.getDanio();
         
         // 1. Base damage command
-        if (damageToDeal > 0) {
+        if (attackFailsOnTails && ataque.getDanio() > 0) {
+            partida.getExecutionQueue().add(new com.pokemon.tcg.model.battle.command.CoinFlipCommand(
+                    new com.pokemon.tcg.model.battle.command.DamageCommand(ataque.getDanio())
+            ));
+        } else if (damageToDeal > 0) {
             partida.getExecutionQueue().add(new com.pokemon.tcg.model.battle.command.DamageCommand(damageToDeal));
         }
 
@@ -83,12 +87,6 @@ public class BattleAttackService {
                 command.execute(partida, atacanteTablero, defensorTablero);
             }
         }
-        if (attackFailsOnTails && ataque.getDanio() > 0) {
-            partida.getExecutionQueue().addFirst(new com.pokemon.tcg.model.battle.command.CoinFlipCommand(
-                    new com.pokemon.tcg.model.battle.command.DamageCommand(ataque.getDanio())
-            ));
-        }
-
         int totalDamage = defensor.isInvulnerable() ? 0 : calcularDanioConTipo(rawDamage, atacante, defensor);
         if (totalDamage > 0) {
             defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
@@ -115,6 +113,12 @@ public class BattleAttackService {
                 new ResultadoAtaque(totalDamage, caras),
                 new java.util.ArrayList<>(partida.getUltimasMonedasLanzadas())
         );
+    }
+
+    public void registrarEventoMoneda(Partida partida, String actor, String attackName) {
+        partida.setLastCoinFlipEventId(partida.getLastCoinFlipEventId() + 1);
+        partida.setLastCoinFlipActor(actor);
+        partida.setLastCoinFlipAttackName(attackName);
     }
 
     private int calcularDanioConTipo(int damage, CartaEnJuego atacante, CartaEnJuego defensor) {

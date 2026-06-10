@@ -301,17 +301,18 @@
 @media (max-width: 1500px), (max-height: 850px) {
   .action-picker {
     position: fixed;
+    top: 50%;
     left: 50%;
     right: auto;
-    bottom: max(18px, env(safe-area-inset-bottom));
+    bottom: auto;
     width: min(420px, calc(100vw - 28px));
-    max-height: min(68vh, 560px);
-    transform: translateX(-50%);
-    animation-name: actionPickerUp;
+    max-height: min(80vh, 500px);
+    transform: translate(-50%, -50%);
+    animation-name: actionPickerCenterIn;
   }
 
-  @keyframes actionPickerUp {
-    from { opacity: 0; transform: translate(-50%, 14px) scale(0.97); }
-    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  @keyframes actionPickerCenterIn {
+    from { opacity: 0; transform: translate(-50%, -45%) scale(0.95); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
   }
 }

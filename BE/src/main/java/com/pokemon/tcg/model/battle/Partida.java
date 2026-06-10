@@ -53,6 +53,9 @@ public class Partida {
 
     private List<String> turnLogs = new ArrayList<>();
     private PendingBattleAction pendingAction;
+    private long lastCoinFlipEventId = 0L;
+    private String lastCoinFlipAttackName;
+    private String lastCoinFlipActor;
 
     private java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue = new java.util.LinkedList<>();
 
@@ -92,6 +95,12 @@ public class Partida {
     public void setTurnLogs(List<String> turnLogs) { this.turnLogs = turnLogs; }
     public PendingBattleAction getPendingAction() { return pendingAction; }
     public void setPendingAction(PendingBattleAction pendingAction) { this.pendingAction = pendingAction; }
+    public long getLastCoinFlipEventId() { return lastCoinFlipEventId; }
+    public void setLastCoinFlipEventId(long lastCoinFlipEventId) { this.lastCoinFlipEventId = lastCoinFlipEventId; }
+    public String getLastCoinFlipAttackName() { return lastCoinFlipAttackName; }
+    public void setLastCoinFlipAttackName(String lastCoinFlipAttackName) { this.lastCoinFlipAttackName = lastCoinFlipAttackName; }
+    public String getLastCoinFlipActor() { return lastCoinFlipActor; }
+    public void setLastCoinFlipActor(String lastCoinFlipActor) { this.lastCoinFlipActor = lastCoinFlipActor; }
 
     public TableroJugador getJugador() { return jugador; }
     public void setJugador(TableroJugador jugador) { this.jugador = jugador; }

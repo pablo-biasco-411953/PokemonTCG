@@ -24,16 +24,11 @@ public class BattleKoService {
 
         System.out.println("[KO] Procesando K.O. de: " + defensor.getCard().getNombre());
 
-        String idADescartar = defensor.getCard().getId();
-
-        if (tableroVictima.getActivo() != null
-                && tableroVictima.getActivo().getCard().getId().equals(idADescartar)) {
+        if (tableroVictima.getActivo() == defensor) {
             tableroVictima.setActivo(null);
+        } else {
+            tableroVictima.getBanca().remove(defensor);
         }
-
-        tableroVictima.getBanca().removeIf(c -> c == null
-                || c.getCard() == null
-                || c.getCard().getId().equals(idADescartar));
         tableroVictima.getPilaDescarte().add(defensor.getCard());
 
         int premiosATomar = esPokemonEx(defensor) ? 2 : 1;
@@ -84,30 +79,31 @@ public class BattleKoService {
     }
 
     private TableroJugador encontrarTableroPorCarta(Partida partida, CartaEnJuego carta) {
-        // Ubica una carta comparando su id contra activo y banca.
-        if (carta == null || carta.getCard() == null) {
+        if (carta == null) {
             return null;
         }
 
-        if (contieneCarta(partida.getJugador(), carta.getCard().getId())) {
+        if (contieneCarta(partida.getJugador(), carta)) {
             return partida.getJugador();
         }
-        if (contieneCarta(partida.getBot(), carta.getCard().getId())) {
+        if (contieneCarta(partida.getBot(), carta)) {
             return partida.getBot();
         }
         return null;
     }
 
-    private boolean contieneCarta(TableroJugador tablero, String cardId) {
-        if (tablero.getActivo() != null
-                && tablero.getActivo().getCard() != null
-                && tablero.getActivo().getCard().getId().equals(cardId)) {
+    private boolean contieneCarta(TableroJugador tablero, CartaEnJuego carta) {
+        if (tablero.getActivo() == carta) {
             return true;
         }
-
-        return tablero.getBanca().stream()
-                .filter(c -> c != null && c.getCard() != null)
-                .anyMatch(c -> c.getCard().getId().equals(cardId));
+        if (tablero.getBanca() != null) {
+            for (CartaEnJuego c : tablero.getBanca()) {
+                if (c == carta) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private CartaEnJuego elegirMejorReemplazoBot(TableroJugador tableroBot, CartaEnJuego activoRival) {
