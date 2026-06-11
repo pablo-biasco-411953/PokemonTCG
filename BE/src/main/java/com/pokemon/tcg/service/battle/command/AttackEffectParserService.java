@@ -14,13 +14,10 @@ public class AttackEffectParserService {
     private static final Pattern HEAL_PATTERN = Pattern.compile("Heal (\\d+) damage from this Pok.{1,2}mon", Pattern.CASE_INSENSITIVE);
     private static final Pattern COIN_FLIP_DAMAGE_PATTERN = Pattern.compile("Flip a coin\\. If heads, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE);
     private static final Pattern DRAW_CARD_PATTERN = Pattern.compile("Draw (?:(\\d+) cards?|a card)", Pattern.CASE_INSENSITIVE);
-    private static final Pattern APPLY_STATUS_PATTERN = Pattern.compile(
-            "(?:(?:the )?Defending|your opponent's Active) Pok.{1,2}mon is now (Poisoned|Asleep|Burned|Paralyzed|Confused)",
-            Pattern.CASE_INSENSITIVE
-    );
+    private static final Pattern APPLY_STATUS_PATTERN = Pattern.compile("(?:The Defending Pok.{1,2}mon|Your opponent's Active Pok.{1,2}mon) is now (Poisoned|Asleep|Burned|Paralyzed|Confused)", Pattern.CASE_INSENSITIVE);
     private static final Pattern SELF_DAMAGE_PATTERN = Pattern.compile("does (\\d+) damage to itself", Pattern.CASE_INSENSITIVE);
     private static final Pattern FIXED_MULTI_COIN_DAMAGE_PATTERN = Pattern.compile(
-            "Flip (\\d+) coins?\\. This attack does (\\d+) damage (?:times the number of|for each) heads",
+            "Flip (\\d+) coins?\\. This attack does (\\d+)(?: more)? damage (?:times the number of|for each) heads",
             Pattern.CASE_INSENSITIVE
     );
     private static final Pattern UNTIL_TAILS_DAMAGE_PATTERN = Pattern.compile(
@@ -128,6 +125,9 @@ public class AttackEffectParserService {
             if (conditional) commands.add(new CoinFlipCommand(poison));
             else commands.add(poison);
         }
+        if (lowerText.contains("both active pok") && lowerText.contains("are now confused")) {
+            commands.add(new ApplyBothActiveStatusConditionCommand("Confused"));
+        }
 
         if (lowerText.contains("if heads, prevent all effects of attacks")
                 || lowerText.contains("if heads, prevent all damage done to this pok")) {
@@ -159,8 +159,13 @@ public class AttackEffectParserService {
             }
         }
 
-        if (lowerText.contains("discard an energy attached to this pok")) {
-            commands.add(new DiscardEnergyCommand(1, Target.SELF));
+        if (lowerText.contains("discard an energy attached to this pok") || lowerText.contains("discard 2 energy attached to this pok")) {
+            int amount = lowerText.contains("discard 2 energy") ? 2 : 1;
+            if (lowerText.contains("flip a coin") && lowerText.contains("if tails")) {
+                commands.add(new CoinFlipCommand(null, new DiscardEnergyCommand(amount, Target.SELF)));
+            } else {
+                commands.add(new DiscardEnergyCommand(amount, Target.SELF));
+            }
         }
         if (lowerText.contains("if heads, discard an energy attached to your opponent's active pok")) {
             commands.add(new CoinFlipCommand(new DiscardEnergyCommand(1, Target.OPPONENT)));
@@ -180,7 +185,12 @@ public class AttackEffectParserService {
             commands.add(new SetAttackBlockNextTurnCommand(Target.OPPONENT));
         }
 
-        if (lowerText.contains("search your deck for a grass pok")) {
+        if (lowerText.contains("search your deck for up to 3 different types of basic energy")) {
+            commands.add(new SearchDeckCommand(
+                    "Energy", "Basic", null, "HAND", 3,
+                    "Elegi hasta 3 Energias Basicas para revelar y poner en tu mano."
+            ));
+        } else if (lowerText.contains("search your deck for a grass pok")) {
             commands.add(new SearchDeckCommand(
                     "Pokemon", null, "Grass", "HAND", 1,
                     "Elegí un Pokémon Planta para poner en tu mano."
@@ -200,6 +210,11 @@ public class AttackEffectParserService {
                     "Energy", null, "Fire", "ATTACH_ACTIVE", 1,
                     "Elegí una Energía Fuego para unir a tu Pokémon Activo."
             ));
+        } else if (lowerText.contains("search your deck for a darkness energy")) {
+            commands.add(new SearchDeckCommand(
+                    "Energy", null, "Darkness", "ATTACH_ACTIVE", 1,
+                    "Elegi una Energia Oscuridad para unir a tu Pokemon Activo."
+            ));
         } else if (lowerText.contains("search your deck for a lightning energy")) {
             String dest = lowerText.contains("switch this pok") ? "ATTACH_ACTIVE_AND_SWITCH" : "ATTACH_ACTIVE";
             commands.add(new SearchDeckCommand(
@@ -217,8 +232,12 @@ public class AttackEffectParserService {
             commands.add(new ShuffleRandomHandToDeckCommand());
         }
 
-        if (lowerText.contains("move a basic energy from this pok") || lowerText.contains("move as many")) {
+        if (lowerText.contains("move a basic energy from this pok") || lowerText.contains("move an energy from this pok") || lowerText.contains("move as many")) {
             commands.add(new MoveEnergyCommand(null, 1));
+        }
+
+        if (lowerText.contains("attach a darkness energy card from your discard pile to 1 of your benched")) {
+            commands.add(new AttachEnergyFromDiscardToBenchCommand("Darkness", 1));
         }
 
         if (lowerText.contains("times the number of your remaining prize cards")) {
@@ -226,6 +245,38 @@ public class AttackEffectParserService {
         }
         if (lowerText.contains("if your opponent's active pok") && lowerText.contains("is a grass pok") && lowerText.contains("20 more damage")) {
             commands.add(new ConditionalDamageMultiplierCommand(0, 20, "OPPONENT_TYPE", "Grass"));
+        }
+        Matcher typedEnergyDamageMatcher = Pattern
+                .compile("does (\\d+) more damage for each ([a-zA-Z]+) energy attached to this pok", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (typedEnergyDamageMatcher.find()) {
+            commands.add(new AddDamageByAttachedEnergyCommand(
+                    typedEnergyDamageMatcher.group(2),
+                    Integer.parseInt(typedEnergyDamageMatcher.group(1)),
+                    false
+            ));
+        }
+        Matcher allEnergyDamageMatcher = Pattern
+                .compile("does (\\d+) more damage times the amount of energy attached to both active pok", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (allEnergyDamageMatcher.find()) {
+            commands.add(new AddDamageByAttachedEnergyCommand(
+                    null,
+                    Integer.parseInt(allEnergyDamageMatcher.group(1)),
+                    true
+            ));
+        }
+        Matcher selfCounterDamageMatcher = Pattern
+                .compile("does (\\d+) more damage for each damage counter on this pok", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (selfCounterDamageMatcher.find()) {
+            commands.add(new AddDamageByDamageCountersCommand(Target.SELF, Integer.parseInt(selfCounterDamageMatcher.group(1))));
+        }
+        Matcher opponentCounterDamageMatcher = Pattern
+                .compile("does (\\d+) more damage for each damage counter on your opponent's active pok", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (opponentCounterDamageMatcher.find()) {
+            commands.add(new AddDamageByDamageCountersCommand(Target.OPPONENT, Integer.parseInt(opponentCounterDamageMatcher.group(1))));
         }
 
         // Restricciones de ataque para el siguiente turno
@@ -245,6 +296,12 @@ public class AttackEffectParserService {
         Matcher blockAttackMatcher = blockAttackPattern.matcher(text);
         if (blockAttackMatcher.find()) {
             commands.add(new BlockAttackNextTurnCommand(blockAttackMatcher.group(1).trim(), Target.SELF));
+        }
+
+        Pattern buffAttackPattern = Pattern.compile("during your next turn, this pok.{1,2}mon's ([a-zA-Z'\\s-]+) attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE);
+        Matcher buffAttackMatcher = buffAttackPattern.matcher(text);
+        if (buffAttackMatcher.find()) {
+            commands.add(new AtaquePotenciadoSiguienteTurnoCommand(buffAttackMatcher.group(1).trim(), Integer.parseInt(buffAttackMatcher.group(2))));
         }
 
         if (lowerText.contains("prevent all damage done to this pok") && !lowerText.contains("if heads")) {
@@ -277,6 +334,21 @@ public class AttackEffectParserService {
             commands.add(new DamageOpponentBenchedCommand(amount, count));
         }
 
+        if (lowerText.contains("search your deck for 3 different types of basic energy cards") || lowerText.contains("search your deck for up to 3 basic energy cards")) {
+            commands.add(new SearchDeckCommand(
+                    "Energy", null, null, "HAND", 3,
+                    "Elegí hasta 3 cartas de Energía para poner en tu mano."
+            ));
+        }
+
+        if (lowerText.contains("you may do") && lowerText.contains("more damage") && lowerText.contains("if you do, this pok") && lowerText.contains("is now asleep")) {
+            Matcher m = Pattern.compile("you may do (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
+            if (m.find()) {
+                commands.add(new DamageCommand(Integer.parseInt(m.group(1))));
+                commands.add(new ApplyStatusConditionCommand("Asleep", Target.SELF));
+            }
+        }
+
         // Descarte de cartas del tope del mazo e interacciones relacionadas (Rhyhorn, Gurdurr, Rhydon, Magcargo)
         if (lowerText.contains("discard the top card of your deck") && lowerText.contains("fighting energy")) {
             commands.add(new DiscardTopDeckAttachEnergyCommand("Fighting"));
@@ -297,7 +369,10 @@ public class AttackEffectParserService {
                     "Mirá las 3 cartas del tope de tu mazo. Seleccionalas en el orden que quieras que queden (la primera elegida quedará arriba)."));
         }
 
+        if (lowerText.contains("switch 1 of your opponent's benched") && lowerText.contains("with your opponent's active")) {
+            commands.add(new SwitchOpponentActiveCommand());
+        }
+
         return commands;
     }
 }
-

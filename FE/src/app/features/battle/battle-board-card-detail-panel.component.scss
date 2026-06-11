@@ -194,12 +194,12 @@
     right: 132px;
     bottom: 18px;
     width: min(520px, calc(100vw - 300px));
-    max-height: min(66vh, 560px);
+    max-height: none;
     padding: 18px;
     gap: 18px;
     transform: scale(.9);
     transform-origin: bottom right;
-    overflow: auto;
+    overflow: visible;
   }
 
   .card-detail-panel.show { transform: scale(.9); }

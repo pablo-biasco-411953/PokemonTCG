@@ -23,6 +23,8 @@ public class CartaEnJuego {
     private boolean noPuedeAtacarSiguienteTurno = false;
     private boolean noPuedeAtacarYaConsumido = false;
     private String ataqueBloqueadoSiguienteTurno = null;
+    private int danioExtraSiguienteTurno = 0;
+    private String ataquePotenciadoSiguienteTurno = null;
     private boolean ataqueBloqueadoYaConsumido = false;
 
     public CartaEnJuego(Card card) {
@@ -49,6 +51,13 @@ public class CartaEnJuego {
 
     public String getAtaqueBloqueadoSiguienteTurno() { return ataqueBloqueadoSiguienteTurno; }
     public void setAtaqueBloqueadoSiguienteTurno(String value) { this.ataqueBloqueadoSiguienteTurno = value; }
+
+    public int getDanioExtraSiguienteTurno() { return danioExtraSiguienteTurno; }
+    public void setDanioExtraSiguienteTurno(int danioExtraSiguienteTurno) { this.danioExtraSiguienteTurno = danioExtraSiguienteTurno; }
+
+    public String getAtaquePotenciadoSiguienteTurno() { return ataquePotenciadoSiguienteTurno; }
+    public void setAtaquePotenciadoSiguienteTurno(String ataquePotenciadoSiguienteTurno) { this.ataquePotenciadoSiguienteTurno = ataquePotenciadoSiguienteTurno; }
+
     public boolean isAtaqueBloqueadoYaConsumido() { return ataqueBloqueadoYaConsumido; }
     public void setAtaqueBloqueadoYaConsumido(boolean value) { this.ataqueBloqueadoYaConsumido = value; }
 

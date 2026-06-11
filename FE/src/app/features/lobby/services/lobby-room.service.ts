@@ -24,6 +24,7 @@ export interface LobbyRoomSnapshot {
   name: string;
   status: LobbyRoomStatus;
   locked: boolean;
+  turnTimeSeconds: number;
   ownerUsername: string;
   ownerDeckName: string;
   ownerReady: boolean;
@@ -62,8 +63,8 @@ export class LobbyRoomService {
     return this.http.get<LobbyRoomSnapshot>(`${this.base}/match/${matchId}`, this.headers());
   }
 
-  createRoom(roomName: string, mazoId: number, deckName: string, password = ''): Observable<LobbyRoomSnapshot> {
-    return this.http.post<LobbyRoomSnapshot>(this.base, { roomName, mazoId, deckName, password }, this.headers());
+  createRoom(roomName: string, mazoId: number, deckName: string, password = '', turnTimeSeconds = 0): Observable<LobbyRoomSnapshot> {
+    return this.http.post<LobbyRoomSnapshot>(this.base, { roomName, mazoId, deckName, password, turnTimeSeconds }, this.headers());
   }
 
   joinRoom(roomId: string, mazoId: number, deckName: string, password = ''): Observable<LobbyRoomSnapshot> {

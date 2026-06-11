@@ -358,6 +358,23 @@
   </div>
 </div>
 
+<div class="card-splash-overlay" *ngIf="cardSplashActive" [class.is-opponent]="!cardSplashActive.esMiAccion">
+  <div class="cs-backdrop"></div>
+  <div class="cs-content">
+    <div class="cs-card">
+      <img [src]="getImagenCarta(cardSplashActive.cardId)" [alt]="cardSplashActive.cardNombre" (error)="onCardImageError($event)" />
+      <div class="cs-fx-sweep"></div>
+    </div>
+  </div>
+</div>
+
+<div class="cinematic-attack-banner" *ngIf="attackBannerActive" [class.is-opponent]="!attackBannerActive.esMiAccion">
+  <div class="cab-stripes"></div>
+  <div class="cab-content">
+    <div class="cab-text">{{ attackBannerActive.attackName }}</div>
+  </div>
+</div>
+
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
 <div class="guided-effect-overlay" *ngIf="pendingAction as pending">
   <section class="guided-effect-panel" [class.reorder-mode]="isReorderMode">
@@ -563,7 +580,7 @@
     <div class="neo-center-line rope-track">
       <div
         class="rope-burn"
-        *ngIf="partida.turnoActual === 'JUGADOR'"
+        *ngIf="turnTimerEnabled && partida.turnoActual === 'JUGADOR'"
         [style.width.%]="porcentajeTimer"
         [class.critical]="tiempoRestante <= 15"
       >

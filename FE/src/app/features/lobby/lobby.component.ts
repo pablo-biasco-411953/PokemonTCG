@@ -206,6 +206,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   currentRoom: LobbyRoomSnapshot | null = null;
   roomCreateName = '';
   roomPassword = '';
+  roomTurnTimerEnabled = false;
+  roomTurnTimeSeconds = 60;
   roomPinDigits = ['', '', '', '', '', ''];
   roomPinMasked = [false, false, false, false, false, false];
   private roomPinTimers: Array<ReturnType<typeof setTimeout> | undefined> = [];
@@ -1789,13 +1791,16 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.roomActionLoading = true;
-    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword).subscribe({
+    const turnTimeSeconds = this.roomTurnTimerEnabled ? Number(this.roomTurnTimeSeconds) || 60 : 0;
+    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword, turnTimeSeconds).subscribe({
       next: (room) => {
         this.currentRoom = room;
         this.selectedRoom = room;
         this.roomPasswordModalOpen = false;
         this.roomTab = 'mine';
         this.roomCreateName = '';
+        this.roomTurnTimerEnabled = false;
+        this.roomTurnTimeSeconds = 60;
         this.clearRoomPin();
         this.roomError = '';
         this.roomActionLoading = false;

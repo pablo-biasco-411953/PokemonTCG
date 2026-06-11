@@ -572,6 +572,22 @@
 
           <div class="room-create-grid" *ngIf="!currentRoom && roomTab === 'create'">
             <input class="room-name-input" [(ngModel)]="roomCreateName" placeholder="Nombre de sala">
+            <label class="room-turn-timer">
+              <span>Tiempo por turno</span>
+              <div>
+                <input type="checkbox" [(ngModel)]="roomTurnTimerEnabled">
+                <input
+                  type="number"
+                  min="15"
+                  max="300"
+                  step="15"
+                  [(ngModel)]="roomTurnTimeSeconds"
+                  [disabled]="!roomTurnTimerEnabled"
+                  aria-label="Segundos por turno"
+                >
+                <em>seg</em>
+              </div>
+            </label>
             <div class="room-pin-lock" [class.complete]="roomPinComplete" (click)="roomPinInput.focus()">
               <span>Codigo secreto</span>
               <input
@@ -602,6 +618,7 @@
               <div>
                 <small>{{ room.locked ? 'Sala con clave' : 'Sala abierta' }}</small>
                 <h3>{{ room.name }}</h3>
+                <p class="room-rules" *ngIf="room.turnTimeSeconds > 0">Tiempo por turno: {{ room.turnTimeSeconds }}s</p>
               </div>
               <span [class.live]="room.status === 'IN_PROGRESS'">{{ room.status === 'IN_PROGRESS' ? roomStatusLabel : 'Lobby' }}</span>
             </div>
@@ -640,6 +657,7 @@
               <div>
                 <small>Tu sala</small>
                 <h3>{{ room.name }}</h3>
+                <p class="room-rules" *ngIf="room.turnTimeSeconds > 0">Tiempo por turno: {{ room.turnTimeSeconds }}s</p>
               </div>
               <span [class.ready]="isCurrentUserReady">{{ isCurrentRoomSpectator ? 'MIRANDO' : (isCurrentUserReady ? 'LISTO' : 'NO LISTO') }}</span>
             </div>
