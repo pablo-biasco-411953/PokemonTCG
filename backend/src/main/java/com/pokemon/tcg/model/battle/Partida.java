@@ -20,6 +20,7 @@ public class Partida {
     private int numeroTurno = 1;
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
+    private boolean muerteSubita = false;
 
     private String jugadorUsername;
     private String botUsername;
@@ -155,6 +156,9 @@ public class Partida {
 
     public int getNumeroTurno() { return numeroTurno; }
     public void setNumeroTurno(int numeroTurno) { this.numeroTurno = Math.max(1, numeroTurno); }
+
+    public boolean isMuerteSubita() { return muerteSubita; }
+    public void setMuerteSubita(boolean muerteSubita) { this.muerteSubita = muerteSubita; }
 
     public int getMulligansJugador() { return mulligansJugador; }
     public void setMulligansJugador(int mulligansJugador) { this.mulligansJugador = mulligansJugador; }

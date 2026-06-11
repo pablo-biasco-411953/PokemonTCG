@@ -197,6 +197,32 @@ class BattleAttackServiceTest {
         assertTrue(partida.getTurnLogs().stream().anyMatch(log -> log.startsWith("ASTONISH_REVEALED:")));
     }
 
+    @Test
+    void resolveAttackConEnergyGlideActivaDecisionDeCambioAlAcoplar() {
+        Partida partida = partidaBasica();
+        partida.setJugadorUsername("Pablo");
+
+        Card lightning = card("lightning-1", "Lightning Energy", "0");
+        lightning.setSupertype("Energy");
+        lightning.setTipo("Lightning");
+        partida.getJugador().getMazo().add(lightning);
+
+        CartaEnJuego suplente = new CartaEnJuego(card("suplente-1", "Bulbasaur", "50"));
+        partida.getJugador().getBanca().add(suplente);
+
+        Ataque ataque = attack(
+                "Energy Glide",
+                10,
+                "Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon."
+        );
+
+        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {});
+
+        assertEquals(Partida.Fase.ESPERANDO_INTERACCION, partida.getFaseActual());
+        assertEquals("SEARCH_DECK", partida.getPendingAction().getType());
+        assertEquals("ATTACH_ACTIVE_AND_SWITCH", partida.getPendingAction().getDestination());
+    }
+
     private Partida partidaBasica() {
         TableroJugador jugador = new TableroJugador();
         jugador.setActivo(new CartaEnJuego(card("p1", "Pikachu", "60")));

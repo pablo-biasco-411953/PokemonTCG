@@ -119,9 +119,11 @@
   </div>
   <div class="setup-panel" *ngIf="estadoSetupMulligan === 'PRIZES'">
     <h2 class="setup-title">Colocando Premios</h2>
-    <p class="setup-sub">Se separan 6 cartas boca abajo.</p>
+    <p class="setup-sub">
+      Se separan {{ partida?.muerteSubita ? 1 : 6 }} carta(s) boca abajo.
+    </p>
     <div class="setup-prize-cascade">
-      <div class="setup-card-back" *ngFor="let p of [1,2,3,4,5,6]" [style.--p]="p"></div>
+      <div class="setup-card-back" *ngFor="let p of getPrizeSlots(); let idx = index" [style.--p]="idx + 1"></div>
     </div>
   </div>
   <div class="setup-panel" *ngIf="estadoSetupMulligan === 'FINAL_REVEAL'">
@@ -573,9 +575,9 @@
   <aside class="side-col left">
     <div class="prizes-section bot-prizes">
       <p class="prizes-title">{{ 'battle.rivalPrizesLabel' | t:{rival: nombreRival} }}</p>
-      <div class="prizes-grid">
+      <div class="prizes-grid" [class.sudden-death-grid]="partida.muerteSubita">
         <div
-          *ngFor="let i of [0, 1, 2, 3, 4, 5]"
+          *ngFor="let i of getPrizeSlots()"
           class="prize-cell"
           [class.empty]="i >= partida.bot.premios.length"
         >
@@ -583,16 +585,16 @@
           <div class="prize-empty-cell" *ngIf="i >= partida.bot.premios.length"></div>
         </div>
       </div>
-      <span class="prizes-count">{{ partida.bot.premios.length }}<em>/6</em></span>
+      <span class="prizes-count">{{ partida.bot.premios.length }}<em>/{{ getPrizeTarget() }}</em></span>
     </div>
 
     <div class="side-divider"></div>
 
     <div class="prizes-section player-prizes">
-      <span class="prizes-count gold">{{ partida.jugador.premios.length }}<em>/6</em></span>
-      <div class="prizes-grid">
+      <span class="prizes-count gold">{{ partida.jugador.premios.length }}<em>/{{ getPrizeTarget() }}</em></span>
+      <div class="prizes-grid" [class.sudden-death-grid]="partida.muerteSubita">
         <div
-          *ngFor="let i of [0, 1, 2, 3, 4, 5]"
+          *ngFor="let i of getPrizeSlots()"
           class="prize-cell"
           [class.empty]="i >= partida.jugador.premios.length"
         >
@@ -629,6 +631,7 @@
           [class.low-hp-warning]="getHpPercent(b) < 30"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
+          (contextmenu)="abrirDetallePokemon($event, b)"
         >
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
           <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
@@ -682,6 +685,7 @@
             class="active-card bot-active"
             (mouseenter)="setHoveredCard(partida.bot.activo?.bocaAbajo ? null : partida.bot.activo)"
             (mouseleave)="clearHoveredCard()"
+            (contextmenu)="abrirDetallePokemon($event, partida.bot.activo)"
           >
             <ng-container *ngIf="partida.bot.activo">
               <img [src]="getImagenCartaEnJuego(partida.bot.activo)" (error)="onCardImageError($event)" />
@@ -1046,6 +1050,7 @@
               (click)="clickEnActivo()"
               (mouseenter)="setHoveredCard(partida.jugador.activo?.bocaAbajo ? null : partida.jugador.activo)"
               (mouseleave)="clearHoveredCard()"
+              (contextmenu)="abrirDetallePokemon($event, partida.jugador.activo)"
             >
               <ng-container *ngIf="partida.jugador.activo">
                 <img [src]="getImagenCartaEnJuego(partida.jugador.activo)" (error)="onCardImageError($event)" />
@@ -1080,6 +1085,7 @@
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
+          (contextmenu)="abrirDetallePokemon($event, b)"
         >
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
           <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
@@ -1330,5 +1336,112 @@
   <button class="btn-cancel-energy" (click)="cancelarModoUnionEnergia()">
     {{ i18n.currentLanguage() === 'en' ? 'Cancel' : 'Cancelar' }}
   </button>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="pokemon-detail-modal-overlay" *ngIf="mostrarDetalleModal && selectedDetailPokemon" (click)="cerrarDetallePokemon()">
+  <div class="pokemon-detail-modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="cerrarDetallePokemon()">&times;</button>
+    <div class="modal-grid">
+      <!-- Left pane: Large Sprite & Card View -->
+      <div class="modal-sprite-section">
+        <div class="modal-sprite-card-frame">
+          <!-- Animated Sprite -->
+          <img class="modal-pokemon-gif" [src]="getSpriteFront(selectedDetailPokemon.card)" (error)="onCardImageError($event)" />
+          <!-- Static Card Image -->
+          <img class="modal-pokemon-card-art" [src]="getImagenCarta(selectedDetailPokemon.card.id)" (error)="onCardImageError($event)" />
+        </div>
+      </div>
+
+      <!-- Right pane: Stats, Energies, Conditions, Attacks -->
+      <div class="modal-info-section">
+        <div class="modal-pokemon-header">
+          <div class="title-row">
+            <h2 class="modal-pokemon-name">{{ selectedDetailPokemon.card.nombre }}</h2>
+            <span class="status-pill" *ngIf="esCartaEX(selectedDetailPokemon.card)">EX</span>
+          </div>
+          <div class="hp-row">
+            <span class="hp-current" [class.damaged]="selectedDetailPokemon.hpActual < getHpMax(selectedDetailPokemon)">
+              HP: {{ selectedDetailPokemon.hpActual }} / {{ getHpMax(selectedDetailPokemon) }}
+            </span>
+            <span class="type-pill" [style.backgroundColor]="getEnergyColor(selectedDetailPokemon.card.tipo)">
+              {{ selectedDetailPokemon.card.tipo }}
+            </span>
+            <span class="evolution-name">
+              {{ getPokemonFase(selectedDetailPokemon.card) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Attached Energies Section -->
+        <div class="modal-section-title">Energías Acopladas</div>
+        <div class="modal-energies-container">
+          <ng-container *ngIf="selectedDetailPokemon.energiasUnidas && selectedDetailPokemon.energiasUnidas.length; else noEnergies">
+            <div class="energy-attached-pill" *ngFor="let energia of selectedDetailPokemon.energiasUnidas" [style.borderColor]="getEnergyColor(energia.tipo)">
+              <div class="energy-icon" [style.backgroundColor]="getEnergyColor(energia.tipo)"></div>
+              <span class="energy-name">{{ energia.nombre }}</span>
+            </div>
+          </ng-container>
+          <ng-template #noEnergies>
+            <span class="no-energies-text">No tiene energías acopladas</span>
+          </ng-template>
+        </div>
+
+        <!-- History/Evo constraints info box -->
+        <div class="modal-section-box" *ngIf="selectedDetailPokemon && selectedDetailPokemon.turnoEntrada">
+          <p class="modal-info-text">
+            <strong>Turno de entrada:</strong> {{ selectedDetailPokemon.turnoEntrada }}
+          </p>
+          <p class="modal-info-text" *ngIf="partida && partida.numeroTurno">
+            <strong>Turnos en juego:</strong> {{ partida.numeroTurno - (selectedDetailPokemon.turnoEntrada || 0) }}
+          </p>
+        </div>
+
+        <!-- Status Conditions Section -->
+        <div class="modal-section-box" *ngIf="selectedDetailPokemon.condicionesEspeciales && selectedDetailPokemon.condicionesEspeciales.length">
+          <p class="modal-info-text">
+            <strong>Condiciones Especiales:</strong>
+            <span class="status-pill" *ngFor="let status of selectedDetailPokemon.condicionesEspeciales">{{ status }}</span>
+          </p>
+        </div>
+
+        <!-- Attacks Section -->
+        <div class="modal-section-title">Ataques</div>
+        <div class="modal-attacks-list">
+          <div class="modal-attack-item" *ngFor="let ataque of selectedDetailPokemon.card.ataques">
+            <div class="modal-attack-header">
+              <div class="modal-attack-cost">
+                <span
+                  *ngFor="let cost of ataque.costo"
+                  class="energy-chip"
+                  [style.background-color]="getEnergyColor(cost)"
+                  [title]="cost"
+                  style="padding: 1px 6px; border-radius: 10px; font-size: 10px; color: #fff; margin-right: 4px; display: inline-flex; align-items: center;"
+                >
+                  {{ resolveEnergyLabel(cost) }}
+                </span>
+              </div>
+              <span class="modal-attack-name">{{ ataque.nombre }}</span>
+              <span class="modal-attack-damage" *ngIf="ataque.danio > 0">{{ ataque.danio }}</span>
+            </div>
+            <p class="modal-attack-description" *ngIf="ataque.texto">{{ formatTextoAtaque(ataque.texto) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY DE MUERTE SUBITA -->
+<div class="muerte-subita-overlay" *ngIf="mostrarOverlayMuerteSubita">
+  <div class="ms-flash-layer"></div>
+  <div class="ms-rain-layer">
+    <span *ngFor="let drop of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]" [style.--n]="drop"></span>
+  </div>
+  <div class="ms-kicker">Empate absoluto</div>
+  <div class="ms-content">
+    <div class="ms-glow">MUERTE SÚBITA</div>
+    <div class="ms-sub">El próximo premio define la partida. ¡Que comience el combate final!</div>
+  </div>
 </div>
 

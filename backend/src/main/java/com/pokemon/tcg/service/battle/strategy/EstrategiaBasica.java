@@ -177,12 +177,16 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         for (Card cartaEstrella : pokemonesBasicos) {
             if (tablero.getActivo() == null) {
-                tablero.setActivo(new CartaEnJuego(cartaEstrella));
+                CartaEnJuego nuevoActivo = new CartaEnJuego(cartaEstrella);
+                nuevoActivo.setTurnoEntrada(partida.getNumeroTurno());
+                tablero.setActivo(nuevoActivo);
                 tablero.getMano().remove(cartaEstrella);
                 partida.getTurnLogs().add("ACTIVE_PLACED:BOT:" + cartaEstrella.getNombre().replace(':', '-'));
                 System.out.println("🤖 [BOT] Bajó como ACTIVO a " + cartaEstrella.getNombre() + " por su alto potencial.");
             } else if (tablero.getBanca().size() < 5) {
-                tablero.getBanca().add(new CartaEnJuego(cartaEstrella));
+                CartaEnJuego nuevoBanca = new CartaEnJuego(cartaEstrella);
+                nuevoBanca.setTurnoEntrada(partida.getNumeroTurno());
+                tablero.getBanca().add(nuevoBanca);
                 tablero.getMano().remove(cartaEstrella);
                 partida.getTurnLogs().add("BENCH_PLACED:BOT:" + cartaEstrella.getNombre().replace(':', '-'));
                 System.out.println("🤖 [BOT] Preparando el futuro: Bajó a la BANCA a " + cartaEstrella.getNombre());

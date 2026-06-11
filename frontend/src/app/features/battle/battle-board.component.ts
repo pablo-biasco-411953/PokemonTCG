@@ -98,6 +98,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   hoveredCardStatuses: CardGlossaryEntry[] = [];
   hoveredCardList: HoveredBattleCard[] = [];
   hoveredCardIndex = -1;
+
+  selectedDetailPokemon: CartaEnJuego | null = null;
+  mostrarDetalleModal = false;
+
+  // Sudden Death (Muerte Súbita)
+  mostrarOverlayMuerteSubita = false;
+  atmosphereHemisphereLight!: THREE.HemisphereLight;
+  atmosphereRivalLight!: THREE.PointLight;
+  atmospherePlayerLight!: THREE.PointLight;
+  atmosphereFloor!: THREE.Mesh;
+  atmosphereGrid!: THREE.GridHelper;
+  private lightningFlashActive = false;
+  private lightningFlashTimer = 0;
+
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
 
@@ -338,7 +352,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => this.hidratarEstadoInicial(data),
       error: (err) => {
         console.error('No se pudo recuperar la partida al recargar', err);
-        alert(this.i18n.translate('alert.battleNotAvailable'));
+        this.mostrarNotificacion(this.i18n.translate('alert.battleNotAvailable'), 'error');
         this.router.navigate(['/lobby']);
       }
     });
@@ -411,6 +425,58 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     this.finalizarCoinFlip();
+  }
+
+  private reingresarAFaseLanzamientoMoneda(data: Partida): void {
+    if (this.pollingPartida) {
+      clearInterval(this.pollingPartida);
+      this.pollingPartida = null;
+    }
+
+    this.detenerRelojTurno();
+    this.detenerPollingHandshake();
+    this.showEndGameOverlay = false;
+    this.cargandoAccion = false;
+    this.bloqueadoPorAnimacion = false;
+    this.botPensando = false;
+    this.botEstaAtacando = false;
+    this.esperandoMiNuevoTurno = false;
+    this.initialBotTurnInFlight = false;
+    this.estadoSetupMulligan = null;
+    this.setupAccionEnCurso = false;
+    this.setupAutoActionKey = '';
+    this.setupMulliganRevealKey = '';
+    this.setupShuffleVisible = false;
+    this.setupMulliganJugadorCartas = [];
+    this.setupMulliganRivalCartas = [];
+    this.setupMulliganJugadorDebeMostrar = false;
+    this.setupMulliganRivalDebeMostrar = false;
+    this.cartasExtraPermitidas = 0;
+    this.mulliganJugadorCount = 0;
+    this.mulliganOponenteCount = 0;
+    this.lanzada = false;
+    this.girando = false;
+    this.boardVisible = false;
+    this.estadoCoinFlip = this.loadingPhaseFinished ? 'DAR_LA_MANO' : 'CARGANDO_VS';
+    this.coinFlipAtaque = null;
+    this.resultadoMoneda = 'CARA';
+    this.anguloFinal = 0;
+
+    this.partida = data;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+
+    if (this.loadingPhaseFinished) {
+      this.hidratarPreparativosIniciales(data);
+    } else {
+      this.startPreloadSequence(data);
+    }
+
+    if (!this.isSpectator) {
+      this.procesarFasesSetup(data);
+    }
+
+    this.procesarTurnLogs();
+    this.cdr.detectChanges();
   }
 
   private hidratarPreparativosIniciales(data: Partida): void {
@@ -1016,6 +1082,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.mostrarTextoFlotante(objetivo, '¡FUERA DE COMBATE!', 'ko');
           break;
         }
+        case 'MUERTE_SUBITA': {
+          this.mostrarNotificacion('Muerte subita: el proximo premio define la partida.', 'warning');
+          break;
+        }
         case 'POISON_DAMAGE': {
           const targetOwner = parts[1];
           const damageAmount = parseInt(parts[3], 10) || 10;
@@ -1151,6 +1221,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       BENCH_PLACED: { title: 'Banca preparada', detail: esMiAccion ? 'Preparaste un Pokemon en banca.' : `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
       PRIZES_PLACED: { title: 'Premios colocados', detail: esMiAccion ? 'Colocaste tus premios.' : `${subject} coloco sus premios.`, kind: 'setup' },
       PRIZE_TAKEN: { title: 'Premio tomado', detail: esMiAccion ? `Tomaste ${first || '1'} carta(s) de Premio.` : `${subject} tomo ${first || '1'} carta(s) de Premio.`, kind: 'prize' },
+      MUERTE_SUBITA: { title: 'Muerte subita', detail: 'Empate total. El siguiente premio define la batalla.', kind: 'system' },
       KNOCK_OUT: { title: 'Fuera de combate', detail: `${first || 'Un Pokemon'} quedo fuera de combate.`, kind: 'ko' },
       ENERGY_ATTACHED: { title: 'Energia unida', detail: esMiAccion ? `Uniste energia a ${first || 'tu Pokemon'}.` : `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
       CARDS_DRAWN: { title: 'Cartas robadas', detail: esMiAccion ? `Robaste ${first || '1'} carta(s).` : `${subject} robo ${first || '1'} carta(s).`, kind: 'draw' },
@@ -1741,7 +1812,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return danioTotal;
   }
 
-  detectarCoinFlipAtaque(ataque: any): {
+  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): {
     cantidadMonedas: number;
     danioBase: number;
     danioExtraPorCara: number;
@@ -1759,6 +1830,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           esFalloCruz,
           esSoloEstado,
         ),
+      activo,
     );
   }
 
@@ -1944,6 +2016,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.aplicarEstadoRefrescado(data);
           return;
         }
+        if (data?.faseActual === 'LANZAMIENTO_MONEDA') {
+          const yaReingresoAlSetup =
+            this.partida?.faseActual === 'LANZAMIENTO_MONEDA' &&
+            this.estadoCoinFlip !== 'OCULTO' &&
+            !this.boardVisible;
+          if (!yaReingresoAlSetup) {
+            this.reingresarAFaseLanzamientoMoneda(data);
+            return;
+          }
+        }
         if (!dataOnline && (this.bloqueadoPorAnimacion || this.botEstaAtacando)) {
           console.log('??? Polling interceptado.');
           return;
@@ -2069,7 +2151,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     } catch (err: any) {
       this.cargandoAccion = false;
       console.error(err);
-      alert(err.error || this.i18n.translate('alert.cannotAttachEnergy'));
+      this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotAttachEnergy'), 'error');
     }
   }
 
@@ -2239,7 +2321,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (estado) => this.aplicarEstadoSetup(estado),
       error: (err) => {
         this.setupAccionEnCurso = false;
-        alert(err.error || 'No se pudieron resolver las cartas extra.');
+        this.mostrarNotificacion(err.error || 'No se pudieron resolver las cartas extra.', 'error');
       }
     });
   }
@@ -2268,7 +2350,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo colocar el Pokemon activo.');
+      this.mostrarNotificacion(err?.error || 'No se pudo colocar el Pokemon activo.', 'error');
     }
   }
 
@@ -2280,7 +2362,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo colocar ese Pokemon en banca.');
+      this.mostrarNotificacion(err?.error || 'No se pudo colocar ese Pokemon en banca.', 'error');
     }
   }
 
@@ -2292,7 +2374,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo confirmar la banca.');
+      this.mostrarNotificacion(err?.error || 'No se pudo confirmar la banca.', 'error');
     }
   }
 
@@ -2394,7 +2476,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error al rendirse', err);
         this.cargandoAccion = false;
-        window.alert(err?.error || this.i18n.translate('alert.cannotSurrender'));
+        this.mostrarNotificacion(err?.error || this.i18n.translate('alert.cannotSurrender'), 'error');
         this.cdr.detectChanges();
       }
     });
@@ -2605,7 +2687,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         habilidadBot = activoBotDespues.card.ataques[0];
       }
 
-      const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
+      const coinConfig = this.detectarCoinFlipAtaque(habilidadBot, activoBotDespues);
 
       if (coinConfig) {
         const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
@@ -2679,7 +2761,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.refrescarTableroDebug();
     } catch (err) {
       console.error('Error en God Mode (Robar Carta):', err);
-      alert(this.i18n.translate('alert.godModeFail'));
+      this.mostrarNotificacion(this.i18n.translate('alert.godModeFail'), 'error');
     }
   }
 
@@ -2863,7 +2945,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
       this.ataqueRealizado = false;
-      alert(this.i18n.translate('alert.attackNotFound'));
+      this.mostrarNotificacion(this.i18n.translate('alert.attackNotFound'), 'error');
       return;
     }
 
@@ -2942,18 +3024,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
       console.error('? Error del servidor al pasar turno:', error);
-      alert(this.i18n.translate('alert.connectionError', { error: error?.error ?? (this.i18n.currentLanguage() === 'es' ? 'El servidor no responde' : 'The server does not respond') }));
+      this.mostrarNotificacion(this.i18n.translate('alert.connectionError', { error: error?.error ?? (this.i18n.currentLanguage() === 'es' ? 'El servidor no responde' : 'The server does not respond') }), 'error');
     }
   }
 
   realizarAccion(habilidad: BattleBoardAttack): void {
     this.showHabilidadesPanel = false;
     if ((this.partida?.numeroTurno || 1) <= 1) {
-      alert('No se puede atacar en el primer turno.');
+      this.mostrarNotificacion('No se puede atacar en el primer turno.', 'warning');
       return;
     }
     if (!this.validarEnergiaAtaque(habilidad)) {
-      alert(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }));
+      this.mostrarNotificacion(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }), 'warning');
       return;
     }
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
@@ -3063,7 +3145,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
         return;
       case 'requiere-promocion':
-        if (decision.mensaje) alert(decision.mensaje);
+        if (decision.mensaje) this.mostrarNotificacion(decision.mensaje, 'info');
         return;
       case 'bajar-pokemon':
         this.gestionarBajadaPokemon(carta);
@@ -3101,7 +3183,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
-      alert(this.i18n.translate('alert.evolutionError', { error: error.error || error.message }));
+      this.mostrarNotificacion(this.i18n.translate('alert.evolutionError', { error: error.error || error.message }), 'error');
     }
   }
 
@@ -3124,7 +3206,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } catch (err: any) {
         this.modoSeleccionRetirada = false;
         this.cargandoAccion = false;
-        alert(err.error || this.i18n.translate('alert.retreatError'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.retreatError'), 'error');
       }
     } else if (!this.partida?.jugador?.activo) {
       this.cargandoAccion = true;
@@ -3136,10 +3218,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.aplicarEstadoRefrescado(nuevoEstado);
         this.cargandoAccion = false;
         this.cdr.detectChanges();
-      } catch (err) {
+      } catch (err: any) {
         this.cargandoAccion = false;
         console.error(err);
-        alert(this.i18n.translate('alert.activeError'));
+        this.mostrarNotificacion(this.i18n.translate('alert.activeError'), 'error');
       }
     }
   }
@@ -3164,7 +3246,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       } catch (err: any) {
         this.cargandoAccion = false;
-        alert(err.error || this.i18n.translate('alert.notEnoughEnergyForRetreat'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.notEnoughEnergyForRetreat'), 'error');
       }
     }
   }
@@ -3175,7 +3257,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const cartaArrastrada = event.item.data;
     if (this.esEnergia(cartaArrastrada)) {
       if (zona !== 'activo') {
-        alert(this.i18n.translate('alert.energyAttachActiveOnly'));
+        this.mostrarNotificacion(this.i18n.translate('alert.energyAttachActiveOnly'), 'warning');
         return;
       }
       this.gestionarUnionEnergia(cartaArrastrada);
@@ -3197,14 +3279,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert(err.error || this.i18n.translate('alert.cannotPlayPokemon'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotPlayPokemon'), 'error');
       });
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) {
-      alert(this.i18n.translate('alert.needActivePokemon'));
+      this.mostrarNotificacion(this.i18n.translate('alert.needActivePokemon'), 'warning');
       return;
     }
     this.cargandoAccion = true;
@@ -3218,7 +3300,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err: any) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert(this.i18n.translate('alert.cannotAttachEnergy'));
+        this.mostrarNotificacion(this.i18n.translate('alert.cannotAttachEnergy'), 'error');
       });
   }
 
@@ -3329,6 +3411,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return activo?.energiasUnidas ?? [];
   }
 
+  getPrizeTarget(): number {
+    return this.partida?.muerteSubita ? 1 : 6;
+  }
+
+  getPrizeSlots(): number[] {
+    return Array.from({ length: this.getPrizeTarget() }, (_, index) => index);
+  }
+
   estaPokemonDerrotado(quien: 'JUGADOR' | 'BOT'): boolean {
     const activo = quien === 'JUGADOR' ? this.partida?.jugador?.activo : this.partida?.bot?.activo;
     return (activo?.hpActual ?? 1) <= 0;
@@ -3377,6 +3467,41 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
   getImagenCarta(id: string): string {
     return this.battleBoardUi.getImagenCarta(id);
+  }
+  abrirDetallePokemon(event: MouseEvent, pokemon: CartaEnJuego | null | undefined): void {
+    if (!pokemon || pokemon.bocaAbajo) return;
+    event.preventDefault();
+    this.selectedDetailPokemon = pokemon;
+    this.mostrarDetalleModal = true;
+    this.cdr.detectChanges();
+  }
+  cerrarDetallePokemon(): void {
+    this.selectedDetailPokemon = null;
+    this.mostrarDetalleModal = false;
+    this.cdr.detectChanges();
+  }
+
+  esCartaEX(carta: Card | undefined | null): boolean {
+    return !!carta?.subtypes?.includes('EX');
+  }
+
+  getPokemonFase(carta: Card | undefined | null): string {
+    if (!carta) return '';
+    const subtypes = carta.subtypes || [];
+    const lower = subtypes.map(s => String(s).toLowerCase());
+    if (lower.includes('stage 1')) return 'Fase 1';
+    if (lower.includes('stage 2')) return 'Fase 2';
+    if (lower.includes('basic')) return 'Básico';
+    return subtypes.join(', ') || 'Básico';
+  }
+
+  resolveEnergyLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      Grass: 'PLA', Fire: 'FUE', Water: 'AGU', Lightning: 'ELE', Psychic: 'PSI',
+      Fighting: 'LUC', Darkness: 'SIN', Metal: 'MET', Fairy: 'HAD',
+      Dragon: 'DRA', Colorless: 'INC'
+    };
+    return labels[tipo] || tipo.slice(0, 2).toUpperCase();
   }
   getEmptySlots(n: number): number[] {
     return this.battleBoardUi.getEmptySlots(n);
@@ -3459,6 +3584,27 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (!estado) return;
     const debeMostrarFinal = estado.faseActual === 'FIN_PARTIDA';
     const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
+
+    if (estado.faseActual === 'LANZAMIENTO_MONEDA') {
+      const yaReingresoAlSetup =
+        this.partida?.faseActual === 'LANZAMIENTO_MONEDA' &&
+        this.estadoCoinFlip !== 'OCULTO' &&
+        !this.boardVisible;
+      if (!yaReingresoAlSetup) {
+        this.reingresarAFaseLanzamientoMoneda(estado);
+        return;
+      }
+    }
+
+    const anteriorMuerteSubita = estadoAnterior?.muerteSubita || false;
+    const actualMuerteSubita = estado.muerteSubita || false;
+    if (actualMuerteSubita && !anteriorMuerteSubita) {
+      this.mostrarOverlayMuerteSubita = true;
+      setTimeout(() => {
+        this.mostrarOverlayMuerteSubita = false;
+        this.cdr.detectChanges();
+      }, 4200);
+    }
 
     // Check if cards were drawn
     if (this.partida) {
@@ -3595,7 +3741,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     habilidad: any,
     estadoFinal: Partida,
   ): Promise<void> {
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad);
+    const coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
     if (!coinConfig) return;
     const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
     if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
@@ -3897,7 +4043,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleAtmosphereCamera = camera;
 
     const floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(18, 12, 18, 12),
+      new THREE.PlaneGeometry(36, 24),
       new THREE.MeshStandardMaterial({
         color: 0x07131d,
         emissive: 0x06131d,
@@ -3911,6 +4057,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = -1.65;
     scene.add(floor);
+    this.atmosphereFloor = floor;
 
     const grid = new THREE.GridHelper(18, 30, 0x38bdf8, 0x173b4f);
     grid.position.y = -1.62;
@@ -3920,6 +4067,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       material.opacity = 0.22;
     });
     scene.add(grid);
+    this.atmosphereGrid = grid;
 
     this.battleAtmosphereRings = [];
     const ringGeometry = new THREE.TorusGeometry(2.25, 0.026, 6, 72);
@@ -4002,7 +4150,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.battleAtmosphereShards = shards;
     scene.add(shards);
 
-    const particleCount = this.isPotato ? 18 : 36;
+    const particleCount = this.isPotato ? 100 : 350;
     const positions = new Float32Array(particleCount * 3);
     for (let index = 0; index < particleCount; index++) {
       positions[index * 3] = (Math.random() - 0.5) * 16;
@@ -4076,13 +4224,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     buildShield(this.playerShieldGroup, 0xf59e0b); // gold/amber for player
     buildShield(this.botShieldGroup, 0x3b82f6);    // blue for bot
 
-    scene.add(new THREE.HemisphereLight(0x8be9ff, 0x030712, 1.45));
+    const hemiLight = new THREE.HemisphereLight(0x8be9ff, 0x030712, 1.45);
+    scene.add(hemiLight);
+    this.atmosphereHemisphereLight = hemiLight;
+
     const rivalLight = new THREE.PointLight(0x38bdf8, 8, 14, 2);
     rivalLight.position.set(0, 2.8, 1.8);
     scene.add(rivalLight);
+    this.atmosphereRivalLight = rivalLight;
+
     const playerLight = new THREE.PointLight(0xfacc15, 7, 14, 2);
     playerLight.position.set(0, -1.1, 3.8);
     scene.add(playerLight);
+    this.atmospherePlayerLight = playerLight;
 
     this.battleAtmosphereResize = new ResizeObserver(entries => {
       const rect = entries[0]?.contentRect;
@@ -4100,34 +4254,111 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.battleAtmosphereFrame = requestAnimationFrame(animate);
       const elapsed = this.battleAtmosphereClock.getElapsedTime();
 
-      // Dynamic game state tension (Danger Level) based on remaining prize cards
+      // Dynamic game state tension based on prize race + match progression.
       const playerPrizes = this.partida?.jugador?.premios?.length ?? 6;
       const botPrizes = this.partida?.bot?.premios?.length ?? 6;
       const minPrizes = Math.min(playerPrizes, botPrizes);
-      const dangerLevel = Math.min(1.0, Math.max(0.0, (6 - minPrizes) / 5.0)); // 0.0 at 6 prizes, 1.0 at 1 prize remaining
+      const prizeDanger = Math.min(1.0, Math.max(0.0, (6 - minPrizes) / 5.0));
+      const turnNumber = this.partida?.numeroTurno ?? 1;
+      const tempoDanger = Math.min(1.0, Math.max(0.0, (turnNumber - 1) / 10));
+      const dangerLevel = Math.min(1.0, prizeDanger * 0.78 + tempoDanger * 0.22);
+      const criticalPressure = !this.partida?.muerteSubita && dangerLevel >= 0.72;
+      const pressurePulse = criticalPressure
+        ? (Math.sin(elapsed * (1.35 + dangerLevel * 1.1)) + 1) * 0.5
+        : 0;
 
-      // 1. Dynamic background clear color and fog color interpolation (shifting to crimson)
-      const baseColor = new THREE.Color(0x020711);
-      const dangerClearColor = new THREE.Color(0x150103);
-      const currentClearColor = baseColor.clone().lerp(dangerClearColor, dangerLevel);
+      // Lightning flash logic for Sudden Death
+      let flashColorOverride: THREE.Color | null = null;
+      let flashIntensityMultiplier = 1.0;
+
+      if (this.partida?.muerteSubita) {
+        if (this.lightningFlashActive) {
+          this.lightningFlashTimer--;
+          if (this.lightningFlashTimer <= 0) {
+            this.lightningFlashActive = false;
+          }
+          // Flash spike (bright red/white thunder illumination)
+          flashColorOverride = new THREE.Color(Math.random() < 0.5 ? 0xff6666 : 0xffffff);
+          flashIntensityMultiplier = 4.5;
+        } else {
+          // 0.6% chance per frame to trigger a lightning strike
+          if (Math.random() < 0.006) {
+            this.lightningFlashActive = true;
+            this.lightningFlashTimer = 6 + Math.floor(Math.random() * 8); // 6 to 13 frames
+          }
+        }
+      } else if (criticalPressure) {
+        if (this.lightningFlashActive) {
+          this.lightningFlashTimer--;
+          if (this.lightningFlashTimer <= 0) {
+            this.lightningFlashActive = false;
+          }
+          flashColorOverride = new THREE.Color(0xffe2d2);
+          flashIntensityMultiplier = 1.25 + dangerLevel * 0.55;
+        } else if (Math.random() < 0.0012 + dangerLevel * 0.0018) {
+          this.lightningFlashActive = true;
+          this.lightningFlashTimer = 2 + Math.floor(Math.random() * 3);
+        }
+      }
+
+      // 1. Dynamic background clear color and fog color interpolation
+      let currentClearColor: THREE.Color;
+      if (this.partida?.muerteSubita) {
+        currentClearColor = flashColorOverride ? flashColorOverride : new THREE.Color(0x1a0002);
+      } else {
+        const baseColor = new THREE.Color(0x020711);
+        const midDangerColor = new THREE.Color(0x10172c);
+        const dangerClearColor = new THREE.Color(0x220406);
+        currentClearColor = baseColor.clone().lerp(midDangerColor, Math.min(1, dangerLevel * 0.55));
+        currentClearColor.lerp(dangerClearColor, Math.max(0, dangerLevel - 0.35) / 0.65);
+        if (flashColorOverride) {
+          currentClearColor.lerp(flashColorOverride, 0.28);
+        }
+      }
       this.battleAtmosphereRenderer.setClearColor(currentClearColor);
 
       if (this.battleAtmosphereScene.fog) {
         const expFog = this.battleAtmosphereScene.fog as THREE.FogExp2;
-        const dangerFogColor = new THREE.Color(0x1a0305);
-        expFog.color.copy(baseColor).lerp(dangerFogColor, dangerLevel);
+        if (this.partida?.muerteSubita) {
+          expFog.color.copy(flashColorOverride ? flashColorOverride : new THREE.Color(0x220003));
+        } else {
+          const baseColor = new THREE.Color(0x020711);
+          const dangerFogColor = new THREE.Color(0x260507);
+          expFog.color.copy(baseColor).lerp(dangerFogColor, dangerLevel);
+          if (flashColorOverride) {
+            expFog.color.lerp(flashColorOverride, 0.22);
+          }
+        }
       }
 
-      // 2. Falling particles physics (raining effect that speeds up with higher danger)
+      // 2. Falling particles physics (intense rain in Sudden Death, else normal space dust/atmosphere particles)
       if (this.battleAtmosphereParticles) {
         const geo = this.battleAtmosphereParticles.geometry as THREE.BufferGeometry;
         const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+        const mat = this.battleAtmosphereParticles.material as THREE.PointsMaterial;
+
+        // Dynamic particle color and opacity
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff3333); // vibrant red rain
+          mat.opacity = 0.55;
+        } else {
+          const particleColor = new THREE.Color(0x8be9ff)
+            .lerp(new THREE.Color(0xf59e0b), Math.min(1, dangerLevel * 0.75))
+            .lerp(new THREE.Color(0xff5b5b), Math.max(0, dangerLevel - 0.58) / 0.42);
+          mat.color.copy(particleColor);
+          mat.opacity = 0.22 + dangerLevel * 0.24 + pressurePulse * 0.06;
+          mat.size = 0.085 + dangerLevel * 0.055;
+        }
+
         if (posAttr) {
           const positions = posAttr.array as Float32Array;
-          const fallSpeed = 0.005 + dangerLevel * 0.015; // particles speed up with danger
+          const fallSpeed = this.partida?.muerteSubita ? 0.16 : (0.006 + dangerLevel * 0.03);
+          const swaySpeed = this.partida?.muerteSubita ? 1.5 : (0.55 + dangerLevel * 0.8);
+          const swayFactor = this.partida?.muerteSubita ? 0.0018 : (0.0012 + dangerLevel * 0.0016);
+
           for (let i = 0; i < positions.length / 3; i++) {
             positions[i * 3 + 1] -= fallSpeed; // move down Y
-            positions[i * 3] += Math.sin(elapsed * 0.5 + i) * 0.0012; // gentle sway on X
+            positions[i * 3] += Math.sin(elapsed * swaySpeed + i) * swayFactor; // sway X
             
             // Reset if they fall below floor limit
             if (positions[i * 3 + 1] < -1.65) {
@@ -4137,7 +4368,88 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           }
           posAttr.needsUpdate = true;
         }
-        this.battleAtmosphereParticles.rotation.y = elapsed * (0.018 + dangerLevel * 0.012);
+        this.battleAtmosphereParticles.rotation.y = elapsed * (this.partida?.muerteSubita ? 0.045 : (0.018 + dangerLevel * 0.012));
+      }
+
+      // Dynamic Floor and Grid updates
+      if (this.atmosphereFloor) {
+        const floorMat = this.atmosphereFloor.material as THREE.MeshStandardMaterial;
+        if (this.partida?.muerteSubita) {
+          floorMat.color.setHex(0x3a0000); // dark red
+          floorMat.emissive.setHex(0x2a0000); // red glow
+          floorMat.emissiveIntensity = 0.85 * flashIntensityMultiplier;
+        } else {
+          const floorColor = new THREE.Color(0x07131d)
+            .lerp(new THREE.Color(0x102035), Math.min(1, dangerLevel * 0.5))
+            .lerp(new THREE.Color(0x2a090a), Math.max(0, dangerLevel - 0.48) / 0.52);
+          const emissiveColor = new THREE.Color(0x06131d)
+            .lerp(new THREE.Color(0x122235), Math.min(1, dangerLevel * 0.45))
+            .lerp(new THREE.Color(0x4a120d), Math.max(0, dangerLevel - 0.6) / 0.4);
+          floorMat.color.copy(floorColor);
+          floorMat.emissive.copy(emissiveColor);
+          floorMat.emissiveIntensity = 0.45 + dangerLevel * 0.42 + pressurePulse * 0.16;
+        }
+      }
+
+      if (this.atmosphereGrid) {
+        const gridMat = (Array.isArray(this.atmosphereGrid.material) 
+          ? this.atmosphereGrid.material[0] 
+          : this.atmosphereGrid.material) as THREE.LineBasicMaterial;
+        if (gridMat) {
+          if (this.partida?.muerteSubita) {
+            gridMat.color.setHex(0xff0000); // red grid
+            gridMat.opacity = 0.35;
+          } else {
+            const gridColor = new THREE.Color(0x38bdf8)
+              .lerp(new THREE.Color(0xfacc15), Math.min(1, dangerLevel * 0.58))
+              .lerp(new THREE.Color(0xff4d4d), Math.max(0, dangerLevel - 0.65) / 0.35);
+            gridMat.color.copy(gridColor);
+            gridMat.opacity = 0.2 + dangerLevel * 0.14 + pressurePulse * 0.08;
+          }
+        }
+      }
+
+      // Dynamic Lights updates
+      if (this.atmosphereHemisphereLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmosphereHemisphereLight.color.setHex(0xff3333);
+          this.atmosphereHemisphereLight.groundColor.setHex(0x110000);
+          this.atmosphereHemisphereLight.intensity = 1.6 * flashIntensityMultiplier;
+        } else {
+          this.atmosphereHemisphereLight.color.copy(
+            new THREE.Color(0x8be9ff)
+              .lerp(new THREE.Color(0xfde68a), Math.min(1, dangerLevel * 0.6))
+              .lerp(new THREE.Color(0xff8b8b), Math.max(0, dangerLevel - 0.62) / 0.38)
+          );
+          this.atmosphereHemisphereLight.groundColor.copy(
+            new THREE.Color(0x030712).lerp(new THREE.Color(0x180406), Math.max(0, dangerLevel - 0.45) / 0.55)
+          );
+          this.atmosphereHemisphereLight.intensity = 1.35 + dangerLevel * 0.5 + pressurePulse * 0.2;
+        }
+      }
+
+      if (this.atmosphereRivalLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmosphereRivalLight.color.setHex(0xff0000);
+          this.atmosphereRivalLight.intensity = 10 * flashIntensityMultiplier;
+        } else {
+          this.atmosphereRivalLight.color.copy(
+            new THREE.Color(0x38bdf8).lerp(new THREE.Color(0xff6b6b), Math.max(0, dangerLevel - 0.55) / 0.45)
+          );
+          this.atmosphereRivalLight.intensity = 7.3 + dangerLevel * 2.4 + pressurePulse * 0.85;
+        }
+      }
+
+      if (this.atmospherePlayerLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmospherePlayerLight.color.setHex(0xff0000);
+          this.atmospherePlayerLight.intensity = 9 * flashIntensityMultiplier;
+        } else {
+          this.atmospherePlayerLight.color.copy(
+            new THREE.Color(0xfacc15).lerp(new THREE.Color(0xff8a5b), Math.max(0, dangerLevel - 0.48) / 0.52)
+          );
+          this.atmospherePlayerLight.intensity = 6.8 + dangerLevel * 2.1 + pressurePulse * 0.7;
+        }
       }
 
       // 3. Dynamic atmosphere rings and beams animation
@@ -4147,14 +4459,36 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         const pulse = 1 + Math.sin(elapsed * (1.15 + dangerLevel * 1.5) + phase) * (0.035 + dangerLevel * 0.02);
         ring.scale.setScalar(baseScale * pulse);
         ring.rotation.z = elapsed * (index % 2 === 0 ? (0.035 + dangerLevel * 0.05) : -(0.045 + dangerLevel * 0.05));
-        (ring.material as THREE.MeshBasicMaterial).opacity =
-          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * 1.4 + phase) * 0.055 + dangerLevel * 0.15;
+        
+        const mat = ring.material as THREE.MeshBasicMaterial;
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff0000); // red rings
+        } else {
+          mat.color.copy(
+            (index < 2 ? new THREE.Color(0x38bdf8) : new THREE.Color(0xfacc15))
+              .lerp(new THREE.Color(0xff5f5f), Math.max(0, dangerLevel - 0.58) / 0.42)
+          );
+        }
+        
+        mat.opacity =
+          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * (1.4 + dangerLevel) + phase) * (0.055 + pressurePulse * 0.04) + dangerLevel * 0.18;
       });
 
       this.battleAtmosphereBeams.forEach((beam) => {
         const phase = beam.userData['phase'] || 0;
-        (beam.material as THREE.MeshBasicMaterial).opacity =
-          0.045 + (Math.sin(elapsed * 0.85 + phase) + 1) * 0.025 + dangerLevel * 0.04;
+        const mat = beam.material as THREE.MeshBasicMaterial;
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff0000); // red beams
+        } else {
+          const isLeft = beam.position.x < 0;
+          mat.color.copy(
+            (isLeft ? new THREE.Color(0x38bdf8) : new THREE.Color(0xfacc15))
+              .lerp(new THREE.Color(0xff6666), Math.max(0, dangerLevel - 0.62) / 0.38)
+          );
+        }
+        
+        mat.opacity =
+          0.045 + (Math.sin(elapsed * (0.85 + dangerLevel * 0.6) + phase) + 1) * 0.025 + dangerLevel * 0.055 + pressurePulse * 0.05;
       });
 
       // 4. Shards (asteroids) rotation, sway, and shake
@@ -4170,7 +4504,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
       }
 
-      this.battleAtmosphereCamera.position.x = Math.sin(elapsed * 0.12) * 0.12;
+      this.battleAtmosphereCamera.position.x = Math.sin(elapsed * (0.12 + dangerLevel * 0.08)) * (0.12 + dangerLevel * 0.07);
+      this.battleAtmosphereCamera.position.y = Math.sin(elapsed * (0.16 + dangerLevel * 0.12)) * (dangerLevel > 0.45 ? 0.035 + dangerLevel * 0.015 : 0.012);
       this.battleAtmosphereCamera.lookAt(0, -0.1, 0);
 
       // Update visibility & animation of shields

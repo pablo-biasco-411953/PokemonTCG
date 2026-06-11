@@ -44,6 +44,16 @@ public class SearchDeckCommand implements BattleCommand {
             applyCards(atacante, legal.subList(0, Math.min(maxSelections, legal.size())));
             Collections.shuffle(atacante.getMazo());
             partida.getTurnLogs().add("DECK_SEARCHED:BOT");
+            if ("ATTACH_ACTIVE_AND_SWITCH".equals(destination) && !atacante.getBanca().isEmpty()) {
+                com.pokemon.tcg.model.battle.CartaEnJuego botActivo = atacante.getActivo();
+                com.pokemon.tcg.model.battle.CartaEnJuego suplente = atacante.getBanca().remove(0);
+                if (botActivo != null) {
+                    botActivo.limpiarCondiciones();
+                    atacante.getBanca().add(botActivo);
+                }
+                atacante.setActivo(suplente);
+                partida.getTurnLogs().add("ACTIVE_SWITCHED:BOT:" + suplente.getCard().getNombre());
+            }
             return;
         }
 
@@ -73,7 +83,7 @@ public class SearchDeckCommand implements BattleCommand {
     private void applyCards(TableroJugador board, List<Card> cards) {
         for (Card card : cards) {
             if (!board.getMazo().remove(card)) continue;
-            if ("ATTACH_ACTIVE".equals(destination) && board.getActivo() != null) {
+            if (("ATTACH_ACTIVE".equals(destination) || "ATTACH_ACTIVE_AND_SWITCH".equals(destination)) && board.getActivo() != null) {
                 board.getActivo().getEnergiasUnidas().add(card);
             } else {
                 board.getMano().add(card);

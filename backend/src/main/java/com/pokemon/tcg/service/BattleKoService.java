@@ -4,6 +4,10 @@ import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
 import com.pokemon.tcg.model.battle.state.EstadoFinPartida;
+import com.pokemon.tcg.model.Card;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -45,15 +49,51 @@ public class BattleKoService {
             partida.getTurnLogs().add("PRIZE_TAKEN:" + limpiar(ganador) + ":" + premiosTomados);
         }
 
-        boolean sinPremios = tableroGanador.getPremios().isEmpty();
-        boolean sinPokemon = tableroVictima.getActivo() == null
-                && tableroVictima.getBanca().isEmpty();
-        if (sinPremios || sinPokemon) {
+        boolean hayKOPendiente = false;
+        if (partida.getJugador().getActivo() != null && partida.getJugador().getActivo().getHpActual() <= 0) {
+            hayKOPendiente = true;
+        }
+        if (partida.getBot().getActivo() != null && partida.getBot().getActivo().getHpActual() <= 0) {
+            hayKOPendiente = true;
+        }
+
+        if (hayKOPendiente) {
+            // Se resolverá el otro KO en la siguiente llamada a resolverKO, no terminamos aún.
+            if (tableroVictima == partida.getBot() && tableroVictima.getActivo() == null) {
+                CartaEnJuego mejor = elegirMejorReemplazoBot(tableroVictima, partida.getJugador().getActivo());
+                if (mejor != null) {
+                    tableroVictima.getBanca().remove(mejor);
+                    tableroVictima.setActivo(mejor);
+                }
+            }
+            return;
+        }
+
+        // Evaluar condiciones de victoria/derrota
+        boolean jugadorSinPremios = partida.getJugador().getPremios().isEmpty();
+        boolean botSinPremios = partida.getBot().getPremios().isEmpty();
+
+        boolean jugadorSinPokemon = partida.getJugador().getActivo() == null && partida.getJugador().getBanca().isEmpty();
+        boolean botSinPokemon = partida.getBot().getActivo() == null && partida.getBot().getBanca().isEmpty();
+
+        boolean jugadorGana = botSinPokemon || jugadorSinPremios;
+        boolean botGana = jugadorSinPokemon || botSinPremios;
+
+        if (jugadorGana && botGana) {
+            iniciarMuerteSubita(partida);
+            return;
+        } else if (jugadorGana) {
             partida.transicionarA(new EstadoFinPartida());
-            partida.setGanador(tableroGanador == partida.getJugador()
-                    ? partida.getJugadorUsername()
-                    : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT"));
-            partida.setRazonFinPartida(sinPremios
+            partida.setGanador(partida.getJugadorUsername());
+            partida.setRazonFinPartida(jugadorSinPremios
+                    ? "El ganador tomo todos sus premios."
+                    : "El rival se quedo sin Pokemon en juego.");
+            return;
+        } else if (botGana) {
+            partida.transicionarA(new EstadoFinPartida());
+            String ganadorBot = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
+            partida.setGanador(ganadorBot);
+            partida.setRazonFinPartida(botSinPremios
                     ? "El ganador tomo todos sus premios."
                     : "El rival se quedo sin Pokemon en juego.");
             return;
@@ -72,7 +112,10 @@ public class BattleKoService {
         // Resuelve quién perdió el Pokémon y quién recibe el premio.
         TableroJugador victima = encontrarTableroPorCarta(partida, defensor);
         TableroJugador ganador = encontrarTableroPorCarta(partida, atacante);
-        if (victima == null || ganador == null) {
+        if (victima != null && ganador == null) {
+            ganador = victima == partida.getJugador() ? partida.getBot() : partida.getJugador();
+        }
+        if (victima == null || ganador == null || victima == ganador) {
             return null;
         }
         return new TableroVictimaYAtacante(victima, ganador);
@@ -108,6 +151,9 @@ public class BattleKoService {
 
     private CartaEnJuego elegirMejorReemplazoBot(TableroJugador tableroBot, CartaEnJuego activoRival) {
         // Cuando el bot pierde su activo, prioriza el mejor suplente disponible.
+        if (tableroBot.getBanca() == null || tableroBot.getBanca().isEmpty()) {
+            return null;
+        }
         return tableroBot.getBanca().stream()
                 .max((c1, c2) -> Integer.compare(
                         calcularPuntajeEstrategico(c1, activoRival),
@@ -177,6 +223,69 @@ public class BattleKoService {
 
     private String limpiar(String value) {
         return value == null ? "" : value.replace(':', '-').replace('\n', ' ').replace('\r', ' ').trim();
+    }
+
+    private void iniciarMuerteSubita(Partida partida) {
+        System.out.println("⚠️ [MUERTE SÚBITA] Se ha detectado un empate. Iniciando Muerte Súbita...");
+
+        partida.setMuerteSubita(true);
+        partida.setNumeroTurno(1);
+        partida.setMulligansJugador(0);
+        partida.setMulligansBot(0);
+        partida.setYaSeRetiroEsteTurno(false);
+        partida.setYaSeUnioEnergiaEsteTurno(false);
+        partida.setCoinFlipped(false);
+        partida.setCoinFlipWinner(null);
+        partida.setCoinFlipResult(null);
+
+        // Reset handshake variables
+        partida.setCoinHandshakeJugadorPower(0);
+        partida.setCoinHandshakeBotPower(0);
+        partida.setCoinHandshakeJugadorHolding(false);
+        partida.setCoinHandshakeBotHolding(false);
+        partida.setCoinHandshakeComplete(false);
+
+        partida.setSetupJugadorListo(false);
+        partida.setSetupBotListo(false);
+        partida.setCartasMulliganExtraPendientesJugador(0);
+        partida.setCartasMulliganExtraPendientesBot(0);
+        partida.setSetupJugadorRoboExtraMulligan(false);
+        partida.setSetupBotRoboExtraMulligan(false);
+
+        // Reset boards
+        resetearTableroParaMuerteSubita(partida.getJugador());
+        resetearTableroParaMuerteSubita(partida.getBot());
+
+        // Draw 7 cards
+        for (int i = 0; i < 7; i++) {
+            if (!partida.getJugador().getMazo().isEmpty()) {
+                partida.getJugador().getMano().add(partida.getJugador().getMazo().remove(0));
+            }
+            if (!partida.getBot().getMazo().isEmpty()) {
+                partida.getBot().getMano().add(partida.getBot().getMazo().remove(0));
+            }
+        }
+
+        // Add special logs
+        partida.getTurnLogs().clear();
+        partida.getTurnLogs().add("MUERTE_SUBITA:INICIADA");
+
+        // Transition back to Lanzamiento de Moneda
+        partida.transicionarA(new com.pokemon.tcg.model.battle.state.EstadoLanzamientoMoneda());
+    }
+
+    private void resetearTableroParaMuerteSubita(TableroJugador tablero) {
+        tablero.getMano().clear();
+        tablero.getBanca().clear();
+        tablero.setActivo(null);
+        tablero.getPremios().clear();
+        tablero.getPilaDescarte().clear();
+        tablero.setTurnosJugados(0);
+
+        // Restore deck from mazoOriginal
+        List<Card> deck = new ArrayList<>(tablero.getMazoOriginal());
+        java.util.Collections.shuffle(deck);
+        tablero.setMazo(deck);
     }
 
     private record TableroVictimaYAtacante(TableroJugador victima, TableroJugador ganador) {}
