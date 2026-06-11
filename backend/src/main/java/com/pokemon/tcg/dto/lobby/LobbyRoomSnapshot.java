@@ -11,6 +11,7 @@ public class LobbyRoomSnapshot {
     private String name;
     private LobbyRoomStatus status;
     private boolean locked;
+    private int turnTimeSeconds;
     private String ownerUsername;
     private String ownerDeckName;
     private boolean ownerReady;
@@ -37,6 +38,8 @@ public class LobbyRoomSnapshot {
     public void setStatus(LobbyRoomStatus status) { this.status = status; }
     public boolean isLocked() { return locked; }
     public void setLocked(boolean locked) { this.locked = locked; }
+    public int getTurnTimeSeconds() { return turnTimeSeconds; }
+    public void setTurnTimeSeconds(int turnTimeSeconds) { this.turnTimeSeconds = turnTimeSeconds; }
     public String getOwnerUsername() { return ownerUsername; }
     public void setOwnerUsername(String ownerUsername) { this.ownerUsername = ownerUsername; }
     public String getOwnerDeckName() { return ownerDeckName; }

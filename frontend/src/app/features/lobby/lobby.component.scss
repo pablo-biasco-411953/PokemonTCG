@@ -1361,9 +1361,56 @@ kbd {
 
 .room-create-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 248px 152px;
+  grid-template-columns: minmax(200px, 1fr) 190px 248px 152px;
   gap: 8px;
   align-items: stretch;
+}
+
+.room-turn-timer {
+  display: grid;
+  gap: 5px;
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.room-turn-timer span,
+.room-rules {
+  color: rgba(226, 232, 240, 0.58);
+  font-size: 0.62rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.room-rules {
+  margin: 6px 0 0;
+}
+
+.room-turn-timer div {
+  display: grid;
+  grid-template-columns: auto minmax(44px, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.room-turn-timer input[type="number"] {
+  min-width: 0;
+  height: 20px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #f8fafc;
+  padding: 0 6px;
+}
+
+.room-turn-timer em {
+  color: rgba(226, 232, 240, 0.64);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .room-view-tabs {

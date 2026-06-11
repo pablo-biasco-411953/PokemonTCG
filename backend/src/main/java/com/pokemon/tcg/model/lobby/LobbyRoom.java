@@ -21,6 +21,7 @@ public class LobbyRoom {
     private String botDifficulty = "NORMAL";
     private boolean hasPassword;
     private String passwordHash;
+    private int turnTimeSeconds;
     private LobbyRoomStatus status = LobbyRoomStatus.OPEN;
     private String matchId;
     private long createdAt = System.currentTimeMillis();
@@ -57,6 +58,8 @@ public class LobbyRoom {
     public void setHasPassword(boolean hasPassword) { this.hasPassword = hasPassword; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public int getTurnTimeSeconds() { return turnTimeSeconds; }
+    public void setTurnTimeSeconds(int turnTimeSeconds) { this.turnTimeSeconds = Math.max(0, turnTimeSeconds); }
     public LobbyRoomStatus getStatus() { return status; }
     public void setStatus(LobbyRoomStatus status) { this.status = status; }
     public String getMatchId() { return matchId; }

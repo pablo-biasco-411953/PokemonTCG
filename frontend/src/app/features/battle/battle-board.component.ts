@@ -71,7 +71,11 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
   mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    this.battleNotificationService.show(mensaje, tipo);
+    if (tipo === 'error') {
+      this.battleNotificationService.showModal('Error', mensaje, tipo);
+    } else {
+      this.battleNotificationService.show(mensaje, tipo);
+    }
   }
   public Math = Math;
   readonly handDropListId = 'player-hand-dropzone';
@@ -1065,16 +1069,28 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           else if (condicion === 'Confused') textoCondicion = 'CONFUNDIDO';
           else if (condicion === 'CantRetreat') textoCondicion = 'RETIRADA BLOQUEADA';
           this.mostrarTextoFlotante(objetivo, `¡${textoCondicion}!`, 'status');
+          if (condicion && condicion !== 'CantRetreat') {
+            this.mostrarEfectoStatusVisual(objetivo, condicion);
+          }
           break;
         }
         case 'ATTACK_USED': {
           const atacante = esMiAccion ? 'jugador' : 'bot';
-          this.mostrarTextoFlotante(atacante, `¡${parts[2].toUpperCase()}!`, 'attack');
+          const attackName = parts[2];
+          this.mostrarTextoFlotante(atacante, `¡${attackName.toUpperCase()}!`, 'attack');
+          if (attackName) this.triggerAttackBanner(attackName, !esMiAccion);
           break;
         }
         case 'ENERGY_ATTACHED': {
           const objetivo = esMiAccion ? 'jugador' : 'bot';
+          const cardName = parts[3];
           this.mostrarTextoFlotante(objetivo, '+1 ENERGÍA', 'energy-add');
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
+          break;
+        }
+        case 'POKEMON_PLAYED': {
+          const cardName = parts[2];
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
           break;
         }
         case 'KNOCK_OUT': {
@@ -1083,7 +1099,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           break;
         }
         case 'MUERTE_SUBITA': {
-          this.mostrarNotificacion('Muerte subita: el proximo premio define la partida.', 'warning');
+          this.battleNotificationService.showModal('Muerte Súbita', 'Empate total. El próximo premio define la partida.', 'warning');
           break;
         }
         case 'POISON_DAMAGE': {
@@ -1096,6 +1112,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             `${this.getLocalizedStatusLabel('Poisoned')} -${damageAmount}`,
             'status-poisoned',
           );
+          this.mostrarEfectoStatusVisual(objetivo, 'Poisoned');
           break;
         }
         case 'BURN_DAMAGE': {
@@ -1108,6 +1125,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             `${this.getLocalizedStatusLabel('Burned')} -${damageAmount}`,
             'status-burned',
           );
+          this.mostrarEfectoStatusVisual(objetivo, 'Burned');
           break;
         }
         case 'ASTONISH_REVEALED': {
@@ -2104,6 +2122,48 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     esMiAccion: boolean;
     isFlipped: boolean;
   } | null = null;
+
+  cardSplashActive: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    esMiAccion: boolean;
+  } | null = null;
+
+  attackBannerActive: {
+    visible: boolean;
+    attackName: string;
+    esMiAccion: boolean;
+  } | null = null;
+
+  triggerAttackBanner(attackName: string, isOpponent: boolean) {
+    this.attackBannerActive = {
+      visible: true,
+      attackName,
+      esMiAccion: !isOpponent
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.attackBannerActive = null;
+      this.cdr.detectChanges();
+    }, 2000);
+  }
+
+  triggerCardSplash(cardName: string, isOpponent: boolean) {
+    const card = this.debugFilteredCatalog.find((c) => c.nombre === cardName || c.name === cardName);
+    const cardId = card ? card.id : '';
+    this.cardSplashActive = {
+      visible: true,
+      cardId,
+      cardNombre: cardName,
+      esMiAccion: !isOpponent
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.cardSplashActive = null;
+      this.cdr.detectChanges();
+    }, 2500);
+  }
 
   cerrarAstonishReveal(): void {
     this.astonishReveal = null;
@@ -3578,6 +3638,46 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
       this.cdr.detectChanges();
     }, 900);
+  }
+
+  mostrarEfectoStatusVisual(objetivo: 'jugador' | 'bot', condicion: string) {
+    let color = '#ffffff';
+    if (condicion === 'Poisoned') color = '#a855f7';
+    else if (condicion === 'Burned') color = '#f97316';
+    else if (condicion === 'Paralyzed') color = '#eab308';
+    else if (condicion === 'Asleep') color = '#93c5fd';
+    else if (condicion === 'Confused') color = '#d946ef';
+
+    const nuevasParticulas = [];
+    for (let i = 0; i < 15; i++) {
+      const angulo = Math.random() * Math.PI * 2;
+      const distancia = 30 + Math.random() * 60;
+      nuevasParticulas.push({
+        color,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia,
+        size: 6 + Math.random() * 8,
+        duracion: 0.8 + Math.random() * 0.4,
+      });
+    }
+
+    if (objetivo === 'bot') {
+      this.particulasBot = nuevasParticulas;
+      this.mostrarEfectoBot = true;
+    } else {
+      this.particulasJugador = nuevasParticulas;
+      this.mostrarEfectoJugador = true;
+    }
+
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (objetivo === 'bot') {
+        this.mostrarEfectoBot = false;
+      } else {
+        this.mostrarEfectoJugador = false;
+      }
+      this.cdr.detectChanges();
+    }, 1200);
   }
 
   private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {

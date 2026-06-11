@@ -5,6 +5,7 @@ import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.PendingBattleAction;
 import com.pokemon.tcg.model.battle.TableroJugador;
 import com.pokemon.tcg.model.battle.state.EstadoEsperandoInteraccion;
+import com.pokemon.tcg.model.battle.state.EstadoTurnoNormal;
 import com.pokemon.tcg.repository.CardRepository;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
@@ -85,5 +86,36 @@ class BattleEngineServiceTest {
         assertEquals("c2", resultado.getJugador().getMazo().get(0).getId());
         assertEquals("c1", resultado.getJugador().getMazo().get(1).getId());
         assertEquals("c3", resultado.getJugador().getMazo().get(2).getId());
+    }
+
+    @Test
+    void ejecutarTurnoBotHacePerderAlJugadorSiNoPuedeRobar() {
+        BattleEngineService service = new BattleEngineService(
+                mock(JugadorRepository.class),
+                mock(MazoRepository.class),
+                mock(CardRepository.class),
+                mock(BotAIService.class),
+                mock(BattleAttackService.class),
+                mock(BattleKoService.class)
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+        Card cartaBot = new Card();
+        cartaBot.setId("bot-draw");
+        cartaBot.setNombre("Bot Draw");
+        bot.getMazo().add(cartaBot);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.setTurnoActual(Partida.Turno.BOT);
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        service.ejecutarTurnoBot(partida.getId());
+
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("BOT", partida.getGanador());
+        assertEquals("El jugador no pudo robar una carta al inicio del turno", partida.getRazonFinPartida());
     }
 }

@@ -86,6 +86,7 @@ public class LobbyRoomService {
         String password = normalizePassword(request.getPassword());
         room.setHasPassword(password != null);
         room.setPasswordHash(password == null ? null : hashPassword(password));
+        room.setTurnTimeSeconds(normalizeTurnTimeSeconds(request.getTurnTimeSeconds()));
         room.getChat().add(new LobbyRoomChatMessage("SISTEMA", username + " creo la sala.", true));
         touch(room);
         rooms.put(room.getId(), room);
@@ -355,6 +356,7 @@ public class LobbyRoomService {
         s.setName(room.getName());
         s.setStatus(room.getStatus());
         s.setLocked(room.isHasPassword());
+        s.setTurnTimeSeconds(room.getTurnTimeSeconds());
         s.setOwnerUsername(room.getOwnerUsername());
         s.setOwnerDeckName(room.getOwnerDeckName());
         s.setOwnerReady(room.isOwnerReady());
@@ -384,6 +386,11 @@ public class LobbyRoomService {
             case "HARD" -> "HARD";
             default -> "NORMAL";
         };
+    }
+
+    private int normalizeTurnTimeSeconds(Integer seconds) {
+        if (seconds == null || seconds <= 0) return 0;
+        return Math.max(15, Math.min(300, seconds));
     }
 
     private LobbyRoom requireRoom(String roomId) {

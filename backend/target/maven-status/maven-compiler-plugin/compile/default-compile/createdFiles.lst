@@ -11,6 +11,8 @@ com\pokemon\tcg\model\battle\command\SetNoPuedeAtacarSiguienteTurnoCommand.class
 com\pokemon\tcg\service\LobbyRoomService.class
 com\pokemon\tcg\model\battle\command\BlockAttackNextTurnCommand.class
 com\pokemon\tcg\service\MazoBackupService.class
+com\pokemon\tcg\model\battle\command\SwitchOpponentActiveCommand.class
+com\pokemon\tcg\model\battle\command\AddDamageByAttachedEnergyCommand.class
 com\pokemon\tcg\model\battle\command\PeekTopDeckCommand.class
 com\pokemon\tcg\service\battle\command\ComandoRetirarse.class
 com\pokemon\tcg\model\battle\state\EstadoLanzamientoMoneda.class
@@ -22,7 +24,9 @@ com\pokemon\tcg\service\battle\strategy\EstrategiaBot.class
 com\pokemon\tcg\model\battle\command\HealCommand.class
 com\pokemon\tcg\dto\lobby\LobbyRoomRequest.class
 com\pokemon\tcg\service\battle\chain\EfectoSueno.class
+com\pokemon\tcg\service\battle\EnergyCostCalculator$EnergyUnit.class
 com\pokemon\tcg\service\battle\chain\EfectoMultiMoneda.class
+com\pokemon\tcg\model\battle\command\AddDamageByDamageCountersCommand.class
 com\pokemon\tcg\model\battle\command\SelfBenchDamageCommand.class
 com\pokemon\tcg\dto\DebugSetSobresRequest.class
 com\pokemon\tcg\model\battle\command\ConditionalDamageMultiplierCommand.class
@@ -52,6 +56,7 @@ com\pokemon\tcg\repository\MazoRepository.class
 com\pokemon\tcg\repository\CardRepository.class
 com\pokemon\tcg\dto\RegisterRequest.class
 com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBenchExtra.class
+com\pokemon\tcg\scratch\TestBunnelby.class
 com\pokemon\tcg\model\battle\command\SequenceCommand.class
 com\pokemon\tcg\controller\MazoController.class
 com\pokemon\tcg\model\battle\command\BattleCommand.class
@@ -92,17 +97,21 @@ com\pokemon\tcg\model\battle\command\SearchDeckCommand.class
 com\pokemon\tcg\service\PasswordRecoveryService.class
 com\pokemon\tcg\model\battle\state\EstadoPartida.class
 com\pokemon\tcg\service\BattleTurnService$KoResolver.class
+com\pokemon\tcg\model\battle\command\DiscardRandomHandCardsByCoinTailsCommand.class
 com\pokemon\tcg\model\battle\command\MoveDiscardCardToTopDeckCommand.class
 com\pokemon\tcg\service\battle\chain\EfectoMonedaFalla.class
 com\pokemon\tcg\controller\LobbyRoomController.class
 com\pokemon\tcg\service\battle\command\AttackEffectParserService.class
 com\pokemon\tcg\service\battle\chain\EfectoRobarCartas.class
+com\pokemon\tcg\service\battle\EnergyCostCalculator.class
 com\pokemon\tcg\model\battle\state\EstadoFinPartida.class
 com\pokemon\tcg\service\battle\chain\EfectoQuemadura.class
+com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchCommand.class
 com\pokemon\tcg\controller\SobreController.class
 com\pokemon\tcg\service\BattleTurnService.class
 com\pokemon\tcg\service\BattleAttackService.class
 com\pokemon\tcg\model\battle\CartaEnJuego.class
+com\pokemon\tcg\model\battle\command\ApplyBothActiveStatusConditionCommand.class
 com\pokemon\tcg\model\battle\command\SetInvulnerableCommand.class
 com\pokemon\tcg\repository\JugadorRepository.class
 com\pokemon\tcg\model\CardAttribute.class
@@ -129,6 +138,7 @@ com\pokemon\tcg\model\battle\command\DiscardTopDeckAttachEnergyCommand.class
 com\pokemon\tcg\dto\LoginRequest.class
 com\pokemon\tcg\service\MazoService.class
 com\pokemon\tcg\dto\EvolveRequest.class
+com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchByCoinsCommand.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\model\battle\PendingBattleAction$Option.class
@@ -143,6 +153,7 @@ com\pokemon\tcg\dto\ForgotPasswordRequest.class
 com\pokemon\tcg\model\battle\PendingBattleAction.class
 com\pokemon\tcg\service\battle\chain\ContextoAtaque.class
 com\pokemon\tcg\config\DataLoader.class
+com\pokemon\tcg\model\battle\command\AtaquePotenciadoSiguienteTurnoCommand.class
 com\pokemon\tcg\dto\JugadorDatosResponse.class
 com\pokemon\tcg\config\BattleSpectatorGuardInterceptor.class
 com\pokemon\tcg\model\battle\command\DamageOpponentBenchedCommand.class

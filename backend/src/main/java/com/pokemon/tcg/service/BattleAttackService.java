@@ -55,7 +55,13 @@ public class BattleAttackService {
                     new com.pokemon.tcg.model.battle.command.DamageCommand(ataque.getDanio())
             ));
         } else if (damageToDeal > 0) {
-            partida.getExecutionQueue().add(new com.pokemon.tcg.model.battle.command.DamageCommand(damageToDeal));
+            int finalDamageToDeal = damageToDeal;
+            if (atacante.getAtaquePotenciadoSiguienteTurno() != null
+                && atacante.getAtaquePotenciadoSiguienteTurno().equalsIgnoreCase(ataque.getNombre())
+                && atacante.getDanioExtraSiguienteTurno() > 0) {
+                finalDamageToDeal += atacante.getDanioExtraSiguienteTurno();
+            }
+            partida.getExecutionQueue().add(new com.pokemon.tcg.model.battle.command.DamageCommand(finalDamageToDeal));
         }
 
         // 2. Parse text effects into commands
