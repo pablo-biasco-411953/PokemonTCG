@@ -10,7 +10,11 @@ public class PendingBattleAction {
     private String destination;
     private int minSelections;
     private int maxSelections;
+    private boolean endsTurn;
     private List<Option> options = new ArrayList<>();
+
+    public boolean isEndsTurn() { return endsTurn; }
+    public void setEndsTurn(boolean endsTurn) { this.endsTurn = endsTurn; }
 
     public static class Option {
         private String id;

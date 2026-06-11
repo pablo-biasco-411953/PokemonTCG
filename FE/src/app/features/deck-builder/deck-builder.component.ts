@@ -8,6 +8,7 @@ import { Card } from '../../shared/models/card';
 import { Mazo } from '../../shared/models/mazo';
 import { I18nService } from '../../i18n/i18n.service';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
+import { CardService } from '../../core/services/card.service';
 import { BattleNotificationComponent } from '../battle/components/battle-notification/battle-notification';
 import { BattleNotificationService } from '../battle/services/battle-notification';
 
@@ -26,6 +27,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   @Output() closed = new EventEmitter<boolean>();
 
   coleccion: Card[] = [];
+  catalogoCartas: Card[] = [];
   mazoEnProceso: Card[] = [];
   cantidadesPoseidas: { [key: string]: number } = {};
   private cantidadesEnMazo: { [key: string]: number } = {};
@@ -58,6 +60,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     private cdr: ChangeDetectorRef,
     private i18n: I18nService,
     private preloaderService: ImagePreloaderService,
+    private cardService: CardService,
     private notificationService: BattleNotificationService
   ) {}
 
@@ -67,6 +70,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     const data = localStorage.getItem('jugador');
     if (data) {
       this.username = JSON.parse(data).username;
+      this.cargarCatalogo();
       this.cargarColeccion();
 
       const mazoInicial = this.mazoInicial || history.state.mazo || null;
@@ -112,6 +116,16 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
         this.isLoadingImages = false;
         this.cdr.detectChanges();
       }
+    });
+  }
+
+  private cargarCatalogo() {
+    this.cardService.getAll().subscribe({
+      next: (cards) => {
+        this.catalogoCartas = cards;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando catalogo para evoluciones:', err),
     });
   }
 
@@ -225,11 +239,53 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   }
 
   getDebilidadDetalle(card: Card | null): string {
-    return card?.debilidades?.map(d => `${d.tipo}${d.valor ? ' ' + d.valor : ''}`).join(', ') || 'Sin dato';
+    return this.formatearAtributos(card?.debilidades);
   }
 
   getResistenciaDetalle(card: Card | null): string {
-    return card?.resistencias?.map(r => `${r.tipo}${r.valor ? ' ' + r.valor : ''}`).join(', ') || 'Sin dato';
+    return this.formatearAtributos(card?.resistencias);
+  }
+
+  getEtapaEvolutiva(card: Card | null): string {
+    if (!card || !this.esPokemon(card)) return card?.supertype || 'Carta';
+    const subtypes = (card.subtypes || []).map(subtype => this.normalizar(subtype));
+    if (subtypes.includes('basic')) return 'Pokemon Basico';
+    if (subtypes.includes('stage 1')) return 'Fase 1';
+    if (subtypes.includes('stage 2')) return 'Fase 2';
+    if (subtypes.includes('mega')) return 'Mega Evolucion';
+    if (card.evolvesFrom) return 'Evolucion';
+    return 'Pokemon';
+  }
+
+  getEvolucionaDe(card: Card | null): string {
+    if (!card || !this.esPokemon(card)) return 'No aplica';
+    return card.evolvesFrom || 'No evoluciona de otro Pokemon';
+  }
+
+  getEvolucionaA(card: Card | null): string {
+    if (!card || !this.esPokemon(card)) return 'No aplica';
+    const fuente = this.catalogoCartas.length ? this.catalogoCartas : this.coleccion;
+    const evoluciones = fuente.filter(
+      candidate => this.normalizar(candidate.evolvesFrom) === this.normalizar(card.nombre),
+    );
+    const nombres = Array.from(new Set(evoluciones.map(candidate => candidate.nombre)));
+    return nombres.length ? nombres.join(', ') : 'Sin evolucion en la coleccion';
+  }
+
+  mostrarInfoEvolucion(card: Card | null): boolean {
+    return !!card && this.esPokemon(card);
+  }
+
+  private formatearAtributos(atributos: Card['debilidades']): string {
+    if (!atributos?.length) return 'Ninguna';
+    return atributos
+      .map(atributo => {
+        const tipo = atributo.tipo || atributo.type;
+        const valor = atributo.valor || atributo.value;
+        return tipo ? `${tipo}${valor ? ' ' + valor : ''}` : null;
+      })
+      .filter((texto): texto is string => !!texto)
+      .join(', ') || 'Ninguna';
   }
 
   agregarAlMazo(carta: Card) {
@@ -325,9 +381,24 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   }
 
   private esPokemonBasico(carta: Card): boolean {
-    const esPokemon = (carta.supertype || '').toLowerCase() === 'pokemon';
-    const esBasico = (carta.subtypes || []).some(subtype => subtype.toLowerCase() === 'basic');
-    return esPokemon && esBasico;
+    return this.esPokemon(carta)
+      && (carta.subtypes || []).some(subtype => this.normalizar(subtype) === 'basic');
+  }
+
+  public esPokemon(carta: Card): boolean {
+    return this.normalizar(carta.supertype) === 'pokemon';
+  }
+
+  public esEX(carta: Card): boolean {
+    return !!carta.subtypes && carta.subtypes.includes('EX');
+  }
+
+  private normalizar(texto: string | null | undefined): string {
+    return (texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   private notificar(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info'): void {

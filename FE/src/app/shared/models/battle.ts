@@ -33,6 +33,7 @@ export interface Partida {
   faseActual: 'INICIO' | 'LANZAMIENTO_MONEDA' | 'SETUP_INITIAL_DRAW' | 'SETUP_MULLIGAN_EVALUATION' | 'SETUP_MULLIGAN_REVEAL' | 'SETUP_PLACE_ACTIVE' | 'SETUP_PLACE_BENCH' | 'SETUP_PRIZE_PLACEMENT' | 'SETUP_MULLIGAN_EXTRA_DRAW' | 'SETUP_PLACE_BENCH_EXTRA' | 'SETUP_REVEAL' | 'ESPERANDO_INTERACCION' | 'TURNO_NORMAL' | 'FIN_PARTIDA';
   numeroTurno?: number;
   yaSeRetiroEsteTurno: boolean;
+  yaSeUnioEnergiaEsteTurno?: boolean;
   ultimasMonedasLanzadas: boolean[];
   jugadorUsername?: string;
   botUsername?: string;

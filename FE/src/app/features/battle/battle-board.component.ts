@@ -1187,6 +1187,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.i18nService.translate('battle.magmaMantle.selfBoost', { card: first }) :
           this.i18nService.translate('battle.magmaMantle.oppBoost', { card: first }),
         kind: 'attack'
+      },
+      DECK_PEEKED: {
+        title: this.i18nService.translate('battle.deckPeeked.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.deckPeeked.selfDetail', { count: first }) :
+          this.i18nService.translate('battle.deckPeeked.oppDetail', { count: first }),
+        kind: 'search'
       }
     };
     return map[event] || {
@@ -1224,6 +1231,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return this.pendingEffectSelection.has(cardId);
   }
 
+  /** Returns the 1-based selection order for REORDER_TOP_DECK mode, or 0 if not selected. */
+  getPendingEffectOrderIndex(cardId: string): number {
+    const arr = [...this.pendingEffectSelection];
+    const idx = arr.indexOf(cardId);
+    return idx === -1 ? 0 : idx + 1;
+  }
+
+  get isReorderMode(): boolean {
+    return this.partida?.pendingAction?.type === 'REORDER_TOP_DECK';
+  }
+
   canConfirmPendingEffect(): boolean {
     const pending = this.partida?.pendingAction;
     if (!pending) return false;
@@ -1234,12 +1252,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   confirmPendingEffect(): void {
     if (!this.matchId || !this.canConfirmPendingEffect()) return;
     this.cargandoAccion = true;
+    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
     this.battleService.resolverEfecto(this.matchId, [...this.pendingEffectSelection]).subscribe({
-      next: estado => {
+      next: async (estado) => {
         this.pendingEffectSelection.clear();
-        this.aplicarEstadoRefrescado(estado);
-        this.cargandoAccion = false;
-        this.cdr.detectChanges();
+        if (estado.turnoActual === 'BOT' && estadoAntiguo?.turnoActual === 'JUGADOR') {
+          await this.procesarPostPassTurn(estadoAntiguo, estado);
+        } else {
+          this.aplicarEstadoRefrescado(estado);
+          this.cargandoAccion = false;
+          this.cdr.detectChanges();
+        }
       },
       error: error => {
         this.cargandoAccion = false;
@@ -2529,11 +2552,29 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     const { botAtaco, hpJugadorDespues, danioHecho } = analisisBot;
+
+    // Detectar si el bot atacó realmente leyendo los logs nuevos de este turno
+    const startLogIdx = estadoAntiguo?.turnLogs?.length || 0;
+    let botAtacoReal = false;
+    let nombreAtaqueBot = '';
+    if (estadoFinal.turnLogs) {
+      for (let i = startLogIdx; i < estadoFinal.turnLogs.length; i++) {
+        const log = estadoFinal.turnLogs[i];
+        if (log.startsWith('ATTACK_USED:BOT:')) {
+          botAtacoReal = true;
+          const parts = log.split(':');
+          if (parts.length >= 3) {
+            nombreAtaqueBot = parts[2];
+          }
+        }
+      }
+    }
+
     const activoBotDespues = estadoFinal?.bot?.activo;
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
-    if (!botAtaco) {
+    if (!botAtacoReal) {
       this.mostrarNotificacion('El rival pasó su turno.', 'info');
       this.aplicarEstadoRefrescado(estadoFinal);
       if (this.showEndGameOverlay) return;
@@ -2553,7 +2594,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
-      const habilidadBot = activoBotDespues.card.ataques[0];
+      let habilidadBot = null;
+      if (nombreAtaqueBot) {
+        const normalizedLogName = nombreAtaqueBot.replace(':', '-').toLowerCase();
+        habilidadBot = activoBotDespues.card.ataques.find(
+          (a: any) => (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName
+        );
+      }
+      if (!habilidadBot) {
+        habilidadBot = activoBotDespues.card.ataques[0];
+      }
+
       const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
 
       if (coinConfig) {

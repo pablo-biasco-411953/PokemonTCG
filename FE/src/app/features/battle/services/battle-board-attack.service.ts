@@ -105,80 +105,73 @@ export class BattleBoardAttackService {
   // Comprueba si el activo puede pagar el costo de un ataque.
   validarEnergiaAtaque(ataque: any, activo: any): boolean {
     if (!ataque || !activo) return false;
-
-    const misEnergias = (activo.energiasUnidas || []).map((e: any) => {
-      const texto = (e.tipo === 'Energy' || !e.tipo) ? e.nombre : e.tipo;
-      return this.normalizarTipo(texto);
-    });
-
-    const costoRequerido = [...(ataque.costo || [])].map((t: string) => this.normalizarTipo(t));
-
-    for (let i = costoRequerido.length - 1; i >= 0; i--) {
-      const tipoReq = costoRequerido[i];
-      if (tipoReq !== 'Colorless') {
-        const index = misEnergias.indexOf(tipoReq);
-        if (index !== -1) {
-          misEnergias.splice(index, 1);
-          costoRequerido.splice(i, 1);
-        } else {
-          return false;
-        }
-      }
-    }
-
-    return misEnergias.length >= costoRequerido.length;
+    return this.resolverCosto(ataque, activo).every(Boolean);
   }
 
   // Marca energia por energia cuales requisitos ya estan cubiertos.
   getCheckEnergiasAtaque(ataque: any, activo: any): any[] {
-    if (!activo?.energiasUnidas) return [];
-    const poseidas = [...activo.energiasUnidas];
-    const resultado: any[] = [];
-
-    (ataque.costo || []).forEach((tipoRequerido: string) => {
-      const index = poseidas.findIndex((e: any) => e.tipo === tipoRequerido || tipoRequerido === 'Colorless');
-      if (index !== -1) {
-        resultado.push({ tipo: tipoRequerido, cumplido: true });
-        poseidas.splice(index, 1);
-      } else {
-        resultado.push({ tipo: tipoRequerido, cumplido: false });
-      }
-    });
-
-    return resultado;
+    const resueltos = this.resolverCosto(ataque, activo);
+    return (ataque?.costo || []).map((tipo: string, index: number) => ({
+      tipo,
+      cumplido: resueltos[index],
+    }));
   }
 
   // Resume las energias que todavia faltan para atacar.
   getFaltantesAtaque(ataque: any, activo: any): any[] {
-    if (!activo?.energiasUnidas) return [];
-
-    const poseidas = [...activo.energiasUnidas];
-    const costoRestante = [...(ataque.costo || [])];
+    const costo = [...(ataque?.costo || [])];
+    const resueltos = this.resolverCosto(ataque, activo);
     const faltantesMap: { [key: string]: number } = {};
-
-    for (let i = costoRestante.length - 1; i >= 0; i--) {
-      const tipoReq = costoRestante[i];
-      if (tipoReq !== 'Colorless') {
-        const index = poseidas.findIndex((p: any) => p.tipo === tipoReq);
-        if (index !== -1) {
-          poseidas.splice(index, 1);
-          costoRestante.splice(i, 1);
-        }
+    costo.forEach((tipo: string, index: number) => {
+      if (!resueltos[index]) {
+        faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1;
       }
-    }
-
-    for (let i = costoRestante.length - 1; i >= 0; i--) {
-      if (costoRestante[i] === 'Colorless' && poseidas.length > 0) {
-        poseidas.splice(0, 1);
-        costoRestante.splice(i, 1);
-      }
-    }
-
-    costoRestante.forEach((tipo: string) => {
-      faltantesMap[tipo] = (faltantesMap[tipo] || 0) + 1;
     });
 
     return Object.keys(faltantesMap).map(tipo => ({ tipo, cantidad: faltantesMap[tipo] }));
+  }
+
+  private resolverCosto(ataque: any, activo: any): boolean[] {
+    const costo = [...(ataque?.costo || [])];
+    const resultado = costo.map(() => false);
+    const unidades: Array<{ tipo: string; wildcard: boolean }> = (activo?.energiasUnidas || []).flatMap((energia: any) =>
+      this.obtenerUnidadesEnergia(energia),
+    );
+
+    costo.forEach((tipo: string, index: number) => {
+      const requerido = this.normalizarTipo(tipo);
+      if (requerido === 'Colorless') return;
+      let unidad = unidades.findIndex((actual) => !actual.wildcard && actual.tipo === requerido);
+      if (unidad < 0) unidad = unidades.findIndex((actual) => actual.wildcard);
+      if (unidad >= 0) {
+        unidades.splice(unidad, 1);
+        resultado[index] = true;
+      }
+    });
+
+    costo.forEach((tipo: string, index: number) => {
+      if (this.normalizarTipo(tipo) !== 'Colorless' || resultado[index]) return;
+      if (unidades.length > 0) {
+        unidades.splice(0, 1);
+        resultado[index] = true;
+      }
+    });
+    return resultado;
+  }
+
+  private obtenerUnidadesEnergia(energia: any): Array<{ tipo: string; wildcard: boolean }> {
+    const nombre = (energia?.nombre || '').toLowerCase();
+    if (nombre.includes('double colorless') || nombre.includes('doble incolora')) {
+      return [
+        { tipo: 'Colorless', wildcard: false },
+        { tipo: 'Colorless', wildcard: false },
+      ];
+    }
+    if (nombre.includes('rainbow') || nombre.includes('arcoiris')) {
+      return [{ tipo: 'Colorless', wildcard: true }];
+    }
+    const texto = energia?.tipo === 'Energy' || !energia?.tipo ? energia?.nombre : energia?.tipo;
+    return [{ tipo: this.normalizarTipo(texto), wildcard: false }];
   }
 
   // Lleva nombres mezclados a un tipo canonico del juego.

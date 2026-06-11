@@ -125,7 +125,7 @@
           <span class="dex-card-image">
             <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" loading="lazy" decoding="async" onerror="this.src='/images/cards/back.png'">
           </span>
-          <strong>{{ carta.nombre }}</strong>
+          <strong>{{ carta.nombre }} <span class="badge-ex" *ngIf="esEX(carta)">EX</span></strong>
           <small>{{ carta.tipo || carta.supertype || 'Card' }}</small>
         </button>
       </div>
@@ -150,11 +150,22 @@
         </div>
         <div class="dex-card-detail-copy">
           <p>ESCANEO</p>
-          <h3>{{ detalle.nombre }}</h3>
+          <h3>{{ detalle.nombre }} <span class="badge-ex" *ngIf="esEX(detalle)">EX</span></h3>
           <div class="dex-detail-chips">
             <span>{{ detalle.tipo || detalle.supertype || 'Card' }}</span>
-            <span>HP {{ detalle.hp || '?' }}</span>
+            <span *ngIf="esPokemon(detalle)">HP {{ detalle.hp || '?' }}</span>
             <span>{{ detalle.rarity || 'Common' }}</span>
+            <span class="evolution-stage">{{ getEtapaEvolutiva(detalle) }}</span>
+          </div>
+          <div class="dex-evolution-info" *ngIf="mostrarInfoEvolucion(detalle)">
+            <div>
+              <span>EVOLUCIONA DE</span>
+              <strong>{{ getEvolucionaDe(detalle) }}</strong>
+            </div>
+            <div>
+              <span>EVOLUCIONA A</span>
+              <strong>{{ getEvolucionaA(detalle) }}</strong>
+            </div>
           </div>
           <div class="dex-detail-grid">
             <span>Debilidad</span><strong>{{ getDebilidadDetalle(detalle) }}</strong>
@@ -172,7 +183,7 @@
 
       <div class="dex-deck-list">
         <div *ngFor="let c of mazoEnProceso; let i = index; trackBy: trackByDeckCard" class="dex-deck-row">
-          <span>{{ c.nombre }}</span>
+          <span>{{ c.nombre }} <span class="badge-ex" *ngIf="esEX(c)">EX</span></span>
           <small>{{ c.tipo || c.supertype || 'Card' }}</small>
           <button type="button" title="Quitar carta" (click)="quitarDelMazo(i)">X</button>
         </div>

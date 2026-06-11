@@ -111,52 +111,10 @@ public class ComandoAtacar implements ComandoTurno {
     }
 
     private static boolean puedePagarCosto(CartaEnJuego atacante, Ataque ataque) {
-        if (ataque.getCosto() == null || ataque.getCosto().isEmpty()) return true;
-
-        List<String> disponibles = atacante.getEnergiasUnidas().stream()
-                .map(e -> normalizarTipo(tipoDeEnergia(e)))
-                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-
-        List<String> pendiente = ataque.getCosto().stream()
-                .map(ComandoAtacar::normalizarTipo)
-                .collect(java.util.stream.Collectors.toCollection(ArrayList::new));
-
-        for (int i = pendiente.size() - 1; i >= 0; i--) {
-            String req = pendiente.get(i);
-            if (!"Colorless".equals(req)) {
-                int idx = disponibles.indexOf(req);
-                if (idx < 0) return false;
-                disponibles.remove(idx);
-                pendiente.remove(i);
-            }
-        }
-        return disponibles.size() >= pendiente.size();
-    }
-
-    private static String tipoDeEnergia(com.pokemon.tcg.model.Card energia) {
-        if (energia.getTipo() != null && !energia.getTipo().isBlank()
-                && !"Energy".equalsIgnoreCase(energia.getTipo())) {
-            return energia.getTipo();
-        }
-        return energia.getNombre();
-    }
-
-    private static String normalizarTipo(String tipo) {
-        if (tipo == null) return "";
-        String t = java.text.Normalizer.normalize(tipo, java.text.Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "").toLowerCase();
-        if (t.contains("grass") || t.contains("planta")) return "Grass";
-        if (t.contains("fire") || t.contains("fuego")) return "Fire";
-        if (t.contains("water") || t.contains("agua")) return "Water";
-        if (t.contains("lightning") || t.contains("electrica") || t.contains("rayo")) return "Lightning";
-        if (t.contains("psychic") || t.contains("psiquica")) return "Psychic";
-        if (t.contains("fighting") || t.contains("lucha")) return "Fighting";
-        if (t.contains("darkness") || t.contains("siniestra") || t.contains("oscuridad")) return "Darkness";
-        if (t.contains("metal") || t.contains("acero")) return "Metal";
-        if (t.contains("dragon")) return "Dragon";
-        if (t.contains("fairy") || t.contains("hada")) return "Fairy";
-        if (t.contains("colorless") || t.contains("incolora")) return "Colorless";
-        return tipo;
+        return com.pokemon.tcg.service.battle.EnergyCostCalculator.canPay(
+                atacante.getEnergiasUnidas(),
+                ataque.getCosto()
+        );
     }
 
     @Override

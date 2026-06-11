@@ -19,7 +19,10 @@ public class ComandoUnirEnergia implements ComandoTurno {
 
     @Override
     public boolean puedeEjecutar(Partida partida) {
-        return objetivo != null && energia != null && tablero.getMano().contains(energia);
+        return !partida.isYaSeUnioEnergiaEsteTurno()
+                && objetivo != null
+                && energia != null
+                && tablero.getMano().contains(energia);
     }
 
     @Override
@@ -27,8 +30,13 @@ public class ComandoUnirEnergia implements ComandoTurno {
         if (objetivo == null) throw new IllegalArgumentException("Pokémon objetivo no encontrado.");
         if (energia == null) throw new IllegalArgumentException("Energía no encontrada en la mano.");
 
+        if (partida.isYaSeUnioEnergiaEsteTurno()) {
+            throw new IllegalStateException("Solo podes unir 1 Energia por turno.");
+        }
+
         objetivo.getEnergiasUnidas().add(energia);
         tablero.getMano().remove(energia);
+        partida.setYaSeUnioEnergiaEsteTurno(true);
     }
 
     @Override
