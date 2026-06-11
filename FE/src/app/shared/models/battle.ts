@@ -12,6 +12,7 @@ export interface CartaEnJuego {
   aumentoDanioCausado?: number;
   bocaAbajo?: boolean;
   debeLanzarMonedaSiAtaca?: boolean;
+  turnoEntrada?: number;
 }
 
 // Zonas visibles de un jugador durante la partida.
@@ -32,11 +33,12 @@ export interface Partida {
   turnoActual: 'JUGADOR' | 'BOT';
   faseActual: 'INICIO' | 'LANZAMIENTO_MONEDA' | 'SETUP_INITIAL_DRAW' | 'SETUP_MULLIGAN_EVALUATION' | 'SETUP_MULLIGAN_REVEAL' | 'SETUP_PLACE_ACTIVE' | 'SETUP_PLACE_BENCH' | 'SETUP_PRIZE_PLACEMENT' | 'SETUP_MULLIGAN_EXTRA_DRAW' | 'SETUP_PLACE_BENCH_EXTRA' | 'SETUP_REVEAL' | 'ESPERANDO_INTERACCION' | 'TURNO_NORMAL' | 'FIN_PARTIDA';
   numeroTurno?: number;
-  yaSeRetiroEsteTurno: boolean;
-  yaSeUnioEnergiaEsteTurno?: boolean;
-  ultimasMonedasLanzadas: boolean[];
+  muerteSubita?: boolean;
   jugadorUsername?: string;
   botUsername?: string;
+  yaSeRetiroEsteTurno: boolean;
+  yaSeUnioEnergiaEsteTurno?: boolean;
+  ultimasMonedasLanzadas?: boolean[];
   ganador?: string;
   razonFinPartida?: string;
   coinFlipped?: boolean;

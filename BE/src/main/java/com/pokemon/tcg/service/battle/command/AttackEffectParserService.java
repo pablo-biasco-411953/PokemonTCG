@@ -201,8 +201,9 @@ public class AttackEffectParserService {
                     "Elegí una Energía Fuego para unir a tu Pokémon Activo."
             ));
         } else if (lowerText.contains("search your deck for a lightning energy")) {
+            String dest = lowerText.contains("switch this pok") ? "ATTACH_ACTIVE_AND_SWITCH" : "ATTACH_ACTIVE";
             commands.add(new SearchDeckCommand(
-                    "Energy", null, "Lightning", "ATTACH_ACTIVE", 1,
+                    "Energy", null, "Lightning", dest, 1,
                     "Elegí una Energía Eléctrica para unir a tu Pokémon Activo."
             ));
         } else if (lowerText.contains("search your deck for a card and put it into your hand")) {

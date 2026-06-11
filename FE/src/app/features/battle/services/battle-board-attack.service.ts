@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { CartaEnJuego } from '../../../shared/models/battle';
 
 // Configuracion visual de un ataque que depende de monedas.
 export interface CoinFlipConfig {
@@ -13,7 +14,18 @@ export interface CoinFlipConfig {
 @Injectable({ providedIn: 'root' })
 export class BattleBoardAttackService {
   // Detecta si un ataque necesita una animacion de moneda y resume su efecto.
-  detectarCoinFlipAtaque(ataque: any, traducirDescripcion: (texto: string, cantidadMonedas: number, danioExtraPorCara: number, esMultiplicador: boolean, esFalloCruz: boolean, esSoloEstado: boolean) => string): CoinFlipConfig | null {
+  detectarCoinFlipAtaque(
+    ataque: any,
+    traducirDescripcion: (
+      texto: string,
+      cantidadMonedas: number,
+      danioExtraPorCara: number,
+      esMultiplicador: boolean,
+      esFalloCruz: boolean,
+      esSoloEstado: boolean,
+    ) => string,
+    activo?: CartaEnJuego | null,
+  ): CoinFlipConfig | null {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
     const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
@@ -28,7 +40,7 @@ export class BattleBoardAttackService {
       four: 4, cuatro: 4, '4': 4,
       five: 5, cinco: 5, '5': 5
     };
-    const cantidadMonedas = (numMap[numStr] ?? parseInt(numStr, 10)) || 1;
+    let cantidadMonedas = (numMap[numStr] ?? parseInt(numStr, 10)) || 1;
 
     let danioBase = parseInt(ataque.danio || ataque.dano || '0', 10) || 0;
     let danioExtraPorCara = 0;
@@ -89,6 +101,8 @@ export class BattleBoardAttackService {
       tipoEfecto = 'restriction';
       esSoloEstado = true;
     }
+
+    cantidadMonedas = this.resolverCantidadMonedasDinamica(texto, cantidadMonedas, activo);
 
     const descripcion = traducirDescripcion(
       texto,
@@ -189,5 +203,35 @@ export class BattleBoardAttackService {
     if (t.includes('fairy') || t.includes('hada')) return 'Fairy';
     if (t.includes('colorless') || t.includes('incolora')) return 'Colorless';
     return tipo;
+  }
+
+  private resolverCantidadMonedasDinamica(
+    texto: string,
+    cantidadBase: number,
+    activo?: CartaEnJuego | null,
+  ): number {
+    if (!activo?.card) {
+      return cantidadBase;
+    }
+
+    if (texto.includes('for each damage counter on this pok')) {
+      const maxHp = parseInt(activo.card.hp || '0', 10) || activo.hpActual || 0;
+      return Math.max(0, Math.floor((maxHp - (activo.hpActual ?? maxHp)) / 10));
+    }
+
+    if (texto.includes('for each energy attached to this pok')) {
+      const specificEnergyMatch = texto.match(/for each ([a-z]+) energy attached to this pok/i);
+      if (specificEnergyMatch?.[1]) {
+        const expected = this.normalizarTipo(specificEnergyMatch[1]);
+        return (activo.energiasUnidas || []).filter((energia) => {
+          if (!energia) return false;
+          const source = energia.tipo === 'Energy' || !energia.tipo ? energia.nombre : energia.tipo;
+          return this.normalizarTipo(source).toLowerCase() === expected.toLowerCase();
+        }).length;
+      }
+      return (activo.energiasUnidas || []).length;
+    }
+
+    return cantidadBase;
   }
 }

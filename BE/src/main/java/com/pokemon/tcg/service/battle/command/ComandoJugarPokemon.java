@@ -25,6 +25,7 @@ public class ComandoJugarPokemon implements ComandoTurno {
         if (carta == null) throw new IllegalArgumentException("La carta no está en tu mano.");
 
         CartaEnJuego nuevoPokemon = new CartaEnJuego(carta);
+        nuevoPokemon.setTurnoEntrada(partida.getNumeroTurno());
 
         if (tablero.getActivo() == null) {
             tablero.setActivo(nuevoPokemon);

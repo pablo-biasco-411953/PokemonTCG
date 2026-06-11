@@ -83,6 +83,11 @@ public class CartaEnJuego {
         this.ataqueBloqueadoYaConsumido = false;
     }
 
+    private int turnoEntrada = 0;
+
+    public int getTurnoEntrada() { return turnoEntrada; }
+    public void setTurnoEntrada(int turnoEntrada) { this.turnoEntrada = turnoEntrada; }
+
     public void setCard(Card card) {
         this.card = card;
     }

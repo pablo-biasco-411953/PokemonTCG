@@ -32,6 +32,15 @@ public class TableroJugador {
     public void setActivo(CartaEnJuego activo) { this.activo = activo; }
     public List<CartaEnJuego> getBanca() { return banca; }
     public void setBanca(List<CartaEnJuego> banca) { this.banca = banca; }
+    private int turnosJugados = 0;
+    private List<Card> mazoOriginal = new ArrayList<>();
+
+    public List<Card> getMazoOriginal() { return mazoOriginal; }
+    public void setMazoOriginal(List<Card> mazoOriginal) { this.mazoOriginal = mazoOriginal; }
+
+    public int getTurnosJugados() { return turnosJugados; }
+    public void setTurnosJugados(int turnosJugados) { this.turnosJugados = turnosJugados; }
+
     public List<Card> getPilaDescarte() { return pilaDescarte; }
     public void setPilaDescarte(List<Card> pilaDescarte) { this.pilaDescarte = pilaDescarte; }
 }

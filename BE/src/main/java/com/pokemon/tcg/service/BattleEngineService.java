@@ -80,10 +80,12 @@ public class BattleEngineService {
         List<Card> mazoJugador = new ArrayList<>(cartasMazo);
         Collections.shuffle(mazoJugador);
         tableroJugador.setMazo(mazoJugador);
+        tableroJugador.setMazoOriginal(new ArrayList<>(mazoJugador));
 
         List<Card> mazoBot = generarMazoBot(cartasMazo, botDifficulty);
         Collections.shuffle(mazoBot);
         tableroBot.setMazo(mazoBot);
+        tableroBot.setMazoOriginal(new ArrayList<>(mazoBot));
 
         // Ya no preparamos la mano con mulligan automático, ni repartimos premios.
         // Solo sacamos 7 cartas (esto es temporal, si decidimos que la animación la hace el front, tal vez solo transicionemos).
@@ -125,8 +127,8 @@ public class BattleEngineService {
         throw new IllegalStateException("El mazo no pudo generar una mano inicial con Pokemon Basico.");
     }
 
-    private void prepararPremios(TableroJugador tablero) {
-        for (int i = 0; i < 6; i++) {
+    private void prepararPremios(TableroJugador tablero, int cantidad) {
+        for (int i = 0; i < cantidad; i++) {
             if (!tablero.getMazo().isEmpty())
                 tablero.getPremios().add(tablero.getMazo().remove(0));
         }
@@ -474,8 +476,8 @@ public class BattleEngineService {
         }
 
         if (partida.isSetupJugadorListo() && partida.isSetupBotListo()) {
-            prepararPremios(partida.getJugador());
-            prepararPremios(partida.getBot());
+            prepararPremios(partida.getJugador(), partida.isMuerteSubita() ? 1 : 6);
+            prepararPremios(partida.getBot(), partida.isMuerteSubita() ? 1 : 6);
             agregarLog(partida, "PRIZES_PLACED", username);
             partida.setSetupJugadorListo(false);
             partida.setSetupBotListo(false);
@@ -799,15 +801,18 @@ public class BattleEngineService {
         if (partida.getBotUsername() == null) {
             partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             partida.setTurnoActual(Partida.Turno.BOT);
+            partida.getBot().setTurnosJugados(partida.getBot().getTurnosJugados() + 1);
             agregarLog(partida, "TURN_STARTED", "BOT");
         } else {
             partida.setNumeroTurno(partida.getNumeroTurno() + 1);
             if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
                 partida.setTurnoActual(Partida.Turno.BOT);
+                partida.getBot().setTurnosJugados(partida.getBot().getTurnosJugados() + 1);
                 robarCarta(partida.getBot());
                 agregarLog(partida, "TURN_STARTED", partida.getBotUsername());
             } else {
                 partida.setTurnoActual(Partida.Turno.JUGADOR);
+                partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
                 robarCarta(partida.getJugador());
                 agregarLog(partida, "TURN_STARTED", partida.getJugadorUsername());
             }
@@ -831,8 +836,8 @@ public class BattleEngineService {
             } else if (partida.getFaseActual() == Partida.Fase.SETUP_PLACE_BENCH_EXTRA) {
                 partida.transicionarA(new EstadoSetupReveal());
             } else if (partida.getFaseActual() == Partida.Fase.SETUP_PRIZE_PLACEMENT) {
-                prepararPremios(partida.getJugador());
-                prepararPremios(partida.getBot());
+                prepararPremios(partida.getJugador(), partida.isMuerteSubita() ? 1 : 6);
+                prepararPremios(partida.getBot(), partida.isMuerteSubita() ? 1 : 6);
                 transicionarAExtraDraw(partida);
             }
         }
@@ -885,22 +890,56 @@ public class BattleEngineService {
                 board.getMazo().add(0, card);
             }
             agregarLog(partida, "DECK_PEEKED", callerUsername, String.valueOf(peekCount));
+        } else if ("SWITCH_ACTIVE".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere seleccionar un suplente.");
+            }
+            String selectedId = ids.get(0);
+            CartaEnJuego suplente = board.getBanca().stream()
+                    .filter(c -> c.getCard().getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
+
+            CartaEnJuego activoViejo = board.getActivo();
+            if (activoViejo != null) {
+                activoViejo.limpiarCondiciones();
+                board.getBanca().remove(suplente);
+                board.getBanca().add(activoViejo);
+            }
+            board.setActivo(suplente);
+            agregarLog(partida, "ACTIVE_SWITCHED", callerUsername, suplente.getCard().getNombre());
         } else {
+            boolean attached = false;
             for (String id : ids) {
                 Card card = board.getMazo().stream()
                         .filter(candidate -> id.equals(candidate.getId()))
                         .findFirst()
                         .orElseThrow(() -> new IllegalArgumentException("La carta ya no esta en el mazo."));
                 board.getMazo().remove(card);
-                if ("ATTACH_ACTIVE".equals(pending.getDestination()) && board.getActivo() != null) {
+                if (("ATTACH_ACTIVE".equals(pending.getDestination()) || "ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination())) && board.getActivo() != null) {
                     board.getActivo().getEnergiasUnidas().add(card);
                     agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
+                    attached = true;
                 } else {
                     board.getMano().add(card);
                 }
             }
             Collections.shuffle(board.getMazo());
             agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
+
+            if ("ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination()) && attached && !board.getBanca().isEmpty()) {
+                com.pokemon.tcg.model.battle.PendingBattleAction switchAction = new com.pokemon.tcg.model.battle.PendingBattleAction();
+                switchAction.setActor(callerUsername);
+                switchAction.setType("SWITCH_ACTIVE");
+                switchAction.setPrompt("Seleccioná un Pokémon de tu banca para cambiarlo por tu activo.");
+                switchAction.setMinSelections(1);
+                switchAction.setMaxSelections(1);
+                switchAction.setOptions(board.getBanca().stream()
+                        .map(b -> new com.pokemon.tcg.model.battle.PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()))
+                        .toList());
+                partida.setPendingAction(switchAction);
+                return partida;
+            }
         }
         boolean shouldPassTurn = pending.isEndsTurn();
         partida.setPendingAction(null);
@@ -967,6 +1006,7 @@ public class BattleEngineService {
 
         partida.setNumeroTurno(partida.getNumeroTurno() + 1);
         partida.setTurnoActual(Partida.Turno.JUGADOR);
+        partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
         robarCarta(partida.getJugador());
         partida.getUltimasMonedasLanzadas().clear();
     }
@@ -985,6 +1025,11 @@ public class BattleEngineService {
         partida.setSetupJugadorListo(false);
         partida.setSetupBotListo(false);
         partida.setNumeroTurno(1);
+        if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+            partida.getJugador().setTurnosJugados(1);
+        } else {
+            partida.getBot().setTurnosJugados(1);
+        }
         partida.transicionarA(new EstadoTurnoNormal());
     }
 
@@ -1209,10 +1254,12 @@ public class BattleEngineService {
         List<Card> m1 = new ArrayList<>(cartasMazo1);
         Collections.shuffle(m1);
         tableroJugador.setMazo(m1);
+        tableroJugador.setMazoOriginal(new ArrayList<>(m1));
 
         List<Card> m2 = new ArrayList<>(cartasMazo2);
         Collections.shuffle(m2);
         tableroBot.setMazo(m2);
+        tableroBot.setMazoOriginal(new ArrayList<>(m2));
 
         robarCartas(tableroJugador, 7);
         robarCartas(tableroBot, 7);
