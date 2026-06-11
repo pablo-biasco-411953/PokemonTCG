@@ -358,10 +358,14 @@
 
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
 <div class="guided-effect-overlay" *ngIf="pendingAction as pending">
-  <section class="guided-effect-panel">
-    <small>EFECTO DE CARTA</small>
+  <section class="guided-effect-panel" [class.reorder-mode]="isReorderMode">
+    <small>{{ isReorderMode ? 'VISTAZO AL MAZO' : 'EFECTO DE CARTA' }}</small>
     <h2>{{ pending.prompt }}</h2>
-    <p>Elegidas {{ pendingEffectSelection.size }} / {{ pending.maxSelections }}</p>
+    <p *ngIf="!isReorderMode">Elegidas {{ pendingEffectSelection.size }} / {{ pending.maxSelections }}</p>
+    <p *ngIf="isReorderMode" class="reorder-hint">
+      Hacé clic en las cartas en el orden que querés que queden. La <strong>primera que toques quedará arriba del mazo</strong>.
+      <span *ngIf="pendingEffectSelection.size > 0"> ({{ pendingEffectSelection.size }}/{{ pending.options.length }} ordenadas)</span>
+    </p>
     <div class="guided-effect-options">
       <button
         type="button"
@@ -369,7 +373,10 @@
         [class.selected]="isPendingEffectCardSelected(option.id)"
         (click)="togglePendingEffectCard(option.id)"
       >
-        <img [src]="getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" />
+        <div class="card-order-badge" *ngIf="isReorderMode && isPendingEffectCardSelected(option.id)">
+          {{ getPendingEffectOrderIndex(option.id) }}
+        </div>
+        <img [src]="option.imagen || getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" />
         <span>{{ option.nombre }}</span>
       </button>
     </div>
@@ -379,7 +386,7 @@
       [disabled]="!canConfirmPendingEffect() || cargandoAccion"
       (click)="confirmPendingEffect()"
     >
-      Confirmar
+      {{ isReorderMode ? 'Confirmar Orden' : 'Confirmar' }}
     </button>
   </section>
 </div>

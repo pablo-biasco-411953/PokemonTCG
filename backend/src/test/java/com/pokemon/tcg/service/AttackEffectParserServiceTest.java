@@ -1,6 +1,7 @@
 package com.pokemon.tcg.service;
 
 import com.pokemon.tcg.model.battle.command.CoinFlipCommand;
+import com.pokemon.tcg.model.battle.command.DiscardEnergyCommand;
 import com.pokemon.tcg.model.battle.command.MultiCoinDamageCommand;
 import com.pokemon.tcg.model.battle.command.SetInvulnerableCommand;
 import com.pokemon.tcg.service.battle.command.AttackEffectParserService;
@@ -47,6 +48,20 @@ class AttackEffectParserServiceTest {
                 .findFirst()
                 .orElseThrow();
         assertInstanceOf(com.pokemon.tcg.model.battle.command.SelfDamageCommand.class, coin.getOnTails());
+    }
+
+    @Test
+    void cutDownDescartaEnergiaRivalSoloEnCara() {
+        var commands = parser.parseEffects(
+                "Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokemon."
+        );
+
+        CoinFlipCommand coin = commands.stream()
+                .filter(CoinFlipCommand.class::isInstance)
+                .map(CoinFlipCommand.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertInstanceOf(DiscardEnergyCommand.class, coin.getOnHeads());
     }
 
     @Test

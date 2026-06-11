@@ -69,4 +69,35 @@ describe('BattleBoardAttackService', () => {
       { tipo: 'Water', cantidad: 1 },
     ]);
   });
+
+  it('reserva la energia Metal para Metal y usa otra para Colorless', () => {
+    const ataque = { costo: ['Colorless', 'Metal'] };
+    const activo = {
+      energiasUnidas: [
+        { nombre: 'Metal Energy', tipo: 'Energy' },
+        { nombre: 'Water Energy', tipo: 'Energy' },
+      ],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
+    expect(service.getFaltantesAtaque(ataque, activo)).toEqual([]);
+  });
+
+  it('cuenta Double Colorless como dos energias incoloras', () => {
+    const ataque = { costo: ['Colorless', 'Colorless'] };
+    const activo = {
+      energiasUnidas: [{ nombre: 'Double Colorless Energy', tipo: '' }],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
+  });
+
+  it('permite que Rainbow Energy cubra un requisito especifico', () => {
+    const ataque = { costo: ['Metal'] };
+    const activo = {
+      energiasUnidas: [{ nombre: 'Rainbow Energy', tipo: '' }],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
+  });
 });

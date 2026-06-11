@@ -11,6 +11,7 @@ com\pokemon\tcg\model\battle\command\SetNoPuedeAtacarSiguienteTurnoCommand.class
 com\pokemon\tcg\service\LobbyRoomService.class
 com\pokemon\tcg\model\battle\command\BlockAttackNextTurnCommand.class
 com\pokemon\tcg\service\MazoBackupService.class
+com\pokemon\tcg\model\battle\command\PeekTopDeckCommand.class
 com\pokemon\tcg\service\battle\command\ComandoRetirarse.class
 com\pokemon\tcg\model\battle\state\EstadoLanzamientoMoneda.class
 com\pokemon\tcg\service\battle\chain\EfectoCuracion.class

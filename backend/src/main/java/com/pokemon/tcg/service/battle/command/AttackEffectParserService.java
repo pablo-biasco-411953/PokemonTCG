@@ -162,6 +162,9 @@ public class AttackEffectParserService {
         if (lowerText.contains("discard an energy attached to this pok")) {
             commands.add(new DiscardEnergyCommand(1, Target.SELF));
         }
+        if (lowerText.contains("if heads, discard an energy attached to your opponent's active pok")) {
+            commands.add(new CoinFlipCommand(new DiscardEnergyCommand(1, Target.OPPONENT)));
+        }
 
         if (lowerText.contains("put a card from your discard pile on top of your deck")) {
             commands.add(new MoveDiscardCardToTopDeckCommand(
@@ -287,6 +290,13 @@ public class AttackEffectParserService {
             commands.add(new RhydonMadMountainCommand());
         }
 
+        // Vistazo y reordenación del tope del mazo (Braixen Clairvoyant Eye, etc.)
+        if (lowerText.contains("look at the top 3 cards of your deck") && lowerText.contains("put them back on top")) {
+            commands.add(new PeekTopDeckCommand(3,
+                    "Mirá las 3 cartas del tope de tu mazo. Seleccionalas en el orden que quieras que queden (la primera elegida quedará arriba)."));
+        }
+
         return commands;
     }
 }
+

@@ -62,7 +62,11 @@ export class BattleBoardActionService {
   // Indica si el activo actual tiene energía suficiente para retirarse.
   puedePagarRetiro(activo: CartaEnJuego | null | undefined): boolean {
     if (!activo) return false;
-    return activo.energiasUnidas.length >= (activo.card.costoRetirada ?? 0);
+    const disponible = activo.energiasUnidas.reduce((total, energia) => {
+      const nombre = (energia.nombre || '').toLowerCase();
+      return total + (nombre.includes('double colorless') || nombre.includes('doble incolora') ? 2 : 1);
+    }, 0);
+    return disponible >= (activo.card.costoRetirada ?? 0);
   }
 
   // Construye el texto de confirmación al retirar un Pokémon activo.

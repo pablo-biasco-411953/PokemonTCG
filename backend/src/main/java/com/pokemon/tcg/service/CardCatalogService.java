@@ -28,10 +28,13 @@ public class CardCatalogService {
         List<Card> cartas = filtrarCartasJugables(cardRepo.findAll());
         if (cartas.size() == 146) {
             normalizarEnergiasXy(cartas);
+            eagerlyLoadCards(cartas);
             return cartas;
         }
 
-        return sincronizarDesdeJson();
+        List<Card> sync = sincronizarDesdeJson();
+        eagerlyLoadCards(sync);
+        return sync;
     }
 
     @Transactional
@@ -52,7 +55,20 @@ public class CardCatalogService {
         cardRepo.flush();
         List<Card> guardadas = filtrarCartasJugables(cardRepo.findAll());
         normalizarEnergiasXy(guardadas);
+        eagerlyLoadCards(guardadas);
         return guardadas;
+    }
+
+    private void eagerlyLoadCards(List<Card> cards) {
+        if (cards != null) {
+            for (Card card : cards) {
+                if (card.getSubtypes() != null) card.getSubtypes().size();
+                if (card.getReglas() != null) card.getReglas().size();
+                if (card.getAtaques() != null) card.getAtaques().size();
+                if (card.getDebilidades() != null) card.getDebilidades().size();
+                if (card.getResistencias() != null) card.getResistencias().size();
+            }
+        }
     }
 
     private List<Card> leerCardsJson() {

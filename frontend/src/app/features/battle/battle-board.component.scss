@@ -4938,8 +4938,19 @@ img.fallback-sprite {
   letter-spacing: .16em;
 }
 
-.guided-effect-panel h2,
-.guided-effect-panel p { margin: 0; }
+.guided-effect-panel h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.guided-effect-panel p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
 
 .guided-effect-options {
   display: grid;
@@ -4991,6 +5002,89 @@ img.fallback-sprite {
 }
 
 .guided-effect-confirm:disabled { opacity: .42; cursor: not-allowed; }
+
+/* Reorder mode (Clairvoyant Eye) */
+.guided-effect-panel.reorder-mode {
+  border-color: rgba(250, 204, 21, .55);
+  box-shadow: 0 0 35px rgba(250, 204, 21, .25), 0 24px 80px rgba(0, 0, 0, .75);
+  background: radial-gradient(circle at 50% 0%, #0c2340, #040d1a);
+  width: min(600px, calc(100vw - 40px));
+  border-radius: 12px;
+  padding: 30px;
+
+  .guided-effect-options {
+    grid-template-columns: repeat(3, minmax(120px, 140px));
+    justify-content: center;
+    gap: 20px;
+    padding: 15px 0;
+    overflow: visible;
+  }
+
+  .guided-effect-options button {
+    padding: 10px;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(125, 211, 252, 0.2);
+
+    &:hover {
+      transform: translateY(-4px) scale(1.03);
+      border-color: rgba(250, 204, 21, 0.5);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    &.selected {
+      border-color: #facc15;
+      box-shadow: 0 0 15px rgba(250, 204, 21, 0.35);
+      background: linear-gradient(135deg, rgba(12, 35, 64, 0.95), rgba(7, 20, 40, 0.98));
+    }
+  }
+
+  .guided-effect-options img {
+    width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .guided-effect-options span {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #cbd5e1;
+  }
+}
+
+.reorder-hint {
+  font-size: 13px;
+  color: rgba(196, 212, 228, .85);
+  line-height: 1.5;
+  strong { color: #facc15; }
+}
+
+.guided-effect-options button {
+  position: relative;
+}
+
+.card-order-badge {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 5;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #facc15;
+  color: #020711;
+  font-size: 12px;
+  font-weight: 900;
+  font-family: var(--fu);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.6);
+  pointer-events: none;
+}
+
 
 .impact-callout {
   position: absolute;

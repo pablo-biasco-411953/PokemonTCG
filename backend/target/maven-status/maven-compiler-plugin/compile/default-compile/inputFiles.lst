@@ -41,6 +41,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\lobby\LobbyRoomReaction.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\JugadorController.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\EnergyCostCalculator.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoFinPartida.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoMonedaFalla.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoCuracion.java
@@ -131,6 +132,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\lobby\Lobb
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetCannotAttackDefendingCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\ConditionalDamageMultiplierCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\WebSocketConfig.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\PeekTopDeckCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoAtrapar.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetAttackBlockNextTurnCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\strategy\EstrategiaBasica.java

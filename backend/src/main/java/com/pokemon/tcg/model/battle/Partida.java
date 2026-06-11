@@ -16,6 +16,7 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private boolean yaSeUnioEnergiaEsteTurno = false;
     private int numeroTurno = 1;
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
@@ -145,6 +146,11 @@ public class Partida {
     public boolean isYaSeRetiroEsteTurno() { return yaSeRetiroEsteTurno; }
     public void setYaSeRetiroEsteTurno(boolean yaSeRetiroEsteTurno) {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
+    }
+
+    public boolean isYaSeUnioEnergiaEsteTurno() { return yaSeUnioEnergiaEsteTurno; }
+    public void setYaSeUnioEnergiaEsteTurno(boolean yaSeUnioEnergiaEsteTurno) {
+        this.yaSeUnioEnergiaEsteTurno = yaSeUnioEnergiaEsteTurno;
     }
 
     public int getNumeroTurno() { return numeroTurno; }

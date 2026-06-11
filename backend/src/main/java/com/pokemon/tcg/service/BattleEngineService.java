@@ -31,7 +31,7 @@ public class BattleEngineService {
     private final CardRepository cardRepo;
     private final Random random = new Random();
     private static final long ONLINE_DISCONNECT_TIMEOUT_MS = 30_000L;
-    private final Map<String, Partida> partidasEnCurso = new ConcurrentHashMap<>();
+    final Map<String, Partida> partidasEnCurso = new ConcurrentHashMap<>();
     private final BotAIService botAIService;
     private final BattleAttackService battleAttackService;
     private final BattleKoService battleKoService;
@@ -674,6 +674,11 @@ public class BattleEngineService {
             System.out.println("🏆 Partida terminada por ataque.");
             return;
         }
+        if (partida.getFaseActual() == Partida.Fase.ESPERANDO_INTERACCION && partida.getPendingAction() != null) {
+            partida.getPendingAction().setEndsTurn(true);
+            System.out.println("⏳ Esperando interacción del jugador antes de pasar el turno.");
+            return;
+        }
         System.out.println("🔄 Ataque finalizado. Pasando turno al oponente...");
         this.pasarTurno(matchId, callerUsername);
     }
@@ -732,6 +737,7 @@ public class BattleEngineService {
     public void pasarTurno(String matchId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurno(partida, callerUsername);
+        partida.getUltimasMonedasLanzadas().clear();
 
         TableroJugador jugador = getTableroDeJugador(partida, callerUsername);
         TableroJugador bot = getTableroOponente(partida, callerUsername);
@@ -787,6 +793,7 @@ public class BattleEngineService {
         }
 
         partida.setYaSeRetiroEsteTurno(false);
+        partida.setYaSeUnioEnergiaEsteTurno(false);
         agregarLog(partida, "TURN_PASSED", callerUsername);
 
         if (partida.getBotUsername() == null) {
@@ -865,6 +872,19 @@ public class BattleEngineService {
                 board.getMazo().add(0, card);
                 agregarLog(partida, "DISCARD_TO_TOP_DECK", callerUsername, card.getNombre());
             }
+        } else if ("REORDER_TOP_DECK".equals(pending.getType())) {
+            // The player sends index-based option IDs in desired top-to-bottom order (ids[0] = new top card).
+            int peekCount = pending.getOptions().size();
+            List<Card> peekedCards = new java.util.ArrayList<>(board.getMazo().subList(0, peekCount));
+            board.getMazo().subList(0, peekCount).clear();
+            // Insert in reverse so ids[0] ends up at position 0 (top of deck).
+            for (int i = ids.size() - 1; i >= 0; i--) {
+                String optionId = ids.get(i);
+                int cardIndex = Integer.parseInt(optionId);
+                Card card = peekedCards.get(cardIndex);
+                board.getMazo().add(0, card);
+            }
+            agregarLog(partida, "DECK_PEEKED", callerUsername, String.valueOf(peekCount));
         } else {
             for (String id : ids) {
                 Card card = board.getMazo().stream()
@@ -882,14 +902,20 @@ public class BattleEngineService {
             Collections.shuffle(board.getMazo());
             agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
         }
+        boolean shouldPassTurn = pending.isEndsTurn();
         partida.setPendingAction(null);
         partida.transicionarA(new EstadoTurnoNormal());
+        if (shouldPassTurn) {
+            this.pasarTurno(matchId, callerUsername);
+        }
         return partida;
     }
+
     public void ejecutarTurnoBot(String matchId) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
 
+        partida.getUltimasMonedasLanzadas().clear();
         robarCarta(partida.getBot());
         botAIService.ejecutarTurno(partida);
 
@@ -942,6 +968,7 @@ public class BattleEngineService {
         partida.setNumeroTurno(partida.getNumeroTurno() + 1);
         partida.setTurnoActual(Partida.Turno.JUGADOR);
         robarCarta(partida.getJugador());
+        partida.getUltimasMonedasLanzadas().clear();
     }
     private void robarCarta(TableroJugador tablero) {
         if (!tablero.getMazo().isEmpty())
