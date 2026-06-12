@@ -72,7 +72,8 @@ public class SearchDeckCommand implements BattleCommand {
     }
 
     private boolean matches(Card card) {
-        boolean superMatch = criteriaSupertype == null || criteriaSupertype.equalsIgnoreCase(card.getSupertype());
+        boolean superMatch = criteriaSupertype == null || criteriaSupertype.equalsIgnoreCase(card.getSupertype())
+                || (criteriaSupertype.equalsIgnoreCase("Pokemon") && card.getSupertype() != null && card.getSupertype().startsWith("Pok"));
         boolean subtypeMatch = criteriaSubtype == null || card.getSubtypes() != null
                 && card.getSubtypes().stream().anyMatch(criteriaSubtype::equalsIgnoreCase);
         boolean typeMatch = criteriaType == null || criteriaType.equalsIgnoreCase(card.getTipo())

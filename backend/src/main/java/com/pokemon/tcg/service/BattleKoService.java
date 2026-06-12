@@ -79,24 +79,29 @@ public class BattleKoService {
         boolean jugadorGana = botSinPokemon || jugadorSinPremios;
         boolean botGana = jugadorSinPokemon || botSinPremios;
 
-        if (jugadorGana && botGana) {
-            iniciarMuerteSubita(partida);
-            return;
-        } else if (jugadorGana) {
-            partida.transicionarA(new EstadoFinPartida());
-            partida.setGanador(partida.getJugadorUsername());
-            partida.setRazonFinPartida(jugadorSinPremios
-                    ? "El ganador tomo todos sus premios."
-                    : "El rival se quedo sin Pokemon en juego.");
-            return;
-        } else if (botGana) {
-            partida.transicionarA(new EstadoFinPartida());
-            String ganadorBot = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
-            partida.setGanador(ganadorBot);
-            partida.setRazonFinPartida(botSinPremios
-                    ? "El ganador tomo todos sus premios."
-                    : "El rival se quedo sin Pokemon en juego.");
-            return;
+        int winConditionsJugador = (botSinPokemon ? 1 : 0) + (jugadorSinPremios ? 1 : 0);
+        int winConditionsBot = (jugadorSinPokemon ? 1 : 0) + (botSinPremios ? 1 : 0);
+
+        if (winConditionsJugador > 0 || winConditionsBot > 0) {
+            if (winConditionsJugador == winConditionsBot) {
+                iniciarMuerteSubita(partida);
+                return;
+            } else if (winConditionsJugador > winConditionsBot) {
+                partida.transicionarA(new EstadoFinPartida());
+                partida.setGanador(partida.getJugadorUsername());
+                partida.setRazonFinPartida(jugadorSinPremios
+                        ? "El ganador tomo todos sus premios."
+                        : "El rival se quedo sin Pokemon en juego.");
+                return;
+            } else {
+                partida.transicionarA(new EstadoFinPartida());
+                String ganadorBot = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
+                partida.setGanador(ganadorBot);
+                partida.setRazonFinPartida(botSinPremios
+                        ? "El ganador tomo todos sus premios."
+                        : "El rival se quedo sin Pokemon en juego.");
+                return;
+            }
         }
 
         if (tableroVictima == partida.getBot() && tableroVictima.getActivo() == null) {
@@ -238,12 +243,13 @@ public class BattleKoService {
         partida.setCoinFlipWinner(null);
         partida.setCoinFlipResult(null);
 
-        // Reset handshake variables
-        partida.setCoinHandshakeJugadorPower(0);
-        partida.setCoinHandshakeBotPower(0);
-        partida.setCoinHandshakeJugadorHolding(false);
-        partida.setCoinHandshakeBotHolding(false);
-        partida.setCoinHandshakeComplete(false);
+        // En muerte súbita saltamos el darse la mano
+        partida.setCoinHandshakeJugadorPower(100);
+        partida.setCoinHandshakeBotPower(100);
+        partida.setCoinHandshakeJugadorHolding(true);
+        partida.setCoinHandshakeBotHolding(true);
+        partida.setCoinHandshakeComplete(true);
+        partida.setFaseActual(Partida.Fase.LANZAMIENTO_MONEDA);
 
         partida.setSetupJugadorListo(false);
         partida.setSetupBotListo(false);

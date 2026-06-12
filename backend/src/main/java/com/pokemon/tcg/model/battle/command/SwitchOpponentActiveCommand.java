@@ -37,7 +37,20 @@ public class SwitchOpponentActiveCommand implements BattleCommand {
         action.setMinSelections(1);
         action.setMaxSelections(1);
         action.setOptions(defensor.getBanca().stream()
-                .map(carta -> new PendingBattleAction.Option(carta.getCard().getId(), carta.getCard().getNombre(), carta.getCard().getImagen()))
+                .map(carta -> {
+                    String id = carta.getCard().getId();
+                    String set = id.contains("-") ? id.split("-")[0] : "base1";
+                    String numero = id.contains("-") ? id.split("-")[1] : "1";
+                    return new PendingBattleAction.Option(
+                        id,
+                        carta.getCard().getNombre(),
+                        carta.getCard().getImagen(),
+                        carta.getHpActual(),
+                        Integer.parseInt(carta.getCard().getHp()),
+                        numero,
+                        set
+                    );
+                })
                 .collect(Collectors.toList()));
         
         partida.setPendingAction(action);

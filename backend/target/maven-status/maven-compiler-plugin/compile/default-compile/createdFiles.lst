@@ -10,6 +10,7 @@ com\pokemon\tcg\model\battle\command\SetAttackBlockNextTurnCommand.class
 com\pokemon\tcg\model\battle\command\SetNoPuedeAtacarSiguienteTurnoCommand.class
 com\pokemon\tcg\service\LobbyRoomService.class
 com\pokemon\tcg\model\battle\command\BlockAttackNextTurnCommand.class
+com\pokemon\tcg\model\battle\command\SelectOwnPokemonToHealCommand.class
 com\pokemon\tcg\service\MazoBackupService.class
 com\pokemon\tcg\model\battle\command\SwitchOpponentActiveCommand.class
 com\pokemon\tcg\model\battle\command\AddDamageByAttachedEnergyCommand.class

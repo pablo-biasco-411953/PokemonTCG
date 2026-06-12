@@ -74,7 +74,7 @@ export interface PendingBattleAction {
   destination: string;
   minSelections: number;
   maxSelections: number;
-  options: Array<{ id: string; nombre: string; imagen?: string }>;
+  options: Array<{ id: string; nombre: string; imagen?: string; hpActual?: number; maxHp?: number; numero?: string; set?: string }>;
 }
 
 export interface StartBattleResponse extends Partida {}

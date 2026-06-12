@@ -52,10 +52,22 @@ public class AttackEffectParserService {
             )));
         }
 
-        Matcher healMatcher = HEAL_PATTERN.matcher(text);
+        Matcher healMatcher = Pattern.compile("Heal (\\d+) damage from this Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
         if (healMatcher.find()) {
             int amount = Integer.parseInt(healMatcher.group(1));
             commands.add(new HealCommand(amount, Target.SELF));
+        }
+
+        Matcher healOwnMatcher = Pattern.compile("Heal (\\d+) damage from 1 of your Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (healOwnMatcher.find()) {
+            int amount = Integer.parseInt(healOwnMatcher.group(1));
+            commands.add(new SelectOwnPokemonToHealCommand(amount));
+        }
+
+        Matcher healOwnBenchedMatcher = Pattern.compile("Heal (\\d+) damage from 1 of your Benched Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (healOwnBenchedMatcher.find()) {
+            int amount = Integer.parseInt(healOwnBenchedMatcher.group(1));
+            commands.add(new SelectOwnPokemonToHealCommand(amount, true));
         }
 
         Matcher fixedMultiMatcher = FIXED_MULTI_COIN_DAMAGE_PATTERN.matcher(text);
@@ -159,6 +171,13 @@ public class AttackEffectParserService {
             }
         }
 
+        Matcher opponentBenchDamageMatcher = Pattern.compile("does (\\d+) damage to (\\d+) of your opponent's benched", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (opponentBenchDamageMatcher.find()) {
+            int amount = Integer.parseInt(opponentBenchDamageMatcher.group(1));
+            int count = Integer.parseInt(opponentBenchDamageMatcher.group(2));
+            commands.add(new DamageOpponentBenchedCommand(amount, count));
+        }
+
         if (lowerText.contains("discard an energy attached to this pok") || lowerText.contains("discard 2 energy attached to this pok")) {
             int amount = lowerText.contains("discard 2 energy") ? 2 : 1;
             if (lowerText.contains("flip a coin") && lowerText.contains("if tails")) {
@@ -240,8 +259,48 @@ public class AttackEffectParserService {
             commands.add(new AttachEnergyFromDiscardToBenchCommand("Darkness", 1));
         }
 
+        Matcher oppBenchDamageMatcher = Pattern
+                .compile("does (\\d+) damage to (\\d+) of your opponent's benched", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        boolean matchedBenchDamage = false;
+        if (oppBenchDamageMatcher.find()) {
+            matchedBenchDamage = true;
+            commands.add(new DamageOpponentBenchedCommand(
+                    Integer.parseInt(oppBenchDamageMatcher.group(1)),
+                    Integer.parseInt(oppBenchDamageMatcher.group(2))
+            ));
+        }
+
+        Matcher oppBenchEachDamageMatcher = Pattern
+                .compile("does (\\d+) damage to each of your opponent's benched", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (oppBenchEachDamageMatcher.find()) {
+            matchedBenchDamage = true;
+            commands.add(new DamageOpponentBenchedCommand(
+                    Integer.parseInt(oppBenchEachDamageMatcher.group(1)),
+                    6
+            ));
+        }
+
+        Matcher oppBench1DamageMatcher = Pattern
+                .compile("does (\\d+) damage to 1 of your opponent's benched", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (!matchedBenchDamage && oppBench1DamageMatcher.find()) {
+            commands.add(new DamageOpponentBenchedCommand(
+                    Integer.parseInt(oppBench1DamageMatcher.group(1)),
+                    1
+            ));
+        }
+
         if (lowerText.contains("times the number of your remaining prize cards")) {
             commands.add(new ConditionalDamageMultiplierCommand(0, 20, "PRIZE_CARDS", null));
+        }
+        
+        Matcher benchMultiplierMatcher = Pattern
+                .compile("does (\\d+) damage times the number of your benched", Pattern.CASE_INSENSITIVE)
+                .matcher(text);
+        if (benchMultiplierMatcher.find()) {
+            commands.add(new ConditionalDamageMultiplierCommand(0, Integer.parseInt(benchMultiplierMatcher.group(1)), "BENCHED_POKEMON", null));
         }
         if (lowerText.contains("if your opponent's active pok") && lowerText.contains("is a grass pok") && lowerText.contains("20 more damage")) {
             commands.add(new ConditionalDamageMultiplierCommand(0, 20, "OPPONENT_TYPE", "Grass"));
@@ -324,15 +383,7 @@ public class AttackEffectParserService {
             commands.add(new SelfBenchDamageCommand(amount));
         }
 
-        // Daño a la banca del oponente
-        Pattern oppBenchDamagePattern = Pattern.compile("(?:does|this attack does) (\\d+) damage to (\\d+|1) of your opponent's benched", Pattern.CASE_INSENSITIVE);
-        Matcher oppBenchDamageMatcher = oppBenchDamagePattern.matcher(text);
-        if (oppBenchDamageMatcher.find()) {
-            int amount = Integer.parseInt(oppBenchDamageMatcher.group(1));
-            String countStr = oppBenchDamageMatcher.group(2);
-            int count = "one".equalsIgnoreCase(countStr) || "1".equals(countStr) ? 1 : Integer.parseInt(countStr);
-            commands.add(new DamageOpponentBenchedCommand(amount, count));
-        }
+        // Ya procesado arriba
 
         if (lowerText.contains("search your deck for 3 different types of basic energy cards") || lowerText.contains("search your deck for up to 3 basic energy cards")) {
             commands.add(new SearchDeckCommand(

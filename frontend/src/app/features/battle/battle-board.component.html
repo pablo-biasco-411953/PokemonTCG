@@ -395,8 +395,31 @@
         <div class="card-order-badge" *ngIf="isReorderMode && isPendingEffectCardSelected(option.id)">
           {{ getPendingEffectOrderIndex(option.id) }}
         </div>
-        <img [src]="option.imagen || getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" />
-        <span>{{ option.nombre }}</span>
+        <div class="modal-card-wrapper" style="position: relative; width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
+          <img [src]="option.imagen || getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" style="border-radius: 4px; max-width: 100%;" />
+          
+          <img *ngIf="option.numero && option.set" 
+               [src]="getSpriteFront({numero: option.numero, set: option.set})" 
+               class="modal-option-sprite" 
+               style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.7)); pointer-events: none;" 
+               (error)="onCardImageError($event)" />
+               
+          <div *ngIf="option.hpActual !== undefined && option.maxHp !== undefined" 
+               class="modal-hp-bar" 
+               style="position: absolute; bottom: 2px; left: 10%; width: 80%; height: 6px; background: rgba(0,0,0,0.7); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.4);">
+            <div class="modal-hp-fill" 
+                 [style.width.%]="(option.hpActual / option.maxHp) * 100" 
+                 [style.backgroundColor]="(option.hpActual / option.maxHp) > 0.5 ? '#10b981' : (option.hpActual / option.maxHp) > 0.25 ? '#f59e0b' : '#ef4444'"
+                 style="height: 100%; transition: width 0.3s ease;">
+            </div>
+          </div>
+        </div>
+        <span style="line-height: 1.2;">
+          {{ option.nombre }}
+          <ng-container *ngIf="option.hpActual !== undefined && option.maxHp !== undefined">
+            <br><small style="color: #94a3b8; font-size: 0.8em;">{{ option.hpActual }} / {{ option.maxHp }} HP</small>
+          </ng-container>
+        </span>
       </button>
     </div>
     <button
@@ -646,10 +669,24 @@
           *ngFor="let b of partida.bot.banca"
           class="bench-slot occupied"
           [class.low-hp-warning]="getHpPercent(b) < 30"
+          [class.status-heal]="cartasCurandose.has(b.card.id)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
           (contextmenu)="abrirDetallePokemon($event, b)"
+          style="position: relative;"
         >
+          <div class="floating-texts-overlay" style="z-index: 50;">
+            <div
+              *ngFor="let ft of getFloatingTextsBot(b.card.id)"
+              class="floating-text-item"
+              [ngClass]="ft.type"
+            >
+              {{ ft.text }}
+            </div>
+          </div>
+          <div class="heal-particles" *ngIf="cartasCurandose.has(b.card.id)">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
           <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
             <div
@@ -713,7 +750,7 @@
             <!-- Floating Texts -->
             <div class="floating-texts-overlay">
               <div
-                *ngFor="let ft of floatingTextsBot"
+                *ngFor="let ft of getFloatingTextsBot(partida.bot.activo?.card?.id)"
                 class="floating-text-item"
                 [ngClass]="ft.type"
               >
@@ -888,7 +925,7 @@
             <!-- Floating Texts -->
             <div class="floating-texts-overlay">
               <div
-                *ngFor="let ft of floatingTextsPlayer"
+                *ngFor="let ft of getFloatingTextsPlayer(partida.jugador.activo?.card?.id)"
                 class="floating-text-item"
                 [ngClass]="ft.type"
               >
@@ -940,7 +977,7 @@
               [class.pokemon-defeated]="estaPokemonDerrotado('JUGADOR')"
               [class.sprite-attack]="animandoAtaque"
               [class.status-confused]="tieneCondicionEspecial('JUGADOR', 'Confused')"
-              [class.status-heal]="mostrarAuraCuracionPlayer"
+              [class.status-heal]="partida.jugador.activo && cartasCurandose.has(partida.jugador.activo.card.id)"
               [class.status-paralyzed]="tieneCondicionEspecial('JUGADOR', 'Paralyzed')"
               [class.status-burned]="tieneCondicionEspecial('JUGADOR', 'Burned')"
               [class.status-poisoned]="tieneCondicionEspecial('JUGADOR', 'Poisoned')"
@@ -1008,7 +1045,7 @@
                   </div>
                 </ng-container>
 
-                <div class="heal-particles" *ngIf="mostrarAuraCuracionPlayer">
+                <div class="heal-particles" *ngIf="partida.jugador.activo && cartasCurandose.has(partida.jugador.activo.card.id)">
                   <span></span><span></span><span></span><span></span><span></span>
                 </div>
               </div>
@@ -1099,11 +1136,25 @@
           class="bench-slot occupied player-slot"
           [class.can-receive-energy-glow]="modoSeleccionUnionEnergia"
           [class.low-hp-warning]="getHpPercent(b) < 30"
+          [class.status-heal]="cartasCurandose.has(b.card.id)"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
           (contextmenu)="abrirDetallePokemon($event, b)"
+          style="position: relative;"
         >
+          <div class="floating-texts-overlay" style="z-index: 50;">
+            <div
+              *ngFor="let ft of getFloatingTextsPlayer(b.card.id)"
+              class="floating-text-item"
+              [ngClass]="ft.type"
+            >
+              {{ ft.text }}
+            </div>
+          </div>
+          <div class="heal-particles" *ngIf="cartasCurandose.has(b.card.id)">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
           <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
             <div

@@ -66,6 +66,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\MazoServ
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\HealCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupMulliganExtraDraw.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BotAIService.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelectOwnPokemonToHealCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\CorsConfig.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\JugadorRepository.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\BattleCommand.java
