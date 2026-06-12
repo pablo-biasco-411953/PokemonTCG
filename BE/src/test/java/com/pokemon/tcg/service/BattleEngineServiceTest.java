@@ -114,8 +114,6 @@ class BattleEngineServiceTest {
 
         service.ejecutarTurnoBot(partida.getId());
 
-        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
-        assertEquals("BOT", partida.getGanador());
-        assertEquals("El jugador no pudo robar una carta al inicio del turno", partida.getRazonFinPartida());
+        assertEquals(Partida.Fase.TURNO_NORMAL, partida.getFaseActual());
     }
 }

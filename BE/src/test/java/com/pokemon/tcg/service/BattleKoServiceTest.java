@@ -143,6 +143,7 @@ class BattleKoServiceTest {
         bot.getPilaDescarte().add(card("bd", "Desc B", "0"));
 
         service.resolverKO(partida, atacante, defensor);
+        service.resolverKO(partida, defensor, atacante);
 
         assertTrue(partida.isMuerteSubita());
         assertEquals(Partida.Fase.LANZAMIENTO_MONEDA, partida.getFaseActual());

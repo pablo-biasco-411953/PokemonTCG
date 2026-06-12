@@ -722,11 +722,14 @@ public class BattleEngineService {
         }
 
         if (activo.getCondicionesEspeciales().contains("Asleep")) {
-            if (random.nextBoolean()) {
+            boolean wakesUp = random.nextBoolean();
+            if (wakesUp) {
                 System.out.println("💤 ¡Salió CARA! " + activo.getCard().getNombre() + " se despertó.");
                 activo.getCondicionesEspeciales().remove("Asleep");
+                partida.getTurnLogs().add("AWAKE_FLIP_HEADS:" + owner + ":" + cardName);
             } else {
                 System.out.println("💤 Salió CRUZ. " + activo.getCard().getNombre() + " sigue Dormido.");
+                partida.getTurnLogs().add("AWAKE_FLIP_TAILS:" + owner + ":" + cardName);
             }
         }
 
@@ -787,16 +790,16 @@ public class BattleEngineService {
             bot.getActivo().setInvulnerable(false);
         }
 
+        partida.setYaSeRetiroEsteTurno(false);
+        partida.setYaSeUnioEnergiaEsteTurno(false);
+        agregarLog(partida, "TURN_PASSED", callerUsername);
+
         aplicarMantenimientoEntreTurnos(partida);
 
         if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
             System.out.println("🏆 Partida terminada durante mantenimiento.");
             return;
         }
-
-        partida.setYaSeRetiroEsteTurno(false);
-        partida.setYaSeUnioEnergiaEsteTurno(false);
-        agregarLog(partida, "TURN_PASSED", callerUsername);
 
         if (partida.getBotUsername() == null) {
             partida.setNumeroTurno(partida.getNumeroTurno() + 1);
@@ -908,6 +911,65 @@ public class BattleEngineService {
             }
             board.setActivo(suplente);
             agregarLog(partida, "ACTIVE_SWITCHED", callerUsername, suplente.getCard().getNombre());
+        } else if ("HEAL_OWN_POKEMON".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere seleccionar un Pokémon para curar.");
+            }
+            String selectedId = ids.get(0);
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(selectedId)) {
+                target = board.getActivo();
+            } else {
+                target = board.getBanca().stream()
+                        .filter(c -> c.getCard().getId().equals(selectedId))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en el tablero."));
+            }
+            
+            int maxHp = Integer.parseInt(target.getCard().getHp());
+            target.setHpActual(Math.min(maxHp, target.getHpActual() + pending.getAmount()));
+            agregarLog(partida, "HEALED", callerUsername, target.getCard().getId() + ":" + pending.getAmount());
+        } else if ("CHOOSE_OPPONENT_BENCH_TO_ACTIVE".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            }
+            TableroJugador opponentBoard = getTableroOponente(partida, callerUsername);
+            String selectedId = ids.get(0);
+            CartaEnJuego suplente = opponentBoard.getBanca().stream()
+                    .filter(c -> c.getCard().getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca del rival."));
+            
+            CartaEnJuego activoViejo = opponentBoard.getActivo();
+            if (activoViejo != null) {
+                activoViejo.limpiarCondiciones();
+                opponentBoard.getBanca().remove(suplente);
+                opponentBoard.getBanca().add(activoViejo);
+            }
+            opponentBoard.setActivo(suplente);
+            // El log del bot usa "OPPONENT_FORCED_SWITCH:BOT:...", acá usamos el username o JUGADOR
+            String actorStr = callerUsername.equals(partida.getJugadorUsername()) ? "JUGADOR" : "BOT";
+            agregarLog(partida, "OPPONENT_FORCED_SWITCH", actorStr, suplente.getCard().getNombre());
+        } else if ("CHOOSE_OPPONENT_BENCH_TO_DAMAGE".equals(pending.getType())) {
+            TableroJugador opponentBoard = getTableroOponente(partida, callerUsername);
+            for (String selectedId : ids) {
+                CartaEnJuego target = opponentBoard.getBanca().stream()
+                        .filter(c -> c.getCard().getId().equals(selectedId))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca del rival."));
+                
+                target.setHpActual(Math.max(0, target.getHpActual() - pending.getAmount()));
+                String targetOwner = callerUsername.equals(partida.getJugadorUsername()) ? "BOT" : "JUGADOR";
+                agregarLog(partida, "BENCH_DAMAGE", targetOwner, target.getCard().getId() + ":" + target.getCard().getNombre().replace(':', '-') + ":" + pending.getAmount());
+            }
+            // Check for KOs on bench
+            TableroJugador atacante = getTableroDeJugador(partida, callerUsername);
+            List<CartaEnJuego> knockouts = opponentBoard.getBanca().stream()
+                    .filter(c -> c.getHpActual() <= 0)
+                    .toList();
+            for (CartaEnJuego ko : knockouts) {
+                battleKoService.resolverKO(partida, atacante.getActivo(), ko);
+            }
         } else {
             boolean attached = false;
             for (String id : ids) {

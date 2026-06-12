@@ -147,6 +147,9 @@ class BattleAttackServiceTest {
 
         BattleCommand cmd = new ConditionalDamageMultiplierCommand(0, 20, "BENCHED_POKEMON", null);
         cmd.execute(partida, partida.getJugador(), partida.getBot());
+        if (!partida.getExecutionQueue().isEmpty()) {
+            partida.getExecutionQueue().poll().execute(partida, partida.getJugador(), partida.getBot());
+        }
 
         assertEquals(40, defensor.getHpActual());
     }
@@ -169,14 +172,26 @@ class BattleAttackServiceTest {
     @Test
     void comandoDamageOpponentBenchedAplicaDanioCorrectoALaBancaEnemiga() {
         Partida partida = partidaBasica();
-        CartaEnJuego b1 = new CartaEnJuego(card("b1", "Bulbasaur", "50"));
-        CartaEnJuego b2 = new CartaEnJuego(card("b2", "Squirtle", "60"));
+        CartaEnJuego b1 = new CartaEnJuego(card("b1-1", "Bulbasaur", "50"));
+        CartaEnJuego b2 = new CartaEnJuego(card("b2-1", "Squirtle", "60"));
         partida.getBot().getBanca().add(b1);
         partida.getBot().getBanca().add(b2);
 
         BattleCommand cmd = new DamageOpponentBenchedCommand(20, 2);
         cmd.execute(partida, partida.getJugador(), partida.getBot());
 
+        // Para el jugador, se crea una acción pendiente
+        assertEquals("CHOOSE_OPPONENT_BENCH_TO_DAMAGE", partida.getPendingAction().getType());
+        assertEquals(2, partida.getPendingAction().getMinSelections());
+        
+        // Ahora probamos el bot atacando al jugador
+        partida.setPendingAction(null);
+        partida.getJugador().getBanca().add(b1);
+        partida.getJugador().getBanca().add(b2);
+        
+        cmd.execute(partida, partida.getBot(), partida.getJugador());
+        
+        // El bot hace daño directamente a ambos porque count = 2
         assertEquals(30, b1.getHpActual());
         assertEquals(40, b2.getHpActual());
     }

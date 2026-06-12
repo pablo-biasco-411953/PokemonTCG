@@ -47,7 +47,8 @@ public class BattleAttackService {
                 effectText.contains("damage times the number of heads")
                 || (effectText.contains("damage for each heads") && !effectText.contains("more damage"));
         boolean attackFailsOnTails = effectText.contains("if tails, this attack does nothing");
-        int damageToDeal = damageComesOnlyFromHeads || attackFailsOnTails ? 0 : ataque.getDanio();
+        boolean damageComesOnlyFromBenched = effectText.contains("damage times the number of your benched");
+        int damageToDeal = damageComesOnlyFromHeads || attackFailsOnTails || damageComesOnlyFromBenched ? 0 : ataque.getDanio();
         
         // 1. Base damage command
         if (attackFailsOnTails && ataque.getDanio() > 0) {

@@ -10,8 +10,12 @@ public class PendingBattleAction {
     private String destination;
     private int minSelections;
     private int maxSelections;
+    private int amount; // For actions that carry a numerical value like heal amount
     private boolean endsTurn;
     private List<Option> options = new ArrayList<>();
+
+    public int getAmount() { return amount; }
+    public void setAmount(int amount) { this.amount = amount; }
 
     public boolean isEndsTurn() { return endsTurn; }
     public void setEndsTurn(boolean endsTurn) { this.endsTurn = endsTurn; }
@@ -20,6 +24,10 @@ public class PendingBattleAction {
         private String id;
         private String nombre;
         private String imagen;
+        private Integer hpActual;
+        private Integer maxHp;
+        private String numero;
+        private String set;
 
         public Option() {}
 
@@ -29,12 +37,30 @@ public class PendingBattleAction {
             this.imagen = imagen;
         }
 
+        public Option(String id, String nombre, String imagen, Integer hpActual, Integer maxHp, String numero, String set) {
+            this.id = id;
+            this.nombre = nombre;
+            this.imagen = imagen;
+            this.hpActual = hpActual;
+            this.maxHp = maxHp;
+            this.numero = numero;
+            this.set = set;
+        }
+
         public String getId() { return id; }
         public void setId(String id) { this.id = id; }
         public String getNombre() { return nombre; }
         public void setNombre(String nombre) { this.nombre = nombre; }
         public String getImagen() { return imagen; }
         public void setImagen(String imagen) { this.imagen = imagen; }
+        public Integer getHpActual() { return hpActual; }
+        public void setHpActual(Integer hpActual) { this.hpActual = hpActual; }
+        public Integer getMaxHp() { return maxHp; }
+        public void setMaxHp(Integer maxHp) { this.maxHp = maxHp; }
+        public String getNumero() { return numero; }
+        public void setNumero(String numero) { this.numero = numero; }
+        public String getSet() { return set; }
+        public void setSet(String set) { this.set = set; }
     }
 
     public String getActor() { return actor; }

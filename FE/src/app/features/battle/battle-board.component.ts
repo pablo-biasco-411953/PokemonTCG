@@ -307,8 +307,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private playerShieldGroup?: THREE.Group;
   private botShieldGroup?: THREE.Group;
-  public floatingTextsPlayer: Array<{ id: number; text: string; type: string }> = [];
-  public floatingTextsBot: Array<{ id: number; text: string; type: string }> = [];
+
   private nextFloatingTextId = 0;
   switchFxBot = false;
   switchFxPlayer = false;
@@ -669,9 +668,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  mostrarTextoFlotante(objetivo: 'jugador' | 'bot', texto: string, tipo = 'info'): void {
+  floatingTextsPlayer: { id: number; text: string; type: string; targetId?: string }[] = [];
+  floatingTextsBot: { id: number; text: string; type: string; targetId?: string }[] = [];
+  cartasCurandose = new Set<string>();
+
+  getFloatingTextsPlayer(targetId?: string): any[] {
+    if (!targetId) return this.floatingTextsPlayer.filter(t => !t.targetId);
+    return this.floatingTextsPlayer.filter(t => t.targetId === targetId || (!t.targetId && targetId === this.partida?.jugador?.activo?.card?.id));
+  }
+
+  getFloatingTextsBot(targetId?: string): any[] {
+    if (!targetId) return this.floatingTextsBot.filter(t => !t.targetId);
+    return this.floatingTextsBot.filter(t => t.targetId === targetId || (!t.targetId && targetId === this.partida?.bot?.activo?.card?.id));
+  }
+
+  mostrarTextoFlotante(objetivo: 'jugador' | 'bot', texto: string, tipo = 'info', targetId?: string): void {
     const id = this.nextFloatingTextId++;
-    const item = { id, text: texto, type: tipo };
+    const item = { id, text: texto, type: tipo, targetId };
     if (objetivo === 'jugador') {
       this.floatingTextsPlayer.push(item);
       this.cdr.detectChanges();
@@ -980,7 +993,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return estado ? JSON.stringify(estado) : '';
   }
 
-  private procesarTurnLogs(): void {
+  private async procesarTurnLogs(): Promise<void> {
     if (!this.partida?.turnLogs) return;
 
     for (let i = this.lastProcessedLogIndex; i < this.partida.turnLogs.length; i++) {
@@ -1128,6 +1141,33 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.mostrarEfectoStatusVisual(objetivo, 'Burned');
           break;
         }
+        case 'HEALED': {
+          const targetOwner = parts[1];
+          const targetId = parts[2];
+          const amount = parseInt(parts[3], 10) || 0;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, `+${amount} HP`, 'status-healed-text', targetId);
+          this.mostrarCuracion(objetivo, targetId);
+          await this.delay(1200); // Dar tiempo para que el jugador vea la animación de curación
+          break;
+        }
+        case 'AWAKE_FLIP_HEADS': {
+          const targetOwner = parts[1];
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '¡Despierta! (CARA)', 'status-healed-text');
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 1, true);
+          break;
+        }
+        case 'AWAKE_FLIP_TAILS': {
+          const targetOwner = parts[1];
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, 'Sigue Dormido (CRUZ)', 'status-asleep');
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 0, true);
+          break;
+        }
         case 'ASTONISH_REVEALED': {
           const cardId = (parts[2] || '').trim();
           const cardNombre = parts[3];
@@ -1171,12 +1211,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           const isMyBench = targetOwner === 'JUGADOR' || targetOwner === this.jugadorNombre;
           const targetSide = isMyBench ? 'jugador' : 'bot';
           
-          this.mostrarTextoFlotante(targetSide, `-${damageAmount} banca`, 'damage');
+          this.mostrarTextoFlotante(targetSide, `-${damageAmount}`, 'damage', cardId);
           
           const detailMsg = isMyBench ?
             this.i18nService.translate('battle.benchDamage.selfDetail', { name: cardNombre, damage: damageAmount.toString() }) :
             this.i18nService.translate('battle.benchDamage.oppDetail', { name: cardNombre, damage: damageAmount.toString() });
           this.mostrarNotificacion(detailMsg, 'warning');
+          await this.delay(1000);
           break;
         }
       }
@@ -1348,7 +1389,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         if (estado.turnoActual === 'BOT' && estadoAntiguo?.turnoActual === 'JUGADOR') {
           await this.procesarPostPassTurn(estadoAntiguo, estado);
         } else {
-          this.aplicarEstadoRefrescado(estado);
+          await this.aplicarEstadoRefrescado(estado);
           this.cargandoAccion = false;
           this.cdr.detectChanges();
         }
@@ -1508,15 +1549,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  async mostrarCuracion(objetivo: 'bot' | 'jugador', duracion = 1500): Promise<void> {
-    if (objetivo === 'bot') this.mostrarAuraCuracionBot = true;
-    else this.mostrarAuraCuracionPlayer = true;
+  async mostrarCuracion(objetivo: 'bot' | 'jugador', targetId?: string, duracion = 1500): Promise<void> {
+    if (targetId) {
+      this.cartasCurandose.add(targetId);
+    } else {
+      if (objetivo === 'bot') this.mostrarAuraCuracionBot = true;
+      else this.mostrarAuraCuracionPlayer = true;
+    }
     this.cdr.detectChanges();
 
     await this.delay(duracion);
 
-    if (objetivo === 'bot') this.mostrarAuraCuracionBot = false;
-    else this.mostrarAuraCuracionPlayer = false;
+    if (targetId) {
+      this.cartasCurandose.delete(targetId);
+    } else {
+      if (objetivo === 'bot') this.mostrarAuraCuracionBot = false;
+      else this.mostrarAuraCuracionPlayer = false;
+    }
     this.cdr.detectChanges();
   }
 
@@ -1881,6 +1930,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.activarEfectoCambio('jugador');
     }
 
+    // Delay damage if attack or ability was used to allow banner to show first
+    const logsDeTurno = estadoNuevo?.turnLogs || [];
+    const huboAtaque = logsDeTurno.some((log: string) => log.startsWith('ATTACK_USED') || log.startsWith('ABILITY_USED'));
+    if (huboAtaque) {
+      await this.delay(1000);
+    }
+
     const hpBotAntes = botActivoAntes?.hpActual ?? 0;
     const hpBotAhora = botActivoAhora?.hpActual ?? 0;
     if (botActivoAntes && botActivoAhora && hpBotAhora < hpBotAntes) {
@@ -2146,11 +2202,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.attackBannerActive = null;
       this.cdr.detectChanges();
-    }, 2000);
+    }, 900);
   }
 
   triggerCardSplash(cardName: string, isOpponent: boolean) {
-    const card = this.debugFilteredCatalog.find((c) => c.nombre === cardName || c.name === cardName);
+    const card = this.debugFilteredCatalog.find((c: any) => c.nombre === cardName || c.name === cardName);
     const cardId = card ? card.id : '';
     this.cardSplashActive = {
       visible: true,
@@ -2162,7 +2218,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.cardSplashActive = null;
       this.cdr.detectChanges();
-    }, 2500);
+    }, 900);
   }
 
   cerrarAstonishReveal(): void {
@@ -2342,6 +2398,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.setupMulliganRevealKey = '';
       this.setupAutoActionKey = '';
       this.setupAccionEnCurso = false;
+      
+      // Mostrar overlay de Muerte Súbita justo al terminar el setup
+      if (data.muerteSubita && !this.mostrarOverlayMuerteSubita && data.numeroTurno === 1) {
+        this.mostrarOverlayMuerteSubita = true;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.mostrarOverlayMuerteSubita = false;
+          this.cdr.detectChanges();
+        }, 4200);
+      }
+
       this.iniciarPrimerTurnoBotSiHaceFalta(data);
     }
   }
@@ -3680,7 +3747,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }, 1200);
   }
 
-  private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
+  private async aplicarEstadoRefrescado(estado: Partida | null | undefined): Promise<void> {
     if (!estado) return;
     const debeMostrarFinal = estado.faseActual === 'FIN_PARTIDA';
     const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
@@ -3696,15 +3763,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
     }
 
-    const anteriorMuerteSubita = estadoAnterior?.muerteSubita || false;
-    const actualMuerteSubita = estado.muerteSubita || false;
-    if (actualMuerteSubita && !anteriorMuerteSubita) {
-      this.mostrarOverlayMuerteSubita = true;
-      setTimeout(() => {
-        this.mostrarOverlayMuerteSubita = false;
-        this.cdr.detectChanges();
-      }, 4200);
-    }
+    // El overlay de muerte súbita se mostrará al iniciar TURNO_NORMAL
 
     // Check if cards were drawn
     if (this.partida) {
@@ -3754,7 +3813,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (estado.bot?.mano) {
       this.detectarCartasNuevasBot(estado.bot.mano);
     }
-    this.procesarTurnLogs();
+    await this.procesarTurnLogs();
   }
 
   private async reproducirChequeoDespertar(
@@ -3938,7 +3997,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
-    this.aplicarEstadoRefrescado(estadoFinal);
+    await this.aplicarEstadoRefrescado(estadoFinal);
     if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
@@ -5588,13 +5647,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.switchFxBot = false;
         this.cdr.detectChanges();
-      }, 1050);
+      }, 550);
     } else {
       this.switchFxPlayer = true;
       setTimeout(() => {
         this.switchFxPlayer = false;
         this.cdr.detectChanges();
-      }, 1050);
+      }, 550);
     }
     this.cdr.detectChanges();
   }
