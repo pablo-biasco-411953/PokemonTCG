@@ -5,6 +5,8 @@ import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.battle.CartaEnJuego;
 import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
+import com.pokemon.tcg.service.BattleAttackService;
+import com.pokemon.tcg.service.BattleKoService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +15,17 @@ import java.util.Random;
 public class EstrategiaBasica implements EstrategiaBot {
 
     private final Random random = new Random();
+    private final BattleAttackService battleAttackService;
+    private final BattleKoService battleKoService;
+
+    public EstrategiaBasica() {
+        this(new BattleAttackService(), new BattleKoService());
+    }
+
+    public EstrategiaBasica(BattleAttackService battleAttackService, BattleKoService battleKoService) {
+        this.battleAttackService = battleAttackService;
+        this.battleKoService = battleKoService;
+    }
 
     @Override
     public void ejecutarSetup(Partida partida) {
@@ -78,7 +91,7 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         gestionarCartasEnMano(tableroBot, partida);
         evaluarRetiradaEstrategica(tableroBot, partida.getJugador(), partida);
-        gestionarEnergiaBot(tableroBot);
+        gestionarEnergiaBotPlanificado(tableroBot, partida);
         intentarAtacar(tableroBot, partida);
     }
 
@@ -164,12 +177,18 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         for (Card cartaEstrella : pokemonesBasicos) {
             if (tablero.getActivo() == null) {
-                tablero.setActivo(new CartaEnJuego(cartaEstrella));
+                CartaEnJuego nuevoActivo = new CartaEnJuego(cartaEstrella);
+                nuevoActivo.setTurnoEntrada(partida.getNumeroTurno());
+                tablero.setActivo(nuevoActivo);
                 tablero.getMano().remove(cartaEstrella);
+                partida.getTurnLogs().add("ACTIVE_PLACED:BOT:" + cartaEstrella.getNombre().replace(':', '-'));
                 System.out.println("🤖 [BOT] Bajó como ACTIVO a " + cartaEstrella.getNombre() + " por su alto potencial.");
             } else if (tablero.getBanca().size() < 5) {
-                tablero.getBanca().add(new CartaEnJuego(cartaEstrella));
+                CartaEnJuego nuevoBanca = new CartaEnJuego(cartaEstrella);
+                nuevoBanca.setTurnoEntrada(partida.getNumeroTurno());
+                tablero.getBanca().add(nuevoBanca);
                 tablero.getMano().remove(cartaEstrella);
+                partida.getTurnLogs().add("BENCH_PLACED:BOT:" + cartaEstrella.getNombre().replace(':', '-'));
                 System.out.println("🤖 [BOT] Preparando el futuro: Bajó a la BANCA a " + cartaEstrella.getNombre());
             }
         }
@@ -222,7 +241,7 @@ public class EstrategiaBasica implements EstrategiaBot {
                 });
     }
 
-    private void gestionarEnergiaBot(TableroJugador tablero) {
+    private void gestionarEnergiaBot(TableroJugador tablero, Partida partida) {
         List<Card> energiasEnMano = tablero.getMano().stream()
                 .filter(this::esEnergia)
                 .collect(java.util.stream.Collectors.toList());
@@ -248,10 +267,80 @@ public class EstrategiaBasica implements EstrategiaBot {
             if (energiaUtil != null) {
                 activo.getEnergiasUnidas().add(energiaUtil);
                 tablero.getMano().remove(energiaUtil);
+                partida.getTurnLogs().add("ENERGY_ATTACHED:BOT:" + activo.getCard().getNombre().replace(':', '-'));
                 System.out.println("🤖 [BOT] Unión estratégica: " + energiaUtil.getNombre() + " a " + activo.getCard().getNombre() + " para cargar ataque.");
             }
         }
     }
+
+    private void gestionarEnergiaBotPlanificado(TableroJugador tablero, Partida partida) {
+        List<Card> energiasEnMano = tablero.getMano().stream()
+                .filter(this::esEnergia)
+                .toList();
+        if (energiasEnMano.isEmpty()) return;
+
+        List<CartaEnJuego> objetivos = new ArrayList<>();
+        if (tablero.getActivo() != null) objetivos.add(tablero.getActivo());
+        objetivos.addAll(tablero.getBanca());
+
+        EnergyPlan mejor = null;
+        for (CartaEnJuego pokemon : objetivos) {
+            if (pokemon.getCard().getAtaques() == null) continue;
+            for (Ataque ataque : pokemon.getCard().getAtaques()) {
+                int faltantesAntes = contarEnergiasFaltantes(pokemon, ataque, null);
+                if (faltantesAntes <= 0) continue;
+                for (Card energia : energiasEnMano) {
+                    int faltantesDespues = contarEnergiasFaltantes(pokemon, ataque, energia);
+                    if (faltantesDespues >= faltantesAntes) continue;
+                    int score = (pokemon == tablero.getActivo() ? 500 : 180)
+                            + ataque.getDanio() * 2
+                            - faltantesDespues * 70;
+                    EnergyPlan candidate = new EnergyPlan(pokemon, ataque, energia, score);
+                    if (mejor == null || candidate.score() > mejor.score()) mejor = candidate;
+                }
+            }
+        }
+
+        if (mejor == null) return;
+        mejor.pokemon().getEnergiasUnidas().add(mejor.energia());
+        tablero.getMano().remove(mejor.energia());
+        partida.getTurnLogs().add("ENERGY_ATTACHED:BOT:" + mejor.pokemon().getCard().getNombre().replace(':', '-'));
+        System.out.println("[BOT] Unio " + mejor.energia().getNombre() + " a "
+                + mejor.pokemon().getCard().getNombre() + " para preparar " + mejor.ataque().getNombre() + ".");
+    }
+
+    private int contarEnergiasFaltantes(CartaEnJuego pokemon, Ataque ataque, Card energiaAdicional) {
+        List<Card> disponibles = new ArrayList<>(pokemon.getEnergiasUnidas());
+        if (energiaAdicional != null) disponibles.add(energiaAdicional);
+        List<String> requisitos = new ArrayList<>(ataque.getCosto() == null ? List.of() : ataque.getCosto());
+        int faltantes = 0;
+
+        for (String requisito : requisitos) {
+            String tipo = normalizarTipo(requisito);
+            if ("Colorless".equals(tipo)) continue;
+            Card match = disponibles.stream()
+                    .filter(energia -> energiaSirveParaTipo(energia, tipo))
+                    .findFirst()
+                    .orElse(null);
+            if (match == null) faltantes++;
+            else disponibles.remove(match);
+        }
+
+        long incoloras = requisitos.stream()
+                .map(this::normalizarTipo)
+                .filter("Colorless"::equals)
+                .count();
+        faltantes += Math.max(0, (int) incoloras - disponibles.size());
+        return faltantes;
+    }
+
+    private boolean energiaSirveParaTipo(Card energia, String tipo) {
+        String nombre = energia.getNombre() == null ? "" : energia.getNombre();
+        if (nombre.toLowerCase().contains("rainbow")) return true;
+        return normalizarTipo(nombre + " " + energia.getTipo()).equals(tipo);
+    }
+
+    private record EnergyPlan(CartaEnJuego pokemon, Ataque ataque, Card energia, int score) {}
 
     private boolean puedePagarCosto(CartaEnJuego pokemon, Ataque ataque) {
         if (pokemon.getEnergiasUnidas() == null || ataque.getCosto() == null) return false;
@@ -331,58 +420,25 @@ public class EstrategiaBasica implements EstrategiaBot {
             return;
         }
 
-        int danioBase = calcularDanioFinal(activoBot, activoJugador, ataqueElegido);
-        String texto = ataqueElegido.getTexto() != null ? ataqueElegido.getTexto().toLowerCase() : "";
-        int danioFinal = danioBase;
-        int carasSacadas = 0;
-
-        if (!texto.isEmpty()) {
-            if (texto.contains("damage counter on this") || texto.contains("damage counter on it")) {
-                int hpMax = Integer.parseInt(activoBot.getCard().getHp());
-                int contadores = (hpMax - activoBot.getHpActual()) / 10;
-                int multiplicador = texto.contains("20 more damage") ? 20 : 10;
-                danioFinal += contadores * multiplicador;
-                System.out.println("🤖 [BOT] Daño por venganza: +" + (contadores * multiplicador));
-            }
-            System.out.println("🛡️ Es invulnerable el jugador?" + activoJugador.isInvulnerable());
-
-            if (activoJugador.isInvulnerable()) {
-                System.out.println("🛡️ [BOT] Rebotó contra el escudo invulnerable del rival.");
-                partida.setUltimasMonedasLanzadas(new ArrayList<>());
-                return;
-            } else if (texto.contains("for each energy attached") || texto.contains("for each extra energy")) {
-                int energias = activoBot.getEnergiasUnidas().size();
-                int mult = texto.contains("20 more") || texto.contains("20 damage") ? 20 :
-                        (texto.contains("30 more") || texto.contains("30 damage") ? 30 : 10);
-                danioFinal += energias * mult;
-                System.out.println("🤖 [BOT] Daño por energías unidas: +" + (energias * mult));
-            }
-
-            if (texto.contains("tails, this attack does nothing") || texto.contains("tails, that attack does nothing")) {
-                if (!random.nextBoolean()) {
-                    System.out.println("🤖 [BOT] ¡Falló por moneda! (CRUZ)");
-                    return;
-                }
-                carasSacadas = 1;
-                System.out.println("🤖 [BOT] ¡Acertó por moneda! (CARA)");
-            } else if (texto.contains("times the number of heads") || texto.contains("x the number of heads") || texto.contains("for each heads")) {
-                int monedas = texto.contains("2 coins") ? 2 : (texto.contains("3 coins") ? 3 : (texto.contains("4 coins") ? 4 : (texto.contains("5 coins") ? 5 : 1)));
-                for (int i = 0; i < monedas; i++) {
-                    if (random.nextBoolean()) carasSacadas++;
-                }
-                danioFinal = danioBase * carasSacadas;
-                System.out.println("🤖 [BOT] Monedas: " + carasSacadas + " caras.");
-            } else if (texto.contains("if heads") && (texto.contains("more damage") || texto.contains("damage plus"))) {
-                if (random.nextBoolean()) {
-                    danioFinal += danioBase;
-                    carasSacadas = 1;
-                    System.out.println("🤖 [BOT] ¡Cara! Daño extra.");
-                }
-            }
+        BattleAttackService.AttackResolution resolution = battleAttackService.resolveAttack(
+                partida,
+                ataqueElegido,
+                activoBot,
+                activoJugador,
+                battleKoService::resolverKO,
+                null
+        );
+        int danioFinal = resolution.resultado().danioFinal();
+        partida.getTurnLogs().add("ATTACK_USED:BOT:"
+                + ataqueElegido.getNombre().replace(':', '-') + ":"
+                + activoJugador.getCard().getNombre().replace(':', '-') + ":"
+                + danioFinal);
+        String tipoBot = activoBot.getCard().getTipo();
+        if (matchesType(activoJugador.getCard().getDebilidades(), tipoBot)) {
+            partida.getTurnLogs().add("SUPER_EFFECTIVE:BOT:" + activoJugador.getCard().getNombre().replace(':', '-'));
+        } else if (matchesType(activoJugador.getCard().getResistencias(), tipoBot)) {
+            partida.getTurnLogs().add("RESISTED:BOT:" + activoJugador.getCard().getNombre().replace(':', '-'));
         }
-
-        int nuevaHpJugador = Math.max(0, activoJugador.getHpActual() - danioFinal);
-        activoJugador.setHpActual(nuevaHpJugador);
         System.out.println("🎯 [BOT] " + activoBot.getCard().getNombre() + " usó " + ataqueElegido.getNombre() + " -> Daño: " + danioFinal);
     }
 
@@ -409,6 +465,15 @@ public class EstrategiaBasica implements EstrategiaBot {
         }
 
         return resultado;
+    }
+
+    private boolean matchesType(List<com.pokemon.tcg.model.CardAttribute> attributes, String type) {
+        if (attributes == null || type == null) return false;
+        return attributes.stream()
+                .filter(java.util.Objects::nonNull)
+                .map(com.pokemon.tcg.model.CardAttribute::getType)
+                .filter(java.util.Objects::nonNull)
+                .anyMatch(value -> value.equalsIgnoreCase(type));
     }
 
     private String normalizarTipo(String texto) {

@@ -82,11 +82,22 @@ public class JugadorController {
     }
 
     @GetMapping("/{username}/coleccion")
+    @Transactional
     public ResponseEntity<?> obtenerColeccion(@PathVariable String username) {
         try {
             Jugador j = jugadorRepo.findByUsername(username);
             if (j == null) return ResponseEntity.notFound().build();
-            return ResponseEntity.ok(j.getColeccion());
+            List<Card> col = j.getColeccion();
+            if (col != null) {
+                for (Card card : col) {
+                    if (card.getSubtypes() != null) card.getSubtypes().size();
+                    if (card.getReglas() != null) card.getReglas().size();
+                    if (card.getAtaques() != null) card.getAtaques().size();
+                    if (card.getDebilidades() != null) card.getDebilidades().size();
+                    if (card.getResistencias() != null) card.getResistencias().size();
+                }
+            }
+            return ResponseEntity.ok(col);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error en coleccion: " + e.getMessage());
         }

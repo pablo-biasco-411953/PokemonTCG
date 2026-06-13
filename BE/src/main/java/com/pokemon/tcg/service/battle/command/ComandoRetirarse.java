@@ -44,12 +44,17 @@ public class ComandoRetirarse implements ComandoTurno {
                 .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
 
         int costo = activoViejo.getCard().getCostoRetirada();
-        if (activoViejo.getEnergiasUnidas().size() < costo) {
+        int energiaDisponible = activoViejo.getEnergiasUnidas().stream()
+                .mapToInt(com.pokemon.tcg.service.battle.EnergyCostCalculator::colorlessValue)
+                .sum();
+        if (energiaDisponible < costo) {
             throw new IllegalStateException("Energías insuficientes. Necesitás " + costo + " para retirar.");
         }
 
-        for (int i = 0; i < costo; i++) {
+        int energiaPagada = 0;
+        while (energiaPagada < costo) {
             Card energia = activoViejo.getEnergiasUnidas().remove(0);
+            energiaPagada += com.pokemon.tcg.service.battle.EnergyCostCalculator.colorlessValue(energia);
             tablero.getPilaDescarte().add(energia);
         }
 

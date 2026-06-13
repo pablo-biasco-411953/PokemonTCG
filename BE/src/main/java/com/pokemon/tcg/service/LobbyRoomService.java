@@ -86,6 +86,7 @@ public class LobbyRoomService {
         String password = normalizePassword(request.getPassword());
         room.setHasPassword(password != null);
         room.setPasswordHash(password == null ? null : hashPassword(password));
+        room.setTurnTimeSeconds(normalizeTurnTimeSeconds(request.getTurnTimeSeconds()));
         room.getChat().add(new LobbyRoomChatMessage("SISTEMA", username + " creo la sala.", true));
         touch(room);
         rooms.put(room.getId(), room);
@@ -131,7 +132,24 @@ public class LobbyRoomService {
         requireUsername(username);
         LobbyRoom room = requireRoom(roomId);
         synchronized (room) {
+            boolean participant = username.equals(room.getOwnerUsername())
+                    || username.equals(room.getGuestUsername());
+            if (participant && room.getStatus() == LobbyRoomStatus.IN_PROGRESS) {
+                if (room.getMatchId() != null) {
+                    battleEngineService.rendirse(room.getMatchId(), username);
+                }
+                room.setStatus(LobbyRoomStatus.FINISHED);
+                room.getChat().add(new LobbyRoomChatMessage(
+                        "SISTEMA",
+                        username + " abandono la partida. La sala fue cerrada.",
+                        true
+                ));
+                touch(room);
+                rooms.remove(roomId);
+                return toSnapshot(room);
+            }
             if (username.equals(room.getOwnerUsername())) {
+                room.setStatus(LobbyRoomStatus.FINISHED);
                 rooms.remove(roomId);
                 room.getChat().add(new LobbyRoomChatMessage("SISTEMA", "La sala fue cerrada.", true));
                 touch(room);
@@ -168,7 +186,7 @@ public class LobbyRoomService {
         }
     }
 
-    public LobbyRoomSnapshot addBot(String roomId, String ownerUsername) {
+    public LobbyRoomSnapshot addBot(String roomId, String ownerUsername, String difficulty) {
         requireUsername(ownerUsername);
         LobbyRoom room = requireRoom(roomId);
         synchronized (room) {
@@ -179,12 +197,18 @@ public class LobbyRoomService {
             if (room.getGuestUsername() != null) {
                 throw new IllegalStateException("La sala ya tiene rival.");
             }
+            String normalizedDifficulty = normalizeBotDifficulty(difficulty);
             room.setGuestUsername("BOT");
-            room.setGuestDeckName("Mazo espejo");
+            room.setGuestDeckName("Mazo bot " + normalizedDifficulty.toLowerCase());
             room.setGuestMazoId(null);
             room.setGuestReady(true);
             room.setGuestBot(true);
-            room.getChat().add(new LobbyRoomChatMessage("SISTEMA", "Se sumo un bot listo para jugar.", true));
+            room.setBotDifficulty(normalizedDifficulty);
+            room.getChat().add(new LobbyRoomChatMessage(
+                    "SISTEMA",
+                    "Se sumo un bot " + normalizedDifficulty.toLowerCase() + " listo para jugar.",
+                    true
+            ));
             touch(room);
             return toSnapshot(room);
         }
@@ -237,7 +261,11 @@ public class LobbyRoomService {
             }
 
             Partida partida = room.isGuestBot()
-                    ? battleEngineService.startBattle(room.getOwnerUsername(), room.getOwnerMazoId())
+                    ? battleEngineService.startBattle(
+                            room.getOwnerUsername(),
+                            room.getOwnerMazoId(),
+                            room.getBotDifficulty()
+                    )
                     : battleEngineService.startBattleOnline(
                             room.getOwnerUsername(), room.getOwnerMazoId(),
                             room.getGuestUsername(), room.getGuestMazoId()
@@ -328,6 +356,7 @@ public class LobbyRoomService {
         s.setName(room.getName());
         s.setStatus(room.getStatus());
         s.setLocked(room.isHasPassword());
+        s.setTurnTimeSeconds(room.getTurnTimeSeconds());
         s.setOwnerUsername(room.getOwnerUsername());
         s.setOwnerDeckName(room.getOwnerDeckName());
         s.setOwnerReady(room.isOwnerReady());
@@ -335,6 +364,7 @@ public class LobbyRoomService {
         s.setGuestDeckName(room.getGuestDeckName());
         s.setGuestReady(room.isGuestReady());
         s.setGuestBot(room.isGuestBot());
+        s.setBotDifficulty(room.getBotDifficulty());
         s.setPlayerCount(room.getGuestUsername() == null ? 1 : 2);
         s.setSpectatorCount(room.getSpectators().size());
         s.setMatchId(room.getMatchId());
@@ -347,6 +377,20 @@ public class LobbyRoomService {
         trimReactions(room);
         s.setReactions(new java.util.ArrayList<>(room.getReactions()));
         return s;
+    }
+
+    private String normalizeBotDifficulty(String difficulty) {
+        if (difficulty == null) return "NORMAL";
+        return switch (difficulty.trim().toUpperCase()) {
+            case "EASY" -> "EASY";
+            case "HARD" -> "HARD";
+            default -> "NORMAL";
+        };
+    }
+
+    private int normalizeTurnTimeSeconds(Integer seconds) {
+        if (seconds == null || seconds <= 0) return 0;
+        return Math.max(15, Math.min(300, seconds));
     }
 
     private LobbyRoom requireRoom(String roomId) {

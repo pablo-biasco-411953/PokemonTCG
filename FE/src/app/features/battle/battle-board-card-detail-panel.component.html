@@ -47,9 +47,10 @@
                 *ngFor="let tipoEnergia of atk.costo"
                 class="cost-dot-small"
                 [style.backgroundColor]="resolveEnergyColor(tipoEnergia)"
-                [title]="tipoEnergia"
-              ></span>
+                [title]="resolveEnergyName(tipoEnergia)"
+              >{{ resolveEnergyLabel(tipoEnergia) }}</span>
             </div>
+            <small class="energy-cost-hint" *ngIf="atk.costo.includes('Colorless')">INC = cualquier energia</small>
             <span class="cda-name">{{ atk.nombre }}</span>
             <span class="cda-dmg">{{ atk.danio || atk.dano || '' }}</span>
           </div>

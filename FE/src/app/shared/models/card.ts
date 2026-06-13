@@ -1,7 +1,9 @@
 // Debilidad o resistencia expresada por tipo.
 export interface CardWeakness {
-  tipo: string;
+  tipo?: string;
   valor?: string;
+  type?: string;
+  value?: string;
 }
 
 // Forma simplificada de un ataque consumida por el frontend.

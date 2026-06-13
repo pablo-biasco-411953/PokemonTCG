@@ -26,6 +26,7 @@ export interface AttackCoinFlipState {
   terminado: boolean;
   progreso: number;
   esSoloEstado: boolean;
+  tipoEfecto?: 'damage' | 'status' | 'protection' | 'self-damage' | 'discard' | 'switch' | 'search' | 'restriction' | 'other';
 }
 
 export interface InterTurnOverlayState {

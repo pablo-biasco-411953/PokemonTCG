@@ -16,9 +16,11 @@ public class Partida {
     private Turno turnoActual;
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
+    private boolean yaSeUnioEnergiaEsteTurno = false;
     private int numeroTurno = 1;
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
+    private boolean muerteSubita = false;
 
     private String jugadorUsername;
     private String botUsername;
@@ -52,6 +54,10 @@ public class Partida {
     private boolean setupBotListo = false;
 
     private List<String> turnLogs = new ArrayList<>();
+    private PendingBattleAction pendingAction;
+    private long lastCoinFlipEventId = 0L;
+    private String lastCoinFlipAttackName;
+    private String lastCoinFlipActor;
 
     private java.util.Deque<com.pokemon.tcg.model.battle.command.BattleCommand> executionQueue = new java.util.LinkedList<>();
 
@@ -89,6 +95,14 @@ public class Partida {
     
     public List<String> getTurnLogs() { return turnLogs; }
     public void setTurnLogs(List<String> turnLogs) { this.turnLogs = turnLogs; }
+    public PendingBattleAction getPendingAction() { return pendingAction; }
+    public void setPendingAction(PendingBattleAction pendingAction) { this.pendingAction = pendingAction; }
+    public long getLastCoinFlipEventId() { return lastCoinFlipEventId; }
+    public void setLastCoinFlipEventId(long lastCoinFlipEventId) { this.lastCoinFlipEventId = lastCoinFlipEventId; }
+    public String getLastCoinFlipAttackName() { return lastCoinFlipAttackName; }
+    public void setLastCoinFlipAttackName(String lastCoinFlipAttackName) { this.lastCoinFlipAttackName = lastCoinFlipAttackName; }
+    public String getLastCoinFlipActor() { return lastCoinFlipActor; }
+    public void setLastCoinFlipActor(String lastCoinFlipActor) { this.lastCoinFlipActor = lastCoinFlipActor; }
 
     public TableroJugador getJugador() { return jugador; }
     public void setJugador(TableroJugador jugador) { this.jugador = jugador; }
@@ -135,8 +149,16 @@ public class Partida {
         this.yaSeRetiroEsteTurno = yaSeRetiroEsteTurno;
     }
 
+    public boolean isYaSeUnioEnergiaEsteTurno() { return yaSeUnioEnergiaEsteTurno; }
+    public void setYaSeUnioEnergiaEsteTurno(boolean yaSeUnioEnergiaEsteTurno) {
+        this.yaSeUnioEnergiaEsteTurno = yaSeUnioEnergiaEsteTurno;
+    }
+
     public int getNumeroTurno() { return numeroTurno; }
     public void setNumeroTurno(int numeroTurno) { this.numeroTurno = Math.max(1, numeroTurno); }
+
+    public boolean isMuerteSubita() { return muerteSubita; }
+    public void setMuerteSubita(boolean muerteSubita) { this.muerteSubita = muerteSubita; }
 
     public int getMulligansJugador() { return mulligansJugador; }
     public void setMulligansJugador(int mulligansJugador) { this.mulligansJugador = mulligansJugador; }

@@ -1244,6 +1244,22 @@ kbd {
   border-color: rgba(248, 113, 113, 0.46);
 }
 
+.room-card.mine {
+  box-shadow: inset 3px 0 0 #38bdf8, 0 0 22px rgba(56, 189, 248, 0.12);
+}
+
+.room-mine-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 2;
+  color: #bae6fd;
+  font-family: $font-tech;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
 .room-card strong,
 .room-card small,
 .room-card em,
@@ -1345,9 +1361,83 @@ kbd {
 
 .room-create-grid {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 248px 152px;
+  grid-template-columns: minmax(200px, 1fr) 190px 248px 152px;
   gap: 8px;
   align-items: stretch;
+}
+
+.room-turn-timer {
+  display: grid;
+  gap: 5px;
+  min-height: 38px;
+  padding: 5px 8px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 10px;
+  background: rgba(2, 6, 23, 0.72);
+}
+
+.room-turn-timer span,
+.room-rules {
+  color: rgba(226, 232, 240, 0.58);
+  font-size: 0.62rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.room-rules {
+  margin: 6px 0 0;
+}
+
+.room-turn-timer div {
+  display: grid;
+  grid-template-columns: auto minmax(44px, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.room-turn-timer input[type="number"] {
+  min-width: 0;
+  height: 20px;
+  border: 1px solid rgba(125, 211, 252, 0.24);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #f8fafc;
+  padding: 0 6px;
+}
+
+.room-turn-timer em {
+  color: rgba(226, 232, 240, 0.64);
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.room-view-tabs {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid rgba(125, 211, 252, 0.18);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.58);
+}
+
+.room-view-tabs button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.68);
+  font-family: $font-tech;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.room-view-tabs button.active {
+  background: rgba(14, 116, 144, 0.42);
+  color: #f8fafc;
 }
 
 .room-create-grid .primary-action {
@@ -1471,6 +1561,85 @@ kbd {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   cursor: pointer;
+}
+
+.bot-config-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000001;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.bot-config-modal {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border: 1px solid rgba(125, 211, 252, 0.34);
+  border-radius: 8px;
+  background: rgba(3, 12, 28, 0.97);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.52);
+}
+
+.bot-config-modal h3 {
+  margin: 3px 0 0;
+  color: #f8fafc;
+  font-family: $font-tech;
+  font-size: 1.5rem;
+}
+
+.bot-config-modal small {
+  color: #7dd3fc;
+  font-family: $font-tech;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.bot-difficulty-options {
+  display: grid;
+  gap: 8px;
+}
+
+.bot-difficulty-options button {
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #e2e8f0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.bot-difficulty-options button.selected {
+  border-color: rgba(250, 204, 21, 0.72);
+  background: rgba(113, 63, 18, 0.34);
+}
+
+.bot-difficulty-options strong {
+  color: #f8fafc;
+  font-family: $font-tech;
+}
+
+.bot-difficulty-options span {
+  color: rgba(226, 232, 240, 0.7);
+  font-size: 0.8rem;
+}
+
+.bot-config-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.bot-config-actions button {
+  min-height: 38px;
+  padding: 0 18px;
 }
 
 @media (max-width: 1120px) {
@@ -1669,8 +1838,8 @@ kbd {
 .room-chat-box {
   display: grid;
   grid-template-rows: minmax(54px, 1fr) auto;
-  min-height: 122px;
-  max-height: 150px;
+  min-height: 138px;
+  max-height: 168px;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(148, 163, 184, 0.16);
@@ -1690,7 +1859,9 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
   padding: 8px 10px;
   background: rgba(2, 6, 23, 0.48);
 }
@@ -1699,9 +1870,65 @@ kbd {
   margin: 0;
   color: #e2e8f0;
   font-size: 0.82rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.room-password-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1210;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.8);
+  backdrop-filter: blur(10px);
+}
+
+.room-password-modal {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+  border: 1px solid rgba(125, 211, 252, 0.36);
+  border-radius: 8px;
+  background: rgba(3, 12, 28, 0.98);
+}
+
+.room-password-modal h3,
+.room-password-modal p {
+  margin: 0;
+}
+
+.room-password-modal h3 {
+  color: #f8fafc;
+  font-family: $font-tech;
+}
+
+.room-password-modal small {
+  color: #7dd3fc;
+  font-family: $font-tech;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.room-password-modal p {
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.room-password-modal input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid rgba(125, 211, 252, 0.28);
+  border-radius: 8px;
+  background: rgba(2, 6, 23, 0.82);
+  color: #f8fafc;
+}
+
+.room-password-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .room-chat-log p.system {
@@ -4413,6 +4640,50 @@ kbd {
 @keyframes pulseNeonRed {
   from { text-shadow: 0 0 4px #ef4444; filter: drop-shadow(0 0 2px #ef4444); }
   to { text-shadow: 0 0 16px #ef4444; filter: drop-shadow(0 0 8px #ef4444); }
+}
+
+.pokedex-deck-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 1145;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: all;
+  background: rgba(2, 8, 18, 0.66);
+  backdrop-filter: blur(8px);
+  animation: pokedexBackdropIn 0.22s ease-out both;
+}
+
+.pokedex-transition-aura {
+  position: absolute;
+  width: min(72vw, 720px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(65, 211, 255, 0.22), rgba(255, 55, 72, 0.1) 42%, transparent 70%);
+  filter: blur(18px);
+}
+
+.pokedex-transition-canvas {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(72vw, 72vh, 720px);
+  height: min(72vw, 72vh, 720px);
+  animation: pokedexBounceIn 0.72s cubic-bezier(0.18, 0.88, 0.25, 1.28) both;
+  filter: drop-shadow(0 28px 42px rgba(0, 0, 0, 0.6));
+}
+
+@keyframes pokedexBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pokedexBounceIn {
+  0% { opacity: 0; transform: translateY(18vh) scale(0.32) rotate(-8deg); }
+  58% { opacity: 1; transform: translateY(-2vh) scale(1.08) rotate(2deg); }
+  78% { transform: translateY(1vh) scale(0.96) rotate(-1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
 }
 
 .deck-builder-overlay {

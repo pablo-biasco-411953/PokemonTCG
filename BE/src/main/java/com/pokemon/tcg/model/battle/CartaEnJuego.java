@@ -11,7 +11,7 @@ import java.util.Set;
  */
 public class CartaEnJuego {
     private Set<String> condicionesEspeciales = new HashSet<>();
-    private  Card card; // referencia a la carta original
+    private Card card; // referencia a la carta original
     private int hpActual;
     private List<Card> energiasUnidas = new ArrayList<>();
     private boolean puedeAtacar = true;
@@ -19,15 +19,15 @@ public class CartaEnJuego {
     private int aumentoDanioCausado = 0;
     private boolean invulnerable = false;
     private boolean bocaAbajo = false;
+    private boolean debeLanzarMonedaSiAtaca = false;
+    private boolean noPuedeAtacarSiguienteTurno = false;
+    private boolean noPuedeAtacarYaConsumido = false;
+    private String ataqueBloqueadoSiguienteTurno = null;
+    private int danioExtraSiguienteTurno = 0;
+    private String ataquePotenciadoSiguienteTurno = null;
+    private boolean ataqueBloqueadoYaConsumido = false;
 
-    public void setInvulnerable(boolean value) { this.invulnerable = value; }
-    public boolean isInvulnerable() { return invulnerable; }
-    
-    public void setBocaAbajo(boolean value) { this.bocaAbajo = value; }
-    public boolean isBocaAbajo() { return bocaAbajo; }
-    
     public CartaEnJuego(Card card) {
-        // El HP inicial se toma de la carta base al entrar en juego.
         this.card = card;
         try {
             this.hpActual = Integer.parseInt(card.getHp());
@@ -36,7 +36,37 @@ public class CartaEnJuego {
         }
     }
 
+    public void setInvulnerable(boolean value) { this.invulnerable = value; }
+    public boolean isInvulnerable() { return invulnerable; }
+    
+    public void setBocaAbajo(boolean value) { this.bocaAbajo = value; }
+    public boolean isBocaAbajo() { return bocaAbajo; }
+    public void setDebeLanzarMonedaSiAtaca(boolean value) { this.debeLanzarMonedaSiAtaca = value; }
+    public boolean isDebeLanzarMonedaSiAtaca() { return debeLanzarMonedaSiAtaca; }
+
+    public boolean isNoPuedeAtacarSiguienteTurno() { return noPuedeAtacarSiguienteTurno; }
+    public void setNoPuedeAtacarSiguienteTurno(boolean value) { this.noPuedeAtacarSiguienteTurno = value; }
+    public boolean isNoPuedeAtacarYaConsumido() { return noPuedeAtacarYaConsumido; }
+    public void setNoPuedeAtacarYaConsumido(boolean value) { this.noPuedeAtacarYaConsumido = value; }
+
+    public String getAtaqueBloqueadoSiguienteTurno() { return ataqueBloqueadoSiguienteTurno; }
+    public void setAtaqueBloqueadoSiguienteTurno(String value) { this.ataqueBloqueadoSiguienteTurno = value; }
+
+    public int getDanioExtraSiguienteTurno() { return danioExtraSiguienteTurno; }
+    public void setDanioExtraSiguienteTurno(int danioExtraSiguienteTurno) { this.danioExtraSiguienteTurno = danioExtraSiguienteTurno; }
+
+    public String getAtaquePotenciadoSiguienteTurno() { return ataquePotenciadoSiguienteTurno; }
+    public void setAtaquePotenciadoSiguienteTurno(String ataquePotenciadoSiguienteTurno) { this.ataquePotenciadoSiguienteTurno = ataquePotenciadoSiguienteTurno; }
+
+    public boolean isAtaqueBloqueadoYaConsumido() { return ataqueBloqueadoYaConsumido; }
+    public void setAtaqueBloqueadoYaConsumido(boolean value) { this.ataqueBloqueadoYaConsumido = value; }
+
     // getters y setters
+    public int getReduccionDanioRecibido() { return reduccionDanioRecibido; }
+    public void setReduccionDanioRecibido(int value) { this.reduccionDanioRecibido = value; }
+    public int getAumentoDanioCausado() { return aumentoDanioCausado; }
+    public void setAumentoDanioCausado(int value) { this.aumentoDanioCausado = value; }
+
     public Card getCard() { return card; }
     public int getHpActual() { return hpActual; }
     public void setHpActual(int hpActual) { this.hpActual = hpActual; }
@@ -53,7 +83,19 @@ public class CartaEnJuego {
 
     public void limpiarCondiciones() {
         this.condicionesEspeciales.clear();
+        this.puedeAtacar = true;
+        this.invulnerable = false;
+        this.debeLanzarMonedaSiAtaca = false;
+        this.noPuedeAtacarSiguienteTurno = false;
+        this.noPuedeAtacarYaConsumido = false;
+        this.ataqueBloqueadoSiguienteTurno = null;
+        this.ataqueBloqueadoYaConsumido = false;
     }
+
+    private int turnoEntrada = 0;
+
+    public int getTurnoEntrada() { return turnoEntrada; }
+    public void setTurnoEntrada(int turnoEntrada) { this.turnoEntrada = turnoEntrada; }
 
     public void setCard(Card card) {
         this.card = card;

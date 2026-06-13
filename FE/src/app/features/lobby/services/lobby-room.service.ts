@@ -24,6 +24,7 @@ export interface LobbyRoomSnapshot {
   name: string;
   status: LobbyRoomStatus;
   locked: boolean;
+  turnTimeSeconds: number;
   ownerUsername: string;
   ownerDeckName: string;
   ownerReady: boolean;
@@ -31,6 +32,7 @@ export interface LobbyRoomSnapshot {
   guestDeckName?: string | null;
   guestReady: boolean;
   guestBot: boolean;
+  botDifficulty?: 'EASY' | 'NORMAL' | 'HARD';
   playerCount: number;
   spectatorCount: number;
   matchId?: string | null;
@@ -61,8 +63,8 @@ export class LobbyRoomService {
     return this.http.get<LobbyRoomSnapshot>(`${this.base}/match/${matchId}`, this.headers());
   }
 
-  createRoom(roomName: string, mazoId: number, deckName: string, password = ''): Observable<LobbyRoomSnapshot> {
-    return this.http.post<LobbyRoomSnapshot>(this.base, { roomName, mazoId, deckName, password }, this.headers());
+  createRoom(roomName: string, mazoId: number, deckName: string, password = '', turnTimeSeconds = 0): Observable<LobbyRoomSnapshot> {
+    return this.http.post<LobbyRoomSnapshot>(this.base, { roomName, mazoId, deckName, password, turnTimeSeconds }, this.headers());
   }
 
   joinRoom(roomId: string, mazoId: number, deckName: string, password = ''): Observable<LobbyRoomSnapshot> {
@@ -77,8 +79,8 @@ export class LobbyRoomService {
     return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/kick`, {}, this.headers());
   }
 
-  addBot(roomId: string): Observable<LobbyRoomSnapshot> {
-    return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/bot`, {}, this.headers());
+  addBot(roomId: string, botDifficulty: 'EASY' | 'NORMAL' | 'HARD'): Observable<LobbyRoomSnapshot> {
+    return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/bot`, { botDifficulty }, this.headers());
   }
 
   setReady(roomId: string, ready: boolean, mazoId: number | null): Observable<LobbyRoomSnapshot> {

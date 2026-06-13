@@ -71,7 +71,11 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
   mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
-    this.battleNotificationService.show(mensaje, tipo);
+    if (tipo === 'error') {
+      this.battleNotificationService.showModal('Error', mensaje, tipo);
+    } else {
+      this.battleNotificationService.show(mensaje, tipo);
+    }
   }
   public Math = Math;
   readonly handDropListId = 'player-hand-dropzone';
@@ -98,6 +102,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   hoveredCardStatuses: CardGlossaryEntry[] = [];
   hoveredCardList: HoveredBattleCard[] = [];
   hoveredCardIndex = -1;
+
+  selectedDetailPokemon: CartaEnJuego | null = null;
+  mostrarDetalleModal = false;
+
+  // Sudden Death (Muerte Súbita)
+  mostrarOverlayMuerteSubita = false;
+  atmosphereHemisphereLight!: THREE.HemisphereLight;
+  atmosphereRivalLight!: THREE.PointLight;
+  atmospherePlayerLight!: THREE.PointLight;
+  atmosphereFloor!: THREE.Mesh;
+  atmosphereGrid!: THREE.GridHelper;
+  private lightningFlashActive = false;
+  private lightningFlashTimer = 0;
+
   public cartasNuevas = new Set<string>();
   private manoAnteriorIds = new Set<string>();
 
@@ -146,6 +164,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
   private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
+  private pendingEndGameTimeout: ReturnType<typeof setTimeout> | null = null;
   showEndGameOverlay = false;
   isVictory = false;
   coinsEarned = 0;
@@ -170,6 +189,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   mostrarModalDescarte = false;
   cartasParaVerEnDescarte: Card[] = [];
   tituloDescarteActual = '';
+  mostrarConversionModal = false;
 
   puedeEvolucionar(cartaMano: BattleActionCard | Card): boolean {
     return this.battleBoardState.puedeEvolucionar(this.partida, cartaMano);
@@ -208,6 +228,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   particulasJugador: ParticleVisualState[] = [];
   animandoBotDanio = false;
   animandoJugadorDanio = false;
+  impactCalloutBot: 'effective' | 'resisted' | null = null;
+  impactCalloutPlayer: 'effective' | 'resisted' | null = null;
+  battlefieldDamagePulse = false;
+  prizeRevealCard: Card | null = null;
+  pendingEffectSelection = new Set<string>();
 
   handshakePower = 0;
   opponentHandshakePower = 0;
@@ -263,6 +288,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private opponentTrainerActions = new Map<string, THREE.AnimationAction>();
   private currentTrainerAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
   private trainersClock = new THREE.Clock();
+  private battleAtmosphereRenderer?: THREE.WebGLRenderer;
+  private battleAtmosphereScene?: THREE.Scene;
+  private battleAtmosphereCamera?: THREE.PerspectiveCamera;
+  private battleAtmosphereFrame = 0;
+  private battleAtmosphereResize?: ResizeObserver;
+  private battleAtmosphereClock = new THREE.Clock();
+  private battleAtmosphereRings: THREE.Mesh[] = [];
+  private battleAtmosphereParticles?: THREE.Points;
+  private battleAtmosphereShards?: THREE.InstancedMesh;
+  private battleAtmosphereBeams: THREE.Mesh[] = [];
   private trainersAnimationId?: number;
   private handshakeParticleGeometry?: THREE.SphereGeometry;
   private handshakeSpotlight?: THREE.SpotLight;
@@ -270,6 +305,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private handshakeParticles: { mesh: THREE.Mesh; velocity: THREE.Vector3; color: THREE.Color; life: number; maxLife: number; }[] = [];
   private canvasInitialized = false;
   private effectsTriggered = false;
+
+  private playerShieldGroup?: THREE.Group;
+  private botShieldGroup?: THREE.Group;
+
+  private nextFloatingTextId = 0;
+  switchFxBot = false;
+  switchFxPlayer = false;
+  public mostrarExplosionEnergiaPlayer = false;
+  public mostrarExplosionEnergiaBot = false;
+  public particulasEnergiaPlayer: Array<{ color: string; size: number; duracion: number; tx: number; ty: number }> = [];
+  public particulasEnergiaBot: Array<{ color: string; size: number; duracion: number; tx: number; ty: number }> = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -310,7 +356,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => this.hidratarEstadoInicial(data),
       error: (err) => {
         console.error('No se pudo recuperar la partida al recargar', err);
-        alert(this.i18n.translate('alert.battleNotAvailable'));
+        this.mostrarNotificacion(this.i18n.translate('alert.battleNotAvailable'), 'error');
         this.router.navigate(['/lobby']);
       }
     });
@@ -321,6 +367,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.pollingSorteo) clearInterval(this.pollingSorteo);
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
+    if (this.pendingEndGameTimeout) clearTimeout(this.pendingEndGameTimeout);
+    this.cleanupBattleAtmosphere();
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
     this.cleanupHandshakeScene();
@@ -334,7 +382,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     this.battleService.heartbeat(this.matchId).subscribe({
       next: (data) => {
-        if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+        if (data?.faseActual === 'FIN_PARTIDA') {
+          this.aplicarEstadoRefrescado(data);
+        }
       },
       error: (err) => console.warn('No se pudo enviar heartbeat inicial de batalla', err)
     });
@@ -343,7 +393,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (!this.matchId || this.showEndGameOverlay) return;
       this.battleService.heartbeat(this.matchId).subscribe({
         next: (data) => {
-          if (data?.faseActual === 'FIN_PARTIDA') this.handleGameEnd(data);
+          if (data?.faseActual === 'FIN_PARTIDA') {
+            this.aplicarEstadoRefrescado(data);
+          }
         },
         error: (err) => console.warn('No se pudo enviar heartbeat de batalla', err)
       });
@@ -377,6 +429,58 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     this.finalizarCoinFlip();
+  }
+
+  private reingresarAFaseLanzamientoMoneda(data: Partida): void {
+    if (this.pollingPartida) {
+      clearInterval(this.pollingPartida);
+      this.pollingPartida = null;
+    }
+
+    this.detenerRelojTurno();
+    this.detenerPollingHandshake();
+    this.showEndGameOverlay = false;
+    this.cargandoAccion = false;
+    this.bloqueadoPorAnimacion = false;
+    this.botPensando = false;
+    this.botEstaAtacando = false;
+    this.esperandoMiNuevoTurno = false;
+    this.initialBotTurnInFlight = false;
+    this.estadoSetupMulligan = null;
+    this.setupAccionEnCurso = false;
+    this.setupAutoActionKey = '';
+    this.setupMulliganRevealKey = '';
+    this.setupShuffleVisible = false;
+    this.setupMulliganJugadorCartas = [];
+    this.setupMulliganRivalCartas = [];
+    this.setupMulliganJugadorDebeMostrar = false;
+    this.setupMulliganRivalDebeMostrar = false;
+    this.cartasExtraPermitidas = 0;
+    this.mulliganJugadorCount = 0;
+    this.mulliganOponenteCount = 0;
+    this.lanzada = false;
+    this.girando = false;
+    this.boardVisible = false;
+    this.estadoCoinFlip = this.loadingPhaseFinished ? 'DAR_LA_MANO' : 'CARGANDO_VS';
+    this.coinFlipAtaque = null;
+    this.resultadoMoneda = 'CARA';
+    this.anguloFinal = 0;
+
+    this.partida = data;
+    this.lastAppliedStateSignature = this.crearFirmaPartida(data);
+
+    if (this.loadingPhaseFinished) {
+      this.hidratarPreparativosIniciales(data);
+    } else {
+      this.startPreloadSequence(data);
+    }
+
+    if (!this.isSpectator) {
+      this.procesarFasesSetup(data);
+    }
+
+    this.procesarTurnLogs();
+    this.cdr.detectChanges();
   }
 
   private hidratarPreparativosIniciales(data: Partida): void {
@@ -562,6 +666,73 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.battleReactions = this.battleReactions.filter(r => r.id !== item.id);
         this.cdr.detectChanges();
       }, 1700);
+    }
+  }
+
+  floatingTextsPlayer: { id: number; text: string; type: string; targetId?: string }[] = [];
+  floatingTextsBot: { id: number; text: string; type: string; targetId?: string }[] = [];
+  cartasCurandose = new Set<string>();
+
+  getFloatingTextsPlayer(targetId?: string): any[] {
+    if (!targetId) return this.floatingTextsPlayer.filter(t => !t.targetId);
+    return this.floatingTextsPlayer.filter(t => t.targetId === targetId || (!t.targetId && targetId === this.partida?.jugador?.activo?.card?.id));
+  }
+
+  getFloatingTextsBot(targetId?: string): any[] {
+    if (!targetId) return this.floatingTextsBot.filter(t => !t.targetId);
+    return this.floatingTextsBot.filter(t => t.targetId === targetId || (!t.targetId && targetId === this.partida?.bot?.activo?.card?.id));
+  }
+
+  mostrarTextoFlotante(objetivo: 'jugador' | 'bot', texto: string, tipo = 'info', targetId?: string): void {
+    const id = this.nextFloatingTextId++;
+    const item = { id, text: texto, type: tipo, targetId };
+    if (objetivo === 'jugador') {
+      this.floatingTextsPlayer.push(item);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.floatingTextsPlayer = this.floatingTextsPlayer.filter(t => t.id !== id);
+        this.cdr.detectChanges();
+      }, 2000);
+    } else {
+      this.floatingTextsBot.push(item);
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.floatingTextsBot = this.floatingTextsBot.filter(t => t.id !== id);
+        this.cdr.detectChanges();
+      }, 2000);
+    }
+  }
+
+  generarExplosionEnergia(objetivo: 'jugador' | 'bot'): void {
+    const colores = ['#ff4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#f97316', '#6b7280'];
+    const particles = [];
+    for (let i = 0; i < 20; i++) {
+      const angulo = Math.random() * Math.PI * 2;
+      const distancia = 50 + Math.random() * 90;
+      particles.push({
+        color: colores[Math.floor(Math.random() * colores.length)],
+        size: 8 + Math.random() * 10,
+        duracion: 0.5 + Math.random() * 0.4,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia
+      });
+    }
+    if (objetivo === 'jugador') {
+      this.particulasEnergiaPlayer = particles;
+      this.mostrarExplosionEnergiaPlayer = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.mostrarExplosionEnergiaPlayer = false;
+        this.cdr.detectChanges();
+      }, 800);
+    } else {
+      this.particulasEnergiaBot = particles;
+      this.mostrarExplosionEnergiaBot = true;
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        this.mostrarExplosionEnergiaBot = false;
+        this.cdr.detectChanges();
+      }, 800);
     }
   }
 
@@ -823,7 +994,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return estado ? JSON.stringify(estado) : '';
   }
 
-  private procesarTurnLogs(): void {
+  private async procesarTurnLogs(): Promise<void> {
     if (!this.partida?.turnLogs) return;
 
     for (let i = this.lastProcessedLogIndex; i < this.partida.turnLogs.length; i++) {
@@ -835,22 +1006,250 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
 
       switch (event) {
-        case 'ENERGY_DISCARDED':
+        case 'SUPER_EFFECTIVE':
+          this.mostrarFeedbackImpacto(actor, 'effective');
+          break;
+        case 'RESISTED':
+          this.mostrarFeedbackImpacto(actor, 'resisted');
+          break;
+        case 'PRIZE_TAKEN': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '¡PREMIO OBTENIDO!', 'prize');
+          this.mostrarNotificacion(
+            `${esMiAccion ? 'Tomaste' : 'El rival tomo'} ${parts[2] || '1'} carta(s) de Premio.`,
+            'info',
+          );
+          break;
+        }
+        case 'DISCARD_TOP_DECK': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.discardTopDeck.selfDetail', { card: cardNombre }) :
+              this.i18nService.translate('battle.discardTopDeck.oppDetail', { card: cardNombre }),
+            'warning'
+          );
+          break;
+        }
+        case 'ATTACHED_FROM_DISCARD': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          const activePokemon = parts[3] || 'Active';
+          const target = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(target, '+1 ENERGÍA', 'energy-add');
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.attachedFromDiscard.selfDetail', { card: cardNombre, active: activePokemon }) :
+              this.i18nService.translate('battle.attachedFromDiscard.oppDetail', { card: cardNombre, active: activePokemon }),
+            'info'
+          );
+          break;
+        }
+        case 'MAGMA_MANTLE_BOOST': {
+          const targetIsMe = esMiAccion;
+          const cardNombre = parts[2] || '';
+          const target = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(target, '+50 DAÑO', 'attack');
+          this.mostrarNotificacion(
+            targetIsMe ?
+              this.i18nService.translate('battle.magmaMantle.selfBoost', { card: cardNombre }) :
+              this.i18nService.translate('battle.magmaMantle.oppBoost', { card: cardNombre }),
+            'info'
+          );
+          break;
+        }
+        case 'ENERGY_DISCARDED': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '-1 ENERGÍA', 'energy-remove');
+          this.generarExplosionEnergia(objetivo);
           this.mostrarNotificacion(`${esMiAccion ? 'Descartaste' : 'El rival descartó'} una energía al ataque.`, 'warning');
           break;
+        }
         case 'DECK_SEARCHED':
           this.mostrarNotificacion(`${esMiAccion ? 'Buscaste' : 'El rival buscó'} cartas en el mazo.`, 'info');
           break;
         case 'ENERGY_MOVED':
           this.mostrarNotificacion(`${esMiAccion ? 'Moviste' : 'El rival movió'} una energía.`, 'info');
           break;
+        case 'STATUS_APPLIED': {
+          const condicion = parts[3];
+          const objetivo = esMiAccion ? 'bot' : 'jugador';
+          let textoCondicion = condicion ? condicion.toUpperCase() : 'ESTADO';
+          if (condicion === 'Poisoned') textoCondicion = 'ENVENENADO';
+          else if (condicion === 'Asleep') textoCondicion = 'DORMIDO';
+          else if (condicion === 'Burned') textoCondicion = 'QUEMADO';
+          else if (condicion === 'Paralyzed') textoCondicion = 'PARALIZADO';
+          else if (condicion === 'Confused') textoCondicion = 'CONFUNDIDO';
+          else if (condicion === 'CantRetreat') textoCondicion = 'RETIRADA BLOQUEADA';
+          this.mostrarTextoFlotante(objetivo, `¡${textoCondicion}!`, 'status');
+          if (condicion && condicion !== 'CantRetreat') {
+            this.mostrarEfectoStatusVisual(objetivo, condicion);
+          }
+          break;
+        }
+        case 'ATTACK_USED': {
+          const atacante = esMiAccion ? 'jugador' : 'bot';
+          const attackName = parts[2];
+          this.mostrarTextoFlotante(atacante, `¡${attackName.toUpperCase()}!`, 'attack');
+          if (attackName) this.triggerAttackBanner(attackName, !esMiAccion);
+          break;
+        }
+        case 'ENERGY_ATTACHED': {
+          const objetivo = esMiAccion ? 'jugador' : 'bot';
+          const cardName = parts[3];
+          this.mostrarTextoFlotante(objetivo, '+1 ENERGÍA', 'energy-add');
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
+          break;
+        }
+        case 'POKEMON_PLAYED': {
+          const cardName = parts[2];
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
+          break;
+        }
+        case 'KNOCK_OUT': {
+          const objetivo = esMiAccion ? 'bot' : 'jugador';
+          this.mostrarTextoFlotante(objetivo, '¡FUERA DE COMBATE!', 'ko');
+          break;
+        }
+        case 'MUERTE_SUBITA': {
+          this.battleNotificationService.showModal('Muerte Súbita', 'Empate total. El próximo premio define la partida.', 'warning');
+          break;
+        }
+        case 'POISON_DAMAGE': {
+          const targetOwner = parts[1];
+          const damageAmount = parseInt(parts[3], 10) || 10;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(
+            objetivo,
+            `${this.getLocalizedStatusLabel('Poisoned')} -${damageAmount}`,
+            'status-poisoned',
+          );
+          this.mostrarEfectoStatusVisual(objetivo, 'Poisoned');
+          break;
+        }
+        case 'BURN_DAMAGE': {
+          const targetOwner = parts[1];
+          const damageAmount = parseInt(parts[3], 10) || 20;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(
+            objetivo,
+            `${this.getLocalizedStatusLabel('Burned')} -${damageAmount}`,
+            'status-burned',
+          );
+          this.mostrarEfectoStatusVisual(objetivo, 'Burned');
+          break;
+        }
+        case 'HEALED': {
+          const targetOwner = parts[1];
+          const targetId = parts[2];
+          const amount = parseInt(parts[3], 10) || 0;
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, `+${amount} HP`, 'status-healed-text', targetId);
+          this.mostrarCuracion(objetivo, targetId);
+          await this.delay(1200); // Dar tiempo para que el jugador vea la animación de curación
+          break;
+        }
+        case 'AWAKE_FLIP_HEADS': {
+          const targetOwner = parts[1];
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          
+          while (this.showTurnOverlay) {
+            await this.delay(100);
+          }
+          await this.delay(500);
+
+          this.mostrarTextoFlotante(objetivo, '¡Despierta! (CARA)', 'status-healed-text');
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 1, true);
+          break;
+        }
+        case 'AWAKE_FLIP_TAILS': {
+          const targetOwner = parts[1];
+          const objetivo =
+            targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+
+          while (this.showTurnOverlay) {
+            await this.delay(100);
+          }
+          await this.delay(500);
+
+          this.mostrarTextoFlotante(objetivo, 'Sigue Dormido (CRUZ)', 'status-asleep');
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 0, true);
+          break;
+        }
+        case 'ASTONISH_REVEALED': {
+          const cardId = (parts[2] || '').trim();
+          const cardNombre = parts[3];
+          const targetIsMe = esMiAccion;
+
+          this.astonishReveal = {
+            visible: true,
+            cardId,
+            cardNombre,
+            esMiAccion: !targetIsMe,
+            isFlipped: false
+          };
+          this.cdr.detectChanges();
+
+          setTimeout(() => {
+            if (this.astonishReveal) {
+              this.astonishReveal.isFlipped = true;
+              this.cdr.detectChanges();
+            }
+          }, 800);
+
+          setTimeout(() => {
+            this.cerrarAstonishReveal();
+          }, 6500);
+
+          const objetivo = targetIsMe ? 'jugador' : 'bot';
+          this.mostrarTextoFlotante(objetivo, '¡ASTONISH!', 'attack');
+
+          const detailMsg = targetIsMe ?
+            this.i18nService.translate('battle.astonish.oppDetail', { card: cardNombre }) :
+            this.i18nService.translate('battle.astonish.selfDetail', { card: cardNombre });
+
+          this.mostrarNotificacion(detailMsg, 'warning');
+          break;
+        }
+        case 'BENCH_DAMAGE': {
+          const targetOwner = parts[1];
+          const cardId = (parts[2] || '').trim();
+          const cardNombre = parts[3];
+          const damageAmount = parseInt(parts[4], 10);
+          const isMyBench = targetOwner === 'JUGADOR' || targetOwner === this.jugadorNombre;
+          const targetSide = isMyBench ? 'jugador' : 'bot';
+          
+          this.mostrarTextoFlotante(targetSide, `-${damageAmount}`, 'damage', cardId);
+          
+          const detailMsg = isMyBench ?
+            this.i18nService.translate('battle.benchDamage.selfDetail', { name: cardNombre, damage: damageAmount.toString() }) :
+            this.i18nService.translate('battle.benchDamage.oppDetail', { name: cardNombre, damage: damageAmount.toString() });
+          this.mostrarNotificacion(detailMsg, 'warning');
+          await this.delay(1000);
+          break;
+        }
       }
     }
     this.lastProcessedLogIndex = this.partida.turnLogs.length;
   }
 
+  getOpponentHandStep(total: number): number {
+    if (total <= 1) return 0;
+    return Math.max(7, Math.min(21, 610 / (total - 1)));
+  }
+
+  get pendingAction() {
+    const pending = this.partida?.pendingAction;
+    return pending?.actor === this.jugadorNombre ? pending : null;
+  }
+
   get visualBattleLog(): Array<{ kind: string; title: string; detail: string }> {
-    const logs = (this.partida?.turnLogs || []).slice(-7).map(log => this.formatBattleLog(log));
+    const logs = (this.partida?.turnLogs || []).slice().reverse().map(log => this.formatBattleLog(log));
     if (logs.length) return logs;
     if (!this.partida) return [];
     return [
@@ -872,20 +1271,73 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const second = parts[3] || '';
     const third = parts[4] || '';
     const map: Record<string, { title: string; detail: string; kind: string }> = {
-      ENERGY_DISCARDED: { title: 'Energia descartada', detail: `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
-      DECK_SEARCHED: { title: 'Busqueda en mazo', detail: `${subject} busco cartas en el mazo.`, kind: 'search' },
-      ENERGY_MOVED: { title: 'Energia movida', detail: `${subject} movio una energia en el campo.`, kind: 'energy' },
-      POKEMON_PLAYED: { title: 'Pokemon en banca', detail: `${subject} bajo a ${first || 'un Pokemon'} a la banca.`, kind: 'bench' },
-      ACTIVE_PLACED: { title: 'Activo preparado', detail: `${subject} preparo su Pokemon activo.`, kind: 'setup' },
-      BENCH_PLACED: { title: 'Banca preparada', detail: `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
-      PRIZES_PLACED: { title: 'Premios colocados', detail: `${subject} coloco sus premios.`, kind: 'setup' },
-      ENERGY_ATTACHED: { title: 'Energia unida', detail: `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
-      ATTACK_USED: { title: 'Ataque', detail: `${subject} uso ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.`, kind: 'attack' },
+      ASTONISH_REVEALED: { 
+        title: this.i18nService.translate('battle.astonish.title'), 
+        detail: esMiAccion ? 
+          this.i18nService.translate('battle.astonish.oppDetail', { card: second }) : 
+          this.i18nService.translate('battle.astonish.selfDetail', { card: second }), 
+        kind: 'search' 
+      },
+      BENCH_DAMAGE: {
+        title: this.i18nService.translate('battle.benchDamage.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.benchDamage.selfDetail', { name: second, damage: third }) :
+          this.i18nService.translate('battle.benchDamage.oppDetail', { name: second, damage: third }),
+        kind: 'damage'
+      },
+      ENERGY_DISCARDED: { title: 'Energia descartada', detail: esMiAccion ? 'Descartaste energia para resolver un ataque.' : `${subject} descarto energia para resolver un ataque.`, kind: 'energy' },
+      DECK_SEARCHED: { title: 'Busqueda en mazo', detail: esMiAccion ? 'Buscaste cartas en el mazo.' : `${subject} busco cartas en el mazo.`, kind: 'search' },
+      ENERGY_MOVED: { title: 'Energia movida', detail: esMiAccion ? 'Moviste una energia en el campo.' : `${subject} movio una energia en el campo.`, kind: 'energy' },
+      POKEMON_PLAYED: { title: 'Pokemon en banca', detail: esMiAccion ? `Bajaste a ${first || 'un Pokemon'} a la banca.` : `${subject} bajo a ${first || 'un Pokemon'} a la banca.`, kind: 'bench' },
+      ACTIVE_PLACED: { title: 'Activo preparado', detail: esMiAccion ? 'Preparaste tu Pokemon activo.' : `${subject} preparo su Pokemon activo.`, kind: 'setup' },
+      BENCH_PLACED: { title: 'Banca preparada', detail: esMiAccion ? 'Preparaste un Pokemon en banca.' : `${subject} preparo un Pokemon en banca.`, kind: 'setup' },
+      PRIZES_PLACED: { title: 'Premios colocados', detail: esMiAccion ? 'Colocaste tus premios.' : `${subject} coloco sus premios.`, kind: 'setup' },
+      PRIZE_TAKEN: { title: 'Premio tomado', detail: esMiAccion ? `Tomaste ${first || '1'} carta(s) de Premio.` : `${subject} tomo ${first || '1'} carta(s) de Premio.`, kind: 'prize' },
+      MUERTE_SUBITA: { title: 'Muerte subita', detail: 'Empate total. El siguiente premio define la batalla.', kind: 'system' },
+      KNOCK_OUT: { title: 'Fuera de combate', detail: `${first || 'Un Pokemon'} quedo fuera de combate.`, kind: 'ko' },
+      ENERGY_ATTACHED: { title: 'Energia unida', detail: esMiAccion ? `Uniste energia a ${first || 'tu Pokemon'}.` : `${subject} unio energia a ${first || 'su Pokemon'}.`, kind: 'energy' },
+      CARDS_DRAWN: { title: 'Cartas robadas', detail: esMiAccion ? `Robaste ${first || '1'} carta(s).` : `${subject} robo ${first || '1'} carta(s).`, kind: 'draw' },
+      ATTACK_USED: { title: 'Ataque', detail: esMiAccion ? `Usaste ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.` : `${subject} uso ${first || 'un ataque'} contra ${second || 'el rival'}${third ? ` por ${third} de dano` : ''}.`, kind: 'attack' },
+      SUPER_EFFECTIVE: { title: 'Super efectivo', detail: `El ataque de ${subject} aprovecho la debilidad de ${first || 'su objetivo'}.`, kind: 'effective' },
+      RESISTED: { title: 'Ataque resistido', detail: `${first || 'El objetivo'} resistio parte del ataque de ${subject}.`, kind: 'resisted' },
       STATUS_APPLIED: { title: 'Estado aplicado', detail: `${subject} dejo a ${first || 'un Pokemon'} ${this.traducirCondicionLog(second)}.`, kind: 'status' },
-      TURN_PASSED: { title: 'Turno terminado', detail: `${subject} termino su turno.`, kind: 'phase' },
-      TURN_STARTED: { title: 'Nuevo turno', detail: `Comienza el turno de ${subject}.`, kind: 'phase' },
-      SURRENDERED: { title: 'Rendicion', detail: `${subject} se rindio.`, kind: 'system' },
-      DISCONNECTED: { title: 'Desconexion', detail: `${subject} se desconecto.`, kind: 'system' }
+      TURN_PASSED: { title: 'Turno terminado', detail: esMiAccion ? 'Terminaste tu turno.' : `${subject} termino su turno.`, kind: 'phase' },
+      TURN_STARTED: { title: 'Nuevo turno', detail: esMiAccion ? 'Comienza tu turno.' : `Comienza el turno de ${subject}.`, kind: 'phase' },
+      SURRENDERED: { title: 'Rendicion', detail: esMiAccion ? 'Te rendiste.' : `${subject} se rindio.`, kind: 'system' },
+      DISCONNECTED: { title: 'Desconexion', detail: esMiAccion ? 'Te desconectaste.' : `${subject} se desconecto.`, kind: 'system' },
+      DISCARD_TOP_DECK: {
+        title: this.i18nService.translate('battle.discardTopDeck.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.discardTopDeck.selfDetail', { card: first }) :
+          this.i18nService.translate('battle.discardTopDeck.oppDetail', { card: first }),
+        kind: 'discard'
+      },
+      ATTACHED_FROM_DISCARD: {
+        title: this.i18nService.translate('battle.attachedFromDiscard.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.attachedFromDiscard.selfDetail', { card: first, active: second }) :
+          this.i18nService.translate('battle.attachedFromDiscard.oppDetail', { card: first, active: second }),
+        kind: 'energy'
+      },
+      MAD_MOUNTAIN_DISCARDED: {
+        title: this.i18nService.translate('battle.madMountain.title'),
+        detail: this.i18nService.translate('battle.madMountain.detail', { subject, flip1: first, flip2: second, count: third }),
+        kind: 'attack'
+      },
+      MAGMA_MANTLE_BOOST: {
+        title: this.i18nService.translate('battle.magmaMantle.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.magmaMantle.selfBoost', { card: first }) :
+          this.i18nService.translate('battle.magmaMantle.oppBoost', { card: first }),
+        kind: 'attack'
+      },
+      DECK_PEEKED: {
+        title: this.i18nService.translate('battle.deckPeeked.title'),
+        detail: esMiAccion ?
+          this.i18nService.translate('battle.deckPeeked.selfDetail', { count: first }) :
+          this.i18nService.translate('battle.deckPeeked.oppDetail', { count: first }),
+        kind: 'search'
+      }
     };
     return map[event] || {
       title: event.replaceAll('_', ' ').toLowerCase(),
@@ -904,6 +1356,82 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       CantRetreat: 'sin retirada'
     };
     return map[condition] || condition || 'afectado';
+  }
+
+  togglePendingEffectCard(cardId: string): void {
+    const pending = this.partida?.pendingAction;
+    if (!pending) return;
+    if (this.pendingEffectSelection.has(cardId)) {
+      this.pendingEffectSelection.delete(cardId);
+      return;
+    }
+    if (this.pendingEffectSelection.size < pending.maxSelections) {
+      this.pendingEffectSelection.add(cardId);
+    }
+  }
+
+  isPendingEffectCardSelected(cardId: string): boolean {
+    return this.pendingEffectSelection.has(cardId);
+  }
+
+  /** Returns the 1-based selection order for REORDER_TOP_DECK mode, or 0 if not selected. */
+  getPendingEffectOrderIndex(cardId: string): number {
+    const arr = [...this.pendingEffectSelection];
+    const idx = arr.indexOf(cardId);
+    return idx === -1 ? 0 : idx + 1;
+  }
+
+  get isReorderMode(): boolean {
+    return this.partida?.pendingAction?.type === 'REORDER_TOP_DECK';
+  }
+
+  canConfirmPendingEffect(): boolean {
+    const pending = this.partida?.pendingAction;
+    if (!pending) return false;
+    return this.pendingEffectSelection.size >= pending.minSelections
+      && this.pendingEffectSelection.size <= pending.maxSelections;
+  }
+
+  confirmPendingEffect(): void {
+    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+    this.cargandoAccion = true;
+    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
+    this.battleService.resolverEfecto(this.matchId, [...this.pendingEffectSelection]).subscribe({
+      next: async (estado) => {
+        this.pendingEffectSelection.clear();
+        if (estado.turnoActual === 'BOT' && estadoAntiguo?.turnoActual === 'JUGADOR') {
+          await this.procesarPostPassTurn(estadoAntiguo, estado);
+        } else {
+          await this.aplicarEstadoRefrescado(estado);
+          this.cargandoAccion = false;
+          this.cdr.detectChanges();
+        }
+      },
+      error: error => {
+        this.cargandoAccion = false;
+        this.mostrarNotificacion(error?.error || 'No se pudo resolver el efecto.', 'warning');
+      },
+    });
+  }
+
+  private mostrarFeedbackImpacto(actor: string, kind: 'effective' | 'resisted'): void {
+    const atacanteEsJugador = actor === this.jugadorNombre || actor === 'JUGADOR';
+    const objetivo = atacanteEsJugador ? 'bot' : 'jugador';
+    if (objetivo === 'bot') {
+      this.impactCalloutBot = kind;
+      this.dispararParticulas('bot', kind === 'effective' ? 'Fire' : 'Metal');
+    } else {
+      this.impactCalloutPlayer = kind;
+      this.dispararParticulas('jugador', kind === 'effective' ? 'Fire' : 'Metal');
+    }
+    this.battlefieldDamagePulse = kind === 'effective';
+    this.cdr.detectChanges();
+    window.setTimeout(() => {
+      if (objetivo === 'bot') this.impactCalloutBot = null;
+      else this.impactCalloutPlayer = null;
+      this.battlefieldDamagePulse = false;
+      this.cdr.detectChanges();
+    }, 1100);
   }
 
   private puedeCantarSorteo(estado: Partida | null | undefined = this.partida): boolean {
@@ -926,7 +1454,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             return;
           }
 
-          if (data.faseActual === 'TURNO_NORMAL' || data.faseActual === 'SETUP_INITIAL_DRAW') {
+          if (data.faseActual !== 'LANZAMIENTO_MONEDA') {
             this.finalizarCoinFlip();
             return;
           }
@@ -1034,15 +1562,23 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  async mostrarCuracion(objetivo: 'bot' | 'jugador', duracion = 1500): Promise<void> {
-    if (objetivo === 'bot') this.mostrarAuraCuracionBot = true;
-    else this.mostrarAuraCuracionPlayer = true;
+  async mostrarCuracion(objetivo: 'bot' | 'jugador', targetId?: string, duracion = 1500): Promise<void> {
+    if (targetId) {
+      this.cartasCurandose.add(targetId);
+    } else {
+      if (objetivo === 'bot') this.mostrarAuraCuracionBot = true;
+      else this.mostrarAuraCuracionPlayer = true;
+    }
     this.cdr.detectChanges();
 
     await this.delay(duracion);
 
-    if (objetivo === 'bot') this.mostrarAuraCuracionBot = false;
-    else this.mostrarAuraCuracionPlayer = false;
+    if (targetId) {
+      this.cartasCurandose.delete(targetId);
+    } else {
+      if (objetivo === 'bot') this.mostrarAuraCuracionBot = false;
+      else this.mostrarAuraCuracionPlayer = false;
+    }
     this.cdr.detectChanges();
   }
 
@@ -1320,6 +1856,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       terminado: false,
       progreso: 0,
       esSoloEstado,
+      tipoEfecto: 'damage',
     };
 
     this.cdr.detectChanges();
@@ -1355,7 +1892,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return danioTotal;
   }
 
-  detectarCoinFlipAtaque(ataque: any): {
+  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): {
     cantidadMonedas: number;
     danioBase: number;
     danioExtraPorCara: number;
@@ -1373,6 +1910,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           esFalloCruz,
           esSoloEstado,
         ),
+      activo,
     );
   }
 
@@ -1387,6 +1925,29 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const playerActivoAhora = estadoNuevo?.jugador?.activo;
     if (playerActivoAntes && !playerActivoAhora) {
       await this.mostrarKOAnim();
+    }
+
+    const botCambioActivo =
+      botActivoAntes &&
+      botActivoAhora &&
+      this.obtenerFirmaActivo(botActivoAntes) !== this.obtenerFirmaActivo(botActivoAhora);
+    if (botCambioActivo) {
+      this.activarEfectoCambio('bot');
+    }
+
+    const playerCambioActivo =
+      playerActivoAntes &&
+      playerActivoAhora &&
+      this.obtenerFirmaActivo(playerActivoAntes) !== this.obtenerFirmaActivo(playerActivoAhora);
+    if (playerCambioActivo) {
+      this.activarEfectoCambio('jugador');
+    }
+
+    // Delay damage if attack or ability was used to allow banner to show first
+    const logsDeTurno = estadoNuevo?.turnLogs || [];
+    const huboAtaque = logsDeTurno.some((log: string) => log.startsWith('ATTACK_USED') || log.startsWith('ABILITY_USED'));
+    if (huboAtaque) {
+      await this.delay(1000);
     }
 
     const hpBotAntes = botActivoAntes?.hpActual ?? 0;
@@ -1495,18 +2056,41 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ): string {
     const numStr = monedas === 1 ? 'una moneda' : `${monedas} monedas`;
 
+    if (textoOriginal.includes('prevent all effects of attacks')) {
+      return `Lanza ${numStr}. Si sale CARA, este Pokemon queda protegido de todo efecto y dano de ataques durante el proximo turno rival.`;
+    }
+    if (textoOriginal.includes('prevent all damage done')) {
+      return `Lanza ${numStr}. Si sale CARA, este Pokemon no recibe dano de ataques durante el proximo turno rival.`;
+    }
+    if (textoOriginal.includes('if tails') && textoOriginal.includes('damage to itself')) {
+      const recoil = textoOriginal.match(/does (\d+) damage to itself/)?.[1] || '';
+      return `Lanza ${numStr}. El ataque hace su dano normal. Si sale CRUZ, este Pokemon recibe ${recoil} de dano.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('discard') && textoOriginal.includes('energy')) {
+      return `Lanza ${numStr}. Si sale CARA, descarta una Energia del Pokemon indicado.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('switch this pok')) {
+      return `Lanza ${numStr}. Si sale CARA, cambia este Pokemon por uno de tu banca.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('search your deck')) {
+      return `Lanza ${numStr}. Si sale CARA, busca la carta indicada en tu mazo.`;
+    }
+    if (textoOriginal.includes('if heads') && textoOriginal.includes('asleep') && textoOriginal.includes('if tails') && textoOriginal.includes('confused')) {
+      return `Lanza ${numStr}. CARA duerme al rival; CRUZ lo confunde.`;
+    }
     if (esSoloEstado) {
       if (textoOriginal.includes('paralyzed'))
         return `Lanzá ${numStr}. Si sale CARA, el rival queda paralizado.`;
       if (textoOriginal.includes('asleep'))
         return `Lanzá ${numStr}. Si sale CARA, el rival queda dormido.`;
-      return `Lanzá ${numStr} para aplicar un efecto especial.`;
+      return `Lanza ${numStr} para resolver el efecto indicado en la carta.`;
     }
 
     if (esFalloCruz) return `Lanzá ${numStr}. Si sale CRUZ, el ataque falla.`;
     if (esMultiplicador) return `Lanzá ${numStr}. Hace ${danio} de daño por cada CARA.`;
 
-    return `Lanzá ${numStr}. Hace ${danio} de daño extra por cada CARA.`;
+    if (danio > 0) return `Lanza ${numStr}. Hace ${danio} de dano extra por cada CARA.`;
+    return `Lanza ${numStr} para resolver el efecto indicado en la carta.`;
   }
 
   cargarEstado(): void {
@@ -1516,8 +2100,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (data) => {
         const dataOnline = this.esPartidaOnline(data);
         if (data?.faseActual === 'FIN_PARTIDA') {
-          this.handleGameEnd(data);
+          this.aplicarEstadoRefrescado(data);
           return;
+        }
+        if (data?.faseActual === 'LANZAMIENTO_MONEDA') {
+          const yaReingresoAlSetup =
+            this.partida?.faseActual === 'LANZAMIENTO_MONEDA' &&
+            this.estadoCoinFlip !== 'OCULTO' &&
+            !this.boardVisible;
+          if (!yaReingresoAlSetup) {
+            this.reingresarAFaseLanzamientoMoneda(data);
+            return;
+          }
         }
         if (!dataOnline && (this.bloqueadoPorAnimacion || this.botEstaAtacando)) {
           console.log('??? Polling interceptado.');
@@ -1545,10 +2139,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
 
         const turnoAnterior = this.partida?.turnoActual;
+        const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
         this.partida = data;
         this.lastAppliedStateSignature = firmaNueva;
 
-        this.procesarFasesSetup(data);
+        if (estadoAnterior) {
+          this.procesarEventosPostEstado(estadoAnterior, data);
+        }
+
+        if (!this.isSpectator) {
+          this.procesarFasesSetup(data);
+        } else {
+          this.estadoSetupMulligan = null;
+        }
 
         this.procesarTurnLogs();
 
@@ -1581,12 +2184,121 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
 
   estadoSetupMulligan: 'REVEAL' | 'EXTRA_DRAW' | 'PLACE_ACTIVE' | 'PLACE_BENCH' | 'PLACE_BENCH_EXTRA' | 'PRIZES' | 'FINAL_REVEAL' | null = null;
+  astonishReveal: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    esMiAccion: boolean;
+    isFlipped: boolean;
+  } | null = null;
+
+  cardSplashActive: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    esMiAccion: boolean;
+  } | null = null;
+
+  attackBannerActive: {
+    visible: boolean;
+    attackName: string;
+    esMiAccion: boolean;
+  } | null = null;
+
+  triggerAttackBanner(attackName: string, isOpponent: boolean) {
+    this.attackBannerActive = {
+      visible: true,
+      attackName,
+      esMiAccion: !isOpponent
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.attackBannerActive = null;
+      this.cdr.detectChanges();
+    }, 900);
+  }
+
+  triggerCardSplash(cardName: string, isOpponent: boolean) {
+    const card = this.debugFilteredCatalog.find((c: any) => c.nombre === cardName || c.name === cardName);
+    const cardId = card ? card.id : '';
+    this.cardSplashActive = {
+      visible: true,
+      cardId,
+      cardNombre: cardName,
+      esMiAccion: !isOpponent
+    };
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.cardSplashActive = null;
+      this.cdr.detectChanges();
+    }, 900);
+  }
+
+  cerrarAstonishReveal(): void {
+    this.astonishReveal = null;
+    this.cdr.detectChanges();
+  }
+
+  modoSeleccionUnionEnergia = false;
+  energiaAUnir: any = null;
+
+  iniciarModoUnionEnergia(cartaEnergia: any): void {
+    if (this.cargandoAccion || this.partida?.turnoActual !== 'JUGADOR') return;
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir?.id === cartaEnergia.id) {
+      this.cancelarModoUnionEnergia();
+      return;
+    }
+    this.modoSeleccionUnionEnergia = true;
+    this.energiaAUnir = cartaEnergia;
+    const msg = this.i18nService.translate('battle.selectTargetForEnergy');
+    this.mostrarNotificacion(msg, 'info');
+    this.cdr.detectChanges();
+  }
+
+  cancelarModoUnionEnergia(): void {
+    this.modoSeleccionUnionEnergia = false;
+    this.energiaAUnir = null;
+    this.cdr.detectChanges();
+  }
+
+  async completarUnionEnergia(targetPokemon: any) {
+    if (!targetPokemon || !this.energiaAUnir) return;
+    this.cargandoAccion = true;
+    this.modoSeleccionUnionEnergia = false;
+    const energia = this.energiaAUnir;
+    this.energiaAUnir = null;
+    
+    try {
+      const nuevoEstado = await this.battleBoardAction.unirEnergiaYRecargar(
+        this.matchId!,
+        targetPokemon.card.id,
+        energia.id
+      );
+      this.aplicarEstadoRefrescado(nuevoEstado);
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      this.cargandoAccion = false;
+      console.error(err);
+      this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotAttachEnergy'), 'error');
+    }
+  }
+
+  clickEnActivo(): void {
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
+      this.completarUnionEnergia(this.partida?.jugador?.activo);
+    } else {
+      this.intentarAbrirHabilidades();
+    }
+  }
+
   mulliganCartasRival: any[] = [];
   mulliganOponenteCount: number = 0;
   mulliganJugadorCount: number = 0;
   cartasExtraPermitidas: number = 0;
   setupAccionEnCurso = false;
   private setupAutoActionKey = '';
+  private initialBotTurnInFlight = false;
   setupMulliganJugadorCartas: any[] = [];
   setupMulliganRivalCartas: any[] = [];
   setupMulliganJugadorDebeMostrar = false;
@@ -1699,7 +2411,46 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.setupMulliganRevealKey = '';
       this.setupAutoActionKey = '';
       this.setupAccionEnCurso = false;
+      
+      // Mostrar overlay de Muerte Súbita justo al terminar el setup
+      if (data.muerteSubita && !this.mostrarOverlayMuerteSubita && data.numeroTurno === 1) {
+        this.mostrarOverlayMuerteSubita = true;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.mostrarOverlayMuerteSubita = false;
+          this.cdr.detectChanges();
+        }, 4200);
+      }
+
+      this.iniciarPrimerTurnoBotSiHaceFalta(data);
     }
+  }
+
+  private iniciarPrimerTurnoBotSiHaceFalta(data: Partida): void {
+    if (
+      this.esPartidaOnline(data) ||
+      data.turnoActual !== 'BOT' ||
+      data.numeroTurno !== 1 ||
+      this.initialBotTurnInFlight ||
+      this.isSpectator ||
+      !this.matchId
+    ) {
+      return;
+    }
+
+    this.initialBotTurnInFlight = true;
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion = true;
+    this.cdr.detectChanges();
+
+    this.iniciarTurnoBot(data)
+      .catch((err) => console.error('No se pudo iniciar el primer turno del bot:', err))
+      .finally(() => {
+        this.initialBotTurnInFlight = false;
+        this.cargandoAccion = false;
+        this.bloqueadoPorAnimacion = false;
+        this.cdr.detectChanges();
+      });
   }
 
   enviarCartasExtra(cantidad: number) {
@@ -1710,7 +2461,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       next: (estado) => this.aplicarEstadoSetup(estado),
       error: (err) => {
         this.setupAccionEnCurso = false;
-        alert(err.error || 'No se pudieron resolver las cartas extra.');
+        this.mostrarNotificacion(err.error || 'No se pudieron resolver las cartas extra.', 'error');
       }
     });
   }
@@ -1739,7 +2490,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo colocar el Pokemon activo.');
+      this.mostrarNotificacion(err?.error || 'No se pudo colocar el Pokemon activo.', 'error');
     }
   }
 
@@ -1751,7 +2502,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo colocar ese Pokemon en banca.');
+      this.mostrarNotificacion(err?.error || 'No se pudo colocar ese Pokemon en banca.', 'error');
     }
   }
 
@@ -1763,7 +2514,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.aplicarEstadoSetup(estado);
     } catch (err: any) {
       this.setupAccionEnCurso = false;
-      alert(err?.error || 'No se pudo confirmar la banca.');
+      this.mostrarNotificacion(err?.error || 'No se pudo confirmar la banca.', 'error');
     }
   }
 
@@ -1815,6 +2566,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private handleGameEnd(partida: Partida): void {
     if (this.showEndGameOverlay) return;
+    if (this.pendingEndGameTimeout) {
+      clearTimeout(this.pendingEndGameTimeout);
+      this.pendingEndGameTimeout = null;
+    }
 
     this.partida = partida;
     this.lastAppliedStateSignature = this.crearFirmaPartida(partida);
@@ -1861,7 +2616,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error('Error al rendirse', err);
         this.cargandoAccion = false;
-        window.alert(err?.error || this.i18n.translate('alert.cannotSurrender'));
+        this.mostrarNotificacion(err?.error || this.i18n.translate('alert.cannotSurrender'), 'error');
         this.cdr.detectChanges();
       }
     });
@@ -1908,14 +2663,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   getCardFanTransform(index: number, total: number): string {
-    const maxAngle = Math.min(4 * total, 35);
+    const maxAngle = Math.min(2.8 * total, 26);
     const angleStep = total > 1 ? (maxAngle * 2) / (total - 1) : 0;
     const angle = total > 1 ? -maxAngle + angleStep * index : 0;
-    const cardSpacing = Math.min(80, 480 / Math.max(total, 1));
+    const cardSpacing = Math.max(30, Math.min(72, 440 / Math.max(total - 1, 1)));
     const totalWidth = cardSpacing * (total - 1);
     const offsetX = -totalWidth / 2 + cardSpacing * index;
     const normalizedPos = total > 1 ? (index / (total - 1)) * 2 - 1 : 0;
-    const offsetY = normalizedPos * normalizedPos * 20;
+    const curveDepth = total <= 7 ? 18 : total <= 10 ? 11 : 7;
+    const baseLift = total <= 7 ? 0 : total <= 10 ? -6 : -10;
+    const offsetY = normalizedPos * normalizedPos * curveDepth + baseLift;
     return `translateX(calc(-50% + ${offsetX}px)) translateY(${offsetY}px) rotate(${angle}deg)`;
   }
 
@@ -2017,11 +2774,29 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     const { botAtaco, hpJugadorDespues, danioHecho } = analisisBot;
+
+    // Detectar si el bot atacó realmente leyendo los logs nuevos de este turno
+    const startLogIdx = estadoAntiguo?.turnLogs?.length || 0;
+    let botAtacoReal = false;
+    let nombreAtaqueBot = '';
+    if (estadoFinal.turnLogs) {
+      for (let i = startLogIdx; i < estadoFinal.turnLogs.length; i++) {
+        const log = estadoFinal.turnLogs[i];
+        if (log.startsWith('ATTACK_USED:BOT:')) {
+          botAtacoReal = true;
+          const parts = log.split(':');
+          if (parts.length >= 3) {
+            nombreAtaqueBot = parts[2];
+          }
+        }
+      }
+    }
+
     const activoBotDespues = estadoFinal?.bot?.activo;
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
 
-    if (!botAtaco) {
+    if (!botAtacoReal) {
       this.mostrarNotificacion('El rival pasó su turno.', 'info');
       this.aplicarEstadoRefrescado(estadoFinal);
       if (this.showEndGameOverlay) return;
@@ -2041,10 +2816,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
 
     if (activoBotDespues && activoBotDespues.card?.ataques?.length > 0) {
-      const habilidadBot = activoBotDespues.card.ataques[0];
-      const coinConfig = this.detectarCoinFlipAtaque(habilidadBot);
+      let habilidadBot = null;
+      if (nombreAtaqueBot) {
+        const normalizedLogName = nombreAtaqueBot.replace(':', '-').toLowerCase();
+        habilidadBot = activoBotDespues.card.ataques.find(
+          (a: any) => (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName
+        );
+      }
+      if (!habilidadBot) {
+        habilidadBot = activoBotDespues.card.ataques[0];
+      }
+
+      const coinConfig = this.detectarCoinFlipAtaque(habilidadBot, activoBotDespues);
 
       if (coinConfig) {
+        const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+        if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
         const carasReales = this.contarCarasServidor(estadoFinal)
           ?? this.battleBoardTurn.resolverCarasBot(
             coinConfig,
@@ -2114,7 +2901,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.refrescarTableroDebug();
     } catch (err) {
       console.error('Error en God Mode (Robar Carta):', err);
-      alert(this.i18n.translate('alert.godModeFail'));
+      this.mostrarNotificacion(this.i18n.translate('alert.godModeFail'), 'error');
     }
   }
 
@@ -2287,6 +3074,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) return;
 
+    if (nombreAtaque === 'Conversion Powder') {
+      this.mostrarConversionModal = true;
+      return;
+    }
+
     this.bloqueadoPorAnimacion = true;
     this.cargandoAccion = true;
     this.ataqueRealizado = true;
@@ -2298,7 +3090,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
       this.ataqueRealizado = false;
-      alert(this.i18n.translate('alert.attackNotFound'));
+      this.mostrarNotificacion(this.i18n.translate('alert.attackNotFound'), 'error');
       return;
     }
 
@@ -2320,6 +3112,40 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
       console.error('Error en ataque:', error);
     }
+  }
+
+  async seleccionarEstadoConversion(estado: string): Promise<void> {
+    this.mostrarConversionModal = false;
+    if (!this.matchId) return;
+    
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion = true;
+    this.ataqueRealizado = true;
+    
+    try {
+      // Usar la función de ataque de battle.service directamente pasando el param, 
+      // y luego recargar el estado como en atacarYRecargar
+      await firstValueFrom(this.battleService.atacar(this.matchId, 'Conversion Powder', estado));
+      const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId));
+      
+      const activoJugador = this.partida?.jugador?.activo;
+      const habilidad = (activoJugador?.card.ataques ?? []).find((a: any) => a.nombre === 'Conversion Powder');
+      const tipoEnergia = habilidad?.costo?.[0] || 'Grass';
+      
+      await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
+      await this.reproducirImpactoAtaqueJugador(tipoEnergia, estadoFinal);
+      await this.finalizarSecuenciaAtaque(estadoFinal);
+    } catch (error: any) {
+      this.cargandoAccion = false;
+      this.ataqueRealizado = false;
+      this.bloqueadoPorAnimacion = false;
+      console.error('Error al atacar (Conversion):', error);
+      this.mostrarNotificacion(error.error?.message || error.message || 'Error al atacar', 'error');
+    }
+  }
+
+  cerrarConversionModal(): void {
+    this.mostrarConversionModal = false;
   }
 
   async iniciarTurnoBot(estadoFinal: any) {
@@ -2377,18 +3203,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cargandoAccion = false;
       this.bloqueadoPorAnimacion = false;
       console.error('? Error del servidor al pasar turno:', error);
-      alert(this.i18n.translate('alert.connectionError', { error: error?.error ?? (this.i18n.currentLanguage() === 'es' ? 'El servidor no responde' : 'The server does not respond') }));
+      this.mostrarNotificacion(this.i18n.translate('alert.connectionError', { error: error?.error ?? (this.i18n.currentLanguage() === 'es' ? 'El servidor no responde' : 'The server does not respond') }), 'error');
     }
   }
 
   realizarAccion(habilidad: BattleBoardAttack): void {
     this.showHabilidadesPanel = false;
     if ((this.partida?.numeroTurno || 1) <= 1) {
-      alert('No se puede atacar en el primer turno.');
+      this.mostrarNotificacion('No se puede atacar en el primer turno.', 'warning');
       return;
     }
     if (!this.validarEnergiaAtaque(habilidad)) {
-      alert(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }));
+      this.mostrarNotificacion(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }), 'warning');
       return;
     }
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
@@ -2415,6 +3241,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       terminado: false,
       progreso: 0,
       esSoloEstado: esSoloEstado,
+      tipoEfecto: config.tipoEfecto,
     };
     this.cdr.detectChanges();
     await this.delay(120);
@@ -2489,7 +3316,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     switch (decision.tipo) {
       case 'unir-energia':
-        this.gestionarUnionEnergia(carta);
+        this.iniciarModoUnionEnergia(carta);
         return;
       case 'evolucionar':
         if (decision.target) {
@@ -2497,7 +3324,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
         return;
       case 'requiere-promocion':
-        if (decision.mensaje) alert(decision.mensaje);
+        if (decision.mensaje) this.mostrarNotificacion(decision.mensaje, 'info');
         return;
       case 'bajar-pokemon':
         this.gestionarBajadaPokemon(carta);
@@ -2535,11 +3362,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
-      alert(this.i18n.translate('alert.evolutionError', { error: error.error || error.message }));
+      this.mostrarNotificacion(this.i18n.translate('alert.evolutionError', { error: error.error || error.message }), 'error');
     }
   }
 
   async seleccionarBanca(p: any) {
+    if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
+      this.completarUnionEnergia(p);
+      return;
+    }
     if (this.modoSeleccionRetirada) {
       this.cargandoAccion = true;
       try {
@@ -2554,7 +3385,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } catch (err: any) {
         this.modoSeleccionRetirada = false;
         this.cargandoAccion = false;
-        alert(err.error || this.i18n.translate('alert.retreatError'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.retreatError'), 'error');
       }
     } else if (!this.partida?.jugador?.activo) {
       this.cargandoAccion = true;
@@ -2566,10 +3397,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.aplicarEstadoRefrescado(nuevoEstado);
         this.cargandoAccion = false;
         this.cdr.detectChanges();
-      } catch (err) {
+      } catch (err: any) {
         this.cargandoAccion = false;
         console.error(err);
-        alert(this.i18n.translate('alert.activeError'));
+        this.mostrarNotificacion(this.i18n.translate('alert.activeError'), 'error');
       }
     }
   }
@@ -2594,7 +3425,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       } catch (err: any) {
         this.cargandoAccion = false;
-        alert(err.error || this.i18n.translate('alert.notEnoughEnergyForRetreat'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.notEnoughEnergyForRetreat'), 'error');
       }
     }
   }
@@ -2605,7 +3436,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const cartaArrastrada = event.item.data;
     if (this.esEnergia(cartaArrastrada)) {
       if (zona !== 'activo') {
-        alert(this.i18n.translate('alert.energyAttachActiveOnly'));
+        this.mostrarNotificacion(this.i18n.translate('alert.energyAttachActiveOnly'), 'warning');
         return;
       }
       this.gestionarUnionEnergia(cartaArrastrada);
@@ -2627,14 +3458,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert(err.error || this.i18n.translate('alert.cannotPlayPokemon'));
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotPlayPokemon'), 'error');
       });
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) {
-      alert(this.i18n.translate('alert.needActivePokemon'));
+      this.mostrarNotificacion(this.i18n.translate('alert.needActivePokemon'), 'warning');
       return;
     }
     this.cargandoAccion = true;
@@ -2648,7 +3479,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       .catch((err: any) => {
         this.cargandoAccion = false;
         console.error(err);
-        alert(this.i18n.translate('alert.cannotAttachEnergy'));
+        this.mostrarNotificacion(this.i18n.translate('alert.cannotAttachEnergy'), 'error');
       });
   }
 
@@ -2707,11 +3538,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  getSpriteBack(nombreCarta: string): string {
-    return this.battleBoardUi.getSpriteBack(nombreCarta);
+  getSpriteBack(carta: any): string {
+    return this.battleBoardUi.getSpriteBack(carta);
   }
-  getSpriteFront(nombreCarta: string): string {
-    return this.battleBoardUi.getSpriteFront(nombreCarta);
+  getSpriteFront(carta: any): string {
+    return this.battleBoardUi.getSpriteFront(carta);
   }
 
   onSpriteError(event: Event, cardId: string): void {
@@ -2759,6 +3590,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return activo?.energiasUnidas ?? [];
   }
 
+  getPrizeTarget(): number {
+    return this.partida?.muerteSubita ? 1 : 6;
+  }
+
+  getPrizeSlots(): number[] {
+    return Array.from({ length: this.getPrizeTarget() }, (_, index) => index);
+  }
+
   estaPokemonDerrotado(quien: 'JUGADOR' | 'BOT'): boolean {
     const activo = quien === 'JUGADOR' ? this.partida?.jugador?.activo : this.partida?.bot?.activo;
     return (activo?.hpActual ?? 1) <= 0;
@@ -2799,8 +3638,49 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   getHpMax(pokemon: any): number {
     return this.battleBoardUi.getHpMax(pokemon);
   }
+  getDamageCounters(pokemon: any): number {
+    if (!pokemon) return 0;
+    const maxHp = this.getHpMax(pokemon);
+    const currentHp = pokemon.hpActual ?? maxHp;
+    return Math.max(0, maxHp - currentHp) / 10;
+  }
   getImagenCarta(id: string): string {
     return this.battleBoardUi.getImagenCarta(id);
+  }
+  abrirDetallePokemon(event: MouseEvent, pokemon: CartaEnJuego | null | undefined): void {
+    if (!pokemon || pokemon.bocaAbajo) return;
+    event.preventDefault();
+    this.selectedDetailPokemon = pokemon;
+    this.mostrarDetalleModal = true;
+    this.cdr.detectChanges();
+  }
+  cerrarDetallePokemon(): void {
+    this.selectedDetailPokemon = null;
+    this.mostrarDetalleModal = false;
+    this.cdr.detectChanges();
+  }
+
+  esCartaEX(carta: Card | undefined | null): boolean {
+    return !!carta?.subtypes?.includes('EX');
+  }
+
+  getPokemonFase(carta: Card | undefined | null): string {
+    if (!carta) return '';
+    const subtypes = carta.subtypes || [];
+    const lower = subtypes.map(s => String(s).toLowerCase());
+    if (lower.includes('stage 1')) return 'Fase 1';
+    if (lower.includes('stage 2')) return 'Fase 2';
+    if (lower.includes('basic')) return 'Básico';
+    return subtypes.join(', ') || 'Básico';
+  }
+
+  resolveEnergyLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      Grass: 'PLA', Fire: 'FUE', Water: 'AGU', Lightning: 'ELE', Psychic: 'PSI',
+      Fighting: 'LUC', Darkness: 'SIN', Metal: 'MET', Fairy: 'HAD',
+      Dragon: 'DRA', Colorless: 'INC'
+    };
+    return labels[tipo] || tipo.slice(0, 2).toUpperCase();
   }
   getEmptySlots(n: number): number[] {
     return this.battleBoardUi.getEmptySlots(n);
@@ -2879,20 +3759,83 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }, 900);
   }
 
-  private aplicarEstadoRefrescado(estado: Partida | null | undefined): void {
-    if (!estado) return;
-    if (estado.faseActual === 'FIN_PARTIDA') {
-      this.handleGameEnd(estado);
-      return;
+  mostrarEfectoStatusVisual(objetivo: 'jugador' | 'bot', condicion: string) {
+    let color = '#ffffff';
+    if (condicion === 'Poisoned') color = '#a855f7';
+    else if (condicion === 'Burned') color = '#f97316';
+    else if (condicion === 'Paralyzed') color = '#eab308';
+    else if (condicion === 'Asleep') color = '#93c5fd';
+    else if (condicion === 'Confused') color = '#d946ef';
+
+    const nuevasParticulas = [];
+    for (let i = 0; i < 15; i++) {
+      const angulo = Math.random() * Math.PI * 2;
+      const distancia = 30 + Math.random() * 60;
+      nuevasParticulas.push({
+        color,
+        tx: Math.cos(angulo) * distancia,
+        ty: Math.sin(angulo) * distancia,
+        size: 6 + Math.random() * 8,
+        duracion: 0.8 + Math.random() * 0.4,
+      });
     }
-    
+
+    if (objetivo === 'bot') {
+      this.particulasBot = nuevasParticulas;
+      this.mostrarEfectoBot = true;
+    } else {
+      this.particulasJugador = nuevasParticulas;
+      this.mostrarEfectoJugador = true;
+    }
+
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (objetivo === 'bot') {
+        this.mostrarEfectoBot = false;
+      } else {
+        this.mostrarEfectoJugador = false;
+      }
+      this.cdr.detectChanges();
+    }, 1200);
+  }
+
+  private async aplicarEstadoRefrescado(estado: Partida | null | undefined): Promise<void> {
+    if (!estado) return;
+    const debeMostrarFinal = estado.faseActual === 'FIN_PARTIDA';
+    const estadoAnterior = this.partida ? this.battleBoardState.clonarPartida(this.partida) : null;
+
+    if (estado.faseActual === 'LANZAMIENTO_MONEDA') {
+      const yaReingresoAlSetup =
+        this.partida?.faseActual === 'LANZAMIENTO_MONEDA' &&
+        this.estadoCoinFlip !== 'OCULTO' &&
+        !this.boardVisible;
+      if (!yaReingresoAlSetup) {
+        this.reingresarAFaseLanzamientoMoneda(estado);
+        return;
+      }
+    }
+
+    // El overlay de muerte súbita se mostrará al iniciar TURNO_NORMAL
+
     // Check if cards were drawn
     if (this.partida) {
+      const previousPrizes = this.partida.jugador?.premios?.length || 0;
+      const nextPrizes = estado.jugador?.premios?.length || 0;
       const prevHandSizeJugador = this.partida.jugador?.mano?.length || 0;
       const newHandSizeJugador = estado.jugador?.mano?.length || 0;
       if (newHandSizeJugador > prevHandSizeJugador) {
         const drawn = newHandSizeJugador - prevHandSizeJugador;
         this.mostrarNotificacion(`Has robado ${drawn} carta(s).`, 'info');
+        if (nextPrizes < previousPrizes) {
+          const revealed = estado.jugador.mano[newHandSizeJugador - 1];
+          if (revealed) {
+            this.prizeRevealCard = revealed;
+            window.setTimeout(() => {
+              this.prizeRevealCard = null;
+              this.cdr.detectChanges();
+            }, 1900);
+          }
+        }
       }
 
       const prevHandSizeBot = this.partida.bot?.mano?.length || 0;
@@ -2906,12 +3849,34 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
+
+    if (estadoAnterior) {
+      void this.procesarEventosPostEstado(estadoAnterior, estado).then(() => {
+        if (debeMostrarFinal) {
+          this.programarFinDePartida(estado, 550);
+        }
+      });
+    } else if (debeMostrarFinal) {
+      this.programarFinDePartida(estado);
+    }
+    if (estado.jugador?.mano) {
+      this.detectarCartasNuevas(estado.jugador.mano);
+    }
+    if (estado.bot?.mano) {
+      this.detectarCartasNuevasBot(estado.bot.mano);
+    }
+    await this.procesarTurnLogs();
   }
 
   private async reproducirChequeoDespertar(
     descripcion: string,
     seDesperto: boolean,
   ): Promise<void> {
+    while (this.showTurnOverlay) {
+      await this.delay(100);
+    }
+    await this.delay(500);
+
     this.coinFlipAtaque = this.battleBoardTurn.crearEstadoCoinFlip(descripcion);
     this.cdr.detectChanges();
 
@@ -2992,8 +3957,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     habilidad: any,
     estadoFinal: Partida,
   ): Promise<void> {
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad);
+    const coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
     if (!coinConfig) return;
+    const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     const hpBotAntes = this.partida?.bot?.activo?.hpActual || 0;
     const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
@@ -3052,7 +4019,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private async finalizarSecuenciaAtaque(estadoFinal: Partida): Promise<void> {
     if (estadoFinal.faseActual === 'FIN_PARTIDA') {
-      this.handleGameEnd(estadoFinal);
+      this.aplicarEstadoRefrescado(estadoFinal);
       return;
     }
     if (estadoFinal.turnoActual === 'BOT') {
@@ -3087,7 +4054,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     await this.verificarEstadosCurados(estadoAntiguo, estadoFinal);
-    this.aplicarEstadoRefrescado(estadoFinal);
+    await this.aplicarEstadoRefrescado(estadoFinal);
     if (this.showEndGameOverlay) return;
     this.cdr.detectChanges();
 
@@ -3254,11 +4221,561 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  @ViewChild('battleAtmosphereCanvas') set battleAtmosphereCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element && !this.battleAtmosphereRenderer) {
+      setTimeout(() => this.initBattleAtmosphere(element.nativeElement), 0);
+    }
+  }
+
   @ViewChild('handshakeCanvas') set handshakeCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
     if (element && !this.canvasInitialized) {
       this.canvasInitialized = true;
       setTimeout(() => this.initHandshakeScene(element.nativeElement), 0);
     }
+  }
+
+  private initBattleAtmosphere(canvas: HTMLCanvasElement): void {
+    const width = Math.max(1, canvas.clientWidth);
+    const height = Math.max(1, canvas.clientHeight);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: false,
+      antialias: !this.isPotato,
+      powerPreference: this.isPotato ? 'low-power' : 'high-performance'
+    });
+    renderer.setPixelRatio(this.isPotato ? 1 : Math.min(window.devicePixelRatio, 1.35));
+    renderer.setSize(width, height, false);
+    renderer.setClearColor(0x020711, 1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.battleAtmosphereRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x020711, 0.115);
+    this.battleAtmosphereScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 60);
+    camera.position.set(0, 2.8, 8.8);
+    camera.lookAt(0, 0, 0);
+    this.battleAtmosphereCamera = camera;
+
+    const floor = new THREE.Mesh(
+      new THREE.PlaneGeometry(36, 24),
+      new THREE.MeshStandardMaterial({
+        color: 0x07131d,
+        emissive: 0x06131d,
+        emissiveIntensity: 0.5,
+        roughness: 0.78,
+        metalness: 0.28,
+        transparent: true,
+        opacity: 0.92
+      })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -1.65;
+    scene.add(floor);
+    this.atmosphereFloor = floor;
+
+    const grid = new THREE.GridHelper(18, 30, 0x38bdf8, 0x173b4f);
+    grid.position.y = -1.62;
+    const gridMaterials = Array.isArray(grid.material) ? grid.material : [grid.material];
+    gridMaterials.forEach(material => {
+      material.transparent = true;
+      material.opacity = 0.22;
+    });
+    scene.add(grid);
+    this.atmosphereGrid = grid;
+
+    this.battleAtmosphereRings = [];
+    const ringGeometry = new THREE.TorusGeometry(2.25, 0.026, 6, 72);
+    const ringConfigs = [
+      { z: -2.35, color: 0x38bdf8, radius: 1 },
+      { z: -2.35, color: 0x67e8f9, radius: 0.72 },
+      { z: 2.35, color: 0xfacc15, radius: 1 },
+      { z: 2.35, color: 0xf59e0b, radius: 0.72 }
+    ];
+    ringConfigs.forEach((config, index) => {
+      const material = new THREE.MeshBasicMaterial({
+        color: config.color,
+        transparent: true,
+        opacity: index % 2 === 0 ? 0.32 : 0.18,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const ring = new THREE.Mesh(ringGeometry, material);
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(0, -1.56 + index * 0.006, config.z);
+      ring.scale.setScalar(config.radius);
+      ring.userData['phase'] = index * 1.35;
+      ring.userData['baseScale'] = config.radius;
+      scene.add(ring);
+      this.battleAtmosphereRings.push(ring);
+    });
+
+    this.battleAtmosphereBeams = [];
+    const beamGeometry = new THREE.CylinderGeometry(0.016, 0.055, 4.6, 6, 1, true);
+    [-6.8, 6.8].forEach((x, sideIndex) => {
+      [-2.6, 0, 2.6].forEach((z, laneIndex) => {
+        const material = new THREE.MeshBasicMaterial({
+          color: sideIndex === 0 ? 0x38bdf8 : 0xfacc15,
+          transparent: true,
+          opacity: 0.07 + laneIndex * 0.018,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+          side: THREE.DoubleSide
+        });
+        const beam = new THREE.Mesh(beamGeometry, material);
+        beam.position.set(x, 0.55, z);
+        beam.userData['phase'] = sideIndex * 1.7 + laneIndex * 0.8;
+        scene.add(beam);
+        this.battleAtmosphereBeams.push(beam);
+      });
+    });
+
+    const shardCount = this.isPotato ? 8 : 22;
+    const shardGeometry = new THREE.IcosahedronGeometry(0.055, 0);
+    const shardMaterial = new THREE.MeshBasicMaterial({
+      color: 0x9ae6ff,
+      transparent: true,
+      opacity: 0.32,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const shards = new THREE.InstancedMesh(shardGeometry, shardMaterial, shardCount);
+    const shardMatrix = new THREE.Matrix4();
+    const shardPosition = new THREE.Vector3();
+    const shardQuaternion = new THREE.Quaternion();
+    const shardScale = new THREE.Vector3();
+    for (let index = 0; index < shardCount; index++) {
+      const side = index % 2 === 0 ? -1 : 1;
+      shardPosition.set(
+        side * (5.2 + Math.random() * 2.4),
+        -0.8 + Math.random() * 4.8,
+        (Math.random() - 0.5) * 8
+      );
+      shardQuaternion.setFromEuler(new THREE.Euler(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      ));
+      const scale = 0.55 + Math.random() * 1.25;
+      shardScale.set(scale, scale * (1.2 + Math.random()), scale);
+      shardMatrix.compose(shardPosition, shardQuaternion, shardScale);
+      shards.setMatrixAt(index, shardMatrix);
+    }
+    shards.instanceMatrix.needsUpdate = true;
+    this.battleAtmosphereShards = shards;
+    scene.add(shards);
+
+    const particleCount = this.isPotato ? 100 : 350;
+    const positions = new Float32Array(particleCount * 3);
+    for (let index = 0; index < particleCount; index++) {
+      positions[index * 3] = (Math.random() - 0.5) * 16;
+      positions[index * 3 + 1] = Math.random() * 7 - 1.2;
+      positions[index * 3 + 2] = (Math.random() - 0.5) * 8;
+    }
+    const particleGeometry = new THREE.BufferGeometry();
+    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.battleAtmosphereParticles = new THREE.Points(
+      particleGeometry,
+      new THREE.PointsMaterial({
+        color: 0x8be9ff,
+        size: this.isPotato ? 0.025 : 0.038,
+        transparent: true,
+        opacity: 0.26,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      })
+    );
+    scene.add(this.battleAtmosphereParticles);
+
+    // Shield groups initialization
+    this.playerShieldGroup = new THREE.Group();
+    this.playerShieldGroup.position.set(0, -0.5, 2.35);
+    scene.add(this.playerShieldGroup);
+
+    this.botShieldGroup = new THREE.Group();
+    this.botShieldGroup.position.set(0, -0.5, -2.35);
+    scene.add(this.botShieldGroup);
+
+    const buildShield = (group: THREE.Group, colorHex: number) => {
+      // 1. Transparent pulsing bubble sphere
+      const sphereGeom = new THREE.SphereGeometry(1.0, 24, 24);
+      const bubbleMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.12,
+        wireframe: true,
+        blending: THREE.AdditiveBlending
+      });
+      const bubble = new THREE.Mesh(sphereGeom, bubbleMat);
+      group.add(bubble);
+
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.04,
+        blending: THREE.AdditiveBlending
+      });
+      const glow = new THREE.Mesh(sphereGeom, glowMat);
+      group.add(glow);
+
+      // 2. Rotating hexagonal outer shield
+      const ringGeom = new THREE.RingGeometry(1.05, 1.15, 6);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.6,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending
+      });
+      const ring1 = new THREE.Mesh(ringGeom, ringMat);
+      ring1.rotation.x = Math.PI / 4;
+      group.add(ring1);
+
+      const ring2 = new THREE.Mesh(ringGeom, ringMat);
+      ring2.rotation.y = Math.PI / 4;
+      group.add(ring2);
+    };
+
+    buildShield(this.playerShieldGroup, 0xf59e0b); // gold/amber for player
+    buildShield(this.botShieldGroup, 0x3b82f6);    // blue for bot
+
+    const hemiLight = new THREE.HemisphereLight(0x8be9ff, 0x030712, 1.45);
+    scene.add(hemiLight);
+    this.atmosphereHemisphereLight = hemiLight;
+
+    const rivalLight = new THREE.PointLight(0x38bdf8, 8, 14, 2);
+    rivalLight.position.set(0, 2.8, 1.8);
+    scene.add(rivalLight);
+    this.atmosphereRivalLight = rivalLight;
+
+    const playerLight = new THREE.PointLight(0xfacc15, 7, 14, 2);
+    playerLight.position.set(0, -1.1, 3.8);
+    scene.add(playerLight);
+    this.atmospherePlayerLight = playerLight;
+
+    this.battleAtmosphereResize = new ResizeObserver(entries => {
+      const rect = entries[0]?.contentRect;
+      if (!rect || !this.battleAtmosphereRenderer || !this.battleAtmosphereCamera) return;
+      const nextWidth = Math.max(1, rect.width);
+      const nextHeight = Math.max(1, rect.height);
+      this.battleAtmosphereRenderer.setSize(nextWidth, nextHeight, false);
+      this.battleAtmosphereCamera.aspect = nextWidth / nextHeight;
+      this.battleAtmosphereCamera.updateProjectionMatrix();
+    });
+    this.battleAtmosphereResize.observe(canvas);
+
+    const animate = () => {
+      if (!this.battleAtmosphereRenderer || !this.battleAtmosphereScene || !this.battleAtmosphereCamera) return;
+      this.battleAtmosphereFrame = requestAnimationFrame(animate);
+      const elapsed = this.battleAtmosphereClock.getElapsedTime();
+
+      // Dynamic game state tension based on prize race + match progression.
+      const playerPrizes = this.partida?.jugador?.premios?.length ?? 6;
+      const botPrizes = this.partida?.bot?.premios?.length ?? 6;
+      const minPrizes = Math.min(playerPrizes, botPrizes);
+      const prizeDanger = Math.min(1.0, Math.max(0.0, (6 - minPrizes) / 5.0));
+      const turnNumber = this.partida?.numeroTurno ?? 1;
+      const tempoDanger = Math.min(1.0, Math.max(0.0, (turnNumber - 1) / 10));
+      const dangerLevel = Math.min(1.0, prizeDanger * 0.78 + tempoDanger * 0.22);
+      const criticalPressure = !this.partida?.muerteSubita && dangerLevel >= 0.72;
+      const pressurePulse = criticalPressure
+        ? (Math.sin(elapsed * (1.35 + dangerLevel * 1.1)) + 1) * 0.5
+        : 0;
+
+      // Lightning flash logic for Sudden Death
+      let flashColorOverride: THREE.Color | null = null;
+      let flashIntensityMultiplier = 1.0;
+
+      if (this.partida?.muerteSubita) {
+        if (this.lightningFlashActive) {
+          this.lightningFlashTimer--;
+          if (this.lightningFlashTimer <= 0) {
+            this.lightningFlashActive = false;
+          }
+          // Flash spike (bright red/white thunder illumination)
+          flashColorOverride = new THREE.Color(Math.random() < 0.5 ? 0xff6666 : 0xffffff);
+          flashIntensityMultiplier = 4.5;
+        } else {
+          // 0.6% chance per frame to trigger a lightning strike
+          if (Math.random() < 0.006) {
+            this.lightningFlashActive = true;
+            this.lightningFlashTimer = 6 + Math.floor(Math.random() * 8); // 6 to 13 frames
+          }
+        }
+      } else if (criticalPressure) {
+        if (this.lightningFlashActive) {
+          this.lightningFlashTimer--;
+          if (this.lightningFlashTimer <= 0) {
+            this.lightningFlashActive = false;
+          }
+          flashColorOverride = new THREE.Color(0xffe2d2);
+          flashIntensityMultiplier = 1.25 + dangerLevel * 0.55;
+        } else if (Math.random() < 0.0012 + dangerLevel * 0.0018) {
+          this.lightningFlashActive = true;
+          this.lightningFlashTimer = 2 + Math.floor(Math.random() * 3);
+        }
+      }
+
+      // 1. Dynamic background clear color and fog color interpolation
+      let currentClearColor: THREE.Color;
+      if (this.partida?.muerteSubita) {
+        currentClearColor = flashColorOverride ? flashColorOverride : new THREE.Color(0x1a0002);
+      } else {
+        const baseColor = new THREE.Color(0x020711);
+        const midDangerColor = new THREE.Color(0x10172c);
+        const dangerClearColor = new THREE.Color(0x220406);
+        currentClearColor = baseColor.clone().lerp(midDangerColor, Math.min(1, dangerLevel * 0.55));
+        currentClearColor.lerp(dangerClearColor, Math.max(0, dangerLevel - 0.35) / 0.65);
+        if (flashColorOverride) {
+          currentClearColor.lerp(flashColorOverride, 0.28);
+        }
+      }
+      this.battleAtmosphereRenderer.setClearColor(currentClearColor);
+
+      if (this.battleAtmosphereScene.fog) {
+        const expFog = this.battleAtmosphereScene.fog as THREE.FogExp2;
+        if (this.partida?.muerteSubita) {
+          expFog.color.copy(flashColorOverride ? flashColorOverride : new THREE.Color(0x220003));
+        } else {
+          const baseColor = new THREE.Color(0x020711);
+          const dangerFogColor = new THREE.Color(0x260507);
+          expFog.color.copy(baseColor).lerp(dangerFogColor, dangerLevel);
+          if (flashColorOverride) {
+            expFog.color.lerp(flashColorOverride, 0.22);
+          }
+        }
+      }
+
+      // 2. Falling particles physics (intense rain in Sudden Death, else normal space dust/atmosphere particles)
+      if (this.battleAtmosphereParticles) {
+        const geo = this.battleAtmosphereParticles.geometry as THREE.BufferGeometry;
+        const posAttr = geo.getAttribute('position') as THREE.BufferAttribute;
+        const mat = this.battleAtmosphereParticles.material as THREE.PointsMaterial;
+
+        // Dynamic particle color and opacity
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff3333); // vibrant red rain
+          mat.opacity = 0.55;
+        } else {
+          const particleColor = new THREE.Color(0x8be9ff)
+            .lerp(new THREE.Color(0xf59e0b), Math.min(1, dangerLevel * 0.75))
+            .lerp(new THREE.Color(0xff5b5b), Math.max(0, dangerLevel - 0.58) / 0.42);
+          mat.color.copy(particleColor);
+          mat.opacity = 0.22 + dangerLevel * 0.24 + pressurePulse * 0.06;
+          mat.size = 0.085 + dangerLevel * 0.055;
+        }
+
+        if (posAttr) {
+          const positions = posAttr.array as Float32Array;
+          const fallSpeed = this.partida?.muerteSubita ? 0.16 : (0.006 + dangerLevel * 0.03);
+          const swaySpeed = this.partida?.muerteSubita ? 1.5 : (0.55 + dangerLevel * 0.8);
+          const swayFactor = this.partida?.muerteSubita ? 0.0018 : (0.0012 + dangerLevel * 0.0016);
+
+          for (let i = 0; i < positions.length / 3; i++) {
+            positions[i * 3 + 1] -= fallSpeed; // move down Y
+            positions[i * 3] += Math.sin(elapsed * swaySpeed + i) * swayFactor; // sway X
+            
+            // Reset if they fall below floor limit
+            if (positions[i * 3 + 1] < -1.65) {
+              positions[i * 3 + 1] = 5.5 + Math.random() * 2.0; // spawn above top
+              positions[i * 3] = (Math.random() - 0.5) * 16.0;  // spread out X
+            }
+          }
+          posAttr.needsUpdate = true;
+        }
+        this.battleAtmosphereParticles.rotation.y = elapsed * (this.partida?.muerteSubita ? 0.045 : (0.018 + dangerLevel * 0.012));
+      }
+
+      // Dynamic Floor and Grid updates
+      if (this.atmosphereFloor) {
+        const floorMat = this.atmosphereFloor.material as THREE.MeshStandardMaterial;
+        if (this.partida?.muerteSubita) {
+          floorMat.color.setHex(0x3a0000); // dark red
+          floorMat.emissive.setHex(0x2a0000); // red glow
+          floorMat.emissiveIntensity = 0.85 * flashIntensityMultiplier;
+        } else {
+          const floorColor = new THREE.Color(0x07131d)
+            .lerp(new THREE.Color(0x102035), Math.min(1, dangerLevel * 0.5))
+            .lerp(new THREE.Color(0x2a090a), Math.max(0, dangerLevel - 0.48) / 0.52);
+          const emissiveColor = new THREE.Color(0x06131d)
+            .lerp(new THREE.Color(0x122235), Math.min(1, dangerLevel * 0.45))
+            .lerp(new THREE.Color(0x4a120d), Math.max(0, dangerLevel - 0.6) / 0.4);
+          floorMat.color.copy(floorColor);
+          floorMat.emissive.copy(emissiveColor);
+          floorMat.emissiveIntensity = 0.45 + dangerLevel * 0.42 + pressurePulse * 0.16;
+        }
+      }
+
+      if (this.atmosphereGrid) {
+        const gridMat = (Array.isArray(this.atmosphereGrid.material) 
+          ? this.atmosphereGrid.material[0] 
+          : this.atmosphereGrid.material) as THREE.LineBasicMaterial;
+        if (gridMat) {
+          if (this.partida?.muerteSubita) {
+            gridMat.color.setHex(0xff0000); // red grid
+            gridMat.opacity = 0.35;
+          } else {
+            const gridColor = new THREE.Color(0x38bdf8)
+              .lerp(new THREE.Color(0xfacc15), Math.min(1, dangerLevel * 0.58))
+              .lerp(new THREE.Color(0xff4d4d), Math.max(0, dangerLevel - 0.65) / 0.35);
+            gridMat.color.copy(gridColor);
+            gridMat.opacity = 0.2 + dangerLevel * 0.14 + pressurePulse * 0.08;
+          }
+        }
+      }
+
+      // Dynamic Lights updates
+      if (this.atmosphereHemisphereLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmosphereHemisphereLight.color.setHex(0xff3333);
+          this.atmosphereHemisphereLight.groundColor.setHex(0x110000);
+          this.atmosphereHemisphereLight.intensity = 1.6 * flashIntensityMultiplier;
+        } else {
+          this.atmosphereHemisphereLight.color.copy(
+            new THREE.Color(0x8be9ff)
+              .lerp(new THREE.Color(0xfde68a), Math.min(1, dangerLevel * 0.6))
+              .lerp(new THREE.Color(0xff8b8b), Math.max(0, dangerLevel - 0.62) / 0.38)
+          );
+          this.atmosphereHemisphereLight.groundColor.copy(
+            new THREE.Color(0x030712).lerp(new THREE.Color(0x180406), Math.max(0, dangerLevel - 0.45) / 0.55)
+          );
+          this.atmosphereHemisphereLight.intensity = 1.35 + dangerLevel * 0.5 + pressurePulse * 0.2;
+        }
+      }
+
+      if (this.atmosphereRivalLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmosphereRivalLight.color.setHex(0xff0000);
+          this.atmosphereRivalLight.intensity = 10 * flashIntensityMultiplier;
+        } else {
+          this.atmosphereRivalLight.color.copy(
+            new THREE.Color(0x38bdf8).lerp(new THREE.Color(0xff6b6b), Math.max(0, dangerLevel - 0.55) / 0.45)
+          );
+          this.atmosphereRivalLight.intensity = 7.3 + dangerLevel * 2.4 + pressurePulse * 0.85;
+        }
+      }
+
+      if (this.atmospherePlayerLight) {
+        if (this.partida?.muerteSubita) {
+          this.atmospherePlayerLight.color.setHex(0xff0000);
+          this.atmospherePlayerLight.intensity = 9 * flashIntensityMultiplier;
+        } else {
+          this.atmospherePlayerLight.color.copy(
+            new THREE.Color(0xfacc15).lerp(new THREE.Color(0xff8a5b), Math.max(0, dangerLevel - 0.48) / 0.52)
+          );
+          this.atmospherePlayerLight.intensity = 6.8 + dangerLevel * 2.1 + pressurePulse * 0.7;
+        }
+      }
+
+      // 3. Dynamic atmosphere rings and beams animation
+      this.battleAtmosphereRings.forEach((ring, index) => {
+        const phase = ring.userData['phase'] || 0;
+        const baseScale = ring.userData['baseScale'] || 1;
+        const pulse = 1 + Math.sin(elapsed * (1.15 + dangerLevel * 1.5) + phase) * (0.035 + dangerLevel * 0.02);
+        ring.scale.setScalar(baseScale * pulse);
+        ring.rotation.z = elapsed * (index % 2 === 0 ? (0.035 + dangerLevel * 0.05) : -(0.045 + dangerLevel * 0.05));
+        
+        const mat = ring.material as THREE.MeshBasicMaterial;
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff0000); // red rings
+        } else {
+          mat.color.copy(
+            (index < 2 ? new THREE.Color(0x38bdf8) : new THREE.Color(0xfacc15))
+              .lerp(new THREE.Color(0xff5f5f), Math.max(0, dangerLevel - 0.58) / 0.42)
+          );
+        }
+        
+        mat.opacity =
+          (index % 2 === 0 ? 0.28 : 0.15) + Math.sin(elapsed * (1.4 + dangerLevel) + phase) * (0.055 + pressurePulse * 0.04) + dangerLevel * 0.18;
+      });
+
+      this.battleAtmosphereBeams.forEach((beam) => {
+        const phase = beam.userData['phase'] || 0;
+        const mat = beam.material as THREE.MeshBasicMaterial;
+        if (this.partida?.muerteSubita) {
+          mat.color.setHex(0xff0000); // red beams
+        } else {
+          const isLeft = beam.position.x < 0;
+          mat.color.copy(
+            (isLeft ? new THREE.Color(0x38bdf8) : new THREE.Color(0xfacc15))
+              .lerp(new THREE.Color(0xff6666), Math.max(0, dangerLevel - 0.62) / 0.38)
+          );
+        }
+        
+        mat.opacity =
+          0.045 + (Math.sin(elapsed * (0.85 + dangerLevel * 0.6) + phase) + 1) * 0.025 + dangerLevel * 0.055 + pressurePulse * 0.05;
+      });
+
+      // 4. Shards (asteroids) rotation, sway, and shake
+      if (this.battleAtmosphereShards) {
+        this.battleAtmosphereShards.rotation.y = elapsed * (0.025 + dangerLevel * 0.08);
+        this.battleAtmosphereShards.position.y = Math.sin(elapsed * (0.3 + dangerLevel * 0.5)) * (0.1 + dangerLevel * 0.12);
+        
+        // Minor earthquake jitter to floating shards under high game tension
+        if (dangerLevel > 0.6) {
+          this.battleAtmosphereShards.position.x = (Math.random() - 0.5) * 0.016 * dangerLevel;
+        } else {
+          this.battleAtmosphereShards.position.x = 0;
+        }
+      }
+
+      this.battleAtmosphereCamera.position.x = Math.sin(elapsed * (0.12 + dangerLevel * 0.08)) * (0.12 + dangerLevel * 0.07);
+      this.battleAtmosphereCamera.position.y = Math.sin(elapsed * (0.16 + dangerLevel * 0.12)) * (dangerLevel > 0.45 ? 0.035 + dangerLevel * 0.015 : 0.012);
+      this.battleAtmosphereCamera.lookAt(0, -0.1, 0);
+
+      // Update visibility & animation of shields
+      const playerActive = this.partida?.jugador?.activo;
+      const botActive = this.partida?.bot?.activo;
+
+      const playerHasShield = !!(playerActive && (playerActive.invulnerable || (playerActive.reduccionDanioRecibido && playerActive.reduccionDanioRecibido > 0)));
+      const botHasShield = !!(botActive && (botActive.invulnerable || (botActive.reduccionDanioRecibido && botActive.reduccionDanioRecibido > 0)));
+
+      if (this.playerShieldGroup) {
+        this.playerShieldGroup.visible = playerHasShield;
+        if (playerHasShield) {
+          this.playerShieldGroup.rotation.y = elapsed * 0.6;
+          this.playerShieldGroup.rotation.z = elapsed * 0.25;
+          const scale = 1.0 + Math.sin(elapsed * 3.5) * 0.04;
+          this.playerShieldGroup.scale.setScalar(scale);
+        }
+      }
+      if (this.botShieldGroup) {
+        this.botShieldGroup.visible = botHasShield;
+        if (botHasShield) {
+          this.botShieldGroup.rotation.y = -elapsed * 0.6;
+          this.botShieldGroup.rotation.z = -elapsed * 0.25;
+          const scale = 1.0 + Math.sin(elapsed * 3.5) * 0.04;
+          this.botShieldGroup.scale.setScalar(scale);
+        }
+      }
+
+      this.battleAtmosphereRenderer.render(this.battleAtmosphereScene, this.battleAtmosphereCamera);
+    };
+    animate();
+  }
+
+  private cleanupBattleAtmosphere(): void {
+    if (this.battleAtmosphereFrame) cancelAnimationFrame(this.battleAtmosphereFrame);
+    this.battleAtmosphereResize?.disconnect();
+    this.battleAtmosphereScene?.traverse(object => {
+      const mesh = object as THREE.Mesh;
+      mesh.geometry?.dispose();
+      const materials = mesh.material
+        ? (Array.isArray(mesh.material) ? mesh.material : [mesh.material])
+        : [];
+      materials.forEach(material => material.dispose());
+    });
+    this.battleAtmosphereRenderer?.dispose();
+    this.battleAtmosphereRenderer = undefined;
+    this.battleAtmosphereScene = undefined;
+    this.battleAtmosphereCamera = undefined;
+    this.battleAtmosphereParticles = undefined;
+    this.battleAtmosphereShards = undefined;
+    this.battleAtmosphereBeams = [];
+    this.battleAtmosphereRings = [];
+    this.playerShieldGroup = undefined;
+    this.botShieldGroup = undefined;
   }
 
   private initHandshakeScene(canvas: HTMLCanvasElement): void {
@@ -3467,12 +4984,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
 
     loader.load(option.path, (gltf) => {
+      const animations = gltf.animations || [];
       HANDSHAKE_GLTF_CACHE.set(option.path, {
         scene: gltf.scene,
-        animations: gltf.animations || []
+        animations
       });
       const clonedScene = cloneSkeleton(gltf.scene);
-      onSuccess(clonedScene, gltf.animations || []);
+      onSuccess(clonedScene, animations);
     }, undefined, (err) => {
       console.error('Error loading handshake model:', option.path, err);
     });
@@ -3499,7 +5017,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     });
 
     const option = CHARACTER_OPTIONS.find(o => o.id === optionId) || CHARACTER_OPTIONS[0];
-    const baseHeight = 1.72 * (heightVal || 1.0) * (option.scale || 1.0);
+    const baseHeight = 1.38 * (option.scale || 1.0);
 
     model.updateMatrixWorld(true);
     const box = new THREE.Box3().setFromObject(model);
@@ -4166,6 +5684,71 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         active.action.fadeOut(0.25);
       }
       this.currentTrainerAnims.set(mixer, { state: 'idle', action: chosenAction });
+    }
+  }
+
+  private programarFinDePartida(partida: Partida, delayMs = 0): void {
+    if (this.showEndGameOverlay) return;
+    if (this.pendingEndGameTimeout) {
+      clearTimeout(this.pendingEndGameTimeout);
+    }
+    this.pendingEndGameTimeout = setTimeout(() => {
+      this.pendingEndGameTimeout = null;
+      this.handleGameEnd(partida);
+    }, Math.max(0, delayMs));
+  }
+
+  private activarEfectoCambio(objetivo: 'bot' | 'jugador'): void {
+    if (objetivo === 'bot') {
+      this.switchFxBot = true;
+      setTimeout(() => {
+        this.switchFxBot = false;
+        this.cdr.detectChanges();
+      }, 550);
+    } else {
+      this.switchFxPlayer = true;
+      setTimeout(() => {
+        this.switchFxPlayer = false;
+        this.cdr.detectChanges();
+      }, 550);
+    }
+    this.cdr.detectChanges();
+  }
+
+  private obtenerFirmaActivo(carta: CartaEnJuego | null | undefined): string {
+    if (!carta?.card) return '';
+    return [
+      carta.card.id,
+      carta.hpActual,
+      carta.energiasUnidas?.length || 0,
+      (carta.condicionesEspeciales || []).join(','),
+    ].join('|');
+  }
+
+  private getLocalizedStatusLabel(status: 'Poisoned' | 'Burned'): string {
+    const language = this.i18n.currentLanguage();
+    if (status === 'Poisoned') {
+      switch (language) {
+        case 'en':
+          return 'POISONED';
+        case 'pt':
+          return 'ENVENENADO';
+        case 'ja':
+          return 'どく';
+        default:
+          return 'ENVENENADO';
+      }
+    }
+
+    switch (language) {
+      case 'en':
+        return 'BURNED';
+      case 'pt':
+        return 'QUEIMADO';
+      case 'ja':
+        return 'やけど';
+      default:
+        return 'QUEMADO';
     }
   }
 

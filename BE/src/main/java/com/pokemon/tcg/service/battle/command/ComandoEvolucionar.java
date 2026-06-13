@@ -20,6 +20,8 @@ public class ComandoEvolucionar implements ComandoTurno {
     @Override
     public boolean puedeEjecutar(Partida partida) {
         if (cartaEvolucion == null || objetivo == null) return false;
+        if (tablero.getTurnosJugados() <= 1) return false;
+        if (objetivo.getTurnoEntrada() == partida.getNumeroTurno()) return false;
         return tablero.getMano().contains(cartaEvolucion);
     }
 
@@ -27,6 +29,13 @@ public class ComandoEvolucionar implements ComandoTurno {
     public void ejecutar(Partida partida) {
         if (cartaEvolucion == null) throw new IllegalArgumentException("La carta de evolución no está en tu mano.");
         if (objetivo == null) throw new IllegalArgumentException("El Pokémon objetivo no está en tu tablero.");
+
+        if (tablero.getTurnosJugados() <= 1) {
+            throw new IllegalStateException("No podés evolucionar Pokémon en el primer turno de la partida.");
+        }
+        if (objetivo.getTurnoEntrada() == partida.getNumeroTurno()) {
+            throw new IllegalStateException("No podés evolucionar un Pokémon en el mismo turno en el que entra en juego.");
+        }
 
         String evolvesFrom = cartaEvolucion.getEvolvesFrom();
         String nombreObjetivo = objetivo.getCard().getNombre();

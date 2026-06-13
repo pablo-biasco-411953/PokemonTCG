@@ -28,7 +28,7 @@ public class BattleController {
     public ResponseEntity<?> startBattle(@PathVariable String username,
                                          @RequestBody StartBattleRequest request) {
         try {
-            Partida partida = battleEngine.startBattle(username, request.getMazoId());
+            Partida partida = battleEngine.startBattle(username, request.getMazoId(), request.getBotDifficulty());
             return ResponseEntity.ok(partida);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -322,9 +322,10 @@ public class BattleController {
     @PostMapping("/{matchId}/attack")
     public ResponseEntity<?> atacar(@PathVariable String matchId,
                                     @RequestHeader(value = "X-Username", required = false) String username,
-                                    @RequestParam String nombreAtaque) {
+                                    @RequestParam String nombreAtaque,
+                                    @RequestParam(required = false) String extraParams) {
         try {
-            battleEngine.realizarAtaque(matchId, nombreAtaque, username);
+            battleEngine.realizarAtaque(matchId, nombreAtaque, username, extraParams);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -442,6 +443,10 @@ public class BattleController {
         swapped.setCartasMulliganExtraPendientesBot(p.getCartasMulliganExtraPendientesJugador());
         swapped.setSetupJugadorRoboExtraMulligan(p.isSetupBotRoboExtraMulligan());
         swapped.setSetupBotRoboExtraMulligan(p.isSetupJugadorRoboExtraMulligan());
+        if (p.getPendingAction() != null && p.getBotUsername() != null
+                && p.getBotUsername().equals(p.getPendingAction().getActor())) {
+            swapped.setPendingAction(p.getPendingAction());
+        }
 
         if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
             swapped.setTurnoActual(Partida.Turno.BOT);
@@ -450,6 +455,20 @@ public class BattleController {
         }
 
         return swapped;
+    }
+
+    @PostMapping("/{matchId}/resolve-effect")
+    public ResponseEntity<?> resolveEffect(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody Map<String, java.util.List<String>> request) {
+        try {
+            Partida partida = battleEngine.resolverAccionPendiente(matchId, username, request.get("selectedIds"));
+            return ResponseEntity.ok(username != null && username.equals(partida.getBotUsername())
+                    ? swapPerspective(partida)
+                    : partida);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     private Partida toSpectatorView(Partida p) {
@@ -509,6 +528,7 @@ public class BattleController {
         copy.setPuedeAtacar(source.isPuedeAtacar());
         copy.setInvulnerable(source.isInvulnerable());
         copy.setBocaAbajo(source.isBocaAbajo());
+        copy.setDebeLanzarMonedaSiAtaca(source.isDebeLanzarMonedaSiAtaca());
         copy.getEnergiasUnidas().addAll(source.getEnergiasUnidas());
         source.getCondicionesEspeciales().forEach(copy::agregarCondicion);
         return copy;

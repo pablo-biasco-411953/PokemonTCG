@@ -11,6 +11,7 @@ public class LobbyRoomSnapshot {
     private String name;
     private LobbyRoomStatus status;
     private boolean locked;
+    private int turnTimeSeconds;
     private String ownerUsername;
     private String ownerDeckName;
     private boolean ownerReady;
@@ -18,6 +19,7 @@ public class LobbyRoomSnapshot {
     private String guestDeckName;
     private boolean guestReady;
     private boolean guestBot;
+    private String botDifficulty;
     private int playerCount;
     private int spectatorCount;
     private String matchId;
@@ -36,6 +38,8 @@ public class LobbyRoomSnapshot {
     public void setStatus(LobbyRoomStatus status) { this.status = status; }
     public boolean isLocked() { return locked; }
     public void setLocked(boolean locked) { this.locked = locked; }
+    public int getTurnTimeSeconds() { return turnTimeSeconds; }
+    public void setTurnTimeSeconds(int turnTimeSeconds) { this.turnTimeSeconds = turnTimeSeconds; }
     public String getOwnerUsername() { return ownerUsername; }
     public void setOwnerUsername(String ownerUsername) { this.ownerUsername = ownerUsername; }
     public String getOwnerDeckName() { return ownerDeckName; }
@@ -50,6 +54,8 @@ public class LobbyRoomSnapshot {
     public void setGuestReady(boolean guestReady) { this.guestReady = guestReady; }
     public boolean isGuestBot() { return guestBot; }
     public void setGuestBot(boolean guestBot) { this.guestBot = guestBot; }
+    public String getBotDifficulty() { return botDifficulty; }
+    public void setBotDifficulty(String botDifficulty) { this.botDifficulty = botDifficulty; }
     public int getPlayerCount() { return playerCount; }
     public void setPlayerCount(int playerCount) { this.playerCount = playerCount; }
     public int getSpectatorCount() { return spectatorCount; }

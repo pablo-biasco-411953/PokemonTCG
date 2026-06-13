@@ -30,8 +30,8 @@ export class BattleService {
   }
 
   // Inicia una partida nueva con el mazo elegido.
-  startBattle(username: string, mazoId: number): Observable<Partida> {
-    return this.http.post<Partida>(`${this.base}/start/${username}`, { mazoId }, this.getHeaders());
+  startBattle(username: string, mazoId: number, botDifficulty = 'NORMAL'): Observable<Partida> {
+    return this.http.post<Partida>(`${this.base}/start/${username}`, { mazoId, botDifficulty }, this.getHeaders());
   }
 
   // Inicia una partida online de dos jugadores.
@@ -131,8 +131,11 @@ export class BattleService {
   }
 
   // Ejecuta el ataque elegido por nombre.
-  atacar(matchId: string, nombreAtaque: string): Observable<void> {
-    const url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
+  atacar(matchId: string, nombreAtaque: string, extraParams?: string): Observable<void> {
+    let url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
+    if (extraParams) {
+      url += `&extraParams=${encodeURIComponent(extraParams)}`;
+    }
     return this.http.post<void>(url, {}, this.getHeaders());
   }
 
@@ -144,6 +147,14 @@ export class BattleService {
   // Pide al backend que resuelva el turno del bot.
   jugarBot(matchId: string): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/jugar-bot`, {}, this.getHeaders());
+  }
+
+  resolverEfecto(matchId: string, selectedIds: string[]): Observable<Partida> {
+    return this.http.post<Partida>(
+      `${this.base}/${matchId}/resolve-effect`,
+      { selectedIds },
+      this.getHeaders(),
+    );
   }
 
   jugarBotSetup(matchId: string): Observable<Partida> {

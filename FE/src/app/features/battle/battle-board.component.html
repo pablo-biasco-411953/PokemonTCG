@@ -112,14 +112,18 @@
       </button>
     </div>
     <div class="setup-draw-actions">
-      <button class="btn-primary" type="button" (click)="confirmarBancaSetup()" [disabled]="setupAccionEnCurso || !puedeConfirmarBancaSetup()">Confirmar</button>
+      <button class="btn-primary" type="button" (click)="confirmarBancaSetup()" [disabled]="setupAccionEnCurso || !!partida?.setupJugadorListo || !puedeConfirmarBancaSetup()">
+        {{ partida?.setupJugadorListo ? 'Esperando rival...' : 'Confirmar' }}
+      </button>
     </div>
   </div>
   <div class="setup-panel" *ngIf="estadoSetupMulligan === 'PRIZES'">
     <h2 class="setup-title">Colocando Premios</h2>
-    <p class="setup-sub">Se separan 6 cartas boca abajo.</p>
+    <p class="setup-sub">
+      Se separan {{ partida?.muerteSubita ? 1 : 6 }} carta(s) boca abajo.
+    </p>
     <div class="setup-prize-cascade">
-      <div class="setup-card-back" *ngFor="let p of [1,2,3,4,5,6]" [style.--p]="p"></div>
+      <div class="setup-card-back" *ngFor="let p of getPrizeSlots(); let idx = index" [style.--p]="idx + 1"></div>
     </div>
   </div>
   <div class="setup-panel" *ngIf="estadoSetupMulligan === 'FINAL_REVEAL'">
@@ -354,7 +358,80 @@
   </div>
 </div>
 
+<div class="card-splash-overlay" *ngIf="cardSplashActive" [class.is-opponent]="!cardSplashActive.esMiAccion">
+  <div class="cs-backdrop"></div>
+  <div class="cs-content">
+    <div class="cs-card">
+      <img [src]="getImagenCarta(cardSplashActive.cardId)" [alt]="cardSplashActive.cardNombre" (error)="onCardImageError($event)" />
+      <div class="cs-fx-sweep"></div>
+    </div>
+  </div>
+</div>
+
+<div class="cinematic-attack-banner" *ngIf="attackBannerActive" [class.is-opponent]="!attackBannerActive.esMiAccion">
+  <div class="cab-stripes"></div>
+  <div class="cab-content">
+    <div class="cab-text">{{ attackBannerActive.attackName }}</div>
+  </div>
+</div>
+
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
+<div class="guided-effect-overlay" *ngIf="pendingAction as pending">
+  <section class="guided-effect-panel" [class.reorder-mode]="isReorderMode">
+    <small>{{ isReorderMode ? 'VISTAZO AL MAZO' : 'EFECTO DE CARTA' }}</small>
+    <h2>{{ pending.prompt }}</h2>
+    <p *ngIf="!isReorderMode">Elegidas {{ pendingEffectSelection.size }} / {{ pending.maxSelections }}</p>
+    <p *ngIf="isReorderMode" class="reorder-hint">
+      Hacé clic en las cartas en el orden que querés que queden. La <strong>primera que toques quedará arriba del mazo</strong>.
+      <span *ngIf="pendingEffectSelection.size > 0"> ({{ pendingEffectSelection.size }}/{{ pending.options.length }} ordenadas)</span>
+    </p>
+    <div class="guided-effect-options">
+      <button
+        type="button"
+        *ngFor="let option of pending.options"
+        [class.selected]="isPendingEffectCardSelected(option.id)"
+        (click)="togglePendingEffectCard(option.id)"
+      >
+        <div class="card-order-badge" *ngIf="isReorderMode && isPendingEffectCardSelected(option.id)">
+          {{ getPendingEffectOrderIndex(option.id) }}
+        </div>
+        <div class="modal-card-wrapper" style="position: relative; width: 100%; display: flex; justify-content: center; margin-bottom: 8px;">
+          <img [src]="option.imagen || getImagenCarta(option.id)" [alt]="option.nombre" (error)="onCardImageError($event)" style="border-radius: 4px; max-width: 100%;" />
+          
+          <img *ngIf="option.numero && option.set" 
+               [src]="getSpriteFront({numero: option.numero, set: option.set})" 
+               class="modal-option-sprite" 
+               style="position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.7)); pointer-events: none;" 
+               (error)="onCardImageError($event)" />
+               
+          <div *ngIf="option.hpActual !== undefined && option.maxHp !== undefined" 
+               class="modal-hp-bar" 
+               style="position: absolute; bottom: 2px; left: 10%; width: 80%; height: 6px; background: rgba(0,0,0,0.7); border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.4);">
+            <div class="modal-hp-fill" 
+                 [style.width.%]="(option.hpActual / option.maxHp) * 100" 
+                 [style.backgroundColor]="(option.hpActual / option.maxHp) > 0.5 ? '#10b981' : (option.hpActual / option.maxHp) > 0.25 ? '#f59e0b' : '#ef4444'"
+                 style="height: 100%; transition: width 0.3s ease;">
+            </div>
+          </div>
+        </div>
+        <span style="line-height: 1.2;">
+          {{ option.nombre }}
+          <ng-container *ngIf="option.hpActual !== undefined && option.maxHp !== undefined">
+            <br><small style="color: #94a3b8; font-size: 0.8em;">{{ option.hpActual }} / {{ option.maxHp }} HP</small>
+          </ng-container>
+        </span>
+      </button>
+    </div>
+    <button
+      type="button"
+      class="guided-effect-confirm"
+      [disabled]="!canConfirmPendingEffect() || cargandoAccion"
+      (click)="confirmPendingEffect()"
+    >
+      {{ isReorderMode ? 'Confirmar Orden' : 'Confirmar' }}
+    </button>
+  </section>
+</div>
 <div class="attack-coinflip-overlay" *ngIf="coinFlipAtaque">
   <div class="acf-backdrop"></div>
   <div class="acf-panel">
@@ -414,7 +491,13 @@
 
     <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
       <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
-        {{ resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t) }}
+        {{
+          coinFlipAtaque.tipoEfecto === 'protection'
+            ? (resultadoMoneda === 'CARA' ? '¡PROTECCIÓN ACTIVADA!' : 'NO SE ACTIVÓ LA PROTECCIÓN')
+            : coinFlipAtaque.tipoEfecto === 'self-damage'
+              ? (resultadoMoneda === 'CRUZ' ? '¡RECIBE DAÑO DE RETROCESO!' : 'SIN DAÑO DE RETROCESO')
+              : (resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t))
+        }}
       </span>
     </div>
   </div>
@@ -458,7 +541,15 @@
   <div class="ko-badge">KO!</div>
 </div>
 
-<div class="playmat" *ngIf="partida" [class.board-visible]="boardVisible" [class.spectator-mode]="isSpectator">
+<div
+  class="playmat"
+  *ngIf="partida"
+  [class.board-visible]="boardVisible"
+  [class.spectator-mode]="isSpectator"
+  [class.damage-pulse]="battlefieldDamagePulse"
+>
+  <canvas #battleAtmosphereCanvas class="battle-atmosphere-canvas" aria-hidden="true"></canvas>
+  <canvas #battleForegroundCanvas class="battle-foreground-canvas" aria-hidden="true"></canvas>
   <div class="battle-social-hud">
     <div class="battle-spectator-counter">
       <strong>{{ battleRoom?.spectatorCount || 0 }}</strong>
@@ -496,6 +587,16 @@
     </div>
   </aside>
 
+  <div class="prize-reveal-overlay" *ngIf="prizeRevealCard">
+    <div class="prize-flight-card">
+      <div class="prize-flight-inner">
+        <div class="prize-flight-back card-back gold"></div>
+        <img [src]="getImagenCarta(prizeRevealCard.id)" [alt]="prizeRevealCard.nombre" (error)="onCardImageError($event)" />
+      </div>
+      <strong>Premio obtenido</strong>
+    </div>
+  </div>
+
   <div class="neoprene-texture" aria-hidden="true">
     <div class="neo-grid"></div>
     <div class="neo-glow bot-glow"></div>
@@ -503,7 +604,7 @@
     <div class="neo-center-line rope-track">
       <div
         class="rope-burn"
-        *ngIf="partida.turnoActual === 'JUGADOR'"
+        *ngIf="turnTimerEnabled && partida.turnoActual === 'JUGADOR'"
         [style.width.%]="porcentajeTimer"
         [class.critical]="tiempoRestante <= 15"
       >
@@ -515,9 +616,9 @@
   <aside class="side-col left">
     <div class="prizes-section bot-prizes">
       <p class="prizes-title">{{ 'battle.rivalPrizesLabel' | t:{rival: nombreRival} }}</p>
-      <div class="prizes-grid">
+      <div class="prizes-grid" [class.sudden-death-grid]="partida.muerteSubita">
         <div
-          *ngFor="let i of [0, 1, 2, 3, 4, 5]"
+          *ngFor="let i of getPrizeSlots()"
           class="prize-cell"
           [class.empty]="i >= partida.bot.premios.length"
         >
@@ -525,16 +626,16 @@
           <div class="prize-empty-cell" *ngIf="i >= partida.bot.premios.length"></div>
         </div>
       </div>
-      <span class="prizes-count">{{ partida.bot.premios.length }}<em>/6</em></span>
+      <span class="prizes-count">{{ partida.bot.premios.length }}<em>/{{ getPrizeTarget() }}</em></span>
     </div>
 
     <div class="side-divider"></div>
 
     <div class="prizes-section player-prizes">
-      <span class="prizes-count gold">{{ partida.jugador.premios.length }}<em>/6</em></span>
-      <div class="prizes-grid">
+      <span class="prizes-count gold">{{ partida.jugador.premios.length }}<em>/{{ getPrizeTarget() }}</em></span>
+      <div class="prizes-grid" [class.sudden-death-grid]="partida.muerteSubita">
         <div
-          *ngFor="let i of [0, 1, 2, 3, 4, 5]"
+          *ngFor="let i of getPrizeSlots()"
           class="prize-cell"
           [class.empty]="i >= partida.jugador.premios.length"
         >
@@ -556,9 +657,10 @@
             [class.nueva-carta]="cartasNuevasBot.has(c.id)"
             [style.--bi]="i"
             [style.--btot]="partida.bot.mano.length"
+            [style.--bstep.px]="getOpponentHandStep(partida.bot.mano.length)"
           ></div>
         </div>
-        <span class="bot-hand-tag">{{ 'battle.cardsCount' | t:{cantidad: partida.bot.mano.length.toString()} }}</span>
+        <span class="bot-hand-tag">MANO RIVAL</span>
       </div>
 
       <div class="bench-row bot-bench">
@@ -567,10 +669,36 @@
         <div
           *ngFor="let b of partida.bot.banca"
           class="bench-slot occupied"
+          [class.low-hp-warning]="getHpPercent(b) < 30"
+          [class.status-heal]="cartasCurandose.has(b.card.id)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
+          (contextmenu)="abrirDetallePokemon($event, b)"
+          style="position: relative;"
         >
+          <div class="floating-texts-overlay" style="z-index: 50;">
+            <div
+              *ngFor="let ft of getFloatingTextsBot(b.card.id)"
+              class="floating-text-item"
+              [ngClass]="ft.type"
+            >
+              {{ ft.text }}
+            </div>
+          </div>
+          <div class="heal-particles" *ngIf="cartasCurandose.has(b.card.id)">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
+          <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
+            <div
+              *ngFor="let energia of b.energiasUnidas"
+              class="bench-energy-badge"
+              [style.background-color]="getEnergyColor(energia.tipo)"
+              [title]="energia.nombre"
+            >
+              <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div class="bench-bar" *ngIf="!b.bocaAbajo">
             <div
               class="bench-fill"
@@ -579,7 +707,22 @@
               [class.low]="getHpPercent(b) < 25"
             ></div>
           </div>
-          <span class="bench-hp" *ngIf="!b.bocaAbajo">{{ b.hpActual }}</span>
+          <div class="bench-footer-badges" *ngIf="!b.bocaAbajo">
+            <span
+              class="bench-hp"
+              [class.high]="getHpPercent(b) >= 70"
+              [class.mid]="getHpPercent(b) < 70 && getHpPercent(b) >= 30"
+              [class.low]="getHpPercent(b) < 30"
+            >
+              {{ b.hpActual }} HP
+            </span>
+            <span class="bench-damage-counter" *ngIf="getDamageCounters(b) > 0">
+              x{{ getDamageCounters(b) }}
+            </span>
+          </div>
+          <div class="bench-hover-hud" *ngIf="!b.bocaAbajo">
+            <span>{{ b.hpActual }}/{{ getHpMax(b) }} HP</span>
+          </div>
         </div>
         <div
           *ngFor="let _ of getEmptySlots(partida.bot.banca.length)"
@@ -590,9 +733,6 @@
     </div>
 
     <div class="arena">
-      <div class="arena-particles">
-        <span *ngFor="let p of [1, 2, 3, 4, 5, 6]" [style.--pn]="p"></span>
-      </div>
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
@@ -600,6 +740,7 @@
             class="active-card bot-active"
             (mouseenter)="setHoveredCard(partida.bot.activo?.bocaAbajo ? null : partida.bot.activo)"
             (mouseleave)="clearHoveredCard()"
+            (contextmenu)="abrirDetallePokemon($event, partida.bot.activo)"
           >
             <ng-container *ngIf="partida.bot.activo">
               <img [src]="getImagenCartaEnJuego(partida.bot.activo)" (error)="onCardImageError($event)" />
@@ -607,14 +748,42 @@
           </div>
 
           <div class="sprite-container" [class.recibiendo-danio]="animandoBotDanio">
+            <!-- Floating Texts -->
+            <div class="floating-texts-overlay">
+              <div
+                *ngFor="let ft of getFloatingTextsBot(partida.bot.activo?.card?.id)"
+                class="floating-text-item"
+                [ngClass]="ft.type"
+              >
+                {{ ft.text }}
+              </div>
+            </div>
+
+            <!-- Energy Discard Particle Emitter -->
+            <div class="energy-explosion-emitter" *ngIf="mostrarExplosionEnergiaBot">
+              <div
+                *ngFor="let p of particulasEnergiaBot"
+                class="energy-particle"
+                [style.backgroundColor]="p.color"
+                [style.boxShadow]="'0 0 10px ' + p.color"
+                [style.width.px]="p.size"
+                [style.height.px]="p.size"
+                [style.animationDuration.s]="p.duracion"
+                [style.--tx.px]="p.tx"
+                [style.--ty.px]="p.ty"
+              ></div>
+            </div>
+
             <div
               class="damage-number"
               *ngIf="damageNumberBot"
               [class.big]="damageNumberBot.valor > 80"
               [class.heal]="damageNumberBot.esCuracion"
             >
-              {{ damageNumberBot.esCuracion ? '+' : '-' }}{{ damageNumberBot.valor }}
+              {{ damageNumberBot.esCuracion ? 'Curando +' + damageNumberBot.valor : '-' + damageNumberBot.valor }}
             </div>
+            <div class="impact-callout effective" *ngIf="impactCalloutBot === 'effective'">¡Es muy efectivo!</div>
+            <div class="impact-callout resisted" *ngIf="impactCalloutBot === 'resisted'">¡Resistente al ataque!</div>
 
             <div class="particle-emitter" *ngIf="mostrarEfectoBot">
               <div
@@ -677,9 +846,16 @@
                 </div>
 
                 <ng-container *ngIf="partida.bot.activo && !partida.bot.activo.bocaAbajo">
+                  <div class="switch-pokeball-fx" *ngIf="switchFxBot">
+                    <div class="switch-pokeball-core"></div>
+                    <div class="switch-pokeball-ring ring-a"></div>
+                    <div class="switch-pokeball-ring ring-b"></div>
+                    <div class="switch-spark switch-spark-a"></div>
+                    <div class="switch-spark switch-spark-b"></div>
+                  </div>
                   <img
                     class="poke-sprite sprite-front"
-                    [src]="getSpriteFront(partida.bot.activo.card.nombre)"
+                    [src]="getSpriteFront(partida.bot.activo.card)"
                     (error)="onSpriteError($event, partida.bot.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>
@@ -718,6 +894,9 @@
               <span class="hp-label"
                 >{{ partida.bot.activo.hpActual }} / {{ getHpMax(partida.bot.activo) }} HP</span
               >
+              <div class="damage-counter-strip" *ngIf="getDamageCounters(partida.bot.activo) > 0">
+                <span class="damage-counter-chip">Contadores x{{ getDamageCounters(partida.bot.activo) }}</span>
+              </div>
             </div>
           </div>
 
@@ -744,14 +923,42 @@
             <canvas #playerTrainerCanvas class="trainer-canvas"></canvas>
           </div>
           <div class="sprite-container" [class.recibiendo-danio]="animandoJugadorDanio">
+            <!-- Floating Texts -->
+            <div class="floating-texts-overlay">
+              <div
+                *ngFor="let ft of getFloatingTextsPlayer(partida.jugador.activo?.card?.id)"
+                class="floating-text-item"
+                [ngClass]="ft.type"
+              >
+                {{ ft.text }}
+              </div>
+            </div>
+
+            <!-- Energy Discard Particle Emitter -->
+            <div class="energy-explosion-emitter" *ngIf="mostrarExplosionEnergiaPlayer">
+              <div
+                *ngFor="let p of particulasEnergiaPlayer"
+                class="energy-particle"
+                [style.backgroundColor]="p.color"
+                [style.boxShadow]="'0 0 10px ' + p.color"
+                [style.width.px]="p.size"
+                [style.height.px]="p.size"
+                [style.animationDuration.s]="p.duracion"
+                [style.--tx.px]="p.tx"
+                [style.--ty.px]="p.ty"
+              ></div>
+            </div>
+
             <div
               class="damage-number"
               *ngIf="damageNumberPlayer"
               [class.big]="damageNumberPlayer.valor > 80"
               [class.heal]="damageNumberPlayer.esCuracion"
             >
-              {{ damageNumberPlayer.esCuracion ? '+' : '-' }}{{ damageNumberPlayer.valor }}
+              {{ damageNumberPlayer.esCuracion ? 'Curando +' + damageNumberPlayer.valor : '-' + damageNumberPlayer.valor }}
             </div>
+            <div class="impact-callout effective victim" *ngIf="impactCalloutPlayer === 'effective'">¡Es muy efectivo!</div>
+            <div class="impact-callout resisted" *ngIf="impactCalloutPlayer === 'resisted'">¡Resistente al ataque!</div>
 
             <div class="particle-emitter" *ngIf="mostrarEfectoJugador">
               <div
@@ -771,7 +978,7 @@
               [class.pokemon-defeated]="estaPokemonDerrotado('JUGADOR')"
               [class.sprite-attack]="animandoAtaque"
               [class.status-confused]="tieneCondicionEspecial('JUGADOR', 'Confused')"
-              [class.status-heal]="mostrarAuraCuracionPlayer"
+              [class.status-heal]="partida.jugador.activo && cartasCurandose.has(partida.jugador.activo.card.id)"
               [class.status-paralyzed]="tieneCondicionEspecial('JUGADOR', 'Paralyzed')"
               [class.status-burned]="tieneCondicionEspecial('JUGADOR', 'Burned')"
               [class.status-poisoned]="tieneCondicionEspecial('JUGADOR', 'Poisoned')"
@@ -815,9 +1022,16 @@
                 </div>
 
                 <ng-container *ngIf="partida.jugador.activo && !partida.jugador.activo.bocaAbajo">
+                  <div class="switch-pokeball-fx" *ngIf="switchFxPlayer">
+                    <div class="switch-pokeball-core"></div>
+                    <div class="switch-pokeball-ring ring-a"></div>
+                    <div class="switch-pokeball-ring ring-b"></div>
+                    <div class="switch-spark switch-spark-a"></div>
+                    <div class="switch-spark switch-spark-b"></div>
+                  </div>
                   <img
                     class="poke-sprite sprite-back"
-                    [src]="getSpriteBack(partida.jugador.activo.card.nombre)"
+                    [src]="getSpriteBack(partida.jugador.activo.card)"
                     (error)="onSpriteError($event, partida.jugador.activo.card.id)"
                   />
                   <div class="sprite-shadow"></div>
@@ -832,7 +1046,7 @@
                   </div>
                 </ng-container>
 
-                <div class="heal-particles" *ngIf="mostrarAuraCuracionPlayer">
+                <div class="heal-particles" *ngIf="partida.jugador.activo && cartasCurandose.has(partida.jugador.activo.card.id)">
                   <span></span><span></span><span></span><span></span><span></span>
                 </div>
               </div>
@@ -864,6 +1078,9 @@
                 >{{ partida.jugador.activo.hpActual }} /
                 {{ getHpMax(partida.jugador.activo) }} HP</span
               >
+              <div class="damage-counter-strip" *ngIf="getDamageCounters(partida.jugador.activo) > 0">
+                <span class="damage-counter-chip">Contadores x{{ getDamageCounters(partida.jugador.activo) }}</span>
+              </div>
             </div>
           </div>
 
@@ -884,9 +1101,11 @@
             <div
               class="active-card player-active"
               [class.can-attack]="puedeAtacar()"
-              (click)="intentarAbrirHabilidades()"
+              [class.can-receive-energy-glow]="modoSeleccionUnionEnergia"
+              (click)="clickEnActivo()"
               (mouseenter)="setHoveredCard(partida.jugador.activo?.bocaAbajo ? null : partida.jugador.activo)"
               (mouseleave)="clearHoveredCard()"
+              (contextmenu)="abrirDetallePokemon($event, partida.jugador.activo)"
             >
               <ng-container *ngIf="partida.jugador.activo">
                 <img [src]="getImagenCartaEnJuego(partida.jugador.activo)" (error)="onCardImageError($event)" />
@@ -916,11 +1135,38 @@
         <div
           *ngFor="let b of partida.jugador.banca; trackBy: trackByCardId"
           class="bench-slot occupied player-slot"
+          [class.can-receive-energy-glow]="modoSeleccionUnionEnergia"
+          [class.low-hp-warning]="getHpPercent(b) < 30"
+          [class.status-heal]="cartasCurandose.has(b.card.id)"
           (click)="seleccionarBanca(b)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
+          (contextmenu)="abrirDetallePokemon($event, b)"
+          style="position: relative;"
         >
+          <div class="floating-texts-overlay" style="z-index: 50;">
+            <div
+              *ngFor="let ft of getFloatingTextsPlayer(b.card.id)"
+              class="floating-text-item"
+              [ngClass]="ft.type"
+            >
+              {{ ft.text }}
+            </div>
+          </div>
+          <div class="heal-particles" *ngIf="cartasCurandose.has(b.card.id)">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
           <img [src]="getImagenCartaEnJuego(b)" [alt]="b.bocaAbajo ? 'Carta boca abajo' : b.card.nombre" (error)="onCardImageError($event)" />
+          <div class="bench-energy-container" *ngIf="!b.bocaAbajo && b.energiasUnidas.length">
+            <div
+              *ngFor="let energia of b.energiasUnidas"
+              class="bench-energy-badge"
+              [style.background-color]="getEnergyColor(energia.tipo)"
+              [title]="energia.nombre"
+            >
+              <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div
             class="evolution-flash-fx"
             *ngIf="animandoEvolucionId === b.card.id"
@@ -934,7 +1180,22 @@
               [class.low]="getHpPercent(b) < 25"
             ></div>
           </div>
-          <span class="bench-hp" *ngIf="!b.bocaAbajo">{{ b.hpActual }}</span>
+          <div class="bench-footer-badges" *ngIf="!b.bocaAbajo">
+            <span
+              class="bench-hp"
+              [class.high]="getHpPercent(b) >= 70"
+              [class.mid]="getHpPercent(b) < 70 && getHpPercent(b) >= 30"
+              [class.low]="getHpPercent(b) < 30"
+            >
+              {{ b.hpActual }} HP
+            </span>
+            <span class="bench-damage-counter" *ngIf="getDamageCounters(b) > 0">
+              x{{ getDamageCounters(b) }}
+            </span>
+          </div>
+          <div class="bench-hover-hud" *ngIf="!b.bocaAbajo">
+            <span>{{ b.hpActual }}/{{ getHpMax(b) }} HP</span>
+          </div>
         </div>
         <div
           *ngFor="let _ of getEmptySlots(partida.jugador.banca.length)"
@@ -1111,5 +1372,174 @@
   </div>
 </div>
 
+<!-- ASTONISH REVEAL OVERLAY -->
+<div class="setup-overlay" *ngIf="astonishReveal?.visible" style="z-index: 10000;">
+  <div class="setup-backdrop" (click)="cerrarAstonishReveal()"></div>
+  <div class="setup-panel setup-panel-wide setup-reveal-panel" style="max-width: 420px; text-align: center; padding: 2rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.15);">
+    <h2 class="setup-title" style="margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 2px;">
+      {{ 'battle.astonish.title' | t }}
+    </h2>
+    <p class="setup-sub" style="margin-bottom: 1.5rem; font-size: 0.95rem;">
+      {{ (astonishReveal?.esMiAccion ? 'battle.astonish.selfDetail' : 'battle.astonish.oppDetail') | t: { card: astonishReveal?.cardNombre } }}
+    </p>
+    
+    <div style="display: flex; justify-content: center; margin-bottom: 1.8rem;">
+      <div class="astonish-flip-card">
+        <div class="astonish-flip-inner" [class.flipped]="astonishReveal?.isFlipped">
+          <div class="astonish-flip-face astonish-flip-back"></div>
+          <img class="astonish-flip-face astonish-flip-front" [src]="getImagenCarta(astonishReveal?.cardId || '')" (error)="onCardImageError($event)" />
+        </div>
+      </div>
+    </div>
+
+    <button class="menu-btn btn-primary" (click)="cerrarAstonishReveal()" style="padding: 0.5rem 2.5rem; border-radius: 8px;">
+      {{ 'lobby.close' | t }}
+    </button>
+  </div>
+</div>
+
 <app-battle-notification></app-battle-notification>
+
+<div class="energy-selection-banner" *ngIf="modoSeleccionUnionEnergia">
+  <span>{{ 'battle.selectTargetForEnergy' | t }}</span>
+  <button class="btn-cancel-energy" (click)="cancelarModoUnionEnergia()">
+    {{ i18n.currentLanguage() === 'en' ? 'Cancel' : 'Cancelar' }}
+  </button>
+</div>
+
+<!-- DETAILS MODAL -->
+<div class="pokemon-detail-modal-overlay" *ngIf="mostrarDetalleModal && selectedDetailPokemon" (click)="cerrarDetallePokemon()">
+  <div class="pokemon-detail-modal-content" (click)="$event.stopPropagation()">
+    <button class="modal-close-btn" (click)="cerrarDetallePokemon()">&times;</button>
+    <div class="modal-grid">
+      <!-- Left pane: Large Sprite & Card View -->
+      <div class="modal-sprite-section">
+        <div class="modal-sprite-card-frame">
+          <!-- Animated Sprite -->
+          <img class="modal-pokemon-gif" [src]="getSpriteFront(selectedDetailPokemon.card)" (error)="onCardImageError($event)" />
+          <!-- Static Card Image -->
+          <img class="modal-pokemon-card-art" [src]="getImagenCarta(selectedDetailPokemon.card.id)" (error)="onCardImageError($event)" />
+        </div>
+      </div>
+
+      <!-- Right pane: Stats, Energies, Conditions, Attacks -->
+      <div class="modal-info-section">
+        <div class="modal-pokemon-header">
+          <div class="title-row">
+            <h2 class="modal-pokemon-name">{{ selectedDetailPokemon.card.nombre }}</h2>
+            <span class="status-pill" *ngIf="esCartaEX(selectedDetailPokemon.card)">EX</span>
+          </div>
+          <div class="hp-row">
+            <span class="hp-current" [class.damaged]="selectedDetailPokemon.hpActual < getHpMax(selectedDetailPokemon)">
+              HP: {{ selectedDetailPokemon.hpActual }} / {{ getHpMax(selectedDetailPokemon) }}
+            </span>
+            <span class="type-pill" [style.backgroundColor]="getEnergyColor(selectedDetailPokemon.card.tipo)">
+              {{ selectedDetailPokemon.card.tipo }}
+            </span>
+            <span class="evolution-name">
+              {{ getPokemonFase(selectedDetailPokemon.card) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Attached Energies Section -->
+        <div class="modal-section-title">Energías Acopladas</div>
+        <div class="modal-energies-container">
+          <ng-container *ngIf="selectedDetailPokemon.energiasUnidas && selectedDetailPokemon.energiasUnidas.length; else noEnergies">
+            <div class="energy-attached-pill" *ngFor="let energia of selectedDetailPokemon.energiasUnidas" [style.borderColor]="getEnergyColor(energia.tipo)">
+              <div class="energy-icon" [style.backgroundColor]="getEnergyColor(energia.tipo)"></div>
+              <span class="energy-name">{{ energia.nombre }}</span>
+            </div>
+          </ng-container>
+          <ng-template #noEnergies>
+            <span class="no-energies-text">No tiene energías acopladas</span>
+          </ng-template>
+        </div>
+
+        <!-- History/Evo constraints info box -->
+        <div class="modal-section-box" *ngIf="selectedDetailPokemon && selectedDetailPokemon.turnoEntrada">
+          <p class="modal-info-text">
+            <strong>Turno de entrada:</strong> {{ selectedDetailPokemon.turnoEntrada }}
+          </p>
+          <p class="modal-info-text" *ngIf="partida && partida.numeroTurno">
+            <strong>Turnos en juego:</strong> {{ partida.numeroTurno - (selectedDetailPokemon.turnoEntrada || 0) }}
+          </p>
+        </div>
+
+        <!-- Status Conditions Section -->
+        <div class="modal-section-box" *ngIf="selectedDetailPokemon.condicionesEspeciales && selectedDetailPokemon.condicionesEspeciales.length">
+          <p class="modal-info-text">
+            <strong>Condiciones Especiales:</strong>
+            <span class="status-pill" *ngFor="let status of selectedDetailPokemon.condicionesEspeciales">{{ status }}</span>
+          </p>
+        </div>
+
+        <!-- Attacks Section -->
+        <div class="modal-section-title">Ataques</div>
+        <div class="modal-attacks-list">
+          <div class="modal-attack-item" *ngFor="let ataque of selectedDetailPokemon.card.ataques">
+            <div class="modal-attack-header">
+              <div class="modal-attack-cost">
+                <span
+                  *ngFor="let cost of ataque.costo"
+                  class="energy-chip"
+                  [style.background-color]="getEnergyColor(cost)"
+                  [title]="cost"
+                  style="padding: 1px 6px; border-radius: 10px; font-size: 10px; color: #fff; margin-right: 4px; display: inline-flex; align-items: center;"
+                >
+                  {{ resolveEnergyLabel(cost) }}
+                </span>
+              </div>
+              <span class="modal-attack-name">{{ ataque.nombre }}</span>
+              <span class="modal-attack-damage" *ngIf="ataque.danio > 0">{{ ataque.danio }}</span>
+            </div>
+            <p class="modal-attack-description" *ngIf="ataque.texto">{{ formatTextoAtaque(ataque.texto) }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAY DE MUERTE SUBITA -->
+<div class="muerte-subita-overlay" *ngIf="mostrarOverlayMuerteSubita">
+  <div class="ms-flash-layer"></div>
+  <div class="ms-rain-layer">
+    <span *ngFor="let drop of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]" [style.--n]="drop"></span>
+  </div>
+  <div class="ms-kicker">Empate absoluto</div>
+  <div class="ms-content">
+    <div class="ms-glow">MUERTE SÚBITA</div>
+    <div class="ms-sub">El próximo premio define la partida. ¡Que comience el combate final!</div>
+  </div>
+</div>
+
+
+<!-- CONVERSION POWDER MODAL -->
+<div class="conversion-modal-overlay" *ngIf="mostrarConversionModal">
+  <div class="conversion-modal">
+    <button class="conversion-close" (click)="cerrarConversionModal()">&times;</button>
+    <h2 class="conversion-title">Eleg� un estado</h2>
+    <p class="conversion-subtitle">El Pok�mon Defensor pasar� a estar Dormido o Envenenado.</p>
+    <div class="conversion-options">
+      <div class="conversion-card sleep-card" (click)="seleccionarEstadoConversion('Asleep')">
+        <div class="sleep-anim-container">
+          <span class="zzz z1">Z</span>
+          <span class="zzz z2">Z</span>
+          <span class="zzz z3">Z</span>
+        </div>
+        <h3>Dormir</h3>
+      </div>
+      <div class="conversion-card poison-card" (click)="seleccionarEstadoConversion('Poisoned')">
+        <div class="poison-anim-container">
+          <span class="bubble b1"></span>
+          <span class="bubble b2"></span>
+          <span class="bubble b3"></span>
+          <span class="bubble b4"></span>
+        </div>
+        <h3>Envenenar</h3>
+      </div>
+    </div>
+  </div>
+</div>
 

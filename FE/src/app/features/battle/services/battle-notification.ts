@@ -1,39 +1,41 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-
-export interface BattleNotification {
-  id: number;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  duration?: number;
-}
+import Swal from 'sweetalert2';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BattleNotificationService {
-  private notifications: BattleNotification[] = [];
-  private notificationsSubject = new BehaviorSubject<BattleNotification[]>([]);
-  private nextId = 0;
 
-  getNotifications(): Observable<BattleNotification[]> {
-    return this.notificationsSubject.asObservable();
-  }
+  private Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    background: 'rgba(20, 20, 20, 0.85)',
+    color: '#fff',
+    didOpen: (toast) => {
+      toast.onmouseenter = Swal.stopTimer;
+      toast.onmouseleave = Swal.resumeTimer;
+    }
+  });
 
   show(message: string, type: 'info' | 'success' | 'warning' | 'error' = 'info', duration = 3000) {
-    const id = this.nextId++;
-    const notification: BattleNotification = { id, message, type, duration };
-    
-    this.notifications.push(notification);
-    this.notificationsSubject.next([...this.notifications]);
-
-    if (duration > 0) {
-      setTimeout(() => this.remove(id), duration);
-    }
+    this.Toast.fire({
+      icon: type,
+      title: message,
+      timer: duration
+    });
   }
 
-  remove(id: number) {
-    this.notifications = this.notifications.filter(n => n.id !== id);
-    this.notificationsSubject.next([...this.notifications]);
+  showModal(title: string, text: string, type: 'info' | 'success' | 'warning' | 'error' | 'question' = 'info') {
+    Swal.fire({
+      title,
+      text,
+      icon: type,
+      background: 'rgba(20, 20, 20, 0.95)',
+      color: '#fff',
+      confirmButtonColor: '#3085d6',
+    });
   }
 }

@@ -26,17 +26,16 @@ public class AuthService {
         }
 
         String cleanUsername = username.trim();
-        String passwordHash = hashPassword(password);
         Jugador jugador = jugadorRepo.findAuthByUsername(cleanUsername);
 
         if (jugador == null) {
-            jugador = new Jugador(cleanUsername);
-            jugador.setPasswordHash(passwordHash);
-            jugadorRepo.save(jugador);
-        } else if (jugador.getPasswordHash() == null || jugador.getPasswordHash().isBlank()) {
-            jugador.setPasswordHash(passwordHash);
-            jugadorRepo.save(jugador);
-        } else if (!jugador.getPasswordHash().equals(passwordHash)) {
+            throw new IllegalArgumentException("Usuario o contrasena incorrectos.");
+        }
+
+        String passwordHash = hashPassword(password);
+        if (jugador.getPasswordHash() == null
+                || jugador.getPasswordHash().isBlank()
+                || !jugador.getPasswordHash().equals(passwordHash)) {
             throw new IllegalArgumentException("Usuario o contrasena incorrectos.");
         }
 

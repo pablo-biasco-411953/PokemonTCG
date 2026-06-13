@@ -20,7 +20,22 @@ describe('BattleBoardAttackService', () => {
       danioExtraPorCara: 30,
       descripcion: traduccion,
       esSoloEstado: false,
+      tipoEfecto: 'damage',
     });
+  });
+
+  it('describe Dig como proteccion y no como dano extra', () => {
+    const result = service.detectarCoinFlipAtaque(
+      {
+        texto: "Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn.",
+        danio: 10,
+      },
+      () => 'proteccion',
+    );
+
+    expect(result?.danioExtraPorCara).toBe(0);
+    expect(result?.esSoloEstado).toBe(true);
+    expect(result?.tipoEfecto).toBe('protection');
   });
 
   it('valida costos mixtos de energia incluyendo colorless', () => {
@@ -53,5 +68,36 @@ describe('BattleBoardAttackService', () => {
     expect(service.getFaltantesAtaque(ataque, activo)).toEqual([
       { tipo: 'Water', cantidad: 1 },
     ]);
+  });
+
+  it('reserva la energia Metal para Metal y usa otra para Colorless', () => {
+    const ataque = { costo: ['Colorless', 'Metal'] };
+    const activo = {
+      energiasUnidas: [
+        { nombre: 'Metal Energy', tipo: 'Energy' },
+        { nombre: 'Water Energy', tipo: 'Energy' },
+      ],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
+    expect(service.getFaltantesAtaque(ataque, activo)).toEqual([]);
+  });
+
+  it('cuenta Double Colorless como dos energias incoloras', () => {
+    const ataque = { costo: ['Colorless', 'Colorless'] };
+    const activo = {
+      energiasUnidas: [{ nombre: 'Double Colorless Energy', tipo: '' }],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
+  });
+
+  it('permite que Rainbow Energy cubra un requisito especifico', () => {
+    const ataque = { costo: ['Metal'] };
+    const activo = {
+      energiasUnidas: [{ nombre: 'Rainbow Energy', tipo: '' }],
+    };
+
+    expect(service.validarEnergiaAtaque(ataque, activo)).toBe(true);
   });
 });

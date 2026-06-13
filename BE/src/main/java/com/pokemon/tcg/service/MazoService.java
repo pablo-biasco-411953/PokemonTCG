@@ -7,8 +7,10 @@ import com.pokemon.tcg.repository.MazoRepository;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.CardRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.ArrayList;
+import java.text.Normalizer;
 
 @Service
 /**
@@ -31,6 +33,7 @@ public class MazoService {
      * Guarda un nuevo mazo para el jugador.
      * Valida que tenga exactamente 60 cartas antes de guardar.
      */
+    @Transactional
     public Mazo guardarMazo(String nombre, String username, List<String> cartaIds) {
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) {
@@ -51,11 +54,13 @@ public class MazoService {
             }
             cartas.add(card);
         }
+        validarMazo(cartas);
 
         // Crear y guardar el mazo
         Mazo mazo = new Mazo(nombre, jugador);
         mazo.setCartas(cartas);
         Mazo guardado = mazoRepo.save(mazo);
+        eagerlyLoadMazo(guardado);
         mazoBackupService.backupAll();
         return guardado;
     }
@@ -63,6 +68,7 @@ public class MazoService {
     /**
      * Actualiza un mazo existente.
      */
+    @Transactional
     public Mazo actualizarMazo(Long id, String nombre, List<String> cartasIds) {
         // Usamos mazoRepo que es el nombre definido arriba
         Mazo mazo = mazoRepo.findById(id)
@@ -70,15 +76,22 @@ public class MazoService {
 
         mazo.setNombre(nombre);
 
-        // Buscamos las cartas usando cardRepo
-        List<Card> nuevasCartas = cardRepo.findAllById(cartasIds);
-
-        if (nuevasCartas.size() != 60) {
+        if (cartasIds == null || cartasIds.size() != 60) {
+            throw new IllegalArgumentException("Un mazo debe contener exactamente 60 cartas.");
         }
+
+        List<Card> nuevasCartas = new ArrayList<>();
+        for (String cartaId : cartasIds) {
+            Card card = cardRepo.findById(cartaId)
+                    .orElseThrow(() -> new IllegalArgumentException("Carta no encontrada en la BD: " + cartaId));
+            nuevasCartas.add(card);
+        }
+        validarMazo(nuevasCartas);
 
         mazo.setCartas(nuevasCartas);
 
         Mazo guardado = mazoRepo.save(mazo);
+        eagerlyLoadMazo(guardado);
         mazoBackupService.backupAll();
         return guardado;
     }
@@ -86,12 +99,19 @@ public class MazoService {
     /**
      * Lista todos los mazos del jugador.
      */
+    @Transactional(readOnly = true)
     public List<Mazo> listarMazos(String username) {
         Jugador jugador = jugadorRepo.findByUsername(username);
         if (jugador == null) {
             throw new IllegalArgumentException("Jugador no encontrado: " + username);
         }
-        return mazoRepo.findByJugador(jugador);
+        List<Mazo> mazos = mazoRepo.findByJugador(jugador);
+        if (mazos != null) {
+            for (Mazo mazo : mazos) {
+                eagerlyLoadMazo(mazo);
+            }
+        }
+        return mazos;
     }
 
     /**
@@ -105,10 +125,7 @@ public class MazoService {
         mazoBackupService.backupAll();
     }
 
-    /**
-     * Inyecta una carta en un mazo para pruebas manuales.
-     * Si el mazo ya tiene 60 cartas, requiere indicar cual reemplazar.
-     */
+    @Transactional
     public Mazo debugInyectarCarta(Long mazoId, String cartaId, String cartaAReemplazarId) {
         Mazo mazo = mazoRepo.findById(mazoId)
                 .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado con ID: " + mazoId));
@@ -144,7 +161,49 @@ public class MazoService {
 
         mazo.setCartas(cartasActuales);
         Mazo guardado = mazoRepo.save(mazo);
+        eagerlyLoadMazo(guardado);
         mazoBackupService.backupAll();
         return guardado;
+    }
+
+    private void validarMazo(List<Card> cartas) {
+        if (cartas == null || cartas.size() != 60) {
+            throw new IllegalArgumentException("Un mazo debe contener exactamente 60 cartas.");
+        }
+        boolean tieneBasico = cartas.stream().anyMatch(this::esPokemonBasico);
+        if (!tieneBasico) {
+            throw new IllegalArgumentException("El mazo debe incluir al menos 1 Pokemon Basico.");
+        }
+    }
+    private void eagerlyLoadMazo(Mazo mazo) {
+        if (mazo != null && mazo.getCartas() != null) {
+            mazo.getCartas().size();
+            for (Card card : mazo.getCartas()) {
+                if (card.getSubtypes() != null) card.getSubtypes().size();
+                if (card.getReglas() != null) card.getReglas().size();
+                if (card.getAtaques() != null) card.getAtaques().size();
+                if (card.getDebilidades() != null) card.getDebilidades().size();
+                if (card.getResistencias() != null) card.getResistencias().size();
+            }
+        }
+    }
+
+    private boolean esPokemonBasico(Card card) {
+        if (card == null || card.getSupertype() == null) {
+            return false;
+        }
+        boolean esPokemon = "pokemon".equals(normalizar(card.getSupertype()));
+        boolean esBasico = card.getSubtypes() != null
+                && card.getSubtypes().stream().anyMatch(subtype -> "basic".equals(normalizar(subtype)));
+        return esPokemon && esBasico;
+    }
+
+    private String normalizar(String text) {
+        if (text == null) {
+            return "";
+        }
+        return Normalizer.normalize(text, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase();
     }
 }
