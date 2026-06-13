@@ -18,19 +18,22 @@ public class ComandoAtacar implements ComandoTurno {
     private final TableroJugador tableroDefensor;
     private final BattleAttackService attackService;
     private final BattleKoService koService;
+    private final String extraParams;
 
     public ComandoAtacar(
             String nombreAtaque,
             TableroJugador tableroAtacante,
             TableroJugador tableroDefensor,
             BattleAttackService attackService,
-            BattleKoService koService
+            BattleKoService koService,
+            String extraParams
     ) {
         this.nombreAtaque = nombreAtaque;
         this.tableroAtacante = tableroAtacante;
         this.tableroDefensor = tableroDefensor;
         this.attackService = attackService;
         this.koService = koService;
+        this.extraParams = extraParams;
     }
 
     @Override
@@ -88,7 +91,7 @@ public class ComandoAtacar implements ComandoTurno {
 
         BattleAttackService.AttackResolution resolution = attackService.resolveAttack(
                 partida, ataqueUsado, activoAtacante, activoDefensor,
-                koService::resolverKO
+                koService::resolverKO, extraParams
         );
 
         partida.setUltimasMonedasLanzadas(resolution.historialMonedas());

@@ -27,7 +27,7 @@ class BattleAttackServiceTest {
         Ataque ataque = attack("Golpe", 30, "");
 
         BattleAttackService.AttackResolution resolution =
-                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {});
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
 
         assertEquals(20, defensor.getHpActual());
         assertEquals(30, resolution.resultado().danioFinal());
@@ -43,7 +43,7 @@ class BattleAttackServiceTest {
 
         Ataque ataque = attack("Recuperar", 20, "Heal 20 damage from this Pokémon. Draw a card.");
 
-        service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> {});
+        service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> {}, null);
 
         assertEquals(50, atacante.getHpActual());
         assertEquals(1, partida.getJugador().getMano().size());
@@ -65,7 +65,7 @@ class BattleAttackServiceTest {
                 "Search your deck for a Grass Pokemon, reveal it, and put it into your hand. Shuffle your deck afterward."
         );
 
-        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {});
+        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {}, null);
 
         assertEquals(Partida.Fase.ESPERANDO_INTERACCION, partida.getFaseActual());
         assertEquals("SEARCH_DECK", partida.getPendingAction().getType());
@@ -81,7 +81,7 @@ class BattleAttackServiceTest {
                 "The Defending Pokémon is now Poisoned. The Defending Pokémon can't retreat during your opponent's next turn."
         );
 
-        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {});
+        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {}, null);
 
         assertTrue(partida.getBot().getActivo().getCondicionesEspeciales().contains("Poisoned"));
         assertTrue(partida.getBot().getActivo().getCondicionesEspeciales().contains("CantRetreat"));
@@ -95,7 +95,7 @@ class BattleAttackServiceTest {
         Ataque ataque = attack("Choque", 10, "This Pokémon does 20 damage to itself.");
         AtomicBoolean koInvocado = new AtomicBoolean(false);
 
-        service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> koInvocado.set(true));
+        service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> koInvocado.set(true), null);
 
         assertEquals(0, atacante.getHpActual());
         assertTrue(koInvocado.get());
@@ -231,7 +231,7 @@ class BattleAttackServiceTest {
                 "Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon."
         );
 
-        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {});
+        service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), partida.getBot().getActivo(), (p, a, d) -> {}, null);
 
         assertEquals(Partida.Fase.ESPERANDO_INTERACCION, partida.getFaseActual());
         assertEquals("SEARCH_DECK", partida.getPendingAction().getType());

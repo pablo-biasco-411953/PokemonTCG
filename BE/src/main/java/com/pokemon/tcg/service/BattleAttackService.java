@@ -36,7 +36,8 @@ public class BattleAttackService {
             Ataque ataque,
             CartaEnJuego atacante,
             CartaEnJuego defensor,
-            KoResolver koResolver
+            KoResolver koResolver,
+            String extraParams
     ) {
         // Clear previous execution queue and coin flips
         partida.getExecutionQueue().clear();
@@ -67,7 +68,7 @@ public class BattleAttackService {
 
         // 2. Parse text effects into commands
         if (ataque.getTexto() != null && !ataque.getTexto().isEmpty()) {
-            List<com.pokemon.tcg.model.battle.command.BattleCommand> effectCommands = effectParserService.parseEffects(ataque.getTexto());
+            List<com.pokemon.tcg.model.battle.command.BattleCommand> effectCommands = effectParserService.parseEffects(ataque.getTexto(), extraParams);
             partida.getExecutionQueue().addAll(effectCommands);
         }
 

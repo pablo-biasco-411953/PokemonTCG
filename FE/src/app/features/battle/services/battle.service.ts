@@ -131,8 +131,11 @@ export class BattleService {
   }
 
   // Ejecuta el ataque elegido por nombre.
-  atacar(matchId: string, nombreAtaque: string): Observable<void> {
-    const url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
+  atacar(matchId: string, nombreAtaque: string, extraParams?: string): Observable<void> {
+    let url = `${this.base}/${matchId}/attack?nombreAtaque=${encodeURIComponent(nombreAtaque)}`;
+    if (extraParams) {
+      url += `&extraParams=${encodeURIComponent(extraParams)}`;
+    }
     return this.http.post<void>(url, {}, this.getHeaders());
   }
 

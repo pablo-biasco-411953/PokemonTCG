@@ -64,7 +64,7 @@ export class BattleBoardActionService {
     if (!activo) return false;
     const disponible = activo.energiasUnidas.reduce((total, energia) => {
       const nombre = (energia.nombre || '').toLowerCase();
-      return total + (nombre.includes('double colorless') || nombre.includes('doble incolora') ? 2 : 1);
+      return total + (nombre.includes('double colorless') || nombre.includes('incolora doble') || nombre.includes('doble incolora') ? 2 : 1);
     }, 0);
     return disponible >= (activo.card.costoRetirada ?? 0);
   }

@@ -631,7 +631,7 @@ public class BattleEngineService {
         ejecutarComando(partida, new ComandoSubirActivo(cartaIdEnBanca, tablero));
     }
 
-    public void realizarAtaque(String matchId, String nombreAtaqueElegido, String callerUsername) {
+    public void realizarAtaque(String matchId, String nombreAtaqueElegido, String callerUsername, String extraParams) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
         validarTurno(partida, callerUsername);
@@ -649,7 +649,7 @@ public class BattleEngineService {
 
         ejecutarComando(partida, new ComandoAtacar(
                 nombreAtaqueElegido, tableroAtacante, tableroDefensor,
-                battleAttackService, battleKoService
+                battleAttackService, battleKoService, extraParams
         ));
 
         CartaEnJuego defensorDespues = tableroDefensor.getActivo();
@@ -742,7 +742,6 @@ public class BattleEngineService {
     public void pasarTurno(String matchId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurno(partida, callerUsername);
-        partida.getUltimasMonedasLanzadas().clear();
 
         TableroJugador jugador = getTableroDeJugador(partida, callerUsername);
         TableroJugador bot = getTableroOponente(partida, callerUsername);

@@ -189,6 +189,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   mostrarModalDescarte = false;
   cartasParaVerEnDescarte: Card[] = [];
   tituloDescarteActual = '';
+  mostrarConversionModal = false;
 
   puedeEvolucionar(cartaMano: BattleActionCard | Card): boolean {
     return this.battleBoardState.puedeEvolucionar(this.partida, cartaMano);
@@ -1156,6 +1157,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           const targetOwner = parts[1];
           const objetivo =
             targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+          
+          while (this.showTurnOverlay) {
+            await this.delay(100);
+          }
+          await this.delay(500);
+
           this.mostrarTextoFlotante(objetivo, '¡Despierta! (CARA)', 'status-healed-text');
           await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 1, true);
           break;
@@ -1164,6 +1171,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           const targetOwner = parts[1];
           const objetivo =
             targetOwner === this.jugadorNombre || targetOwner === 'JUGADOR' ? 'jugador' : 'bot';
+
+          while (this.showTurnOverlay) {
+            await this.delay(100);
+          }
+          await this.delay(500);
+
           this.mostrarTextoFlotante(objetivo, 'Sigue Dormido (CRUZ)', 'status-asleep');
           await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 0, true);
           break;
@@ -3061,6 +3074,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) return;
 
+    if (nombreAtaque === 'Conversion Powder') {
+      this.mostrarConversionModal = true;
+      return;
+    }
+
     this.bloqueadoPorAnimacion = true;
     this.cargandoAccion = true;
     this.ataqueRealizado = true;
@@ -3094,6 +3112,40 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.bloqueadoPorAnimacion = false;
       console.error('Error en ataque:', error);
     }
+  }
+
+  async seleccionarEstadoConversion(estado: string): Promise<void> {
+    this.mostrarConversionModal = false;
+    if (!this.matchId) return;
+    
+    this.bloqueadoPorAnimacion = true;
+    this.cargandoAccion = true;
+    this.ataqueRealizado = true;
+    
+    try {
+      // Usar la función de ataque de battle.service directamente pasando el param, 
+      // y luego recargar el estado como en atacarYRecargar
+      await firstValueFrom(this.battleService.atacar(this.matchId, 'Conversion Powder', estado));
+      const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId));
+      
+      const activoJugador = this.partida?.jugador?.activo;
+      const habilidad = (activoJugador?.card.ataques ?? []).find((a: any) => a.nombre === 'Conversion Powder');
+      const tipoEnergia = habilidad?.costo?.[0] || 'Grass';
+      
+      await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
+      await this.reproducirImpactoAtaqueJugador(tipoEnergia, estadoFinal);
+      await this.finalizarSecuenciaAtaque(estadoFinal);
+    } catch (error: any) {
+      this.cargandoAccion = false;
+      this.ataqueRealizado = false;
+      this.bloqueadoPorAnimacion = false;
+      console.error('Error al atacar (Conversion):', error);
+      this.mostrarNotificacion(error.error?.message || error.message || 'Error al atacar', 'error');
+    }
+  }
+
+  cerrarConversionModal(): void {
+    this.mostrarConversionModal = false;
   }
 
   async iniciarTurnoBot(estadoFinal: any) {
@@ -3820,6 +3872,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     descripcion: string,
     seDesperto: boolean,
   ): Promise<void> {
+    while (this.showTurnOverlay) {
+      await this.delay(100);
+    }
+    await this.delay(500);
+
     this.coinFlipAtaque = this.battleBoardTurn.crearEstadoCoinFlip(descripcion);
     this.cdr.detectChanges();
 

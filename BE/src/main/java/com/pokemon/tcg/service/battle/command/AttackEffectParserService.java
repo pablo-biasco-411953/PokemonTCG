@@ -37,7 +37,7 @@ public class AttackEffectParserService {
             Pattern.CASE_INSENSITIVE
     );
 
-    public List<BattleCommand> parseEffects(String text) {
+    public List<BattleCommand> parseEffects(String text, String extraParams) {
         List<BattleCommand> commands = new ArrayList<>();
         if (text == null || text.trim().isEmpty()) {
             return commands;
@@ -177,8 +177,11 @@ public class AttackEffectParserService {
             int count = Integer.parseInt(opponentBenchDamageMatcher.group(2));
             commands.add(new DamageOpponentBenchedCommand(amount, count));
         }
-
-        if (lowerText.contains("discard an energy attached to this pok") || lowerText.contains("discard 2 energy attached to this pok")) {
+        Matcher optionalDiscardDamageMatcher = Pattern.compile("you may discard an energy attached to this pok.{1,2}mon\\.\\s*if you do, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (optionalDiscardDamageMatcher.find()) {
+            int extraDamage = Integer.parseInt(optionalDiscardDamageMatcher.group(1));
+            commands.add(new OptionalDiscardEnergyForDamageCommand(extraDamage));
+        } else if (lowerText.contains("discard an energy attached to this pok") || lowerText.contains("discard 2 energy attached to this pok")) {
             int amount = lowerText.contains("discard 2 energy") ? 2 : 1;
             if (lowerText.contains("flip a coin") && lowerText.contains("if tails")) {
                 commands.add(new CoinFlipCommand(null, new DiscardEnergyCommand(amount, Target.SELF)));
@@ -186,6 +189,23 @@ public class AttackEffectParserService {
                 commands.add(new DiscardEnergyCommand(amount, Target.SELF));
             }
         }
+        
+        Matcher differentBasicEnergyMatcher = Pattern.compile("does (\\d+) more damage for each different type of basic energy attached", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (differentBasicEnergyMatcher.find()) {
+            int extraDamage = Integer.parseInt(differentBasicEnergyMatcher.group(1));
+            commands.add(new AddDamageByDifferentBasicEnergyTypesCommand(extraDamage));
+        }
+        
+        if (lowerText.contains("choose either asleep or poisoned. your opponent's active pok")) {
+            if ("Asleep".equalsIgnoreCase(extraParams)) {
+                commands.add(new ApplyStatusConditionCommand("Asleep", Target.OPPONENT));
+            } else if ("Poisoned".equalsIgnoreCase(extraParams)) {
+                commands.add(new ApplyStatusConditionCommand("Poisoned", Target.OPPONENT));
+            } else {
+                commands.add(new RandomAsleepOrPoisonedCommand(Target.OPPONENT));
+            }
+        }
+
         if (lowerText.contains("if heads, discard an energy attached to your opponent's active pok")) {
             commands.add(new CoinFlipCommand(new DiscardEnergyCommand(1, Target.OPPONENT)));
         }

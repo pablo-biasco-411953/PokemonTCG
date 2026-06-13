@@ -322,9 +322,10 @@ public class BattleController {
     @PostMapping("/{matchId}/attack")
     public ResponseEntity<?> atacar(@PathVariable String matchId,
                                     @RequestHeader(value = "X-Username", required = false) String username,
-                                    @RequestParam String nombreAtaque) {
+                                    @RequestParam String nombreAtaque,
+                                    @RequestParam(required = false) String extraParams) {
         try {
-            battleEngine.realizarAtaque(matchId, nombreAtaque, username);
+            battleEngine.realizarAtaque(matchId, nombreAtaque, username, extraParams);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
