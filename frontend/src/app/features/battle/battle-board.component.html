@@ -549,6 +549,7 @@
   [class.damage-pulse]="battlefieldDamagePulse"
 >
   <canvas #battleAtmosphereCanvas class="battle-atmosphere-canvas" aria-hidden="true"></canvas>
+  <canvas #battleForegroundCanvas class="battle-foreground-canvas" aria-hidden="true"></canvas>
   <div class="battle-social-hud">
     <div class="battle-spectator-counter">
       <strong>{{ battleRoom?.spectatorCount || 0 }}</strong>
@@ -1510,6 +1511,35 @@
   <div class="ms-content">
     <div class="ms-glow">MUERTE SÃšBITA</div>
     <div class="ms-sub">El prÃ³ximo premio define la partida. Â¡Que comience el combate final!</div>
+  </div>
+</div>
+
+
+<!-- CONVERSION POWDER MODAL -->
+<div class="conversion-modal-overlay" *ngIf="mostrarConversionModal">
+  <div class="conversion-modal">
+    <button class="conversion-close" (click)="cerrarConversionModal()">&times;</button>
+    <h2 class="conversion-title">Elegí un estado</h2>
+    <p class="conversion-subtitle">El Pokémon Defensor pasará a estar Dormido o Envenenado.</p>
+    <div class="conversion-options">
+      <div class="conversion-card sleep-card" (click)="seleccionarEstadoConversion('Asleep')">
+        <div class="sleep-anim-container">
+          <span class="zzz z1">Z</span>
+          <span class="zzz z2">Z</span>
+          <span class="zzz z3">Z</span>
+        </div>
+        <h3>Dormir</h3>
+      </div>
+      <div class="conversion-card poison-card" (click)="seleccionarEstadoConversion('Poisoned')">
+        <div class="poison-anim-container">
+          <span class="bubble b1"></span>
+          <span class="bubble b2"></span>
+          <span class="bubble b3"></span>
+          <span class="bubble b4"></span>
+        </div>
+        <h3>Envenenar</h3>
+      </div>
+    </div>
   </div>
 </div>
 

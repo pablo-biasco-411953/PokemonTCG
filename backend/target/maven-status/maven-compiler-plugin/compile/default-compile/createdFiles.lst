@@ -26,6 +26,7 @@ com\pokemon\tcg\model\battle\command\HealCommand.class
 com\pokemon\tcg\dto\lobby\LobbyRoomRequest.class
 com\pokemon\tcg\service\battle\chain\EfectoSueno.class
 com\pokemon\tcg\service\battle\EnergyCostCalculator$EnergyUnit.class
+com\pokemon\tcg\TestRetreat.class
 com\pokemon\tcg\service\battle\chain\EfectoMultiMoneda.class
 com\pokemon\tcg\model\battle\command\AddDamageByDamageCountersCommand.class
 com\pokemon\tcg\model\battle\command\SelfBenchDamageCommand.class
@@ -49,6 +50,7 @@ com\pokemon\tcg\model\lobby\LobbyRoom.class
 com\pokemon\tcg\service\BattleKoService$TableroVictimaYAtacante.class
 com\pokemon\tcg\model\battle\command\SetCannotAttackDefendingCommand.class
 com\pokemon\tcg\service\SobreService.class
+com\pokemon\tcg\model\battle\command\RandomAsleepOrPoisonedCommand.class
 com\pokemon\tcg\dto\ActualizarMazoRequest.class
 com\pokemon\tcg\model\battle\state\EstadoSetupPlaceActive.class
 com\pokemon\tcg\service\battle\chain\EfectoInmunidad.class
@@ -69,6 +71,7 @@ com\pokemon\tcg\service\battle\command\ComandoSubirActivo.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaDificil.class
 com\pokemon\tcg\service\battle\command\ComandoEvolucionar.class
 com\pokemon\tcg\model\Jugador.class
+com\pokemon\tcg\model\battle\command\OptionalDiscardEnergyForDamageCommand.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaBasica.class
 com\pokemon\tcg\model\battle\Ataque.class
 com\pokemon\tcg\model\battle\command\MultiCoinDamageCommand$CountMode.class
@@ -140,6 +143,7 @@ com\pokemon\tcg\dto\LoginRequest.class
 com\pokemon\tcg\service\MazoService.class
 com\pokemon\tcg\dto\EvolveRequest.class
 com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchByCoinsCommand.class
+com\pokemon\tcg\model\battle\command\AddDamageByDifferentBasicEnergyTypesCommand.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\model\battle\PendingBattleAction$Option.class

@@ -9,6 +9,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\MoveDiscardCardToTopDeckCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoLanzamientoMoneda.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\AtaqueController.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\RandomAsleepOrPoisonedCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\UnirEnergiaRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Card.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoAtacar.java
@@ -21,13 +22,16 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\CardC
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\ShuffleRandomHandToDeckCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\SantoroQuestResponse.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleTurnService.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AddDamageByDifferentBasicEnergyTypesCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetNoPuedeAtacarSiguienteTurnoCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\CadenaAtaqueFactory.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\TableroJugador.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\TestRetreat.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\MagcargoMagmaMantleCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelfDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\LobbyRoomController.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\CardRepository.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\OptionalDiscardEnergyForDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DiscardEnergyCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPlaceBench.java

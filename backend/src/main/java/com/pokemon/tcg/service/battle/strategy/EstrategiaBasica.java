@@ -425,7 +425,8 @@ public class EstrategiaBasica implements EstrategiaBot {
                 ataqueElegido,
                 activoBot,
                 activoJugador,
-                battleKoService::resolverKO
+                battleKoService::resolverKO,
+                null
         );
         int danioFinal = resolution.resultado().danioFinal();
         partida.getTurnLogs().add("ATTACK_USED:BOT:"

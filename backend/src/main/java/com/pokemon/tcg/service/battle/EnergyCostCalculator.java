@@ -47,7 +47,7 @@ public final class EnergyCostCalculator {
     private static List<EnergyUnit> unitsFrom(Card energy) {
         String name = energy.getNombre() == null ? "" : energy.getNombre();
         String normalizedName = normalizeText(name);
-        if (normalizedName.contains("double colorless")) {
+        if (normalizedName.contains("double colorless") || normalizedName.contains("incolora doble") || normalizedName.contains("doble incolora")) {
             return List.of(new EnergyUnit("Colorless", false), new EnergyUnit("Colorless", false));
         }
         if (normalizedName.contains("rainbow")) {

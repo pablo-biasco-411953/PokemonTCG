@@ -6325,3 +6325,159 @@ img.fallback-sprite {
   80% { transform: translateX(-5vw) skewX(-20deg); opacity: 1; }
   100% { transform: translateX(-150vw) skewX(-20deg); opacity: 0; }
 }
+
+.battle-foreground-canvas { position: absolute; inset: 0; z-index: 20; width: 100%; height: 100%; pointer-events: none; }
+
+
+/* CONVERSION POWDER MODAL */
+.conversion-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.conversion-modal {
+  background: linear-gradient(135deg, #2a2a35 0%, #1a1a24 100%);
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  text-align: center;
+  position: relative;
+  color: #fff;
+  width: 400px;
+  max-width: 90vw;
+}
+
+.conversion-close {
+  position: absolute;
+  top: 10px; right: 15px;
+  background: transparent;
+  border: none;
+  color: #888;
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 0.2s;
+  &:hover { color: #fff; }
+}
+
+.conversion-title {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.conversion-subtitle {
+  color: #aaa;
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.conversion-options {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.conversion-card {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px 10px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+  }
+  
+  h3 {
+    margin: 15px 0 0 0;
+    font-size: 16px;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+  }
+}
+
+/* Asleep specific */
+.sleep-card {
+  &:hover {
+    background: rgba(30, 40, 60, 0.8);
+    border-color: #64b5f6;
+  }
+}
+
+.sleep-anim-container {
+  height: 60px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zzz {
+  position: absolute;
+  color: #64b5f6;
+  font-weight: bold;
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  opacity: 0;
+  animation: floatZzz 2.5s infinite linear;
+}
+.z1 { font-size: 20px; left: 30%; animation-delay: 0s; }
+.z2 { font-size: 24px; left: 45%; animation-delay: 0.8s; }
+.z3 { font-size: 28px; left: 60%; animation-delay: 1.6s; }
+
+@keyframes floatZzz {
+  0% { transform: translateY(10px) translateX(0) scale(0.8); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-30px) translateX(20px) scale(1.5); opacity: 0; }
+}
+
+/* Poisoned specific */
+.poison-card {
+  &:hover {
+    background: rgba(60, 20, 80, 0.8);
+    border-color: #ab47bc;
+  }
+}
+
+.poison-anim-container {
+  height: 60px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bubble {
+  position: absolute;
+  background: radial-gradient(circle at 30% 30%, rgba(206, 147, 216, 0.9), rgba(142, 36, 170, 0.8));
+  border-radius: 50%;
+  bottom: 0;
+  opacity: 0;
+  animation: floatBubble 2s infinite ease-in;
+}
+.b1 { width: 15px; height: 15px; left: 20%; animation-delay: 0s; }
+.b2 { width: 25px; height: 25px; left: 40%; animation-delay: 0.5s; }
+.b3 { width: 18px; height: 18px; left: 60%; animation-delay: 1.2s; }
+.b4 { width: 12px; height: 12px; left: 80%; animation-delay: 0.8s; }
+
+@keyframes floatBubble {
+  0% { transform: translateY(10px) scale(0.5); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(-40px) scale(1.2); opacity: 0; }
+}
+
