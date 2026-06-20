@@ -191,6 +191,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   tituloDescarteActual = '';
   mostrarConversionModal = false;
 
+  // Animaciones de moneda acumulativas y temblor de pantalla
+  public carasAcumuladas = 0;
+  public danioAcumulado = 0;
+  public screenShaking = false;
+
   puedeEvolucionar(cartaMano: BattleActionCard | Card): boolean {
     return this.battleBoardState.puedeEvolucionar(this.partida, cartaMano);
   }
@@ -204,7 +209,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     | 'ELEGIR_TURNO'
     | 'RESULTADO_BOT'
     | 'ESPERANDO_RIVAL'
-    | 'OCULTO' = 'CARGANDO_VS';
+    | 'OCULTO' = 'OCULTO';
   eleccionJugador: 'CARA' | 'CRUZ' = 'CARA';
   resultadoMoneda: CoinSide = 'CARA';
   public girando = false;
@@ -212,6 +217,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   jugadorLoadingPercentage = 0;
   botLoadingPercentage = 0;
   loadingPhaseFinished = false;
+  isAdmin = false;
+
+  get battleLoadingCombined(): number {
+    return (this.jugadorLoadingPercentage + this.botLoadingPercentage) / 2;
+  }
   private preloadPollingId: any = null;
   private preloadTimeoutId: any = null;
 
@@ -270,6 +280,35 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private playerActions = new Map<string, THREE.AnimationAction>();
   private opponentActions = new Map<string, THREE.AnimationAction>();
   private currentAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
+
+  // Versus Scene Cinematic Properties
+  preloadCinematicStartedAt = 0;
+  cinematicSceneLoadingPercentage = 0;
+  cinematicAssetsReady = false;
+  cinematicLoadingBarsVisible = false;
+
+  private versusStartedAt = 0;
+  private versusSequenceStartedAt = 0;
+  private versusModelsLoaded = 0;
+  private versusLastShotIndex = 0;
+  private versusCameraTilt = 0;
+  private versusPlayerClips = new Map<string, THREE.AnimationAction>();
+  private versusOpponentClips = new Map<string, THREE.AnimationAction>();
+  private versusPlayerCurrentClip = '';
+  private versusOpponentCurrentClip = '';
+  private versusPlayerModel: THREE.Object3D | undefined;
+  private versusOpponentModel: THREE.Object3D | undefined;
+  private versusPlayerMixer: THREE.AnimationMixer | undefined;
+  private versusOpponentMixer: THREE.AnimationMixer | undefined;
+  private versusAnimationId: number | undefined;
+  versusCanvasInitialized = false;
+  private versusScene: THREE.Scene | undefined;
+  private versusCamera: THREE.PerspectiveCamera | undefined;
+  private versusRenderer: THREE.WebGLRenderer | undefined;
+  private versusProgressLastRender = 0;
+  private serverLoadingComplete = false;
+  private lastPreloadState: Partida | null = null;
+  private finalizarPreloadFn: ((state?: Partida | null) => void) | null = null;
 
   // Standalone Board Trainers 3D Scene Properties
   playerTrainerCanvasInitialized = false;
@@ -337,6 +376,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    try {
+      const jugadorData = localStorage.getItem('jugador');
+      if (jugadorData) {
+        this.isAdmin = JSON.parse(jugadorData).admin || false;
+      }
+    } catch (e) {
+      this.isAdmin = false;
+    }
     this.isPotato = (navigator as any).hardwareConcurrency <= 4 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
     this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
@@ -419,7 +466,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (data.faseActual === 'LANZAMIENTO_MONEDA') {
       this.boardVisible = false;
-      if (this.estadoCoinFlip === 'CARGANDO_VS') {
+      if (!this.loadingPhaseFinished) {
         this.startPreloadSequence(data);
       } else {
         this.hidratarPreparativosIniciales(data);
@@ -540,6 +587,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
     this.estadoCoinFlip = 'CARGANDO_VS';
+
+    this.preloadCinematicStartedAt = performance.now();
+    this.cinematicSceneLoadingPercentage = 4;
+    this.cinematicAssetsReady = false;
+    this.cinematicLoadingBarsVisible = false;
+
     this.jugadorLoadingPercentage = data.jugadorLoadingPercentage ?? 0;
     this.botLoadingPercentage = data.botLoadingPercentage ?? 0;
 
@@ -573,6 +626,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     const finalizarPreload = (state: Partida | null = null) => {
       if (this.loadingPhaseFinished) return;
+      this.finalizarPreloadFn = null;
       if (this.preloadPollingId) {
         clearInterval(this.preloadPollingId);
         this.preloadPollingId = null;
@@ -589,14 +643,27 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
 
-    this.preloadTimeoutId = setTimeout(() => finalizarPreload(), 3500);
+    this.finalizarPreloadFn = finalizarPreload;
+    this.serverLoadingComplete = false;
+    this.lastPreloadState = data;
+
+    this.preloadTimeoutId = setTimeout(() => {
+      this.serverLoadingComplete = true;
+      if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+        this.finalizarPreloadFn(this.lastPreloadState);
+      }
+    }, 20000);
 
     this.preloadPollingId = setInterval(() => {
       this.battleService.getState(this.matchId!).subscribe(state => {
         if (state) {
+          this.lastPreloadState = state;
           this.botLoadingPercentage = state.botLoadingPercentage ?? 0;
           if (this.jugadorLoadingPercentage >= 99 && this.botLoadingPercentage >= 98) {
-            finalizarPreload(state);
+            this.serverLoadingComplete = true;
+            if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+              this.finalizarPreloadFn(state);
+            }
           } else if (!this.esPartidaOnline(state) && this.botLoadingPercentage < 100) {
              this.updateLoadingPercentage(Math.min(100, this.botLoadingPercentage + 18));
           }
@@ -612,7 +679,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.jugadorLoadingPercentage = pct;
         this.updateLoadingPercentage(pct);
         if (pct >= 100 && (!this.esPartidaOnline(data) || this.botLoadingPercentage >= 98)) {
-          finalizarPreload();
+          this.serverLoadingComplete = true;
+          if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+            this.finalizarPreloadFn(this.lastPreloadState);
+          }
         }
       };
       img.src = url;
@@ -983,7 +1053,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private esPartidaOnline(estado: Partida | null | undefined = this.partida): boolean {
-    return !!estado?.botUsername;
+    return !estado?.botUsername;
   }
 
   trackByCardId(index: number, item: any): string {
@@ -3227,10 +3297,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     esSoloEstado: boolean,
   ): Promise<void> {
     this.resultadoMoneda = '';
+    this.carasAcumuladas = 0;
+    this.danioAcumulado = config.danioBase;
+    this.screenShaking = false;
 
     this.coinFlipAtaque = {
       nombreAtaque,
       descripcion: config.descripcion,
+      parentesisDetalle: (config as any).parentesisDetalle,
       cantidadMonedas: config.cantidadMonedas,
       danioBase: config.danioBase,
       danioExtraPorCara: config.danioExtraPorCara,
@@ -3259,7 +3333,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         i,
       );
 
-      if (esCara) carasAsignadas++;
+      if (esCara) {
+        carasAsignadas++;
+        this.carasAcumuladas = carasAsignadas;
+        this.danioAcumulado = config.danioBase + (carasAsignadas * config.danioExtraPorCara);
+      }
 
       this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
 
@@ -3283,12 +3361,45 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       carasAsignadas,
     );
     this.coinFlipAtaque!.terminado = true;
+
+    // Vibrar pantalla si el daño total es alto (>= 80)
+    if (this.coinFlipAtaque!.danioTotal >= 80) {
+      this.screenShaking = true;
+      window.setTimeout(() => {
+        this.screenShaking = false;
+        this.cdr.detectChanges();
+      }, 850);
+    }
+
     this.cdr.detectChanges();
 
     await this.delay(3000);
 
     this.coinFlipAtaque = null;
+    this.carasAcumuladas = 0;
+    this.danioAcumulado = 0;
     this.cdr.detectChanges();
+  }
+
+  get coinFlipAttacker(): CartaEnJuego | null {
+    if (!this.partida) return null;
+    return this.partida.turnoActual === 'BOT' ? this.partida.bot?.activo : this.partida.jugador?.activo;
+  }
+
+  getCoinFlipThemeIcon(): string {
+    const effect = this.coinFlipAtaque?.tipoEfecto;
+    if (effect === 'protection') return '🛡️';
+    if (effect === 'discard') return '⚡';
+    if (effect === 'status') return '✨';
+    if (effect === 'search') return '🔎';
+    if (effect === 'self-damage') return '💥';
+    if (effect === 'switch') return '↔';
+    if ((this.coinFlipAtaque?.nombreAtaque || '').toLowerCase().includes('seafaring')) return '🌊';
+    return '🪙';
+  }
+
+  getCoinFlipThemeClass(): string {
+    return `acf-theme-${this.coinFlipAtaque?.tipoEfecto || 'other'}`;
   }
 
   intentarAbrirHabilidades(event?: MouseEvent): void {
@@ -4104,6 +4215,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
     this.opponentLoaded = true;
+
+    if (!this.esPartidaOnline()) {
+      this.randomizeBotCustomization();
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.jugadorService.getJugador(this.nombreRival).subscribe({
       next: (res) => {
         if (res) {
@@ -4128,11 +4246,24 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             if (this.opponentTrainerScene) {
               this.reloadOpponentTrainerModel();
             }
+            if (this.versusScene) {
+              this.reloadVersusOpponentModel();
+            }
           } else {
             this.loadOpponent3DModel();
             if (this.opponentTrainerModel) {
               this.applyModelCustomization(
                 this.opponentTrainerModel,
+                this.opponentCharacterId,
+                this.opponentSkinColor,
+                this.opponentHairColor,
+                this.opponentEyeColor,
+                this.opponentHeight
+              );
+            }
+            if (this.versusOpponentModel) {
+              this.applyModelCustomization(
+                this.versusOpponentModel,
                 this.opponentCharacterId,
                 this.opponentSkinColor,
                 this.opponentHairColor,
@@ -4146,8 +4277,74 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.warn('No se pudo cargar datos del rival, usando bot por defecto', err);
+        this.randomizeBotCustomization();
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  private randomizeBotCustomization(): void {
+    const characters = ['ash', 'lillie', 'hilda-sygna', 'robot'];
+    const skins = ['#ffe0bd', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+    const hairs = ['#5c4033', '#2c1e18', '#b55229', '#e6c875', '#ffffff', '#2563eb', '#16a34a', '#db2777', '#7c3aed'];
+    const eyes = ['#2563eb', '#16a34a', '#7c3aed', '#b45309', '#475569', '#db2777'];
+    
+    const oldCharId = this.opponentCharacterId;
+    
+    this.opponentCharacterId = characters[Math.floor(Math.random() * characters.length)];
+    this.opponentSkinColor = skins[Math.floor(Math.random() * skins.length)];
+    this.opponentHairColor = hairs[Math.floor(Math.random() * hairs.length)];
+    this.opponentEyeColor = eyes[Math.floor(Math.random() * eyes.length)];
+    this.opponentHeight = parseFloat((0.92 + Math.random() * 0.16).toFixed(3)); // 0.92 to 1.08
+    
+    console.log('Bot customization randomized:', {
+      id: this.opponentCharacterId,
+      skin: this.opponentSkinColor,
+      hair: this.opponentHairColor,
+      eye: this.opponentEyeColor,
+      height: this.opponentHeight
+    });
+    
+    if (this.opponentCharacterId !== oldCharId) {
+      if (this.handshakeScene) {
+        if (this.opponentModel) {
+          this.disposeModelMaterials(this.opponentModel);
+          this.handshakeScene.remove(this.opponentModel);
+          this.opponentModel = undefined;
+        }
+        this.opponentMixer = undefined;
+        this.opponentActions.clear();
+        this.loadOpponentModelInScene();
+      }
+      if (this.opponentTrainerScene) {
+        this.reloadOpponentTrainerModel();
+      }
+      if (this.versusScene) {
+        this.reloadVersusOpponentModel();
+      }
+    } else {
+      this.loadOpponent3DModel();
+      if (this.opponentTrainerModel) {
+        this.applyModelCustomization(
+          this.opponentTrainerModel,
+          this.opponentCharacterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+      }
+      if (this.versusOpponentModel) {
+        this.applyModelCustomization(
+          this.versusOpponentModel,
+          this.opponentCharacterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+      }
+    }
   }
 
   loadOpponent3DModel(): void {
@@ -4231,6 +4428,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (element && !this.canvasInitialized) {
       this.canvasInitialized = true;
       setTimeout(() => this.initHandshakeScene(element.nativeElement), 0);
+    }
+  }
+
+  @ViewChild('versusCanvas') set versusCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (!element) {
+      this.cleanupVersusScene(true);
+    } else if (!this.versusCanvasInitialized) {
+      this.versusCanvasInitialized = true;
+      setTimeout(() => this.initVersusScene(element.nativeElement), 0);
     }
   }
 
@@ -5754,5 +5960,380 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private initVersusScene(canvas: HTMLCanvasElement): void {
+    this.cleanupVersusScene(false);
+    this.versusCanvasInitialized = true;
+    this.versusStartedAt = performance.now();
+    this.versusSequenceStartedAt = 0;
+    this.versusModelsLoaded = 0;
+    this.versusLastShotIndex = 0;
+    this.versusCameraTilt = 0;
+    this.versusPlayerClips.clear();
+    this.versusOpponentClips.clear();
+    this.versusPlayerCurrentClip = '';
+    this.versusOpponentCurrentClip = '';
+    this.cinematicSceneLoadingPercentage = Math.max(this.cinematicSceneLoadingPercentage, 8);
+
+    const width = Math.max(1, canvas.clientWidth || window.innerWidth);
+    const height = Math.max(1, canvas.clientHeight || window.innerHeight);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !this.isPotato,
+      powerPreference: this.isPotato ? 'low-power' : 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1 : Math.min(window.devicePixelRatio, 1.35));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.16;
+    this.versusRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x02040a, 0.085);
+    this.versusScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(31, width / height, 0.1, 40);
+    camera.position.set(0, 1.05, 4.85);
+    camera.lookAt(0, 0.78, 0);
+    this.versusCamera = camera;
+
+    scene.add(new THREE.AmbientLight(0xffffff, this.isPotato ? 0.7 : 0.52));
+    const playerLight = new THREE.DirectionalLight(0xff3b2f, 5.8);
+    playerLight.position.set(-4, 2.5, 3);
+    scene.add(playerLight);
+    const rivalLight = new THREE.DirectionalLight(0x38bdf8, 6.2);
+    rivalLight.position.set(4, 2.7, 3);
+    scene.add(rivalLight);
+    const rimLight = new THREE.PointLight(0xffffff, 8, 9);
+    rimLight.position.set(0, 1.15, 1.2);
+    scene.add(rimLight);
+
+    this.loadVersusParticipant('player', renderer);
+    this.loadVersusParticipant('opponent', renderer);
+
+    const clock = new THREE.Clock();
+    const animate = () => {
+      if (!this.versusRenderer || !this.versusScene || !this.versusCamera) return;
+      this.versusAnimationId = requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const now = performance.now();
+      const elapsed = (now - this.versusStartedAt) / 1000;
+      const sequenceElapsed = this.versusSequenceStartedAt
+        ? (now - this.versusSequenceStartedAt) / 1000
+        : 0;
+
+      if (!this.cinematicAssetsReady) {
+        const progressCap = this.versusModelsLoaded === 0 ? 48 : this.versusModelsLoaded === 1 ? 78 : 94;
+        this.cinematicSceneLoadingPercentage = Math.min(
+          progressCap,
+          this.cinematicSceneLoadingPercentage + dt * (this.versusModelsLoaded === 0 ? 10 : 16)
+        );
+        if (now - this.versusProgressLastRender > 140) {
+          this.versusProgressLastRender = now;
+          this.cdr.detectChanges();
+        }
+      }
+
+      if (this.cinematicAssetsReady) {
+        this.versusPlayerMixer?.update(dt);
+        this.versusOpponentMixer?.update(dt);
+        if (sequenceElapsed >= 10.0 && this.serverLoadingComplete && this.finalizarPreloadFn) {
+          this.finalizarPreloadFn(this.lastPreloadState);
+        }
+      }
+
+      const currWidth = Math.max(1, canvas.clientWidth || window.innerWidth);
+      const currHeight = Math.max(1, canvas.clientHeight || window.innerHeight);
+      if (canvas.width !== Math.floor(currWidth * renderer.getPixelRatio()) || canvas.height !== Math.floor(currHeight * renderer.getPixelRatio())) {
+        renderer.setSize(currWidth, currHeight, false);
+        camera.aspect = currWidth / currHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      const reveal = THREE.MathUtils.smoothstep(sequenceElapsed, 0.55, 2.4);
+
+      // ─── CINEMATIC CAMERA SHOTS (Smash Bros inspired) ───
+      // Continuous camera sequence (no hard cuts/teleporting)
+      const keyframes = [
+        { time: 0,   tx: 0.0, ty: 1.15, tz: 3.5,  lx: 0.0, ly: 0.95, tilt: -0.03 },
+        { time: 2.0, tx: 0.0, ty: 1.12, tz: 3.8,  lx: 0.0, ly: 0.92, tilt: -0.01 },
+        { time: 4.0, tx: 0.0, ty: 1.09, tz: 4.2,  lx: 0.0, ly: 0.89, tilt: 0.01 },
+        { time: 6.0, tx: 0.0, ty: 1.07, tz: 4.7,  lx: 0.0, ly: 0.86, tilt: 0.03 },
+        { time: 8.0, tx: 0.0, ty: 1.06, tz: 5.2,  lx: 0.0, ly: 0.84, tilt: 0.01 },
+        { time: 10.0,tx: 0.0, ty: 1.05, tz: 5.6,  lx: 0.0, ly: 0.82, tilt: 0.0 }
+      ];
+
+      let k1 = keyframes[0];
+      let k2 = keyframes[keyframes.length - 1];
+      let easeT = 0;
+
+      if (sequenceElapsed <= k1.time) {
+        k2 = k1;
+        easeT = 0;
+      } else if (sequenceElapsed >= k2.time) {
+        k1 = k2;
+        easeT = 1;
+      } else {
+        for (let i = 0; i < keyframes.length - 1; i++) {
+          if (sequenceElapsed >= keyframes[i].time && sequenceElapsed < keyframes[i + 1].time) {
+            k1 = keyframes[i];
+            k2 = keyframes[i + 1];
+            const t = (sequenceElapsed - k1.time) / (k2.time - k1.time);
+            easeT = THREE.MathUtils.smoothstep(t, 0, 1);
+            break;
+          }
+        }
+      }
+
+      const targetX = THREE.MathUtils.lerp(k1.tx, k2.tx, easeT);
+      const targetY = THREE.MathUtils.lerp(k1.ty, k2.ty, easeT);
+      let targetZ = THREE.MathUtils.lerp(k1.tz, k2.tz, easeT);
+      const lookX = THREE.MathUtils.lerp(k1.lx, k2.lx, easeT);
+      const lookY = THREE.MathUtils.lerp(k1.ly, k2.ly, easeT);
+      const tilt = THREE.MathUtils.lerp(k1.tilt, k2.tilt, easeT);
+
+      // Micro-pulse for liveliness
+      const pulse = Math.sin(sequenceElapsed * 3.2) * 0.018;
+      targetZ += pulse;
+
+      // Apply camera with smooth weight interpolation
+      const lerpSpeed = 0.15;
+      camera.position.x += (targetX - camera.position.x) * lerpSpeed;
+      camera.position.y += (targetY - camera.position.y) * lerpSpeed;
+      camera.position.z += (targetZ - camera.position.z) * lerpSpeed;
+      camera.lookAt(lookX, lookY, 0);
+      this.versusCameraTilt += (tilt - this.versusCameraTilt) * 0.12;
+      camera.rotation.z = this.versusCameraTilt;
+
+      if (this.cinematicAssetsReady) {
+        this.updateVersusAnimation('player', this.localPlayerCharacterId, sequenceElapsed);
+        this.updateVersusAnimation('opponent', this.opponentCharacterId, sequenceElapsed);
+      }
+
+      // Model positions kept stationary (no skating) for clean camera focus
+      if (this.versusPlayerModel) {
+        this.versusPlayerModel.position.x = -1.34;
+        this.versusPlayerModel.position.y = 0;
+        this.versusPlayerModel.position.z = Math.sin(elapsed * 1.3) * 0.03;
+      }
+      if (this.versusOpponentModel) {
+        this.versusOpponentModel.position.x = 1.34;
+        this.versusOpponentModel.position.y = 0;
+        this.versusOpponentModel.position.z = -Math.sin(elapsed * 1.3) * 0.03;
+      }
+
+      renderer.render(scene, camera);
+    };
+    animate();
+  }
+
+  reloadVersusOpponentModel(): void {
+    if (!this.versusScene || !this.versusRenderer) return;
+
+    if (this.versusOpponentModel) {
+      this.versusScene.remove(this.versusOpponentModel);
+      this.disposeModelMaterials(this.versusOpponentModel);
+      this.versusOpponentModel = undefined;
+    }
+    this.versusOpponentMixer = undefined;
+    this.versusOpponentClips.clear();
+    this.versusOpponentCurrentClip = '';
+
+    this.loadVersusParticipant('opponent', this.versusRenderer);
+  }
+
+  private loadVersusParticipant(side: 'player' | 'opponent', renderer: THREE.WebGLRenderer): void {
+    const isPlayer = side === 'player';
+    const characterId = isPlayer ? this.localPlayerCharacterId : this.opponentCharacterId;
+    this.loadHandshakeCharacter(characterId, (model, animations) => {
+      if (!this.versusScene || !this.versusRenderer) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+
+      // Guard against race conditions where the character changed while loading
+      const currentId = isPlayer ? this.localPlayerCharacterId : this.opponentCharacterId;
+      if (characterId !== currentId) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+
+      const mixer = new THREE.AnimationMixer(model);
+      const clipMap = isPlayer ? this.versusPlayerClips : this.versusOpponentClips;
+      
+      // Ensure all clips play in-place by removing any root translation tracks.
+      // This prevents characters from walking/jumping away from their designated coordinates.
+      animations.forEach(clip => {
+        clip.tracks = clip.tracks.filter(track => {
+          const name = track.name.toLowerCase();
+          if (name.endsWith('.position') && (
+            name.startsWith('root') ||
+            name.startsWith('armature') ||
+            name.startsWith('position') ||
+            name.startsWith('__root') ||
+            name === '.position'
+          )) {
+            return false;
+          }
+          return true;
+        });
+        clipMap.set(clip.name.toLowerCase(), mixer.clipAction(clip));
+      });
+
+      if (isPlayer) {
+        this.applyModelCustomization(
+          model,
+          characterId,
+          localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+          localStorage.getItem('lobbyHairColor') || '#5c4033',
+          localStorage.getItem('lobbyEyeColor') || '#2563eb',
+          parseFloat(localStorage.getItem('lobbyHeight') || '1')
+        );
+        model.position.set(-1.34, 0, 0);
+        model.rotation.y = Math.PI * 4 / 5;
+        this.versusPlayerModel = model;
+        this.versusPlayerMixer = mixer;
+      } else {
+        this.applyModelCustomization(
+          model,
+          characterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+        model.position.set(1.34, 0, 0);
+        model.rotation.y = -Math.PI / 5;
+        this.versusOpponentModel = model;
+        this.versusOpponentMixer = mixer;
+      }
+      this.versusScene.add(model);
+      this.updateVersusAnimation(side, characterId, 0);
+      mixer.update(0.001);
+      this.markVersusParticipantLoaded(renderer);
+    }, renderer);
+  }
+
+  private setCinematicAssetsReady(): void {
+    if (this.cinematicAssetsReady) return;
+    this.cinematicAssetsReady = true;
+    
+    // Show loading bars with a delay of 2.0s after players start revealing
+    setTimeout(() => {
+      this.cinematicLoadingBarsVisible = true;
+      this.cdr.detectChanges();
+    }, 2000);
+  }
+
+  private markVersusParticipantLoaded(renderer: THREE.WebGLRenderer): void {
+    this.versusModelsLoaded++;
+    this.cinematicSceneLoadingPercentage = Math.max(
+      this.cinematicSceneLoadingPercentage,
+      this.versusModelsLoaded === 1 ? 58 : 88
+    );
+    this.cdr.detectChanges();
+    if (this.versusModelsLoaded < 2 || !this.versusScene || !this.versusCamera) return;
+
+    const warmup = typeof renderer.compileAsync === 'function'
+      ? renderer.compileAsync(this.versusScene, this.versusCamera)
+      : Promise.resolve();
+    warmup.catch(() => undefined).finally(() => {
+      if (!this.versusRenderer) return;
+      this.cinematicSceneLoadingPercentage = 100;
+      this.setCinematicAssetsReady();
+      this.versusSequenceStartedAt = performance.now();
+      this.cdr.detectChanges();
+    });
+  }
+
+  private updateVersusAnimation(side: 'player' | 'opponent', characterId: string, elapsed: number): void {
+    const plan = this.getVersusAnimationPlan(characterId);
+    let token = plan[0].token;
+    for (const step of plan) {
+      if (elapsed >= step.at) token = step.token;
+    }
+
+    const clipMap = side === 'player' ? this.versusPlayerClips : this.versusOpponentClips;
+    const current = side === 'player' ? this.versusPlayerCurrentClip : this.versusOpponentCurrentClip;
+    if (current === token) return;
+
+    const entry = [...clipMap.entries()].find(([name]) => name.includes(token))
+      || [...clipMap.entries()].find(([name]) => /idle|stand|house|talk/.test(name));
+    if (!entry) return;
+
+    clipMap.forEach(action => {
+      if (action !== entry[1] && action.isRunning()) action.fadeOut(0.18);
+    });
+    entry[1].reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.18).play();
+    entry[1].clampWhenFinished = true;
+    if (side === 'player') this.versusPlayerCurrentClip = token;
+    else this.versusOpponentCurrentClip = token;
+  }
+
+  private getVersusAnimationPlan(characterId: string): Array<{ at: number; token: string }> {
+    if (characterId === 'hilda-sygna') {
+      return [
+        { at: 0, token: 'appearance_2' },
+        { at: 2.35, token: 'cutin_trainer' },
+        { at: 4.75, token: 'sync_move_player' },
+        { at: 7.35, token: 'start_battle' }
+      ];
+    }
+    if (characterId === 'lillie') {
+      return [
+        { at: 0, token: 'appearance_1' },
+        { at: 2.2, token: 'greeting_1' },
+        { at: 4.55, token: 'cutin_trainer' },
+        { at: 7.25, token: 'start_battle' }
+      ];
+    }
+    if (characterId === 'ash') {
+      return [
+        { at: 0, token: 'yoteeligo' },
+        { at: 3.0, token: 'fight' },
+        { at: 6.4, token: 'talking' },
+        { at: 8.2, token: 'fight' }
+      ];
+    }
+    return [
+      { at: 0, token: 'wave' },
+      { at: 2.7, token: 'punch' },
+      { at: 5.25, token: 'dance' },
+      { at: 8.0, token: 'standing' }
+    ];
+  }
+
+  private cleanupVersusScene(resetCanvasFlag = true): void {
+    if (this.versusAnimationId) {
+      cancelAnimationFrame(this.versusAnimationId);
+      this.versusAnimationId = undefined;
+    }
+    if (this.versusPlayerModel) {
+      this.versusScene?.remove(this.versusPlayerModel);
+      this.disposeModelMaterials(this.versusPlayerModel);
+    }
+    if (this.versusOpponentModel) {
+      this.versusScene?.remove(this.versusOpponentModel);
+      this.disposeModelMaterials(this.versusOpponentModel);
+    }
+    this.versusPlayerModel = undefined;
+    this.versusOpponentModel = undefined;
+    this.versusPlayerMixer = undefined;
+    this.versusOpponentMixer = undefined;
+    this.versusPlayerClips.clear();
+    this.versusOpponentClips.clear();
+    this.versusPlayerCurrentClip = '';
+    this.versusOpponentCurrentClip = '';
+    this.versusModelsLoaded = 0;
+    this.versusRenderer?.dispose();
+    this.versusRenderer = undefined;
+    this.versusScene = undefined;
+    this.versusCamera = undefined;
+    if (resetCanvasFlag) this.versusCanvasInitialized = false;
   }
 }

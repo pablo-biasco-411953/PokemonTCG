@@ -83,6 +83,10 @@ export class LobbyRoomService {
     return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/bot`, { botDifficulty }, this.headers());
   }
 
+  updateSettings(roomId: string, turnTimeSeconds: number, botDifficulty: string): Observable<LobbyRoomSnapshot> {
+    return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/settings`, { turnTimeSeconds, botDifficulty }, this.headers());
+  }
+
   setReady(roomId: string, ready: boolean, mazoId: number | null): Observable<LobbyRoomSnapshot> {
     return this.http.post<LobbyRoomSnapshot>(`${this.base}/${roomId}/ready`, { ready, mazoId }, this.headers());
   }

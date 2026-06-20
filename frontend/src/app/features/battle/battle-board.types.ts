@@ -18,6 +18,7 @@ export interface CoinVisualState {
 export interface AttackCoinFlipState {
   nombreAtaque: string;
   descripcion: string;
+  parentesisDetalle?: string;
   cantidadMonedas: number;
   danioBase: number;
   danioExtraPorCara: number;

@@ -20,6 +20,7 @@ com\pokemon\tcg\model\battle\state\EstadoLanzamientoMoneda.class
 com\pokemon\tcg\service\battle\chain\EfectoCuracion.class
 com\pokemon\tcg\model\battle\command\ShuffleRandomHandToDeckCommand.class
 com\pokemon\tcg\model\Card.class
+com\pokemon\tcg\model\battle\command\CorsolaRefreshCommand.class
 com\pokemon\tcg\model\lobby\LobbyRoomStatus.class
 com\pokemon\tcg\service\battle\strategy\EstrategiaBot.class
 com\pokemon\tcg\model\battle\command\HealCommand.class
@@ -32,6 +33,7 @@ com\pokemon\tcg\model\battle\command\AddDamageByDamageCountersCommand.class
 com\pokemon\tcg\model\battle\command\SelfBenchDamageCommand.class
 com\pokemon\tcg\dto\DebugSetSobresRequest.class
 com\pokemon\tcg\model\battle\command\ConditionalDamageMultiplierCommand.class
+com\pokemon\tcg\model\battle\command\FroakieBounceCommand.class
 com\pokemon\tcg\service\BattleAttackService$AttackResolution.class
 com\pokemon\tcg\controller\JugadorController.class
 com\pokemon\tcg\model\battle\command\CoinFlipCommand.class
@@ -48,6 +50,7 @@ com\pokemon\tcg\model\battle\command\DiscardTopDeckCommand.class
 com\pokemon\tcg\model\battle\state\EstadoSetupMulliganEvaluation.class
 com\pokemon\tcg\model\lobby\LobbyRoom.class
 com\pokemon\tcg\service\BattleKoService$TableroVictimaYAtacante.class
+com\pokemon\tcg\model\battle\command\DiscardAttachedEnergyOfTypeCommand.class
 com\pokemon\tcg\model\battle\command\SetCannotAttackDefendingCommand.class
 com\pokemon\tcg\service\SobreService.class
 com\pokemon\tcg\model\battle\command\RandomAsleepOrPoisonedCommand.class
@@ -79,6 +82,7 @@ com\pokemon\tcg\service\BattleAttackService$KoResolver.class
 com\pokemon\tcg\dto\TradeExecutionRequest.class
 com\pokemon\tcg\model\battle\command\SelfDamageCommand.class
 com\pokemon\tcg\dto\SantoroTrackingRequest.class
+com\pokemon\tcg\model\battle\command\LaprasSeafaringCommand.class
 com\pokemon\tcg\model\battle\command\Target.class
 com\pokemon\tcg\config\LobbyWebSocketHandler.class
 com\pokemon\tcg\model\battle\ResultadoAtaque.class
@@ -104,6 +108,8 @@ com\pokemon\tcg\service\BattleTurnService$KoResolver.class
 com\pokemon\tcg\model\battle\command\DiscardRandomHandCardsByCoinTailsCommand.class
 com\pokemon\tcg\model\battle\command\MoveDiscardCardToTopDeckCommand.class
 com\pokemon\tcg\service\battle\chain\EfectoMonedaFalla.class
+com\pokemon\tcg\model\battle\command\GogoatChargeDashCommand.class
+com\pokemon\tcg\model\battle\command\OpponentShuffleHandDrawCommand.class
 com\pokemon\tcg\controller\LobbyRoomController.class
 com\pokemon\tcg\service\battle\command\AttackEffectParserService.class
 com\pokemon\tcg\service\battle\chain\EfectoRobarCartas.class
@@ -124,6 +130,7 @@ com\pokemon\tcg\dto\JugadorDTO.class
 com\pokemon\tcg\service\battle\chain\EfectoMonedaExtraDanio.class
 com\pokemon\tcg\dto\StartBattleOnlineRequest.class
 com\pokemon\tcg\model\battle\command\MultiCoinDamageCommand.class
+com\pokemon\tcg\model\battle\command\SelectOpponentPokemonToDiscardEnergyCommand.class
 com\pokemon\tcg\model\battle\state\EstadoSetupMulliganReveal.class
 com\pokemon\tcg\dto\LobbyMessage.class
 com\pokemon\tcg\exception\GlobalExceptionHandler.class
@@ -144,6 +151,7 @@ com\pokemon\tcg\service\MazoService.class
 com\pokemon\tcg\dto\EvolveRequest.class
 com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchByCoinsCommand.class
 com\pokemon\tcg\model\battle\command\AddDamageByDifferentBasicEnergyTypesCommand.class
+com\pokemon\tcg\model\battle\command\MoveOpponentActiveEnergyToBenchCommand.class
 com\pokemon\tcg\model\battle\Partida$Fase.class
 com\pokemon\tcg\dto\StartBattleRequest.class
 com\pokemon\tcg\model\battle\PendingBattleAction$Option.class
@@ -162,6 +170,8 @@ com\pokemon\tcg\model\battle\command\AtaquePotenciadoSiguienteTurnoCommand.class
 com\pokemon\tcg\dto\JugadorDatosResponse.class
 com\pokemon\tcg\config\BattleSpectatorGuardInterceptor.class
 com\pokemon\tcg\model\battle\command\DamageOpponentBenchedCommand.class
+com\pokemon\tcg\model\battle\command\SetPreventDamageThresholdCommand.class
+com\pokemon\tcg\model\battle\command\TormentBlockAttackCommand.class
 com\pokemon\tcg\service\BattleEngineService.class
 com\pokemon\tcg\config\WebMvcConfig.class
 com\pokemon\tcg\model\battle\command\ApplyStatusConditionCommand.class

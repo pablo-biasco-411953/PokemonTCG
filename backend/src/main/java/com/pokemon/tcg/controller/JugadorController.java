@@ -41,13 +41,14 @@ public class JugadorController {
                 j.getUsername(), 
                 j.getSobresDisponibles(), 
                 highlightCardCount(j),
-                j.getSantoCoins(),
+                j.getSantoroPoints(),
                 j.getCharacterId(),
                 j.getSkinColor(),
                 j.getHairColor(),
                 j.getEyeColor(),
                 j.getHeight(),
-                j.isPikachuCompanion()
+                j.isPikachuCompanion(),
+                j.isAdmin()
             );
 
             return ResponseEntity.ok(response);
@@ -110,6 +111,10 @@ public class JugadorController {
             Jugador jugador = jugadorRepo.findByUsername(username);
             if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
 
+            if (!jugador.isAdmin()) {
+                return ResponseEntity.status(403).body("Solo los administradores pueden usar God Mode.");
+            }
+
             int cantidad = Math.max(0, request.getCantidad());
             jugador.setSobresDisponibles(cantidad);
             jugadorRepo.save(jugador);
@@ -118,13 +123,14 @@ public class JugadorController {
                     jugador.getUsername(),
                     jugador.getSobresDisponibles(),
                     jugador.getColeccion() != null ? jugador.getColeccion().size() : 0,
-                    jugador.getSantoCoins(),
+                    jugador.getSantoroPoints(),
                     jugador.getCharacterId(),
                     jugador.getSkinColor(),
                     jugador.getHairColor(),
                     jugador.getEyeColor(),
                     jugador.getHeight(),
-                    jugador.isPikachuCompanion()
+                    jugador.isPikachuCompanion(),
+                    jugador.isAdmin()
             );
 
             return ResponseEntity.ok(response);
@@ -141,11 +147,11 @@ public class JugadorController {
             if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
 
             int amount = readPositiveAmount(payload);
-            jugador.setSantoCoins(jugador.getSantoCoins() + amount);
+            jugador.setSantoroPoints(jugador.getSantoroPoints() + amount);
             jugadorRepo.save(jugador);
             return ResponseEntity.ok(toDatosResponse(jugador));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al acreditar SantoCoins: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al acreditar Santoropoints: " + e.getMessage());
         }
     }
 
@@ -157,14 +163,14 @@ public class JugadorController {
             if (jugador == null) return ResponseEntity.status(404).body("Jugador no encontrado");
 
             int amount = readPositiveAmount(payload);
-            if (jugador.getSantoCoins() < amount) {
-                return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+            if (jugador.getSantoroPoints() < amount) {
+                return ResponseEntity.badRequest().body("Santoropoints insuficientes");
             }
-            jugador.setSantoCoins(jugador.getSantoCoins() - amount);
+            jugador.setSantoroPoints(jugador.getSantoroPoints() - amount);
             jugadorRepo.save(jugador);
             return ResponseEntity.ok(toDatosResponse(jugador));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error al gastar SantoCoins: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Error al gastar Santoropoints: " + e.getMessage());
         }
     }
 
@@ -183,11 +189,11 @@ public class JugadorController {
                 default -> throw new IllegalArgumentException("Bundle no disponible");
             };
 
-            if (jugador.getSantoCoins() < cost) {
-                return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+            if (jugador.getSantoroPoints() < cost) {
+                return ResponseEntity.badRequest().body("Santoropoints insuficientes");
             }
 
-            jugador.setSantoCoins(jugador.getSantoCoins() - cost);
+            jugador.setSantoroPoints(jugador.getSantoroPoints() - cost);
             jugador.setSobresDisponibles(jugador.getSobresDisponibles() + amount);
             jugadorRepo.save(jugador);
             return ResponseEntity.ok(toDatosResponse(jugador));
@@ -212,13 +218,14 @@ public class JugadorController {
                 jugador.getUsername(),
                 jugador.getSobresDisponibles(),
                 jugador.getColeccion() != null ? jugador.getColeccion().size() : 0,
-                jugador.getSantoCoins(),
+                jugador.getSantoroPoints(),
                 jugador.getCharacterId(),
                 jugador.getSkinColor(),
                 jugador.getHairColor(),
                 jugador.getEyeColor(),
                 jugador.getHeight(),
-                jugador.isPikachuCompanion()
+                jugador.isPikachuCompanion(),
+                jugador.isAdmin()
         );
     }
 

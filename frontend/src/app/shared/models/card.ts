@@ -12,6 +12,8 @@ export interface Ataque {
   danio: number;
   texto: string;
   costo: string[];
+  interactionType?: 'CHOOSE_STATUS' | 'CHOOSE_OPPONENT_ATTACK' | 'YES_NO_PROMPT' | 'CHOOSE_BENCHED_ENERGY_TARGETS' | null;
+  interactionPrompt?: string | null;
 }
 
 // Modelo base de una carta recibido desde backend.

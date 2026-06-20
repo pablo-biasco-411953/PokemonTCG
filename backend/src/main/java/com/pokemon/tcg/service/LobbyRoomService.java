@@ -245,6 +245,29 @@ public class LobbyRoomService {
         }
     }
 
+    public LobbyRoomSnapshot updateSettings(String roomId, String ownerUsername, Integer turnTimeSeconds, String botDifficulty) {
+        requireUsername(ownerUsername);
+        LobbyRoom room = requireRoom(roomId);
+        synchronized (room) {
+            requireOwner(room, ownerUsername);
+            if (room.getStatus() != LobbyRoomStatus.OPEN) {
+                throw new IllegalStateException("La partida ya empezo.");
+            }
+            if (turnTimeSeconds != null) {
+                room.setTurnTimeSeconds(turnTimeSeconds);
+            }
+            if (botDifficulty != null) {
+                String normalizedDifficulty = normalizeBotDifficulty(botDifficulty);
+                room.setBotDifficulty(normalizedDifficulty);
+                if (room.isGuestBot() && "BOT".equals(room.getGuestUsername())) {
+                    room.setGuestDeckName("Mazo bot " + normalizedDifficulty.toLowerCase());
+                }
+            }
+            touch(room);
+            return toSnapshot(room);
+        }
+    }
+
     public LobbyRoomStartResponse startRoom(String roomId, String ownerUsername) {
         requireUsername(ownerUsername);
         LobbyRoom room = requireRoom(roomId);

@@ -396,6 +396,11 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         for (Ataque atk : ataques) {
             if (!puedePagarCosto(activoBot, atk)) continue;
+            if (activoBot.getAtaqueBloqueadoSiguienteTurno() != null
+                    && activoBot.getAtaqueBloqueadoSiguienteTurno().equalsIgnoreCase(atk.getNombre())) {
+                System.out.println("🤖 [BOT] Saltando ataque bloqueado: " + atk.getNombre());
+                continue;
+            }
 
             int score = calcularDanioFinal(activoBot, activoJugador, atk);
             String txt = (atk.getTexto() != null) ? atk.getTexto().toLowerCase() : "";

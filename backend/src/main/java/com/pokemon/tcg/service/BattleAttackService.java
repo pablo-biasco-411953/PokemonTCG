@@ -97,7 +97,12 @@ public class BattleAttackService {
         }
         int totalDamage = defensor.isInvulnerable() ? 0 : calcularDanioConTipo(rawDamage, atacante, defensor);
         if (totalDamage > 0) {
-            defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
+            if (defensor.getPreventDamageThreshold() > 0 && totalDamage <= defensor.getPreventDamageThreshold()) {
+                System.out.println("🛡️ [BATTLE] Harden previno " + totalDamage + " de daño a " + defensor.getCard().getNombre());
+                totalDamage = 0;
+            } else {
+                defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
+            }
         }
 
         System.out.println("⚔️ [BATTLE] " + atacante.getCard().getNombre()

@@ -171,4 +171,31 @@ class BotAIServiceTest {
         ataque.setTexto(texto);
         return ataque;
     }
+
+    @Test
+    void ejecutarTurnoBotRespetaAtaqueBloqueado() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego activoJugador = new CartaEnJuego(basicPokemon("enemy", "Squirtle", "70", "Water"));
+        jugador.setActivo(activoJugador);
+
+        TableroJugador bot = new TableroJugador();
+        Ataque strong = attack("StrongHit", 50, List.of("Colorless"), "");
+        Ataque weak = attack("WeakHit", 10, List.of("Colorless"), "");
+        Card botCard = basicPokemon("bot-1", "Eevee", "60", "Colorless");
+        botCard.reemplazarAtaques(List.of(strong, weak));
+        
+        CartaEnJuego activoBot = new CartaEnJuego(botCard);
+        activoBot.getEnergiasUnidas().add(energy("c-1", "Colorless Energy"));
+        bot.setActivo(activoBot);
+
+        activoBot.setAtaqueBloqueadoSiguienteTurno("StrongHit");
+        activoBot.setAtaqueBloqueadoYaConsumido(false);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setNumeroTurno(2);
+
+        service.ejecutarTurno(partida);
+
+        assertEquals(60, activoJugador.getHpActual());
+    }
 }

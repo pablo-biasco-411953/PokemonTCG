@@ -969,6 +969,48 @@ public class BattleEngineService {
             for (CartaEnJuego ko : knockouts) {
                 battleKoService.resolverKO(partida, atacante.getActivo(), ko);
             }
+        } else if ("DISCARD_OPPONENT_ENERGY".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere seleccionar un Pokémon para descartar su energía.");
+            }
+            TableroJugador opponentBoard = getTableroOponente(partida, callerUsername);
+            String selectedId = ids.get(0);
+            CartaEnJuego target = null;
+            if (opponentBoard.getActivo() != null && opponentBoard.getActivo().getCard().getId().equals(selectedId)) {
+                target = opponentBoard.getActivo();
+            } else {
+                target = opponentBoard.getBanca().stream()
+                        .filter(c -> c.getCard().getId().equals(selectedId))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en juego."));
+            }
+
+            if (target.getEnergiasUnidas().isEmpty()) {
+                throw new IllegalArgumentException("El Pokémon elegido no tiene energías unidas.");
+            }
+
+            Card energy = target.getEnergiasUnidas().remove(0);
+            opponentBoard.getPilaDescarte().add(energy);
+            String actor = callerUsername.equals(partida.getJugadorUsername()) ? "JUGADOR" : "BOT";
+            partida.getTurnLogs().add("ENERGY_DISCARDED:" + actor + ":" + energy.getNombre());
+        } else if ("MOVE_ENERGY_TO_OPPONENT_BENCH".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                throw new IllegalArgumentException("Se requiere seleccionar un Pokémon en banca.");
+            }
+            TableroJugador opponentBoard = getTableroOponente(partida, callerUsername);
+            if (opponentBoard.getActivo() == null || opponentBoard.getActivo().getEnergiasUnidas().isEmpty()) {
+                throw new IllegalArgumentException("El Pokémon Activo del rival ya no tiene energías.");
+            }
+            String selectedId = ids.get(0);
+            CartaEnJuego target = opponentBoard.getBanca().stream()
+                    .filter(c -> c.getCard().getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca del rival."));
+
+            Card energy = opponentBoard.getActivo().getEnergiasUnidas().remove(0);
+            target.getEnergiasUnidas().add(energy);
+            String actor = callerUsername.equals(partida.getJugadorUsername()) ? "JUGADOR" : "BOT";
+            partida.getTurnLogs().add("ENERGY_MOVED:" + actor + ":" + energy.getNombre() + ":" + target.getCard().getNombre());
         } else {
             boolean attached = false;
             for (String id : ids) {
@@ -995,6 +1037,7 @@ public class BattleEngineService {
                 switchAction.setPrompt("Seleccioná un Pokémon de tu banca para cambiarlo por tu activo.");
                 switchAction.setMinSelections(1);
                 switchAction.setMaxSelections(1);
+                switchAction.setEndsTurn(pending.isEndsTurn());
                 switchAction.setOptions(board.getBanca().stream()
                         .map(b -> new com.pokemon.tcg.model.battle.PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()))
                         .toList());
@@ -1240,7 +1283,24 @@ public class BattleEngineService {
         ejecutarComando(partida, new ComandoEvolucionar(cartaEvolucion, objetivo, tablero));
     }
 
-    public Partida debugRobarCarta(String matchId, String cardId) {
+    private void verificarAdmin(String username) {
+        if (username == null) {
+            throw new SecurityException("Operación no autorizada (God Mode requiere autenticación).");
+        }
+        Jugador jugador = jugadorRepo.findByUsername(username);
+        if (jugador == null) {
+            jugador = jugadorRepo.findAll().stream()
+                    .filter(j -> j.getUsername().equalsIgnoreCase(username.trim()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        if (jugador == null || !jugador.isAdmin()) {
+            throw new SecurityException("Operación no autorizada (God Mode requiere privilegios de administrador).");
+        }
+    }
+
+    public Partida debugRobarCarta(String matchId, String cardId, String username) {
+        verificarAdmin(username);
         Partida partida = getPartidaOThrow(matchId);
 
         Card cartaMagica = cardRepo.findById(cardId)
@@ -1252,7 +1312,8 @@ public class BattleEngineService {
         return partida;
     }
 
-    public Partida debugForzarEstado(String matchId, String objetivo, String estado) {
+    public Partida debugForzarEstado(String matchId, String objetivo, String estado, String username) {
+        verificarAdmin(username);
         Partida partida = getPartidaOThrow(matchId);
 
         CartaEnJuego activo = objetivo.equals("BOT") ?
@@ -1268,7 +1329,8 @@ public class BattleEngineService {
         return partida;
     }
 
-    public Partida debugSetHp(String matchId, String objetivo, int hp) {
+    public Partida debugSetHp(String matchId, String objetivo, int hp, String username) {
+        verificarAdmin(username);
         Partida partida = getPartidaOThrow(matchId);
 
         CartaEnJuego activoVictima = objetivo.equals("BOT") ? partida.getBot().getActivo() : partida.getJugador().getActivo();

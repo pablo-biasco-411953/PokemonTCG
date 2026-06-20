@@ -15,6 +15,7 @@ public class SearchDeckCommand implements BattleCommand {
     private final String destination;
     private final int maxSelections;
     private final String prompt;
+    private final boolean endsTurn;
 
     public SearchDeckCommand(
             String criteriaSupertype,
@@ -24,12 +25,25 @@ public class SearchDeckCommand implements BattleCommand {
             int maxSelections,
             String prompt
     ) {
+        this(criteriaSupertype, criteriaSubtype, criteriaType, destination, maxSelections, prompt, true);
+    }
+
+    public SearchDeckCommand(
+            String criteriaSupertype,
+            String criteriaSubtype,
+            String criteriaType,
+            String destination,
+            int maxSelections,
+            String prompt,
+            boolean endsTurn
+    ) {
         this.criteriaSupertype = criteriaSupertype;
         this.criteriaSubtype = criteriaSubtype;
         this.criteriaType = criteriaType;
         this.destination = destination;
         this.maxSelections = maxSelections;
         this.prompt = prompt;
+        this.endsTurn = endsTurn;
     }
 
     @Override
@@ -64,6 +78,7 @@ public class SearchDeckCommand implements BattleCommand {
         action.setDestination(destination);
         action.setMinSelections(0);
         action.setMaxSelections(Math.min(maxSelections, legal.size()));
+        action.setEndsTurn(endsTurn);
         action.setOptions(legal.stream()
                 .map(card -> new PendingBattleAction.Option(card.getId(), card.getNombre(), card.getImagen()))
                 .toList());

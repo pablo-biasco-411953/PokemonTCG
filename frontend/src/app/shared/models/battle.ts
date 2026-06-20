@@ -13,6 +13,7 @@ export interface CartaEnJuego {
   bocaAbajo?: boolean;
   debeLanzarMonedaSiAtaca?: boolean;
   turnoEntrada?: number;
+  ataqueBloqueadoSiguienteTurno?: string;
 }
 
 // Zonas visibles de un jugador durante la partida.
@@ -74,6 +75,8 @@ export interface PendingBattleAction {
   destination: string;
   minSelections: number;
   maxSelections: number;
+  amount?: number;
+  endsTurn?: boolean;
   options: Array<{ id: string; nombre: string; imagen?: string; hpActual?: number; maxHp?: number; numero?: string; set?: string }>;
 }
 

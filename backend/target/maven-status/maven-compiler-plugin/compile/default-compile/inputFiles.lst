@@ -25,12 +25,16 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BattleTu
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AddDamageByDifferentBasicEnergyTypesCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetNoPuedeAtacarSiguienteTurnoCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\CadenaAtaqueFactory.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\CorsolaRefreshCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\TableroJugador.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\TestRetreat.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\MagcargoMagmaMantleCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelfDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\controller\LobbyRoomController.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SetPreventDamageThresholdCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\repository\CardRepository.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\GogoatChargeDashCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\TormentBlockAttackCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\OptionalDiscardEnergyForDamageCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DiscardEnergyCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchCommand.java
@@ -68,6 +72,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ActualizarMa
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\exception\GlobalExceptionHandler.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\MazoService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\HealCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelectOpponentPokemonToDiscardEnergyCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupMulliganExtraDraw.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\BotAIService.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SelectOwnPokemonToHealCommand.java
@@ -105,6 +110,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\Pen
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LobbyMessage.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AtaquePotenciadoSiguienteTurnoCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SearchDeckCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\DiscardAttachedEnergyOfTypeCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPrizePlacement.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoJugarPokemon.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\SobreService.java
@@ -114,12 +120,15 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\sta
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\ManejadorEfecto.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugInjectCardRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugarPokemonRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\LaprasSeafaringCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoSetupPlaceActive.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SwitchOpponentActiveCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Mazo.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\DebugSetSobresRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\JugadorDTO.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\state\EstadoPartida.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\MoveOpponentActiveEnergyToBenchCommand.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\OpponentShuffleHandDrawCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoDescartarEnergiaRival.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\config\WebMvcConfig.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\Jugador.java
@@ -127,6 +136,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\EvolveReques
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\ChooseTurnRequest.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\chain\EfectoDanioBanca.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\lobby\LobbyRoomRequest.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\FroakieBounceCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AttachEnergyFromDiscardToBenchByCoinsCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\lobby\LobbyRoom.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\scratch\TestBunnelby.java
