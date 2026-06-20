@@ -5,9 +5,29 @@ import com.pokemon.tcg.model.battle.Partida;
 import com.pokemon.tcg.model.battle.TableroJugador;
 
 public class MagcargoMagmaMantleCommand implements BattleCommand {
+    private final String choice;
+
+    public MagcargoMagmaMantleCommand() {
+        this.choice = null;
+    }
+
+    public MagcargoMagmaMantleCommand(String choice) {
+        this.choice = choice;
+    }
 
     @Override
     public void execute(Partida partida, TableroJugador atacante, TableroJugador defensor) {
+        boolean chooseYes = false;
+        if (atacante == partida.getBot()) {
+            chooseYes = true;
+        } else {
+            chooseYes = "yes".equalsIgnoreCase(choice);
+        }
+
+        if (!chooseYes) {
+            return;
+        }
+
         if (atacante.getMazo() == null || atacante.getMazo().isEmpty()) {
             return;
         }

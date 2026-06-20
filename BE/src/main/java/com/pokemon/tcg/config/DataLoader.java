@@ -67,6 +67,7 @@ public class DataLoader implements CommandLineRunner {
         Jugador pablo = new Jugador("Pablo");
         pablo.setPasswordHash("2ab74e1d95f6aff7947352ee0d793c366a8ab33452a87a3e39b003b42c843cf9");
         pablo.setSobresDisponibles(10);
+        pablo.setAdmin(true);
 
         List<Card> coleccionCompleta = new ArrayList<>();
         for (Card card : todasLasCartas) {

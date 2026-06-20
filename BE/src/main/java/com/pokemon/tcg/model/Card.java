@@ -87,6 +87,8 @@ public class Card {
                 String textoAtk = (String) map.get("texto");
                 atk.setTexto(textoAtk != null ? textoAtk : "");
 
+                determinarMetadatosDeInteraccion(atk);
+
                 nuevaLista.add(atk);
             }
         }
@@ -134,10 +136,62 @@ public class Card {
     public List<String> getSubtypes() { return subtypes; }
     public List<String> getReglas() { return reglas; }
     public List<Ataque> getAtaques() { return ataques; }
-    public void reemplazarAtaques(List<Ataque> ataques) { this.ataques = ataques != null ? ataques : new ArrayList<>(); }
+    public void reemplazarAtaques(List<Ataque> ataques) {
+        this.ataques = ataques != null ? ataques : new ArrayList<>();
+        for (Ataque atk : this.ataques) {
+            determinarMetadatosDeInteraccion(atk);
+        }
+    }
     public List<CardAttribute> getDebilidades() { return debilidades; }
     public List<CardAttribute> getResistencias() { return resistencias; }
 
     public int getCostoRetirada() { return costoRetirada; }
     public void setCostoRetirada(int costoRetirada) { this.costoRetirada = costoRetirada; }
+
+    @PostLoad
+    public void postLoad() {
+        if (this.ataques != null) {
+            for (Ataque atk : this.ataques) {
+                determinarMetadatosDeInteraccion(atk);
+            }
+        }
+    }
+
+    private void determinarMetadatosDeInteraccion(Ataque atk) {
+        String lowerText = normalizarTexto(atk.getTexto());
+        
+        if (lowerText.contains("choose either asleep or poisoned")) {
+            atk.setInteractionType("CHOOSE_STATUS");
+            atk.setInteractionPrompt("Elegí un estado. El Pokémon Defensor pasará a estar Dormido o Envenenado.");
+        } else if (lowerText.contains("choose 1 of your opponent's active") && lowerText.contains("attacks") && lowerText.contains("can't use that attack")) {
+            atk.setInteractionType("CHOOSE_OPPONENT_ATTACK");
+            atk.setInteractionPrompt("Tormento: Elegí 1 de los ataques del Pokémon Activo de tu oponente para bloquearlo.");
+        } else if (lowerText.contains("you may do 20 more damage") && lowerText.contains("if you do, this pok") && lowerText.contains("does 20 damage to itself")) {
+            atk.setInteractionType("YES_NO_PROMPT");
+            atk.setInteractionPrompt("Charge Dash: ¿Querés hacer 20 más de daño a cambio de hacerte 20 de daño a vos mismo?");
+        } else if (lowerText.contains("you may discard the top card") && lowerText.contains("fire energy")) {
+            atk.setInteractionType("YES_NO_PROMPT");
+            atk.setInteractionPrompt("Manto de Magma: ¿Querés descartar la primera carta de tu mazo? Si es una Energía Fuego, hacés 50 más de daño.");
+        } else if (lowerText.contains("you may discard an energy attached to this pok") && lowerText.contains("more damage")) {
+            atk.setInteractionType("YES_NO_PROMPT");
+            atk.setInteractionPrompt("Electron Crush: ¿Querés descartar una Energía unida a este Pokémon para hacer 30 más de daño?");
+        } else if (lowerText.contains("you may move an energy attached to your opponent's active pok")) {
+            atk.setInteractionType("YES_NO_PROMPT");
+            atk.setInteractionPrompt("Tricky Steps: ¿Querés mover una Energía del Pokémon Activo de tu oponente a uno de sus Pokémon en Banca?");
+        } else if (lowerText.contains("attach a water energy card from your discard pile to your benched pok") && lowerText.contains("heads")) {
+            atk.setInteractionType("CHOOSE_BENCHED_ENERGY_TARGETS");
+            atk.setInteractionPrompt("Navegación Marina: Elegí a qué Pokémon de tu banca asignarle las energías de agua si sale cara.");
+        }
+    }
+
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+        return java.text.Normalizer.normalize(texto, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace("’", "'")
+                .replace("‘", "'")
+                .replace("´", "'")
+                .replace("`", "'")
+                .toLowerCase();
+    }
 }

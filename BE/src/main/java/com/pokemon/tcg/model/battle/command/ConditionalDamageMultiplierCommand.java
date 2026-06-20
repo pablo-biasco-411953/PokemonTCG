@@ -37,10 +37,70 @@ public class ConditionalDamageMultiplierCommand implements BattleCommand {
                 energies += defensor.getActivo().getEnergiasUnidas().size();
             }
             finalDamage += (energies * multiplier);
+        } else if ("HAS_ENERGY_TYPE".equals(conditionType)) {
+            if (atacante.getActivo() != null) {
+                boolean hasEnergy = atacante.getActivo().getEnergiasUnidas().stream()
+                        .anyMatch(energy -> isEnergyOfType(energy, conditionValue));
+                if (hasEnergy) {
+                    finalDamage += multiplier;
+                }
+            }
+        } else if ("ENERGY_COUNT_OF_TYPE".equals(conditionType)) {
+            if (atacante.getActivo() != null) {
+                long count = atacante.getActivo().getEnergiasUnidas().stream()
+                        .filter(energy -> isEnergyOfType(energy, conditionValue))
+                        .count();
+                finalDamage += (count * multiplier);
+            }
         }
 
         if (finalDamage > 0) {
             partida.getExecutionQueue().add(new DamageCommand(finalDamage));
         }
+    }
+
+    private boolean isEnergyOfType(com.pokemon.tcg.model.Card card, String targetType) {
+        if (card.getSupertype() != null && !card.getSupertype().equalsIgnoreCase("Energy")) {
+            return false;
+        }
+        String name = card.getNombre() == null ? "" : card.getNombre();
+        String type = card.getTipo();
+        if (type == null || type.isBlank() || "Energy".equalsIgnoreCase(type)) {
+            type = name;
+        }
+        String normalized = normalizeType(type);
+        return normalized.equalsIgnoreCase(targetType);
+    }
+
+    private String normalizeType(String value) {
+        String text = value == null ? "" : value.toLowerCase();
+        if (text.contains("grass") || text.contains("planta")) return "Grass";
+        if (text.contains("fire") || text.contains("fuego")) return "Fire";
+        if (text.contains("water") || text.contains("agua")) return "Water";
+        if (text.contains("lightning") || text.contains("electrica") || text.contains("rayo")) return "Lightning";
+        if (text.contains("psychic") || text.contains("psiquica")) return "Psychic";
+        if (text.contains("fighting") || text.contains("lucha")) return "Fighting";
+        if (text.contains("darkness") || text.contains("siniestra") || text.contains("oscuridad")) return "Darkness";
+        if (text.contains("metal") || text.contains("acero")) return "Metal";
+        if (text.contains("dragon")) return "Dragon";
+        if (text.contains("fairy") || text.contains("hada")) return "Fairy";
+        if (text.contains("colorless") || text.contains("incolora")) return "Colorless";
+        return value == null ? "" : value;
+    }
+
+    public int getBaseDamage() {
+        return baseDamage;
+    }
+
+    public int getMultiplier() {
+        return multiplier;
+    }
+
+    public String getConditionType() {
+        return conditionType;
+    }
+
+    public String getConditionValue() {
+        return conditionValue;
     }
 }

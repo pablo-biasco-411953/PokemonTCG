@@ -61,7 +61,7 @@ getJugador(username: string): Observable<JugadorDatosResponse> {
   "username": "Pikachu123",
   "email": "pikachu@example.com",
   "sobresDisponibles": 5,
-  "santoCoins": 250,
+  "santoroPoints": 250,
   "characterId": "pikachu",
   "skinColor": "#FFD700",
   "hairColor": "#000000",
@@ -77,7 +77,7 @@ getJugador(username: string): Observable<JugadorDatosResponse> {
 this.jugadorService.getJugador('Pikachu123').subscribe(
   (datos: JugadorDatosResponse) => {
     console.log(`Jugador: ${datos.username}`);
-    this.santoCoins = datos.santoCoins;
+    this.santoroPoints = datos.santoroPoints;
   }
 );
 ```
@@ -282,7 +282,7 @@ rewardCoins(username: string, amount: number): Observable<JugadorDatosResponse> 
 ```typescript
 this.jugadorService.rewardCoins('Pikachu123', 50).subscribe(
   (updated) => {
-    console.log(`Nuevas monedas: ${updated.santoCoins}`);
+    console.log(`Nuevos puntos: ${updated.santoroPoints}`);
   }
 );
 ```
@@ -311,13 +311,13 @@ spendCoins(username: string, amount: number): Observable<JugadorDatosResponse> {
 **Endpoint**: POST `/api/jugadores/[username]/coins/spend`
 
 **Validaciones**:
-- `santoCoins >= amount` - Fondos suficientes
+- `santoroPoints >= amount` - Fondos suficientes
 
 **Uso (compra en tienda)**:
 ```typescript
 this.jugadorService.spendCoins('Pikachu123', 50).subscribe(
   (updated) => {
-    if (updated.santoCoins >= 0) {
+    if (updated.santoroPoints >= 0) {
       console.log('Compra exitosa');
     }
   },
@@ -358,14 +358,14 @@ buyPacks(username: string, amount: number): Observable<JugadorDatosResponse> {
 **Validaciones**:
 - `amount > 0`
 - Costo calculado: `amount * costoPorSobre` (ej: 3 * 50 = 150 monedas)
-- `santoCoins >= totalCosto`
+- `santoroPoints >= totalCosto`
 
 **Uso**:
 ```typescript
 this.jugadorService.buyPacks('Pikachu123', 3).subscribe(
   (updated) => {
     console.log(`Sobres: ${updated.sobresDisponibles}`);
-    console.log(`Monedas restantes: ${updated.santoCoins}`);
+    console.log(`Puntos restantes: ${updated.santoroPoints}`);
   }
 );
 ```
@@ -536,7 +536,7 @@ interface JugadorDatosResponse {
   username: string;
   email: string;
   sobresDisponibles: number;
-  santoCoins: number;
+  santoroPoints: number;
   characterId?: string;
   skinColor?: string;
   hairColor?: string;
@@ -572,7 +572,7 @@ export class ProfileComponent implements OnInit {
     this.jugadorService.getJugador('Pikachu123').subscribe(
       (datos) => {
         this.jugador = datos;
-        console.log(`${datos.username} tiene ${datos.santoCoins} monedas`);
+        console.log(`${datos.username} tiene ${datos.santoroPoints} puntos`);
       }
     );
   }
@@ -584,7 +584,7 @@ export class ProfileComponent implements OnInit {
 comprarSobres(cantidad: number) {
   this.jugadorService.buyPacks(this.username, cantidad).subscribe(
     (updated) => {
-      this.santoCoins = updated.santoCoins;
+      this.santoroPoints = updated.santoroPoints;
       this.sobresDisponibles = updated.sobresDisponibles;
       this.showNotification('Compra exitosa');
     },
@@ -654,7 +654,7 @@ consultarMision() {
 this.jugadorService.getJugador('Pikachu123')
   .pipe(
     tap((datos) => console.log('Datos cargados:', datos)),
-    map((datos) => datos.santoCoins),
+    map((datos) => datos.santoroPoints),
     filter((coins) => coins > 0),
     shareReplay(1)  // Cachea para múltiples suscriptores
   )

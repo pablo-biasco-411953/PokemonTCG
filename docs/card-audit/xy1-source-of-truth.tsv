@@ -1,0 +1,265 @@
+row_id	card_id	card_name	source_kind	source_name	source_text	requires_engine_capability	pattern_target	should_exist_now	current_status	fully_reviewed	notes
+1	xy1-1	Venusaur-EX	attack	Poison Powder	Your opponent's Active Pokémon is now Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+2	xy1-1	Venusaur-EX	attack	Jungle Hammer	Heal 30 damage from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+3	xy1-1	Venusaur-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+4	xy1-2	M Venusaur-EX	attack	Crisis Vine	Your opponent's Active Pokémon is now Paralyzed and Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+5	xy1-2	M Venusaur-EX	rule	Rule	Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.	rule-engine	State/KO/Prize	yes	todo	no	
+6	xy1-2	M Venusaur-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+7	xy1-3	Weedle	attack	Leaf Munch	If your opponent's Active Pokémon is a Grass Pokémon, this attack does 20 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+8	xy1-4	Kakuna	attack	Harden	During your opponent's next turn, if this Pokémon would be damaged by an attack, prevent that attack's damage done to this Pokémon if that damage is 60 or less.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+9	xy1-5	Beedrill	attack	Poison Jab	Your opponent's Active Pokémon is now Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+10	xy1-5	Beedrill	attack	Flash Needle	Flip 3 coins. This attack does 40 damage times the number of heads. If all of them are heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+11	xy1-6	Ledyba	attack	Spinning Attack		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+12	xy1-7	Ledian	attack	Tackle		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+13	xy1-7	Ledian	attack	Mach Punch	This attack does 10 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+14	xy1-8	Volbeat	attack	Luring Glow	Switch 1 of your opponent's Benched Pokémon with your opponent's Active Pokémon.	gust-opponent-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+15	xy1-8	Volbeat	attack	Signal Beam	Your opponent's Active Pokémon is now Confused.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+16	xy1-9	Illumise	attack	Pheromotion	Search your deck for a Grass Pokémon, reveal it, and put it into your hand. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+17	xy1-9	Illumise	attack	Quick Attack	Flip a coin. If heads, this attack does 20 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+18	xy1-10	Pansage	attack	Vine Whip		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+19	xy1-10	Pansage	attack	Leech Seed	Heal 10 damage from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+20	xy1-11	Simisage	attack	Torment	Choose 1 of your opponent's Active Pokémon's attacks. That Pokémon can't use that attack during your opponent's next turn.	next-turn-attack-restriction	Chain.PreAttack	yes	partial-or-recent	no	
+21	xy1-11	Simisage	attack	Solar Beam		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+22	xy1-12	Chespin	attack	Pin Missile	Flip 4 coins. This attack does 10 damage times the number of heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+23	xy1-13	Quilladin	attack	Scrunch	Flip a coin. If heads, prevent all damage done to this Pokémon by attacks during your opponent's next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+24	xy1-13	Quilladin	attack	Wood Hammer	This Pokémon does 10 damage to itself.	self-damage	Strategy.AttackEffect	yes	partial	no	
+25	xy1-14	Chesnaught	attack	Touchdown	Heal 20 damage from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+26	xy1-14	Chesnaught	ability	Spiky Shield	If this Pokémon is your Active Pokémon and is damaged by an opponent's attack (even if this Pokémon is Knocked Out), put 3 damage counters on the Attacking Pokémon.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+27	xy1-15	Scatterbug	attack	Bug Bite		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+28	xy1-16	Spewpa	attack	Bug Bite		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+29	xy1-16	Spewpa	attack	Stun Spore	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+30	xy1-17	Vivillon	attack	Conversion Powder	Choose either Asleep or Poisoned. Your opponent's Active Pokémon is now affected by that Special Condition.	choose-one-status	PendingAction.OptionSelection	yes	missing-foundation	no	
+31	xy1-17	Vivillon	attack	Colorful Wind	This attack does 30 more damage for each different type of basic Energy attached to this Pokémon.	dynamic-damage-modifier	Chain.DamageModifiers	yes	partial	no	
+32	xy1-18	Skiddo	attack	Lead	Flip a coin. If heads, search your deck for a Supporter card, reveal it, and put it into your hand. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+33	xy1-18	Skiddo	attack	Tackle		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+34	xy1-19	Gogoat	attack	Lead	Search your deck for up to 2 Supporter cards, reveal them, and put them into your hand. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+35	xy1-19	Gogoat	attack	Charge Dash	You may do 20 more damage. If you do, this Pokémon does 20 damage to itself.	optional-effect-decision	PendingAction.BinaryChoice	yes	missing-foundation	no	
+36	xy1-20	Slugma	attack	Flamethrower	Discard an Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+37	xy1-21	Magcargo	attack	Magma Mantle	You may discard the top card of your deck. If that card is a Fire Energy card, this attack does 50 more damage.	optional-effect-decision	PendingAction.BinaryChoice	yes	missing-foundation	no	
+38	xy1-21	Magcargo	attack	Heat Blast		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+39	xy1-22	Pansear	attack	Live Coal		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+40	xy1-22	Pansear	attack	Fireworks	Discard an Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+41	xy1-23	Simisear	attack	Yawn	Your opponent's Active Pokémon is now Asleep.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+42	xy1-23	Simisear	attack	Flamethrower	Discard a Fire Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+43	xy1-24	Fennekin	attack	Will-O-Wisp		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+44	xy1-25	Braixen	attack	Clairvoyant Eye	Look at the top 3 cards of your deck and put them back on top of your deck in any order.	deck-peek-and-reorder	PendingAction.DeckOrdering	yes	missing-foundation	no	
+45	xy1-25	Braixen	attack	Fire Tail Slap	Discard a Fire Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+46	xy1-26	Delphox	attack	Blaze Ball	This attack does 20 more damage for each Fire Energy attached to this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+47	xy1-26	Delphox	ability	Mystical Fire	Once during your turn (before your attack), you may draw cards until you have 6 cards in your hand.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+48	xy1-27	Fletchinder	attack	Flame Charge	Search your deck for a Fire Energy card and attach it to this Pokémon. Shuffle your deck afterward.	search-and-attach-active	Strategy.AttackEffect	yes	partial	no	
+49	xy1-27	Fletchinder	attack	Fire Wing		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+50	xy1-28	Talonflame	attack	Devastating Wind	Your opponent shuffles his or her hand into his or her deck and draws 4 cards.	hand-disruption	Strategy.AttackEffect	yes	todo	no	
+51	xy1-28	Talonflame	attack	Flare Blitz	Discard all Fire Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+52	xy1-29	Blastoise-EX	attack	Rapid Spin	Switch this Pokémon with 1 of your Benched Pokémon. Then, your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon.	switch-own-active-with-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+53	xy1-29	Blastoise-EX	attack	Splash Bomb	Flip a coin. If tails, this Pokémon does 30 damage to itself.	coin-resolution	Chain.PreAttack	yes	partial	no	
+54	xy1-29	Blastoise-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+55	xy1-30	M Blastoise-EX	attack	Hydro Bombard	This attack does 30 damage to 2 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+56	xy1-30	M Blastoise-EX	rule	Rule	Mega Evolution rule: When 1 of your Pokémon becomes a Mega Evolution Pokémon, your turn ends.	rule-engine	State/KO/Prize	yes	todo	no	
+57	xy1-30	M Blastoise-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+58	xy1-31	Shellder	attack	Rain Splash		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+59	xy1-32	Cloyster	attack	Clamp Crush	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed and discard an Energy attached to that Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+60	xy1-32	Cloyster	attack	Spike Cannon	Flip 5 coins. This attack does 30 damage times the number of heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+61	xy1-33	Staryu	attack	Reckless Charge	This Pokémon does 10 damage to itself.	self-damage	Strategy.AttackEffect	yes	partial	no	
+62	xy1-34	Starmie	attack	Recover	Discard an Energy attached to this Pokémon and heal all damage from it.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+63	xy1-34	Starmie	attack	Core Splash	If this Pokémon has any Psychic Energy attached to it, this attack does 30 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+64	xy1-35	Lapras	attack	Seafaring	Flip 3 coins. For each heads, attach a Water Energy card from your discard pile to your Benched Pokémon in any way you like.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+65	xy1-35	Lapras	attack	Hydro Pump	This attack does 20 more damage for each Water Energy attached to this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+66	xy1-36	Corsola	attack	Refresh	Heal 30 damage and remove all Special Conditions from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+67	xy1-36	Corsola	attack	Spiny Rush	Flip a coin until you get tails. This attack does 20 more damage for each heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+68	xy1-37	Panpour	attack	Wave Splash		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+69	xy1-37	Panpour	attack	Water Splash	Flip a coin. If heads, this attack does 20 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+70	xy1-38	Simipour	attack	Recycle	Put a card from your discard pile on top of your deck.	recover-discard-to-topdeck	PendingAction.DiscardSelection	yes	partial-or-recent	no	
+71	xy1-38	Simipour	attack	Surf		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+72	xy1-39	Froakie	attack	Bounce	Flip a coin. If heads, switch this Pokémon with 1 of your Benched Pokémon.	switch-own-active-with-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+73	xy1-40	Frogadier	attack	Lick	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+74	xy1-41	Greninja	attack	Mist Slash	This attack's damage isn't affected by Weakness, Resistance, or any other effects on your opponent's Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+75	xy1-41	Greninja	ability	Water Shuriken	Once during your turn (before your attack), you may discard a Water Energy card from your hand. If you do, put 3 damage counters on 1 of your opponent's Pokémon.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+76	xy1-42	Pikachu	attack	Nuzzle	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+77	xy1-42	Pikachu	attack	Quick Attack	Flip a coin. If heads, this attack does 10 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+78	xy1-43	Raichu	attack	Circle Circuit	This attack does 20 damage times the number of your Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+79	xy1-43	Raichu	attack	Thunderbolt	Discard all Energy attached to this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+80	xy1-44	Voltorb	attack	Rollout		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+81	xy1-44	Voltorb	ability	Destiny Burst	If this Pokémon is your Active Pokémon and is Knocked Out by damage from an opponent's attack, flip a coin. If heads, put 5 damage counters on the Attacking Pokémon.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+82	xy1-45	Electrode	attack	Eerie Impulse	Flip a coin. If heads, discard an Energy attached to 1 of your opponent's Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+83	xy1-45	Electrode	attack	Rollout		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+84	xy1-46	Emolga-EX	attack	Energy Glide	Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon.	switch-own-active-with-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+85	xy1-46	Emolga-EX	attack	Electron Crush	You may discard an Energy attached to this Pokémon. If you do, this attack does 30 more damage.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+86	xy1-46	Emolga-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+87	xy1-47	Ekans	attack	Bite		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+88	xy1-48	Arbok	attack	Gastro Acid	The Defending Pokémon has no Abilities until the end of your next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+89	xy1-48	Arbok	attack	Poison Jab	Your opponent's Active Pokémon is now Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+90	xy1-49	Spoink	attack	Splash		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+91	xy1-50	Grumpig	attack	Tricky Steps	You may move an Energy attached to your opponent's Active Pokémon to 1 of your opponent's Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+92	xy1-50	Grumpig	attack	Psybeam	Your opponent's Active Pokémon is now Confused.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+93	xy1-51	Venipede	attack	Poison Sting	Your opponent's Active Pokémon is now Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+94	xy1-52	Whirlipede	attack	Continuous Tumble	Flip a coin until you get tails. This attack does 30 damage times the number of heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+95	xy1-53	Scolipede	attack	Random Peck	Flip 2 coins. This attack does 20 more damage for each heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+96	xy1-53	Scolipede	attack	Poison Ring	Your opponent's Active Pokémon is now Poisoned. That Pokémon can't retreat during your opponent's next turn.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+97	xy1-54	Phantump	attack	Astonish	Choose a random card from your opponent's hand. Your opponent reveals that card and shuffles it into his or her deck.	random-hand-disruption	Strategy.AttackEffect	yes	implemented	no	
+98	xy1-54	Phantump	attack	Hook		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+99	xy1-55	Trevenant	attack	Tree Slam	This attack does 20 damage to 2 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+100	xy1-55	Trevenant	ability	Forest's Curse	As long as this Pokémon is your Active Pokémon, your opponent can't play any Item cards from his or her hand.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+101	xy1-56	Pumpkaboo	attack	Confuse Ray	Your opponent's Active Pokémon is now Confused.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+102	xy1-57	Gourgeist	attack	Eerie Voice	Put 2 damage counters each of your opponent's Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+103	xy1-57	Gourgeist	attack	Spirit Scream	Put damage counters on both Active Pokémon until the remaining HP of each Pokémon is 10.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+104	xy1-58	Diglett	attack	Mine	Look at the top card of your opponent's deck. Then, you may have your opponent shuffle his or her deck.	optional-effect-decision	PendingAction.BinaryChoice	yes	missing-foundation	no	
+105	xy1-58	Diglett	attack	Mud-Slap		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+106	xy1-59	Dugtrio	attack	Earthquake	This attack does 10 damage to each of your Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+107	xy1-59	Dugtrio	attack	Rock Tumble	This attack's damage isn't affected by Resistance.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+108	xy1-60	Rhyhorn	attack	Dig Out	Discard the top card of your deck. If that card is a Fighting Energy, attach it to this Pokémon.	search-and-attach-active	Strategy.AttackEffect	yes	partial	no	
+109	xy1-60	Rhyhorn	attack	Horn Drill		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+110	xy1-61	Rhydon	attack	Horn Drill		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+111	xy1-61	Rhydon	attack	Mad Mountain	Flip 2 coins. If both of them are heads, discard the top card of your opponent's deck for each damage counter on this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+112	xy1-62	Rhyperior	attack	Rock Black	Flip a coin for each Fighting Energy attached to this Pokémon. This attack does 50 damage times the number of heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+113	xy1-62	Rhyperior	attack	Rock Wrecker	This attack's damage isn't affected by Weakness or Resistance. This Pokémon can't attack during your next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+114	xy1-63	Lunatone	attack	Double Draw	Draw 2 cards.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+115	xy1-63	Lunatone	attack	Moonblast	During your opponent's next turn, any damage done by attacks from the Defending Pokémon is reduced by 20 (before applying Weakness and Resistance).	custom-effect	Strategy.AttackEffect	yes	todo	no	
+116	xy1-64	Solrock	attack	Cosmic Spin	If Lunatone is on your Bench, this attack does 30 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+117	xy1-64	Solrock	attack	Solar Beam		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+118	xy1-65	Timburr	attack	Pummel	Flip a coin. If heads, this attack does 20 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+119	xy1-66	Gurdurr	attack	Pummel	Flip a coin. If heads, this attack does 20 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+120	xy1-66	Gurdurr	attack	Hammer Arm	Discard the top card of your opponent's deck.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+121	xy1-67	Conkeldurr	attack	Wake-Up Slap	If your opponent's Active Pokémon is affected by a Special Condition, this attack does 60 more damage. Then, remove all Special Conditions from that Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+122	xy1-67	Conkeldurr	attack	Dynamic Punch	Flip a coin. If heads, this attack does 40 more damage and your opponent's Active Pokémon is now Confused.	coin-resolution	Chain.PreAttack	yes	partial	no	
+123	xy1-68	Sableye	attack	Filch	Draw a card.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+124	xy1-68	Sableye	attack	Rip Claw	Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+125	xy1-69	Sandile	attack	Ram		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+126	xy1-69	Sandile	attack	Darkness Fang		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+127	xy1-70	Krokorok	attack	Crunch	Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+128	xy1-70	Krokorok	attack	Darkness Fang		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+129	xy1-71	Krookodile	attack	Bother	Flip a coin. If heads, your opponent can't play any Supporter cards from his or her hand during his or her next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+130	xy1-71	Krookodile	attack	Knock Back	Your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+131	xy1-72	Zorua	attack	Scratch		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+132	xy1-72	Zorua	attack	Nasty Plot	Search your deck for a card and put it into your hand. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+133	xy1-73	Zoroark	attack	Corner	The Defending Pokémon can't retreat during your opponent's next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+134	xy1-73	Zoroark	attack	Night Claw	Flip a coin. If tails, discard 2 Energy attached to this Pokémon.	coin-resolution	Chain.PreAttack	yes	partial	no	
+135	xy1-74	Inkay	attack	Confusion Wave	Both Active Pokémon are now Confused.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+136	xy1-74	Inkay	ability	Upside-Down Evolution	Once during your turn, (before your attack), if this Pokémon is Confused, you may search your deck for a card that evolves from this Pokémon and put it onto this Pokémon. (This counts as evolving this Pokémon.) Shuffle your deck afterward.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+137	xy1-75	Inkay	attack	Tackle		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+138	xy1-75	Inkay	attack	Puncture	This attack's damage isn't affected by Resistance.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+139	xy1-76	Malamar	attack	Mental Trash	Your opponent flips 4 coins. For each tails, he or she discards a card from his or her hand.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+140	xy1-76	Malamar	attack	Distortion Beam	Flip a coin. If heads, your opponent's Active Pokémon is now Asleep. If tails, your opponent's Active Pokémon is now Confused.	coin-resolution	Chain.PreAttack	yes	partial	no	
+141	xy1-77	Malamar	attack	Mental Panic	If the Defending Pokémon tries to attack during your opponent's next turn, your opponent flips a coin. If tails, that attack does nothing.	next-turn-attack-restriction	Chain.PreAttack	yes	partial-or-recent	no	
+142	xy1-77	Malamar	attack	Puncture	This attack's damage isn't affected by Resistance.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+143	xy1-78	Yveltal	attack	Oblivion Wing	Attach a Darkness Energy card from your discard pile to 1 of your Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+144	xy1-78	Yveltal	attack	Darkness Blade	Flip a coin. If tails, this Pokémon can't attack during your next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+145	xy1-79	Yveltal-EX	attack	Evil Ball	This attack does 20 more damage times the amount of Energy attached to both Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+146	xy1-79	Yveltal-EX	attack	Y Cyclone	Move an Energy from this Pokémon to 1 of your Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+147	xy1-79	Yveltal-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+148	xy1-80	Skarmory-EX	attack	Joust	Before doing damage, discard all Pokémon Tool cards attached to your opponent's Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+149	xy1-80	Skarmory-EX	attack	Tailspin Piledriver	If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+150	xy1-80	Skarmory-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+151	xy1-81	Pawniard	attack	Cut Down	Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+152	xy1-81	Pawniard	attack	Metal Claw		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+153	xy1-82	Bisharp	attack	Metal Sound	Your opponent's Active Pokémon is now Confused.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+154	xy1-82	Bisharp	attack	Metal Wallop	During your next turn, this Pokémon's Metal Wallop attack does 40 more damage (before applying Weakness and Resistance).	custom-effect	Strategy.AttackEffect	yes	todo	no	
+155	xy1-83	Honedge	attack	Pierce		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+156	xy1-84	Doublade	attack	Dual Blades	Flip 2 coins. This attack does 30 damage times the number of heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+157	xy1-85	Aegislash	attack	Buster Swing	This attack's damage isn't affected by Resistance.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+158	xy1-85	Aegislash	ability	Stance Change	Once during your turn (before your attack), you may switch this Pokémon with an Aegislash in your hand. (Any cards attached to this Pokémon, damage counters, Special Conditions, turns in play, and any other effects remain on the new Pokémon.)	ability-system	Strategy.AbilityEffect	yes	todo	no	
+159	xy1-86	Aegislash	attack	King's Shield	Prevent all damage done to this Pokémon by attacks during your opponent's next turn. This Pokémon can't use King's Shield during your next turn.	next-turn-protection	Chain.PreAttack	yes	partial	no	
+160	xy1-86	Aegislash	ability	Stance Change	Once during your turn (before your attack), you may switch this Pokémon with an Aegislash in your hand. (Any cards attached to this Pokémon, damage counters, Special Conditions, turns in play, and any other effects remain on the new Pokémon.)	ability-system	Strategy.AbilityEffect	yes	todo	no	
+161	xy1-87	Jigglypuff	attack	Rollout		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+162	xy1-87	Jigglypuff	attack	Heartfelt Song	Discard a Darkness Energy attached to your opponent's Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+163	xy1-88	Jigglypuff	attack	Body Slam	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+164	xy1-89	Wigglytuff	attack	Gather Energy	Search your deck for a basic Energy card and attach it to 1 of your Pokémon. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+165	xy1-89	Wigglytuff	attack	Hocus Pinkus	The Defending Pokémon can't attack during your opponent's next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+166	xy1-90	Wigglytuff	attack	Balloon Barrage	This attack does 20 damage times the amount of Energy attached to this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+167	xy1-90	Wigglytuff	attack	Double-Edge	This Pokémon does 10 damage to itself.	self-damage	Strategy.AttackEffect	yes	partial	no	
+168	xy1-91	Mr. Mime	attack	Massage	Heal 60 damage from 1 of your Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+169	xy1-91	Mr. Mime	attack	Slap Down	Flip 2 coins. This attack does 20 more damage for each heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+170	xy1-92	Spritzee	attack	Sweet Scent	Heal 20 damage from 1 of your Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+171	xy1-92	Spritzee	attack	Flop		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+172	xy1-93	Aromatisse	attack	Fairy Wind		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+173	xy1-93	Aromatisse	ability	Fairy Transfer	As often as you like during your turn (before your attack), you may move a Fairy Energy attached to 1 of your Pokémon to another of your Pokémon.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+174	xy1-94	Swirlix	attack	Tackle		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+175	xy1-94	Swirlix	attack	Fairy Wind		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+176	xy1-95	Slurpuff	attack	Draining Kiss	Heal 30 damage from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+177	xy1-95	Slurpuff	ability	Sweet Veil	Each of your Pokémon that has any Fairy Energy attached to it can't be affected by any Special Conditions. (Remove any Special Conditions affecting those Pokémon.)	ability-system	Strategy.AbilityEffect	yes	todo	no	
+178	xy1-96	Xerneas	attack	Geomancy	Choose 2 of your Benched Pokémon. For each of those Pokémon, search your deck for a Fairy Energy card and attach it to that Pokémon. Shuffle your deck afterward.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+179	xy1-96	Xerneas	attack	Rainbow Spear	Discard an Energy attached to this Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+180	xy1-97	Xerneas-EX	attack	Break Through	This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+181	xy1-97	Xerneas-EX	attack	X Blast	This Pokémon can't use X Blast during your next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+182	xy1-97	Xerneas-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+183	xy1-98	Doduo	attack	Double Hit	Flip 2 coins. This attack does 30 damage times the number of heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+184	xy1-99	Dodrio	attack	Rage	This attack does 10 more damage for each damage counter on this Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+185	xy1-99	Dodrio	attack	Endeavor	Flip 2 coins. This attack does 20 more damage for each heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+186	xy1-100	Tauros	attack	Take Down	This Pokémon does 10 damage to itself.	self-damage	Strategy.AttackEffect	yes	partial	no	
+187	xy1-100	Tauros	attack	Seething Anger	Flip a coin for each damage counter on this Pokémon. This attack does 30 damage times the number of heads.	coin-resolution	Chain.PreAttack	yes	partial	no	
+188	xy1-101	Dunsparce	attack	Glare	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+189	xy1-101	Dunsparce	attack	Second Bite	Does 10 more damage for each damage counter on your opponent's Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+190	xy1-102	Taillow	attack	Aerial Ace	Flip a coin. If heads, this attack does 30 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+191	xy1-103	Swellow	attack	Wing Attack		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+192	xy1-103	Swellow	ability	Drive Off	Once during your turn (before your attack), you may have your opponent switch his or her Active Pokémon with 1 of his or her Benched Pokémon.	ability-system	Strategy.AbilityEffect	yes	todo	no	
+193	xy1-104	Skitty	attack	Heal Bell	Heal 10 damage from each of your Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+194	xy1-104	Skitty	attack	Tail Whap		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+195	xy1-105	Delcatty	attack	Energy Salon	Search your deck for 3 different types of basic Energy cards, reveal them, and put them into your hand. Shuffle your deck afterward.	search-deck	PendingAction.DeckSelection	yes	partial	no	
+196	xy1-105	Delcatty	attack	Fake Out	Flip a coin. If heads, your opponent's Active Pokémon is now Paralyzed.	coin-resolution	Chain.PreAttack	yes	partial	no	
+197	xy1-106	Bidoof	attack	Hyper Fang	Flip a coin. If tails, this attack does nothing.	coin-resolution	Chain.PreAttack	yes	partial	no	
+198	xy1-107	Bibarel	attack	Double Headbutt	Flip 2 coins. This attack does 30 damage for each heads.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+199	xy1-107	Bibarel	attack	Hypno Headbutt	You may do 30 more damage. If you do, this Pokémon is now Asleep.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+200	xy1-108	Lillipup	attack	Tackle		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+201	xy1-108	Lillipup	attack	Bite		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+202	xy1-109	Herdier	attack	Bite		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+203	xy1-109	Herdier	attack	Jump On	Flip a coin. If heads, this attack does 20 more damage.	coin-resolution	Chain.PreAttack	yes	partial	no	
+204	xy1-110	Stoutland	attack	Bite Off	If your opponent's Active Pokémon is a Pokémon-EX, this attack does 60 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+205	xy1-110	Stoutland	attack	Wild Barking	Does 20 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+206	xy1-111	Bunnelby	attack	Dig	Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+207	xy1-112	Diggersby	attack	Pickup	Put 2 Item cards from your discard pile into your hand.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+208	xy1-112	Diggersby	attack	Dig	Flip a coin. If heads, prevent all effects of attacks, including damage, done to this Pokémon during your opponent's next turn.	coin-resolution	Chain.PreAttack	yes	partial	no	
+209	xy1-113	Fletchling	attack	Me First	Draw a card.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+210	xy1-113	Fletchling	attack	Peck		vanilla-damage	Strategy.AttackEffect	yes	n/a	no	
+211	xy1-114	Furfrou	attack	Energy Cutoff	Flip a coin. If heads, discard an Energy attached to your opponent's Active Pokémon.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+212	xy1-114	Furfrou	ability	Fur Coat	Any damage done to this Pokémon by attacks is reduced by 20 (after applying Weakness and Resistance).	ability-system	Strategy.AbilityEffect	yes	todo	no	
+213	xy1-115	Cassius	rule	Rule	Shuffle 1 of your Pokémon and all cards attached to it into your deck.	rule-engine	State/KO/Prize	yes	todo	no	
+214	xy1-115	Cassius	rule	Rule	You may play only 1 Supporter card during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+215	xy1-116	Evosoda	rule	Rule	Search your deck for a card that evolves from 1 of your Pokémon and put it onto that Pokémon. (This counts as evolving that Pokémon.) Shuffle your deck afterward. You can't use this card during your first turn or on a Pokémon that was put into play this turn.	rule-engine	State/KO/Prize	yes	todo	no	
+216	xy1-116	Evosoda	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+217	xy1-117	Fairy Garden	rule	Rule	Each Pokémon that has any Fairy Energy attached to it (both yours and your opponent's) has no Retreat Cost.	rule-engine	State/KO/Prize	yes	todo	no	
+218	xy1-117	Fairy Garden	rule	Rule	This card stays in play when you play it. Discard this card if another Stadium card comes into play. If another card with the same name is in play, you can't play this card.	rule-engine	State/KO/Prize	yes	todo	no	
+219	xy1-118	Great Ball	rule	Rule	Look at the top 7 cards of your deck. You may reveal a Pokémon you find there and put it into your hand. Shuffle the other cards back into your deck.	rule-engine	State/KO/Prize	yes	todo	no	
+220	xy1-118	Great Ball	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+221	xy1-119	Hard Charm	rule	Rule	Attach a Pokémon Tool to 1 of your Pokémon that doesn't already have a Pokémon Tool attached to it.	rule-engine	State/KO/Prize	yes	todo	no	
+222	xy1-119	Hard Charm	rule	Rule	Any damage done to the Pokémon this card is attached to by an opponent's attack is reduced by 20 (after applying Weakness and Resistance).	rule-engine	State/KO/Prize	yes	todo	no	
+223	xy1-119	Hard Charm	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+224	xy1-120	Max Revive	rule	Rule	Put a Pokémon from your discard pile on top of your deck.	rule-engine	State/KO/Prize	yes	todo	no	
+225	xy1-120	Max Revive	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+226	xy1-121	Muscle Band	rule	Rule	Attach a Pokémon Tool to 1 of your Pokémon that doesn't already have a Pokémon Tool attached to it.	rule-engine	State/KO/Prize	yes	todo	no	
+227	xy1-121	Muscle Band	rule	Rule	The attacks of the Pokémon this card is attached to do 20 more damage to your opponent's Active Pokémon (before applying Weakness and Resistance).	rule-engine	State/KO/Prize	yes	todo	no	
+228	xy1-121	Muscle Band	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+229	xy1-122	Professor Sycamore	rule	Rule	Discard your hand and draw 7 cards.	rule-engine	State/KO/Prize	yes	todo	no	
+230	xy1-122	Professor Sycamore	rule	Rule	You may play only 1 Supporter card during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+231	xy1-123	Professor's Letter	rule	Rule	Search your deck for up to 2 basic Energy cards, reveal them, and put them into your hand. Shuffle your deck afterward.	rule-engine	State/KO/Prize	yes	todo	no	
+232	xy1-123	Professor's Letter	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+233	xy1-124	Red Card	rule	Rule	Your opponent shuffles his or her hand into his or her deck and draws 4 cards.	rule-engine	State/KO/Prize	yes	todo	no	
+234	xy1-124	Red Card	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+235	xy1-125	Roller Skates	rule	Rule	Flip a coin. If heads, draw 3 cards.	rule-engine	State/KO/Prize	yes	todo	no	
+236	xy1-125	Roller Skates	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+237	xy1-126	Shadow Circle	rule	Rule	Each Pokémon that has any Darkness Energy attached to it (both yours and your opponent's) has no Weakness.	rule-engine	State/KO/Prize	yes	todo	no	
+238	xy1-126	Shadow Circle	rule	Rule	This card stays in play when you play it. Discard this card if another Stadium card comes into play. If another card with the same name is in play, you can't play this card.	rule-engine	State/KO/Prize	yes	todo	no	
+239	xy1-127	Shauna	rule	Rule	Shuffle your hand into your deck. Then, draw 5 cards.	rule-engine	State/KO/Prize	yes	todo	no	
+240	xy1-127	Shauna	rule	Rule	You may play only 1 Supporter card during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+241	xy1-128	Super Potion	rule	Rule	Heal 60 damage from 1 of your Pokémon. If you do, discard an Energy attached to that Pokémon.	rule-engine	State/KO/Prize	yes	todo	no	
+242	xy1-128	Super Potion	rule	Rule	You may play as many Item cards as you like during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+243	xy1-129	Team Flare Grunt	rule	Rule	Discard an Energy attached to your opponent's Active Pokémon.	rule-engine	State/KO/Prize	yes	todo	no	
+244	xy1-129	Team Flare Grunt	rule	Rule	You may play only 1 Supporter card during your turn (before your attack).	rule-engine	State/KO/Prize	yes	todo	no	
+245	xy1-130	Double Colorless Energy	rule	Rule	Double Colorless Energy provides ColorlessColorless Energy.	rule-engine	State/KO/Prize	yes	todo	no	
+246	xy1-131	Rainbow Energy	rule	Rule	This card provides Colorless Energy. While in play, this card provides every type of Energy but provides only 1 Energy at a time. When you attach this card from your hand to 1 of your Pokémon, put 1 damage counter on that Pokémon.	rule-engine	State/KO/Prize	yes	todo	no	
+247	xy1-141	Venusaur-EX	attack	Poison Powder	Your opponent's Active Pokémon is now Poisoned.	special-condition-apply	Strategy.AttackEffect	yes	partial	no	
+248	xy1-141	Venusaur-EX	attack	Jungle Hammer	Heal 30 damage from this Pokémon.	healing	Strategy.AttackEffect	yes	partial	no	
+249	xy1-141	Venusaur-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+250	xy1-142	Blastoise-EX	attack	Rapid Spin	Switch this Pokémon with 1 of your Benched Pokémon. Then, your opponent switches his or her Active Pokémon with 1 of his or her Benched Pokémon.	switch-own-active-with-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+251	xy1-142	Blastoise-EX	attack	Splash Bomb	Flip a coin. If tails, this Pokémon does 30 damage to itself.	coin-resolution	Chain.PreAttack	yes	partial	no	
+252	xy1-142	Blastoise-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+253	xy1-143	Emolga-EX	attack	Energy Glide	Search your deck for a Lightning Energy card and attach it to this Pokémon. Shuffle your deck afterward. If you attached Energy in this way, switch this Pokémon with 1 of your Benched Pokémon.	switch-own-active-with-bench	PendingAction.TargetSelection	yes	missing-foundation	no	
+254	xy1-143	Emolga-EX	attack	Electron Crush	You may discard an Energy attached to this Pokémon. If you do, this attack does 30 more damage.	discard-attached-energy	Strategy.AttackEffect	yes	partial	no	
+255	xy1-143	Emolga-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+256	xy1-144	Yveltal-EX	attack	Evil Ball	This attack does 20 more damage times the amount of Energy attached to both Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+257	xy1-144	Yveltal-EX	attack	Y Cyclone	Move an Energy from this Pokémon to 1 of your Benched Pokémon.	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+258	xy1-144	Yveltal-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+259	xy1-145	Skarmory-EX	attack	Joust	Before doing damage, discard all Pokémon Tool cards attached to your opponent's Active Pokémon.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+260	xy1-145	Skarmory-EX	attack	Tailspin Piledriver	If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+261	xy1-145	Skarmory-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	
+262	xy1-146	Xerneas-EX	attack	Break Through	This attack does 30 damage to 1 of your opponent's Benched Pokémon. (Don't apply Weakness and Resistance for Benched Pokémon.)	target-bench-damage	Chain.TargetSelection	yes	missing-foundation	no	
+263	xy1-146	Xerneas-EX	attack	X Blast	This Pokémon can't use X Blast during your next turn.	custom-effect	Strategy.AttackEffect	yes	todo	no	
+264	xy1-146	Xerneas-EX	rule	Rule	Pokémon-EX rule: When a Pokémon-EX has been Knocked Out, your opponent takes 2 Prize cards.	rule-engine	State/KO/Prize	yes	todo	no	

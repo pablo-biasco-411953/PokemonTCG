@@ -91,18 +91,18 @@ private Long passwordResetTokenExpiresAt;  // Expiracion del token
 private int sobresDisponibles;      // Cantidad de sobres sin abrir
 
 @Column(nullable = false)
-private int santoCoins = 200;       // Moneda del juego (inicio: 200)
+private int santoroPoints = 200;       // Puntos del juego (inicio: 200)
 ```
 
 | Campo | Tipo | Default | Descripción |
 |-------|------|---------|-----------|
 | `sobresDisponibles` | `int` | 10 | Sobres disponibles (regalados al registrar) |
-| `santoCoins` | `int` | 200 | Monedas para comprar sobres |
+| `santoroPoints` | `int` | 200 | Puntos para comprar sobres |
 
 **Getter con validación**:
 ```java
-public void setSantoCoins(int santoCoins) {
-    this.santoCoins = Math.max(0, santoCoins);  // Nunca negativo
+public void setSantoroPoints(int santoroPoints) {
+    this.santoroPoints = Math.max(0, santoroPoints);  // Nunca negativo
 }
 ```
 
@@ -207,7 +207,7 @@ public Jugador(String username) {
 Jugador j = new Jugador("Pikachu123");
 // username: "Pikachu123"
 // sobresDisponibles: 10
-// santoCoins: 200 (default)
+// santoroPoints: 200 (default)
 ```
 
 ---
@@ -218,7 +218,7 @@ Jugador j = new Jugador("Pikachu123");
 NEW Jugador("user"):
 ├── username: "user"
 ├── sobresDisponibles: 10 (regalo inicial)
-├── santoCoins: 200 (gift inicial)
+├── santoroPoints: 200 (gift inicial)
 ├── coleccion: [] (vacío)
 ├── characterId: null
 ├── pikachuCompanion: true
@@ -278,8 +278,8 @@ public void setPasswordResetTokenExpiresAt(Long t)
 // Recursos
 public int getSobresDisponibles()
 public void setSobresDisponibles(int s)
-public int getSantoCoins()
-public void setSantoCoins(int coins)     // Con validación Math.max(0, coins)
+public int getSantoroPoints()
+public void setSantoroPoints(int points)     // Con validación Math.max(0, points)
 
 // Colección
 public List<Card> getColeccion()
@@ -321,7 +321,7 @@ CREATE TABLE jugadores (
     passwordResetTokenHash VARCHAR(128),
     passwordResetTokenExpiresAt BIGINT,
     sobresDisponibles INT,
-    santoCoins INT NOT NULL DEFAULT 200,
+    santoroPoints INT NOT NULL DEFAULT 200,
     characterId VARCHAR(255),
     skinColor VARCHAR(255),
     hairColor VARCHAR(255),
@@ -364,7 +364,7 @@ jugadorRepo.save(j);
 ### Comprar sobres
 ```java
 Jugador j = jugadorRepo.findByUsername("Pikachu123");
-j.setSantoCoins(j.getSantoCoins() - 80);
+j.setSantoroPoints(j.getSantoroPoints() - 80);
 j.setSobresDisponibles(j.getSobresDisponibles() + 1);
 jugadorRepo.save(j);
 ```

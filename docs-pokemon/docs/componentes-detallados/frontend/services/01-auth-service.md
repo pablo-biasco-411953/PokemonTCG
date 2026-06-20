@@ -222,7 +222,7 @@ interface Jugador {
   username: string;
   email?: string;
   sobresDisponibles: number;
-  santoCoins: number;
+  santoroPoints?: number;
   coleccion?: Card[];
   // ... otros campos
 }

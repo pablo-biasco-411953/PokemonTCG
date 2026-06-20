@@ -130,6 +130,10 @@ public class MazoService {
         Mazo mazo = mazoRepo.findById(mazoId)
                 .orElseThrow(() -> new IllegalArgumentException("Mazo no encontrado con ID: " + mazoId));
 
+        if (mazo.getJugador() == null || !mazo.getJugador().isAdmin()) {
+            throw new SecurityException("Solo los administradores pueden usar God Mode.");
+        }
+
         Card cartaNueva = cardRepo.findById(cartaId)
                 .orElseThrow(() -> new IllegalArgumentException("Carta no encontrada en la BD: " + cartaId));
 

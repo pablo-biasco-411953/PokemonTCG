@@ -42,6 +42,7 @@ public class AttackEffectParserService {
         if (text == null || text.trim().isEmpty()) {
             return commands;
         }
+        text = normalizeQuotes(text);
         String lowerText = text.toLowerCase();
         Matcher combinedCoinMatcher = COIN_DAMAGE_AND_STATUS_PATTERN.matcher(text);
         boolean combinedCoinHandled = combinedCoinMatcher.find();
@@ -162,7 +163,7 @@ public class AttackEffectParserService {
         }
 
         Matcher selfDamageMatcher = SELF_DAMAGE_PATTERN.matcher(text);
-        if (selfDamageMatcher.find()) {
+        if (selfDamageMatcher.find() && !lowerText.contains("you may do")) {
             int amount = Integer.parseInt(selfDamageMatcher.group(1));
             if (lowerText.contains("if tails")) {
                 commands.add(new CoinFlipCommand(null, new SelfDamageCommand(amount)));
@@ -180,7 +181,7 @@ public class AttackEffectParserService {
         Matcher optionalDiscardDamageMatcher = Pattern.compile("you may discard an energy attached to this pok.{1,2}mon\\.\\s*if you do, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
         if (optionalDiscardDamageMatcher.find()) {
             int extraDamage = Integer.parseInt(optionalDiscardDamageMatcher.group(1));
-            commands.add(new OptionalDiscardEnergyForDamageCommand(extraDamage));
+            commands.add(new OptionalDiscardEnergyForDamageCommand(extraDamage, extraParams));
         } else if (lowerText.contains("discard an energy attached to this pok") || lowerText.contains("discard 2 energy attached to this pok")) {
             int amount = lowerText.contains("discard 2 energy") ? 2 : 1;
             if (lowerText.contains("flip a coin") && lowerText.contains("if tails")) {
@@ -208,6 +209,10 @@ public class AttackEffectParserService {
 
         if (lowerText.contains("if heads, discard an energy attached to your opponent's active pok")) {
             commands.add(new CoinFlipCommand(new DiscardEnergyCommand(1, Target.OPPONENT)));
+        }
+
+        if (lowerText.contains("discard an energy attached to 1 of your opponent's pok")) {
+            commands.add(new CoinFlipCommand(new SelectOpponentPokemonToDiscardEnergyCommand()));
         }
 
         if (lowerText.contains("put a card from your discard pile on top of your deck")) {
@@ -273,6 +278,10 @@ public class AttackEffectParserService {
 
         if (lowerText.contains("move a basic energy from this pok") || lowerText.contains("move an energy from this pok") || lowerText.contains("move as many")) {
             commands.add(new MoveEnergyCommand(null, 1));
+        }
+
+        if (lowerText.contains("move an energy attached to your opponent's active pok")) {
+            commands.add(new MoveOpponentActiveEnergyToBenchCommand(extraParams));
         }
 
         if (lowerText.contains("attach a darkness energy card from your discard pile to 1 of your benched")) {
@@ -387,6 +396,13 @@ public class AttackEffectParserService {
             commands.add(new SetInvulnerableCommand());
         }
 
+        Pattern preventThresholdPattern = Pattern.compile("prevent that attack's damage done to this pok.{1,2}mon if that damage is (\\d+) or less", Pattern.CASE_INSENSITIVE);
+        Matcher preventThresholdMatcher = preventThresholdPattern.matcher(text);
+        if (preventThresholdMatcher.find()) {
+            int amount = Integer.parseInt(preventThresholdMatcher.group(1));
+            commands.add(new SetPreventDamageThresholdCommand(amount));
+        }
+
         // Escalado de daño según la banca
         Pattern benchDamageMultiplierPattern = Pattern.compile("does (\\d+) damage times the number of your benched", Pattern.CASE_INSENSITIVE);
         Matcher benchDamageMultiplierMatcher = benchDamageMultiplierPattern.matcher(text);
@@ -425,8 +441,37 @@ public class AttackEffectParserService {
             commands.add(new DiscardTopDeckAttachEnergyCommand("Fighting"));
         }
         if (lowerText.contains("discard the top card of your deck") && lowerText.contains("fire energy")) {
-            commands.add(new MagcargoMagmaMantleCommand());
+            commands.add(new MagcargoMagmaMantleCommand(extraParams));
         }
+
+        // Simisage's Torment
+        if (lowerText.contains("choose 1 of your opponent's active") && lowerText.contains("attacks") && lowerText.contains("can't use that attack")) {
+            commands.add(new TormentBlockAttackCommand(extraParams));
+        }
+
+        // Gogoat's Charge Dash
+        if (lowerText.contains("you may do 20 more damage") && lowerText.contains("if you do, this pok") && lowerText.contains("does 20 damage to itself")) {
+            commands.add(new GogoatChargeDashCommand(extraParams));
+        }
+
+        // Simisear's Flamethrower
+        if (lowerText.contains("discard a fire energy attached to this pok")) {
+            commands.add(new DiscardAttachedEnergyOfTypeCommand("Fire", Target.SELF));
+        }
+
+        // Talonflame's Devastating Wind
+        Pattern opponentShuffleHandDrawPattern = Pattern.compile("your opponent shuffles (?:his or her|their) hand into (?:his or her|their) deck and draws (\\d+) cards", Pattern.CASE_INSENSITIVE);
+        Matcher opponentShuffleHandDrawMatcher = opponentShuffleHandDrawPattern.matcher(text);
+        if (opponentShuffleHandDrawMatcher.find()) {
+            int amount = Integer.parseInt(opponentShuffleHandDrawMatcher.group(1));
+            commands.add(new OpponentShuffleHandDrawCommand(amount));
+        }
+
+        // Talonflame's Flare Blitz
+        if (lowerText.contains("discard all fire energy attached to this pok")) {
+            commands.add(new DiscardAttachedEnergyOfTypeCommand("Fire", Target.SELF, true));
+        }
+
         if (lowerText.contains("discard the top card of your opponent's deck") && !lowerText.contains("damage counter")) {
             commands.add(new DiscardTopDeckCommand(Target.OPPONENT, 1));
         }
@@ -444,6 +489,48 @@ public class AttackEffectParserService {
             commands.add(new SwitchOpponentActiveCommand());
         }
 
+        // Starmie's Recover
+        if (lowerText.contains("discard an energy attached to this pokemon and heal all damage from it")
+                || (lowerText.contains("discard") && lowerText.contains("energy attached to this pok") && lowerText.contains("heal all damage"))) {
+            commands.add(new DiscardAttachedEnergyOfTypeCommand("Any", Target.SELF));
+            commands.add(new HealCommand(-1, Target.SELF));
+        }
+
+        // Starmie's Core Splash
+        if (lowerText.contains("has any psychic energy attached to it") && lowerText.contains("does 30 more damage")) {
+            commands.add(new ConditionalDamageMultiplierCommand(0, 30, "HAS_ENERGY_TYPE", "Psychic"));
+        }
+
+        // Lapras's Seafaring
+        if (lowerText.contains("attach a water energy card from your discard pile to your benched pok") && lowerText.contains("heads")) {
+            commands.add(new LaprasSeafaringCommand(extraParams));
+        }
+
+
+        // Corsola's Refresh
+        if (lowerText.contains("heal 30 damage and remove all special conditions from this pok")) {
+            commands.add(new CorsolaRefreshCommand());
+        }
+
+        // Raichu's Thunderbolt
+        if (lowerText.contains("discard all energy attached to this pok")) {
+            commands.add(new DiscardAttachedEnergyOfTypeCommand("Any", Target.SELF, true));
+        }
+
+        // Froakie's Bounce
+        if (lowerText.contains("flip a coin. if heads, switch this pok") && lowerText.contains("benched pok")) {
+            commands.add(new FroakieBounceCommand());
+        }
+
         return commands;
+    }
+
+    private String normalizeQuotes(String text) {
+        if (text == null) return "";
+        return text
+                .replace("’", "'")
+                .replace("‘", "'")
+                .replace("´", "'")
+                .replace("`", "'");
     }
 }

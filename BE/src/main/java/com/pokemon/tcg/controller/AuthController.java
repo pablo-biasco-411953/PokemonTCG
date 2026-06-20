@@ -67,6 +67,6 @@ public class AuthController {
     }
 
     private JugadorDTO toAuthResponse(Jugador jugador) {
-        return new JugadorDTO(jugador.getUsername(), jugador.getSobresDisponibles(), 0);
+        return new JugadorDTO(jugador.getUsername(), jugador.getSobresDisponibles(), 0, jugador.isAdmin());
     }
 }

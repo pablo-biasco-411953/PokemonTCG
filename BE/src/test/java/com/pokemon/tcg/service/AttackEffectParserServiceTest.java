@@ -182,4 +182,111 @@ class AttackEffectParserServiceTest {
                 command instanceof com.pokemon.tcg.model.battle.command.MagcargoMagmaMantleCommand
         ));
     }
+
+    @Test
+    void parseaLeafMunchComoOpponentTypeGrass() {
+        var commands = parser.parseEffects("If your opponent's Active Pokémon is a Grass Pokémon, this attack does 20 more damage.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.ConditionalDamageMultiplierCommand cmd
+                && "OPPONENT_TYPE".equals(cmd.getConditionType())
+                && "Grass".equals(cmd.getConditionValue())
+                && cmd.getMultiplier() == 20
+        ));
+    }
+
+    @Test
+    void parseaTormentComoTormentBlockAttackCommand() {
+        var commands = parser.parseEffects("Choose 1 of your opponent's Active Pokémon's attacks. That Pokémon can't use that attack during your opponent's next turn.", "Scratch");
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.TormentBlockAttackCommand
+        ));
+    }
+
+    @Test
+    void parseaTormentConComillasCurvasCorrectamente() {
+        var commands = parser.parseEffects("Choose 1 of your opponent’s Active Pokémon’s attacks. That Pokémon can’t use that attack during your opponent’s next turn.", "Scratch");
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.TormentBlockAttackCommand
+        ));
+    }
+
+    @Test
+    void parseaChargeDashComoGogoatChargeDashCommand() {
+        var commands = parser.parseEffects("You may do 20 more damage. If you do, this Pokemon does 20 damage to itself.", "yes");
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.GogoatChargeDashCommand
+        ));
+    }
+
+    @Test
+    void parseaFlamethrowerComoDiscardAttachedEnergyOfTypeCommand() {
+        var commands = parser.parseEffects("Discard a Fire Energy attached to this Pokémon.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.DiscardAttachedEnergyOfTypeCommand
+        ));
+    }
+
+    @Test
+    void parseaHardenComoSetPreventDamageThresholdCommand() {
+        var commands = parser.parseEffects("During your opponent's next turn, if this Pokemon would be damaged by an attack, prevent that attack's damage done to this Pokemon if that damage is 60 or less.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.SetPreventDamageThresholdCommand cmd
+                && cmd.getThreshold() == 60
+        ));
+    }
+
+    @Test
+    void parseaDevastatingWindComoOpponentShuffleHandDrawCommand() {
+        var commands = parser.parseEffects("Your opponent shuffles his or her hand into his or her deck and draws 4 cards.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.OpponentShuffleHandDrawCommand cmd
+                && cmd.getDrawCount() == 4
+        ));
+    }
+
+    @Test
+    void parseaFlareBlitzComoDiscardAttachedEnergyOfTypeCommandAll() {
+        var commands = parser.parseEffects("Discard all Fire Energy attached to this Pokemon.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.DiscardAttachedEnergyOfTypeCommand
+        ));
+    }
+
+    @Test
+    void parseaRecoverComoDiscardAnyYHealAll() {
+        var commands = parser.parseEffects("Discard an Energy attached to this Pokemon and heal all damage from it.", null);
+        assertTrue(commands.stream().anyMatch(command -> command instanceof com.pokemon.tcg.model.battle.command.DiscardAttachedEnergyOfTypeCommand));
+        assertTrue(commands.stream().anyMatch(command -> command instanceof com.pokemon.tcg.model.battle.command.HealCommand cmd && cmd.getAmount() == -1));
+    }
+
+    @Test
+    void parseaCoreSplashComoConditionalDamageHasEnergyType() {
+        var commands = parser.parseEffects("If this Pokemon has any Psychic Energy attached to it, this attack does 30 more damage.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.ConditionalDamageMultiplierCommand cmd
+                && "HAS_ENERGY_TYPE".equals(cmd.getConditionType())
+                && "Psychic".equals(cmd.getConditionValue())
+                && cmd.getMultiplier() == 30
+        ));
+    }
+
+    @Test
+    void parseaSeafaringComoLaprasSeafaringCommand() {
+        var commands = parser.parseEffects("Flip 3 coins. For each heads, attach a Water Energy card from your discard pile to your Benched Pokemon in any way you like.", null);
+        assertTrue(commands.stream().anyMatch(command -> command instanceof com.pokemon.tcg.model.battle.command.LaprasSeafaringCommand));
+    }
+
+    @Test
+    void parseaHydroPumpComoAddDamageByAttachedEnergyCommand() {
+        var commands = parser.parseEffects("This attack does 20 more damage for each Water Energy attached to this Pokemon.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.AddDamageByAttachedEnergyCommand
+        ));
+    }
+
+    @Test
+    void parseaRefreshComoCorsolaRefreshCommand() {
+        var commands = parser.parseEffects("Heal 30 damage and remove all Special Conditions from this Pokemon.", null);
+        assertTrue(commands.stream().anyMatch(command -> command instanceof com.pokemon.tcg.model.battle.command.CorsolaRefreshCommand));
+    }
 }

@@ -17,7 +17,7 @@ public class BlockAttackNextTurnCommand implements BattleCommand {
         TableroJugador affectedBoard = (target == Target.SELF) ? atacante : defensor;
         if (affectedBoard.getActivo() != null) {
             affectedBoard.getActivo().setAtaqueBloqueadoSiguienteTurno(attackName);
-            affectedBoard.getActivo().setAtaqueBloqueadoYaConsumido(false);
+            affectedBoard.getActivo().setAtaqueBloqueadoYaConsumido(target != Target.SELF);
         }
     }
 }

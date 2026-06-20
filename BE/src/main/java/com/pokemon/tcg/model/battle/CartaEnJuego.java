@@ -18,6 +18,8 @@ public class CartaEnJuego {
     private int reduccionDanioRecibido = 0;
     private int aumentoDanioCausado = 0;
     private boolean invulnerable = false;
+    private int preventDamageThreshold = 0;
+    private boolean preventDamageThresholdYaConsumido = false;
     private boolean bocaAbajo = false;
     private boolean debeLanzarMonedaSiAtaca = false;
     private boolean noPuedeAtacarSiguienteTurno = false;
@@ -61,6 +63,11 @@ public class CartaEnJuego {
     public boolean isAtaqueBloqueadoYaConsumido() { return ataqueBloqueadoYaConsumido; }
     public void setAtaqueBloqueadoYaConsumido(boolean value) { this.ataqueBloqueadoYaConsumido = value; }
 
+    public int getPreventDamageThreshold() { return preventDamageThreshold; }
+    public void setPreventDamageThreshold(int value) { this.preventDamageThreshold = value; }
+    public boolean isPreventDamageThresholdYaConsumido() { return preventDamageThresholdYaConsumido; }
+    public void setPreventDamageThresholdYaConsumido(boolean value) { this.preventDamageThresholdYaConsumido = value; }
+
     // getters y setters
     public int getReduccionDanioRecibido() { return reduccionDanioRecibido; }
     public void setReduccionDanioRecibido(int value) { this.reduccionDanioRecibido = value; }
@@ -85,6 +92,8 @@ public class CartaEnJuego {
         this.condicionesEspeciales.clear();
         this.puedeAtacar = true;
         this.invulnerable = false;
+        this.preventDamageThreshold = 0;
+        this.preventDamageThresholdYaConsumido = false;
         this.debeLanzarMonedaSiAtaca = false;
         this.noPuedeAtacarSiguienteTurno = false;
         this.noPuedeAtacarYaConsumido = false;

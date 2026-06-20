@@ -111,9 +111,152 @@ class BattleEngineServiceTest {
         partida.setTurnoActual(Partida.Turno.BOT);
         partida.transicionarA(new EstadoTurnoNormal());
         service.partidasEnCurso.put(partida.getId(), partida);
-
         service.ejecutarTurnoBot(partida.getId());
 
         assertEquals(Partida.Fase.TURNO_NORMAL, partida.getFaseActual());
+    }
+
+    @Test
+    void testGodModeDebugActions() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        jugador.setActivo(new com.pokemon.tcg.model.battle.CartaEnJuego(card("p1", "Pikachu", "60")));
+        TableroJugador bot = new TableroJugador();
+        bot.setActivo(new com.pokemon.tcg.model.battle.CartaEnJuego(card("p2", "Charmander", "50")));
+
+        Partida partida = new Partida(jugador, bot);
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        Card waterCard = card("xy1-34", "Starmie", "90");
+        org.mockito.Mockito.when(cardRepo.findById("xy1-34")).thenReturn(java.util.Optional.of(waterCard));
+
+        com.pokemon.tcg.model.Jugador adminUser = new com.pokemon.tcg.model.Jugador();
+        adminUser.setUsername("admin");
+        adminUser.setAdmin(true);
+        org.mockito.Mockito.when(jugadorRepo.findByUsername("admin")).thenReturn(adminUser);
+
+        // Test debugRobarCarta
+        Partida res1 = service.debugRobarCarta(partida.getId(), "xy1-34", "admin");
+        assertEquals(1, res1.getJugador().getMano().size());
+        assertEquals("Starmie", res1.getJugador().getMano().get(0).getNombre());
+
+        // Test debugForzarEstado
+        Partida res2 = service.debugForzarEstado(partida.getId(), "JUGADOR", "Poisoned", "admin");
+        org.junit.jupiter.api.Assertions.assertTrue(res2.getJugador().getActivo().getCondicionesEspeciales().contains("Poisoned"));
+
+        // Test debugSetHp
+        Partida res3 = service.debugSetHp(partida.getId(), "BOT", 10, "admin");
+        assertEquals(10, res3.getBot().getActivo().getHpActual());
+    }
+
+    private Card card(String id, String nombre, String hp) {
+        Card card = new Card();
+        card.setId(id);
+        card.setNombre(nombre);
+        card.setHp(hp);
+        return card;
+    }
+
+    @Test
+    void testResolverAccionPendienteDiscardOpponentEnergy() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card electro = card("xy1-45", "Electrode", "90");
+        Card energyCard = card("e-1", "Fire Energy", "Energy");
+
+        com.pokemon.tcg.model.battle.CartaEnJuego activeOpponent = new com.pokemon.tcg.model.battle.CartaEnJuego(card("p2", "Charmander", "50"));
+        activeOpponent.getEnergiasUnidas().add(energyCard);
+        bot.setActivo(activeOpponent);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        PendingBattleAction action = new PendingBattleAction();
+        action.setActor("pablo");
+        action.setType("DISCARD_OPPONENT_ENERGY");
+        action.setMinSelections(1);
+        action.setMaxSelections(1);
+        action.getOptions().add(new PendingBattleAction.Option("p2", "Charmander", null));
+        partida.setPendingAction(action);
+
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        Partida resultado = service.resolverAccionPendiente(partida.getId(), "pablo", List.of("p2"));
+
+        assertNull(resultado.getPendingAction());
+        assertEquals(0, resultado.getBot().getActivo().getEnergiasUnidas().size());
+        assertEquals(1, resultado.getBot().getPilaDescarte().size());
+        assertEquals("Fire Energy", resultado.getBot().getPilaDescarte().get(0).getNombre());
+    }
+
+    @Test
+    void testResolverAccionPendienteMoveEnergyToOpponentBench() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card energyCard = card("e-1", "Fire Energy", "Energy");
+
+        com.pokemon.tcg.model.battle.CartaEnJuego activeOpponent = new com.pokemon.tcg.model.battle.CartaEnJuego(card("p2", "Charmander", "50"));
+        activeOpponent.getEnergiasUnidas().add(energyCard);
+        bot.setActivo(activeOpponent);
+
+        com.pokemon.tcg.model.battle.CartaEnJuego benchedOpponent = new com.pokemon.tcg.model.battle.CartaEnJuego(card("b-1", "Bulbasaur", "50"));
+        bot.getBanca().add(benchedOpponent);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        PendingBattleAction action = new PendingBattleAction();
+        action.setActor("pablo");
+        action.setType("MOVE_ENERGY_TO_OPPONENT_BENCH");
+        action.setMinSelections(1);
+        action.setMaxSelections(1);
+        action.setEndsTurn(true);
+        action.getOptions().add(new PendingBattleAction.Option("b-1", "Bulbasaur", null));
+        partida.setPendingAction(action);
+
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        Partida resultado = service.resolverAccionPendiente(partida.getId(), "pablo", List.of("b-1"));
+
+        assertNull(resultado.getPendingAction());
+        assertEquals(0, resultado.getBot().getActivo().getEnergiasUnidas().size());
+        assertEquals(1, resultado.getBot().getBanca().get(0).getEnergiasUnidas().size());
+        assertEquals("Fire Energy", resultado.getBot().getBanca().get(0).getEnergiasUnidas().get(0).getNombre());
     }
 }

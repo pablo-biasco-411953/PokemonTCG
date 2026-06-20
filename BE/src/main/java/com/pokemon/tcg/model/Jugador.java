@@ -31,7 +31,7 @@ public class Jugador {
     
     private int sobresDisponibles;
     @Column(nullable = false)
-    private int santoCoins = 200;
+    private int santoroPoints = 200;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -51,12 +51,17 @@ public class Jugador {
     private boolean santoroQuestTracking = false;
     private String santoroQuestState = "AVAILABLE";
 
+    private boolean admin;
+
     // valores base de los juegadores
     public Jugador() {}
     public Jugador(String username) {
         this.username = username;
         this.sobresDisponibles = 10;
     }
+
+    public boolean isAdmin() { return admin; }
+    public void setAdmin(boolean admin) { this.admin = admin; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -72,8 +77,8 @@ public class Jugador {
     public void setPasswordResetTokenExpiresAt(Long passwordResetTokenExpiresAt) { this.passwordResetTokenExpiresAt = passwordResetTokenExpiresAt; }
     public int getSobresDisponibles() { return sobresDisponibles; }
     public void setSobresDisponibles(int sobresDisponibles) { this.sobresDisponibles = sobresDisponibles; }
-    public int getSantoCoins() { return santoCoins; }
-    public void setSantoCoins(int santoCoins) { this.santoCoins = Math.max(0, santoCoins); }
+    public int getSantoroPoints() { return santoroPoints; }
+    public void setSantoroPoints(int santoroPoints) { this.santoroPoints = Math.max(0, santoroPoints); }
     public List<Card> getColeccion() { return coleccion; }
     public void setColeccion(List<Card> coleccion) { this.coleccion = coleccion; }
 

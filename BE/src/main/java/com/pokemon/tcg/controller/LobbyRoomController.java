@@ -207,6 +207,24 @@ public class LobbyRoomController {
         }
     }
 
+    @PostMapping("/{roomId}/settings")
+    public ResponseEntity<?> updateSettings(@PathVariable String roomId,
+                                            @RequestHeader(value = "X-Username", required = false) String headerUsername,
+                                            @RequestBody LobbyRoomRequest request) {
+        try {
+            LobbyRoomSnapshot room = lobbyRoomService.updateSettings(
+                    roomId,
+                    resolveUsername(headerUsername, request),
+                    request.getTurnTimeSeconds(),
+                    request.getBotDifficulty()
+            );
+            broadcastRoomsUpdated(room);
+            return ResponseEntity.ok(room);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     private String resolveUsername(String headerUsername, LobbyRoomRequest request) {
         if (headerUsername != null && !headerUsername.isBlank()) return headerUsername;
         return request == null ? null : request.getUsername();

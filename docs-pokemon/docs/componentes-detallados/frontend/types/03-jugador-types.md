@@ -24,7 +24,7 @@ export interface Jugador {
   id?: number;
   username: string;
   sobresDisponibles: number;
-  santoCoins?: number;
+  santoroPoints?: number;
   cantidadCartas?: number;
   nivel?: number;
   coleccion?: Card[];
@@ -45,7 +45,7 @@ Estado principal del jugador dentro del frontend.
 | `id` | `number` | No | ID interno del jugador |
 | `username` | `string` | Sí | Nombre de usuario (único) |
 | `sobresDisponibles` | `number` | Sí | Cantidad de sobres sin abrir |
-| `santoCoins` | `number` | No | Moneda del juego |
+| `santoroPoints` | `number` | No | Puntos del juego |
 | `cantidadCartas` | `number` | No | Total de cartas en colección |
 | `nivel` | `number` | No | Nivel del jugador |
 | `coleccion` | `Card[]` | No | Colección completa de cartas |
@@ -65,7 +65,7 @@ Estado principal del jugador dentro del frontend.
 export interface JugadorDatosResponse {
   username: string;
   sobresDisponibles: number;
-  santoCoins?: number;
+  santoroPoints?: number;
   cantidadCartas: number;
   cartasObtenidas?: Card[];
   characterId?: string;

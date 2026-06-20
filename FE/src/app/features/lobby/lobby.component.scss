@@ -148,7 +148,7 @@ $font-pixel: 'VT323', monospace;
     0 0 20px rgba(34, 211, 238, 0.1);
 }
 
-.santocoins-chip {
+.santoropoints-chip {
   border-color: rgba($gold, 0.35);
   background: linear-gradient(135deg, rgba(8, 18, 44, 0.76), rgba(42, 36, 12, 0.58));
   animation: coinGlowPulse 3s infinite ease-in-out;
@@ -159,7 +159,7 @@ $font-pixel: 'VT323', monospace;
   }
 }
 
-.santocoins-chip:hover {
+.santoropoints-chip:hover {
   border-color: rgba($gold, 0.75);
   box-shadow: 
     0 16px 36px rgba(250, 204, 21, 0.2),
@@ -1009,7 +1009,7 @@ kbd {
   font-weight: 400;
 }
 
-.santocoins-chip {
+.santoropoints-chip {
   border-color: rgba($gold, .55);
   background:
     radial-gradient(circle at 16% 50%, rgba($gold, .32), transparent 34%),
@@ -1361,7 +1361,7 @@ kbd {
 
 .room-create-grid {
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 190px 248px 152px;
+  grid-template-columns: minmax(180px, 1fr) 220px 140px;
   gap: 8px;
   align-items: stretch;
 }
@@ -5421,4 +5421,132 @@ kbd {
 .room-browser-panel > small {
   flex: 0 0 auto;
 }
+
+.room-settings-btn {
+  background: rgba(14, 116, 144, 0.15);
+  border: 1px solid rgba(125, 211, 252, 0.2);
+  border-radius: 6px;
+  color: rgba(226, 232, 240, 0.8);
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+
+  .gear-icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.5s ease;
+  }
+
+  &:hover {
+    background: rgba(14, 116, 144, 0.35);
+    border-color: #38bdf8;
+    color: #38bdf8;
+    box-shadow: 0 0 8px rgba(56, 189, 248, 0.25);
+
+    .gear-icon {
+      transform: rotate(90deg);
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.settings-overlay {
+  z-index: 70000 !important;
+}
+
+.room-small-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.settings-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: left;
+  width: 100%;
+
+  label {
+    color: rgba(226, 232, 240, 0.7);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  select, input[type="number"] {
+    width: 100%;
+    height: 38px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(125, 211, 252, 0.24);
+    border-radius: 8px;
+    color: #f8fafc;
+    padding: 0 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+
+    &:focus {
+      border-color: #38bdf8;
+    }
+  }
+
+  select option {
+    background: #0f172a;
+    color: #f8fafc;
+  }
+
+  &.checkbox-label {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: #0e7490;
+    }
+
+    span {
+      color: rgba(226, 232, 240, 0.9);
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.timer-input-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  width: 100%;
+
+  input[type="number"] {
+    width: 80px !important;
+  }
+
+  span {
+    color: rgba(226, 232, 240, 0.6);
+    font-size: 0.8rem;
+  }
+}
+
 
