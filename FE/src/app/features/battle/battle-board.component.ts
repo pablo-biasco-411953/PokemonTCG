@@ -1665,15 +1665,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.coinFlipControls.target.copy(this.coinFlipCoinModel.position);
     }
 
-    await this.delay(1200);
-
+    // Baile de celebración/derrota justo después de caer
     if (data.coinFlipWinner === this.jugadorNombre) {
       if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
       if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
-      this.estadoCoinFlip = 'ELEGIR_TURNO';
     } else {
       if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
       if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+    }
+    this.cdr.detectChanges();
+
+    // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
+    await this.delay(5000);
+
+    if (data.coinFlipWinner === this.jugadorNombre) {
+      this.estadoCoinFlip = 'ELEGIR_TURNO';
+    } else {
       this.estadoCoinFlip = 'RESULTADO_BOT';
       if (this.esPartidaOnline(data)) {
         this.iniciarPollingSorteo();
@@ -6262,7 +6269,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
 
       // --- POSICIÓN Y ROTACIÓN DE LA MONEDA EN REPOSO ---
-      if (!this.coinFlipVuelo && this.coinFlipCoinModel) {
+      if (!this.coinFlipVuelo && !this.coinFlipResultadoListo && this.coinFlipCoinModel) {
         const shakeIntensity = this.arrastrando ? (this.fuerzaActual / 400) * 0.04 : 0;
         const shakeX = Math.sin(Date.now() * 0.18) * shakeIntensity;
         const shakeY = Math.cos(Date.now() * 0.21) * shakeIntensity;
