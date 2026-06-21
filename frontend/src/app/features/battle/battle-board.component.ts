@@ -5873,8 +5873,25 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     loader.load('/assets/models/hand_gesture_1.glb', (gltfHand) => {
       this.coinFlipHandModel = gltfHand.scene;
       
-      this.coinFlipHandModel.position.set(0, -0.9, -0.2);
-      this.coinFlipHandModel.rotation.set(0.15, Math.PI - 0.25, 0);
+      // Asignar un material premium metálico gris que refleje las luces
+      const handMat = new THREE.MeshStandardMaterial({
+        color: 0x9fb0bc,
+        roughness: 0.25,
+        metalness: 0.75,
+        bumpScale: 0.05
+      });
+
+      this.coinFlipHandModel.traverse((child: any) => {
+        if (child.isMesh) {
+          child.material = handMat;
+          child.castShadow = true;
+          child.receiveShadow = true;
+        }
+      });
+
+      // Posicionar la mano más arriba en pantalla para que sea totalmente visible
+      this.coinFlipHandModel.position.set(0, -0.5, 0.0);
+      this.coinFlipHandModel.rotation.set(0.1, Math.PI - 0.1, 0);
       
       const handBox = new THREE.Box3().setFromObject(this.coinFlipHandModel);
       const handSize = new THREE.Vector3();
@@ -5894,15 +5911,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         const coinMesh = gltfCoin.scene;
 
-        // Centrar geometría
-        coinMesh.traverse((child: any) => {
-          if (child.isMesh) {
-            child.geometry.center();
-          }
-        });
+        // Centrado seguro de forma global sin romper el desfase de sub-mallas
+        const coinBox = new THREE.Box3().setFromObject(coinMesh);
+        const center = new THREE.Vector3();
+        coinBox.getCenter(center);
+        coinMesh.position.sub(center);
 
         // Medir dimensiones
-        const coinBox = new THREE.Box3().setFromObject(coinMesh);
         const coinSize = new THREE.Vector3();
         coinBox.getSize(coinSize);
         const maxCoinDim = Math.max(coinSize.x, coinSize.y, coinSize.z);
@@ -5912,12 +5927,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
         coinGroup.add(coinMesh);
 
-        // Medir espesor y radio real
-        const scaledBox = new THREE.Box3().setFromObject(coinMesh);
-        const scaledSize = new THREE.Vector3();
-        scaledBox.getSize(scaledSize);
-        const espesor = scaledSize.z;
-        const radio = Math.max(scaledSize.x, scaledSize.y) / 2;
+        // Espesor y radio reales de la moneda escalada
+        const espesor = coinSize.z * (0.62 / maxCoinDim);
+        const radio = (Math.max(coinSize.x, coinSize.y) / 2) * (0.62 / maxCoinDim);
 
         const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
         
@@ -5936,17 +5948,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         });
 
         const caraMesh = new THREE.Mesh(circleGeom, caraMat);
-        caraMesh.position.set(0, 0, espesor / 2 + 0.005);
+        caraMesh.position.set(0, 0, espesor / 2 + 0.002);
 
         const cruzMesh = new THREE.Mesh(circleGeom, cruzMat);
-        cruzMesh.position.set(0, 0, -(espesor / 2 + 0.005));
+        cruzMesh.position.set(0, 0, -(espesor / 2 + 0.002));
         cruzMesh.rotation.y = Math.PI;
 
         coinGroup.add(caraMesh);
         coinGroup.add(cruzMesh);
 
         // Posicionar sobre el pulgar
-        coinGroup.position.set(0.18, -0.4, 0.15);
+        coinGroup.position.set(0.18, -0.1, 0.25);
         coinGroup.rotation.set(Math.PI / 4, 0, 0.1);
         scene.add(coinGroup);
 
@@ -6056,17 +6068,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         const shakeY = Math.cos(Date.now() * 0.19) * shakeIntensity;
         const shakeZ = Math.sin(Date.now() * 0.22) * shakeIntensity;
 
-        this.coinFlipHandModel.position.set(shakeX, -0.9 - offset + shakeY, -0.2 + shakeZ);
-        this.coinFlipCoinModel.position.set(0.18 + shakeX, -0.4 - offset + shakeY, 0.15 + shakeZ);
+        this.coinFlipHandModel.position.set(shakeX, -0.5 - offset + shakeY, 0.0 + shakeZ);
+        this.coinFlipCoinModel.position.set(0.18 + shakeX, -0.1 - offset + shakeY, 0.25 + shakeZ);
       } else if (!this.coinFlipVuelo && this.coinFlipHandModel && this.coinFlipCoinModel) {
         this.coinFlipHandModel.position.x += (0 - this.coinFlipHandModel.position.x) * 0.1;
-        this.coinFlipHandModel.position.y += (-0.9 - this.coinFlipHandModel.position.y) * 0.1;
-        this.coinFlipHandModel.position.z += (-0.2 - this.coinFlipHandModel.position.z) * 0.1;
+        this.coinFlipHandModel.position.y += (-0.5 - this.coinFlipHandModel.position.y) * 0.1;
+        this.coinFlipHandModel.position.z += (0.0 - this.coinFlipHandModel.position.z) * 0.1;
 
         if (!this.coinFlipResultadoListo) {
           this.coinFlipCoinModel.position.x += (0.18 - this.coinFlipCoinModel.position.x) * 0.1;
-          this.coinFlipCoinModel.position.y += (-0.4 - this.coinFlipCoinModel.position.y) * 0.1;
-          this.coinFlipCoinModel.position.z += (0.15 - this.coinFlipCoinModel.position.z) * 0.1;
+          this.coinFlipCoinModel.position.y += (-0.1 - this.coinFlipCoinModel.position.y) * 0.1;
+          this.coinFlipCoinModel.position.z += (0.25 - this.coinFlipCoinModel.position.z) * 0.1;
         }
       }
 
