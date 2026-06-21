@@ -176,18 +176,14 @@ export class BattleBoardUiService {
   getSpriteBack(carta: string | { nombre?: string; pokemonId?: number }): string {
     const num = this.getPokemonNum(carta);
     if (!num) return '';
-    return num > 649
-      ? `/sprites/pokemon/static/${num}.png`
-      : `/sprites/pokemon/showdown/back/${num}.gif`;
+    return `/sprites/pokemon/showdown/back/${num}.gif`;
   }
 
   // Devuelve el sprite frontal animado del Pokemon.
   getSpriteFront(carta: string | { nombre?: string; pokemonId?: number }): string {
     const num = this.getPokemonNum(carta);
     if (!num) return '';
-    return num > 649
-      ? `/sprites/pokemon/static/${num}.png`
-      : `/sprites/pokemon/showdown/${num}.gif`;
+    return `/sprites/pokemon/showdown/${num}.gif`;
   }
 
   // Convierte los HP actuales en porcentaje para la barra de vida.
