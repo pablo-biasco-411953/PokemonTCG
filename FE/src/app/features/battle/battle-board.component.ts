@@ -1606,6 +1606,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             this.estadoCoinFlip = 'ELEGIR_TURNO';
           } else {
             this.estadoCoinFlip = 'RESULTADO_BOT';
+            this.cdr.detectChanges();
+            if (!this.esPartidaOnline(data)) {
+              if (this.pollingSorteo) {
+                clearInterval(this.pollingSorteo);
+                this.pollingSorteo = null;
+              }
+              await this.delay(2000);
+              try {
+                await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+              } catch (err) {
+                console.error('Error al elegir turno del bot en polling:', err);
+              }
+              this.finalizarCoinFlip();
+            }
           }
           this.cdr.detectChanges();
         },
@@ -1688,7 +1702,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } else {
         // En partida offline (contra bot), el bot elige su turno de forma simulada tras 2 segundos
         await this.delay(2000);
-        await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+        try {
+          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+        } catch (err) {
+          console.error('Error al elegir turno del bot en animacion:', err);
+        }
         this.finalizarCoinFlip();
       }
     }
@@ -1917,7 +1935,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.iniciarPollingSorteo();
         } else {
           await this.delay(2000);
-          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+          try {
+            await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+          } catch (err) {
+            console.error('Error al elegir turno del bot en manual:', err);
+          }
           this.finalizarCoinFlip();
         }
       }
