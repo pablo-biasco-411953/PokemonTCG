@@ -529,6 +529,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
           this.ngZone.run(() => {
             setTimeout(() => {
+              if (this.renderer && this.scene && this.camera) {
+                // Compilar de forma anticipada shaders y calentar materiales
+                this.renderer.compile(this.scene, this.camera);
+              }
               this.showHubLoadingOverlay = false;
               this.cdr.detectChanges();
             }, 900); // 900ms para un desvanecimiento estÃ©tico y suave
@@ -647,6 +651,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly remoteFullModelDistanceSq = 38 * 38;
   private readonly remoteCompanionDistanceSq = 28 * 28;
   private kioskProductPlaceholders?: THREE.Group;
+  private kioskDetailedProductsGroup?: THREE.Group;
   private kioskProductsDetailedLoaded = false;
 
   // Control de cÃ¡mara con mouse (Ã³rbita y zoom)
@@ -3997,8 +4002,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private addKioskProducts() {
     this.createKioskProductPlaceholders();
-
-    // Los GLB reales de productos se cargan bajo demanda al acercarse al kiosco.
+    this.preloadDetailedKioskProducts();
 
     // MÃ¡quinas expendedoras al fondo (Coca-Cola al centro, PS1 al rincÃ³n izquierdo)
     [
@@ -4059,9 +4063,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(group);
   }
 
-  private ensureDetailedKioskProductsLoaded() {
-    if (this.kioskProductsDetailedLoaded || !this.scene) return;
-    this.kioskProductsDetailedLoaded = true;
+  private preloadDetailedKioskProducts() {
+    if (!this.scene) return;
+
+    this.kioskDetailedProductsGroup = new THREE.Group();
+    this.kioskDetailedProductsGroup.visible = false; // Oculto al inicio
+    this.scene.add(this.kioskDetailedProductsGroup);
 
     const products = [
       { path: '/models-optimized/kiosk/coca_cola_bottle.glb', maxDim: 0.30 },
@@ -4090,6 +4097,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           const productOffset = shelfIndex === 0 ? 0 : 2;
           const item = products[(row * 3 + col + productOffset) % products.length];
           this.loadSceneAsset(item.path, (loadedModel) => {
+            if (!this.kioskDetailedProductsGroup) return;
             const model = loadedModel.clone();
             this.fitModelToMaxDimension(model, item.maxDim);
             this.centerModelPivot(model);
@@ -4114,27 +4122,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
               model.rotation.set(0.08, 0, 0, 'YXZ');
             }
             this.alignModelBottom(model, y + 0.08);
-            this.scene!.add(model);
+            this.kioskDetailedProductsGroup.add(model);
           }, { castShadow: false, receiveShadow: false });
         }
       });
     });
 
-    setTimeout(() => {
-      if (this.kioskProductPlaceholders) {
-        this.kioskProductPlaceholders.visible = false;
-      }
-    }, 1200);
-
+    // Also preload the Argentine Mate on the front counter desk
     this.loadSceneAsset('/models-optimized/kiosk/mate_argentino.glb', (loadedModel) => {
+      if (!this.kioskDetailedProductsGroup) return;
       const model = loadedModel.clone();
       this.fitModelToMaxDimension(model, 0.30);
       this.centerModelPivot(model);
       model.position.set(-19.78, 1.24, -15.62);
       model.rotation.set(0.05, Math.PI + 0.38, 0.02, 'YXZ');
       this.alignModelBottom(model, 1.24);
-      this.scene!.add(model);
+      this.kioskDetailedProductsGroup.add(model);
     }, { castShadow: false, receiveShadow: false });
+  }
+
+  private ensureDetailedKioskProductsLoaded() {
+    if (this.kioskProductsDetailedLoaded) return;
+    this.kioskProductsDetailedLoaded = true;
+
+    if (this.kioskDetailedProductsGroup) {
+      this.kioskDetailedProductsGroup.visible = true;
+    }
+
+    if (this.kioskProductPlaceholders) {
+      this.kioskProductPlaceholders.visible = false;
+    }
   }
 
   private fitModelToHeight(model: THREE.Object3D, targetHeight: number) {
