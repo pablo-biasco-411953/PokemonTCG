@@ -1688,7 +1688,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } else {
         // En partida offline (contra bot), el bot elige su turno de forma simulada tras 2 segundos
         await this.delay(2000);
-        await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
+        await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
         this.finalizarCoinFlip();
       }
     }
@@ -1917,7 +1917,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.iniciarPollingSorteo();
         } else {
           await this.delay(2000);
-          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
+          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
           this.finalizarCoinFlip();
         }
       }
