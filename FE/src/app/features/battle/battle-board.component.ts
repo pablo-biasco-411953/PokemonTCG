@@ -6035,10 +6035,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             const coinScale = 0.22 / maxCoinDim;
             coinMesh.scale.setScalar(coinScale);
           }
-          coinGroup.add(coinMesh);
-
+          // NOT adding the original GLB coinMesh to prevent duplicate geometry (star vs Cara/Cruz)
+          
           const espesor = coinSize.z * (0.22 / maxCoinDim);
           const radio = (Math.max(coinSize.x, coinSize.y) / 2) * (0.22 / maxCoinDim);
+
+          // Crear un canto dorado brillante para el cuerpo de la moneda
+          const cantoGeom = new THREE.CylinderGeometry(radio, radio, espesor, 32);
+          const cantoMat = new THREE.MeshStandardMaterial({
+            color: 0xdca81e, // Color dorado metálico
+            metalness: 0.95,
+            roughness: 0.08
+          });
+          const cantoMesh = new THREE.Mesh(cantoGeom, cantoMat);
+          cantoMesh.rotation.x = Math.PI / 2; // Orientar cilindro de canto
+          coinGroup.add(cantoMesh);
 
           const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
           
@@ -6212,11 +6223,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.emitirParticulaCoin(this.coinFlipCoinModel.position);
         }
 
-        const angle = Date.now() * 0.0075;
-        const radioCam = 2.6 - (this.coinVy * 0.02);
-        camera.position.x = this.coinFlipCoinModel.position.x + Math.sin(angle) * radioCam;
-        camera.position.z = this.coinFlipCoinModel.position.z + Math.cos(angle) * radioCam;
-        camera.position.y += (this.coinFlipCoinModel.position.y + 0.5 - camera.position.y) * 0.15;
+        // Seguir a la moneda con una cámara cinemática fija sobre el hombro estable
+        targetCameraPos.set(0.8, 1.8, 3.2);
+        // Acompañar sutilmente el avance del tiro en el aire
+        targetCameraPos.x += (this.coinFlipCoinModel.position.x * 0.5);
+        targetCameraPos.y += (this.coinFlipCoinModel.position.y * 0.3);
+        targetCameraPos.z += (this.coinFlipCoinModel.position.z * 0.2);
+        
+        camera.position.lerp(targetCameraPos, 0.08);
         camera.lookAt(this.coinFlipCoinModel.position);
 
         if (this.coinVy < 0 && this.coinFlipCoinModel.position.y <= -0.9) {
@@ -6259,9 +6273,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } else {
         // 3. Fase estática e interactiva de selección o espera
         if (this.confirmadoLado) {
-          // Pose detrás del hombro (Tercera persona listo para tirar)
-          targetCameraPos.set(0.48, 1.25, 2.38);
-          targetCameraLook.set(0.0, 0.5, -1.0);
+          // Pose detrás del hombro (Tercera persona listo para tirar) - Mayor amplitud y altura
+          targetCameraPos.set(0.8, 1.6, 3.4);
+          targetCameraLook.set(0.0, 0.2, -1.0);
         } else if (this.eleccionTemporal) {
           // Zoom dramático a la mano y moneda
           targetCameraPos.copy(handWorldPos).add(new THREE.Vector3(0.05, 0.12, 0.42));
