@@ -2950,7 +2950,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.endGameRewardSent || !this.jugadorNombre || this.coinsEarned <= 0) return;
     this.endGameRewardSent = true;
     this.jugadorService.rewardCoins(this.jugadorNombre, this.coinsEarned).subscribe({
-      error: (err) => console.error('Error acreditando SantoCoins', err)
+      error: (err) => console.error('Error acreditando SantoroPoints', err)
     });
   }
 
