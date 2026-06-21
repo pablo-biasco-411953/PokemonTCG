@@ -436,9 +436,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.iniciarPresenciaBatalla();
     }
     this.cargarCatalogoGodMode();
-    this.showIntro = true;
-    setTimeout(() => (this.introFadingOut = true), 2000);
-    setTimeout(() => (this.showIntro = false), 3000);
+    setTimeout(() => {
+      this.introFadingOut = true;
+      this.cdr.detectChanges();
+    }, 2000);
+    setTimeout(() => {
+      this.showIntro = false;
+      this.cdr.detectChanges();
+    }, 3000);
 
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => this.hidratarEstadoInicial(data),
@@ -656,8 +661,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     extractImages(data.bot);
 
     // Texturas de tablero base
-    imageUrls.add('/assets/mat.png');
-    imageUrls.add('/assets/mat_bot.png');
     imageUrls.add('/images/cards/back.png');
 
     const totalItems = imageUrls.size;
@@ -7117,13 +7120,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         : 0;
 
       if (!this.cinematicAssetsReady) {
-        const progressCap = this.versusModelsLoaded === 0 ? 48 : this.versusModelsLoaded === 1 ? 78 : 94;
-        this.cinematicSceneLoadingPercentage = Math.min(
-          progressCap,
-          this.cinematicSceneLoadingPercentage + dt * (this.versusModelsLoaded === 0 ? 10 : 16)
-        );
         if (now - this.versusProgressLastRender > 140) {
+          const deltaSecs = (now - this.versusProgressLastRender) / 1000;
           this.versusProgressLastRender = now;
+          const progressCap = this.versusModelsLoaded === 0 ? 48 : this.versusModelsLoaded === 1 ? 78 : 94;
+          this.cinematicSceneLoadingPercentage = Math.min(
+            progressCap,
+            this.cinematicSceneLoadingPercentage + deltaSecs * (this.versusModelsLoaded === 0 ? 10 : 16)
+          );
           this.cdr.detectChanges();
         }
       }
