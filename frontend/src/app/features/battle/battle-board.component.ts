@@ -29,6 +29,7 @@ import { JugadorService } from '../../core/services/jugador.service';
 import { LobbyRoomReaction, LobbyRoomService, LobbyRoomSnapshot } from '../lobby/services/lobby-room.service';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -318,6 +319,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private coinFlipHandModel?: THREE.Object3D;
   private coinFlipCoinModel?: THREE.Group;
   private coinFlipAnimationId?: number;
+  private coinFlipControls?: OrbitControls;
   private coinFlipClock = new THREE.Clock();
   private coinFlipParticles: { mesh: THREE.Mesh; vx: number; vy: number; vz: number; life: number; maxLife: number; }[] = [];
   fuerzaActual = 0;
@@ -1593,15 +1595,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
     await this.delay(400); // Pausa dramática
 
+    if (this.coinFlipControls) this.coinFlipControls.enabled = false;
+
     // Disparar físicas automatizadas en 3D
     this.coinFlipVuelo = true;
     this.coinRebotes = 0;
     
     const fuerzaSimulada = 200 + Math.random() * 150;
-    this.coinVy = 6.5 + (fuerzaSimulada / 400) * 11.0; 
+    this.coinVy = 7.0 + (fuerzaSimulada / 400) * 11.5; 
     this.coinVx = (Math.random() - 0.5) * 1.5;
     this.coinVz = (Math.random() - 0.5) * 1.0;
-    this.coinOmegaX = 20.0 + (fuerzaSimulada / 400) * 25.0 + Math.random() * 10;
+    this.coinOmegaX = 25.0 + (fuerzaSimulada / 400) * 30.0 + Math.random() * 10;
     this.coinOmegaY = (Math.random() - 0.5) * 8;
     this.coinOmegaZ = (Math.random() - 0.5) * 8;
 
@@ -1613,6 +1617,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     // Esperar fin de parábola
     while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
       await this.delay(50);
+    }
+
+    if (this.coinFlipControls) {
+      this.coinFlipControls.enabled = true;
+      this.coinFlipControls.target.set(0, -0.9, 0.6);
     }
 
     await this.delay(1200);
@@ -1630,13 +1639,41 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   onCoinPointerDown(event: PointerEvent) {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO' || this.loadingCoinModels) return;
-    event.preventDefault();
-    this.coinPointerId = event.pointerId;
-    this.yStart = event.clientY;
-    this.xStart = event.clientX;
-    this.arrastrando = true;
-    this.fuerzaActual = 0;
-    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    if (!this.coinFlipCanvasInitialized || !this.coinFlipCamera || !this.coinFlipCoinModel || !this.coinFlipRenderer) return;
+
+    // Raycasting para detectar si hizo clic en la moneda
+    const canvas = this.coinFlipRenderer.domElement;
+    const rect = canvas.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(x, y), this.coinFlipCamera);
+    const intersects = raycaster.intersectObjects(this.coinFlipScene?.children || [], true);
+
+    let tocoMoneda = false;
+    for (const hit of intersects) {
+      let obj: THREE.Object3D | null = hit.object;
+      while (obj) {
+        if (obj === this.coinFlipCoinModel) {
+          tocoMoneda = true;
+          break;
+        }
+        obj = obj.parent;
+      }
+    }
+
+    if (tocoMoneda) {
+      if (this.coinFlipControls) this.coinFlipControls.enabled = false;
+
+      event.preventDefault();
+      this.coinPointerId = event.pointerId;
+      this.yStart = event.clientY;
+      this.xStart = event.clientX;
+      this.arrastrando = true;
+      this.fuerzaActual = 0;
+      canvas.setPointerCapture?.(event.pointerId);
+    }
   }
 
   onCoinPointerMove(event: PointerEvent) {
@@ -1655,6 +1692,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.coinPointerId = null;
     this.arrastrando = false;
     this.fuerzaActual = 0;
+    if (this.coinFlipControls) this.coinFlipControls.enabled = true;
     this.cdr.detectChanges();
   }
 
@@ -1728,27 +1766,31 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async onCoinPointerUp(event: PointerEvent) {
-    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
     if (this.coinPointerId !== null && event.pointerId !== this.coinPointerId) return;
-    event.preventDefault();
-    
-    this.coinPointerId = null;
-    this.arrastrando = false;
 
-    // Medir fuerza final
-    const deltaY = event.clientY - this.yStart;
-    const deltaX = event.clientX - this.xStart;
-    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const fuerzaFinal = Math.min(Math.max(dist, 0), 400);
+    if (this.arrastrando) {
+      event.preventDefault();
+      this.coinPointerId = null;
+      this.arrastrando = false;
 
-    if (fuerzaFinal >= 50) {
-      this.lanzada = true;
-      this.fuerzaActual = fuerzaFinal;
-      this.cdr.detectChanges();
-      await this.lanzarMoneda3D(fuerzaFinal);
+      const deltaY = event.clientY - this.yStart;
+      const deltaX = event.clientX - this.xStart;
+      const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const fuerzaFinal = Math.min(Math.max(dist, 0), 400);
+
+      if (fuerzaFinal >= 50) {
+        this.lanzada = true;
+        this.fuerzaActual = fuerzaFinal;
+        this.cdr.detectChanges();
+        if (this.coinFlipControls) this.coinFlipControls.enabled = true;
+        await this.lanzarMoneda3DConAngulos(fuerzaFinal, deltaX, deltaY);
+      } else {
+        this.fuerzaActual = 0;
+        if (this.coinFlipControls) this.coinFlipControls.enabled = true;
+        this.cdr.detectChanges();
+      }
     } else {
-      this.fuerzaActual = 0;
-      this.cdr.detectChanges();
+      this.coinPointerId = null;
     }
   }
 
@@ -1763,40 +1805,39 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async lanzarMoneda3D(fuerza: number): Promise<void> {
+  private async lanzarMoneda3DConAngulos(fuerza: number, deltaX: number, deltaY: number): Promise<void> {
     try {
       this.coinFlipVuelo = true;
       this.coinRebotes = 0;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';
 
-      // Configurar impulsos físicos de Three.js
-      this.coinVy = 6.5 + (fuerza / 400) * 11.0; 
-      this.coinVx = (Math.random() - 0.5) * 1.5;
-      this.coinVz = (Math.random() - 0.5) * 1.0;
-      this.coinOmegaX = 20.0 + (fuerza / 400) * 25.0 + Math.random() * 10;
-      this.coinOmegaY = (Math.random() - 0.5) * 8;
-      this.coinOmegaZ = (Math.random() - 0.5) * 8;
+      if (this.coinFlipControls) this.coinFlipControls.enabled = false;
+
+      // Impulsos físicos basados en swipe vector (dirección opuesta con resortera/flick)
+      this.coinVy = 7.0 + (fuerza / 400) * 11.5; 
+      this.coinVx = -deltaX * 0.02;
+      this.coinVz = deltaY * 0.025;
+
+      this.coinOmegaX = 25.0 + (fuerza / 400) * 35.0;
+      this.coinOmegaY = -deltaX * 0.08;
+      this.coinOmegaZ = deltaY * 0.08;
       
       this.cdr.detectChanges();
 
-      // Solicitar sorteo al backend
       const estadoSorteo = await firstValueFrom(
         this.battleService.lanzarMoneda(this.matchId!, this.eleccionJugador),
       );
       this.partida = estadoSorteo;
       this.resultadoMoneda = estadoSorteo.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
 
-      // Sincronizar el resultado con las físicas
       this.coinFlipResultadoEsperado = this.resultadoMoneda;
       this.coinFlipResultadoListo = true;
 
-      // Esperar a que la física complete la parábola e impactos
       while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
         await this.delay(50);
       }
 
-      // Delay estético de resultado
       await this.delay(1200);
 
       if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
@@ -5754,9 +5795,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.opponentTrainerScene = undefined;
     this.playerTrainerCamera = undefined;
     this.opponentTrainerCamera = undefined;
-
-    this.handshakeScene = undefined;
-    this.handshakeCamera = undefined;
   }
 
   private initCoinFlipScene(canvas: HTMLCanvasElement): void {
@@ -5793,21 +5831,34 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.coinFlipScene = scene;
 
     const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 50);
-    camera.position.set(0, 1.2, 3.8);
+    camera.position.set(1.5, 1.3, 3.2);
     camera.lookAt(0, -0.2, 0);
     this.coinFlipCamera = camera;
 
+    // Controles de órbita interactivos
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enableZoom = false;
+    controls.minPolarAngle = Math.PI / 6;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    this.coinFlipControls = controls;
+
     // Iluminación
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
     scene.add(ambientLight);
 
-    const goldLight = new THREE.DirectionalLight(0xfccd4d, 5.0);
-    goldLight.position.set(2.0, 4.0, 3.0);
+    const goldLight = new THREE.DirectionalLight(0xfccd4d, 5.5);
+    goldLight.position.set(3.0, 5.0, 3.0);
     scene.add(goldLight);
 
-    const cyanLight = new THREE.DirectionalLight(0x00f0ff, 3.5);
-    cyanLight.position.set(-3.0, -1.0, 1.0);
+    const cyanLight = new THREE.DirectionalLight(0x00f0ff, 4.0);
+    cyanLight.position.set(-3.0, -1.0, 2.0);
     scene.add(cyanLight);
+
+    const rimLight = new THREE.DirectionalLight(0xff00ff, 2.5);
+    rimLight.position.set(0, -2, -3);
+    scene.add(rimLight);
 
     // Cargar modelos
     const loader = new GLTFLoader();
@@ -5822,15 +5873,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     loader.load('/assets/models/hand_gesture_1.glb', (gltfHand) => {
       this.coinFlipHandModel = gltfHand.scene;
       
-      this.coinFlipHandModel.position.set(0, -1.6, 0.2);
-      this.coinFlipHandModel.rotation.set(0.1, Math.PI, 0);
+      this.coinFlipHandModel.position.set(0, -0.9, -0.2);
+      this.coinFlipHandModel.rotation.set(0.15, Math.PI - 0.25, 0);
       
       const handBox = new THREE.Box3().setFromObject(this.coinFlipHandModel);
       const handSize = new THREE.Vector3();
       handBox.getSize(handSize);
       const maxHandDim = Math.max(handSize.x, handSize.y, handSize.z);
       if (maxHandDim > 0) {
-        const handScale = 2.0 / maxHandDim;
+        const handScale = 1.7 / maxHandDim;
         this.coinFlipHandModel.scale.setScalar(handScale);
       }
 
@@ -5842,45 +5893,61 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.coinFlipCoinModel = coinGroup;
 
         const coinMesh = gltfCoin.scene;
+
+        // Centrar geometría
+        coinMesh.traverse((child: any) => {
+          if (child.isMesh) {
+            child.geometry.center();
+          }
+        });
+
+        // Medir dimensiones
         const coinBox = new THREE.Box3().setFromObject(coinMesh);
         const coinSize = new THREE.Vector3();
         coinBox.getSize(coinSize);
         const maxCoinDim = Math.max(coinSize.x, coinSize.y, coinSize.z);
         if (maxCoinDim > 0) {
-          const coinScale = 0.65 / maxCoinDim;
+          const coinScale = 0.62 / maxCoinDim;
           coinMesh.scale.setScalar(coinScale);
         }
         coinGroup.add(coinMesh);
 
-        // Crear tapas de cara y cruz dinámicas
-        const circleGeom = new THREE.CircleGeometry(0.31, 32);
+        // Medir espesor y radio real
+        const scaledBox = new THREE.Box3().setFromObject(coinMesh);
+        const scaledSize = new THREE.Vector3();
+        scaledBox.getSize(scaledSize);
+        const espesor = scaledSize.z;
+        const radio = Math.max(scaledSize.x, scaledSize.y) / 2;
+
+        const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
         
         const caraMat = new THREE.MeshStandardMaterial({
           map: this.crearTexturaCara(),
-          roughness: 0.15,
-          metalness: 0.85,
+          roughness: 0.1,
+          metalness: 0.9,
           side: THREE.FrontSide
         });
 
         const cruzMat = new THREE.MeshStandardMaterial({
           map: this.crearTexturaCruz(),
-          roughness: 0.15,
-          metalness: 0.85,
+          roughness: 0.1,
+          metalness: 0.9,
           side: THREE.FrontSide
         });
 
         const caraMesh = new THREE.Mesh(circleGeom, caraMat);
-        caraMesh.position.set(0, 0, 0.045);
+        caraMesh.position.set(0, 0, espesor / 2 + 0.005);
 
         const cruzMesh = new THREE.Mesh(circleGeom, cruzMat);
-        cruzMesh.position.set(0, 0, -0.045);
+        cruzMesh.position.set(0, 0, -(espesor / 2 + 0.005));
         cruzMesh.rotation.y = Math.PI;
 
         coinGroup.add(caraMesh);
         coinGroup.add(cruzMesh);
 
-        coinGroup.position.set(0, -0.45, 0.4);
-        coinGroup.rotation.set(Math.PI / 6, 0, 0);
+        // Posicionar sobre el pulgar
+        coinGroup.position.set(0.18, -0.4, 0.15);
+        coinGroup.rotation.set(Math.PI / 4, 0, 0.1);
         scene.add(coinGroup);
 
         this.loadingCoinModels = false;
@@ -5910,6 +5977,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         camera.updateProjectionMatrix();
       }
 
+      if (this.coinFlipControls && this.coinFlipControls.enabled) {
+        this.coinFlipControls.update();
+      }
+
       // Animaciones de física
       if (this.coinFlipVuelo && this.coinFlipCoinModel) {
         this.coinVy -= 18.0 * dt;
@@ -5922,15 +5993,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.coinFlipCoinModel.rotateY(this.coinOmegaY * dt);
         this.coinFlipCoinModel.rotateZ(this.coinOmegaZ * dt);
 
-        if (Math.random() < 0.6) {
+        if (Math.random() < 0.65) {
           this.emitirParticulaCoin(this.coinFlipCoinModel.position);
         }
 
-        const targetCamY = Math.max(1.2, this.coinFlipCoinModel.position.y + 0.6);
-        camera.position.y += (targetCamY - camera.position.y) * 0.15;
-        const targetCamZ = 3.8 + Math.max(0, this.coinFlipCoinModel.position.y * 0.15);
-        camera.position.z += (targetCamZ - camera.position.z) * 0.1;
-        camera.lookAt(this.coinFlipCoinModel.position.x, this.coinFlipCoinModel.position.y, this.coinFlipCoinModel.position.z);
+        // Cámara flotante y vertiginosa siguiendo la moneda
+        const angle = Date.now() * 0.0075;
+        const radioCam = 2.6 - (this.coinVy * 0.02);
+        camera.position.x = this.coinFlipCoinModel.position.x + Math.sin(angle) * radioCam;
+        camera.position.z = this.coinFlipCoinModel.position.z + Math.cos(angle) * radioCam;
+        camera.position.y += (this.coinFlipCoinModel.position.y + 0.5 - camera.position.y) * 0.15;
+        camera.lookAt(this.coinFlipCoinModel.position);
 
         if (this.coinVy < 0 && this.coinFlipCoinModel.position.y <= -0.9) {
           if (this.coinRebotes < 2) {
@@ -5947,6 +6020,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             this.coinFlipVuelo = false;
             this.coinFlipCoinModel.position.set(0, -0.9, 0.6);
             
+            if (this.coinFlipControls) {
+              this.coinFlipControls.enabled = true;
+              this.coinFlipControls.target.set(0, -0.9, 0.6);
+            }
+            
             this.girando = false;
             this.cdr.detectChanges();
           }
@@ -5962,21 +6040,33 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
         this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.15);
 
-        camera.position.y += (1.2 - camera.position.y) * 0.1;
-        camera.position.z += (3.8 - camera.position.z) * 0.1;
-        camera.lookAt(0, -0.2, 0);
+        camera.position.x += (0 - camera.position.x) * 0.1;
+        camera.position.y += (0.1 - camera.position.y) * 0.1;
+        camera.position.z += (2.2 - camera.position.z) * 0.1;
+        camera.lookAt(0, -0.9, 0.6);
       }
 
+      // Tensión / Vibración
       if (this.arrastrando && this.coinFlipHandModel && this.coinFlipCoinModel && !this.coinFlipVuelo) {
-        const offset = (this.fuerzaActual / 400) * 0.35;
-        this.coinFlipHandModel.position.y = -1.6 - offset;
-        this.coinFlipCoinModel.position.y = -0.45 - offset;
+        const tension = this.fuerzaActual / 400;
+        const offset = tension * 0.35;
+
+        const shakeIntensity = tension * 0.05;
+        const shakeX = Math.sin(Date.now() * 0.16) * shakeIntensity;
+        const shakeY = Math.cos(Date.now() * 0.19) * shakeIntensity;
+        const shakeZ = Math.sin(Date.now() * 0.22) * shakeIntensity;
+
+        this.coinFlipHandModel.position.set(shakeX, -0.9 - offset + shakeY, -0.2 + shakeZ);
+        this.coinFlipCoinModel.position.set(0.18 + shakeX, -0.4 - offset + shakeY, 0.15 + shakeZ);
       } else if (!this.coinFlipVuelo && this.coinFlipHandModel && this.coinFlipCoinModel) {
-        this.coinFlipHandModel.position.y += (-1.6 - this.coinFlipHandModel.position.y) * 0.1;
+        this.coinFlipHandModel.position.x += (0 - this.coinFlipHandModel.position.x) * 0.1;
+        this.coinFlipHandModel.position.y += (-0.9 - this.coinFlipHandModel.position.y) * 0.1;
+        this.coinFlipHandModel.position.z += (-0.2 - this.coinFlipHandModel.position.z) * 0.1;
+
         if (!this.coinFlipResultadoListo) {
-          this.coinFlipCoinModel.position.y += (-0.45 - this.coinFlipCoinModel.position.y) * 0.1;
-          this.coinFlipCoinModel.position.x += (0 - this.coinFlipCoinModel.position.x) * 0.1;
-          this.coinFlipCoinModel.position.z += (0.4 - this.coinFlipCoinModel.position.z) * 0.1;
+          this.coinFlipCoinModel.position.x += (0.18 - this.coinFlipCoinModel.position.x) * 0.1;
+          this.coinFlipCoinModel.position.y += (-0.4 - this.coinFlipCoinModel.position.y) * 0.1;
+          this.coinFlipCoinModel.position.z += (0.15 - this.coinFlipCoinModel.position.z) * 0.1;
         }
       }
 
@@ -5991,7 +6081,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private emitirParticulaCoin(pos: THREE.Vector3): void {
     if (!this.coinFlipScene) return;
     const color = Math.random() > 0.5 ? 0xfccd4d : 0x00f0ff;
-    const geom = new THREE.SphereGeometry(0.035 + Math.random() * 0.035, 6, 6);
+    const geom = new THREE.SphereGeometry(0.03 + Math.random() * 0.03, 6, 6);
     const mat = new THREE.MeshBasicMaterial({
       color: color,
       transparent: true,
@@ -6048,6 +6138,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.coinFlipAnimationId = undefined;
     }
 
+    if (this.coinFlipControls) {
+      this.coinFlipControls.dispose();
+      this.coinFlipControls = undefined;
+    }
+
     this.coinFlipParticles.forEach(p => {
       this.coinFlipScene?.remove(p.mesh);
       p.mesh.geometry.dispose();
@@ -6082,7 +6177,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private crearTexturaCara(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
     canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
 
