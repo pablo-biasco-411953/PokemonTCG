@@ -6032,13 +6032,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           coinBox.getSize(coinSize);
           const maxCoinDim = Math.max(coinSize.x, coinSize.y, coinSize.z);
           if (maxCoinDim > 0) {
-            const coinScale = 0.54 / maxCoinDim;
+            const coinScale = 0.22 / maxCoinDim;
             coinMesh.scale.setScalar(coinScale);
           }
           coinGroup.add(coinMesh);
 
-          const espesor = coinSize.z * (0.54 / maxCoinDim);
-          const radio = (Math.max(coinSize.x, coinSize.y) / 2) * (0.54 / maxCoinDim);
+          const espesor = coinSize.z * (0.22 / maxCoinDim);
+          const radio = (Math.max(coinSize.x, coinSize.y) / 2) * (0.22 / maxCoinDim);
 
           const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
           
