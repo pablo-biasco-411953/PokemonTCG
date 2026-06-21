@@ -324,24 +324,22 @@
       <div
         class="throw-zone"
         (pointerdown)="onCoinPointerDown($event)"
+        (pointermove)="onCoinPointerMove($event)"
         (pointerup)="onCoinPointerUp($event)"
         (pointercancel)="onCoinPointerCancel($event)"
         [class.pointer-events-none]="lanzada"
       >
         <p class="swipe-hint" *ngIf="!lanzada">{{ 'battle.swipeHint' | t }}</p>
 
-        <div class="moneda-scene">
-          <div class="moneda-sombra" [class.active]="lanzada"></div>
-          <div
-            class="moneda-inner"
-            [class.animar-vuelo]="lanzada"
-            [class.girando]="lanzada && girando"
-            [style.transform]="!girando && lanzada ? 'rotateY(' + anguloFinal + 'deg)' : null"
-          >
-            <div class="cara front"><img src="/coin-heads.png" draggable="false" /></div>
-            <div class="cruz back"><img src="/coin-tails.png" draggable="false" /></div>
-          </div>
+        <div class="coin-canvas-container">
+          <canvas #coinFlipCanvas class="coinflip-canvas"></canvas>
         </div>
+
+        <!-- Medidor de fuerza vertical -->
+        <div class="fuerza-meter-container" *ngIf="arrastrando && fuerzaActual > 0">
+          <div class="fuerza-meter-bar" [style.height.%]="(fuerzaActual / 400) * 100" [style.background]="getFuerzaColor()"></div>
+        </div>
+
         <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">{{ 'battle.coinDecides' | t }}</p>
       </div>
     </ng-container>

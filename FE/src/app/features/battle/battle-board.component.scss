@@ -2219,138 +2219,74 @@ bot-sprite-wrap {
 }
 
 // --- ESCENA Y MONEDA 3D REAL ---
-.moneda-scene {
-  perspective: 2000px; // 🚩 CLAVE: Un valor alto para el efecto 3D
-  width: 180px; // Un poco más grande
-  height: 180px;
-  margin: 50px auto;
+.coin-canvas-container {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  margin: 10px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at center, rgba(16, 24, 48, 0.4) 0%, rgba(2, 6, 16, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+}
+
+.coinflip-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
   pointer-events: none;
-  position: relative;
 }
 
-// 🔥 SOMBRA DINÁMICA
-.moneda-sombra {
+/* 🔥 MEDIDOR DE FUERZA GLASSMORPHIC */
+.fuerza-meter-container {
   position: absolute;
-  bottom: -30px; // Abajo de la moneda
-  left: 50%; transform: translateX(-50%) scaleY(0.2);
-  width: 140px; height: 140px;
-  background: radial-gradient(circle, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 70%);
-  border-radius: 50%;
-  opacity: 0; // Se prende cuando vuela
-  transition: opacity 0.3s, transform 0.3s;
-  
-  &.active {
-    opacity: 1;
-  }
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 220px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 0 0 10px rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(8px);
+  padding: 2px;
+  box-sizing: border-box;
 }
 
-.moneda-inner {
-  width: 100%; height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  // 🚩 Este transition es el que "suaviza" el aterrizaje cuando deja de girar
-  transition: transform 0.8s cubic-bezier(0.15, 0.85, 0.35, 1.1), filter 0.5s;
-
-  &.girando {
-    animation: girarRapido 0.15s linear infinite; 
-  }
-
-  // 🔥 Efecto de Brillo Metálico cuando aterriza
-  &.final-cara, &.final-cruz {
-    filter: brightness(1.4) contrast(1.1);
-  }
-
-  .animar-vuelo {
-  animation: vueloParabola var(--duracion-vuelo) ease-in-out forwards;
-}
-
-&.final-cara {
-    animation: none;
-    // Forzamos 10 vueltas completas (3600deg) para que termine en CARA (0°)
-    transform: translateY(0) rotateY(3600deg) scale(1.1);
-  }  &.final-cruz {
-    animation: none;
-    // Forzamos 10 vueltas + MEDIA VUELTA (3600 + 180 = 3780deg) para que termine en CRUZ
-    transform: translateY(0) rotateY(3780deg) scale(1.1);
-  }
-
-  // 🔥 EFECTO BRILLO METÁLICO (Luz)
-  .luz {
-    position: absolute; inset: -20px;
-    background: linear-gradient(135deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 60%);
-    border-radius: 50%;
-    backface-visibility: hidden;
-    animation: shineEffect 0.3s linear infinite; // ¡Gira con la moneda!
-  }
-
-  // Estilo de las caras de la moneda
-  .cara, .cruz {
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    backface-visibility: hidden; // 🚩 Oculta la parte trasera
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 
-      inset 0 0 10px rgba(0,0,0,0.5), // Sombra interna (Canto)
-      0 0 30px rgba(255, 255, 255, 0.3); // Glow externo
-    border: 6px solid #111; // Canto más grueso
-
-    img {
-      width: 85%; height: 85%;
-      object-fit: contain;
-      pointer-events: none;
-      user-drag: none; -webkit-user-drag: none;
-      filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); // Glow en el Pikachu
-    }
-  }
-
-  .cara { background: linear-gradient(135deg, #fceabb 0%, #fccd4d 50%, #f8b500 100%); border-color: #b58900; }
-  .cruz { background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 50%, #9e9e9e 100%); border-color: #757575; transform: rotateY(180deg); }
-}
-
-// --- KEYFRAMES ---
-
-@keyframes vueloDinamico {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(var(--altura-vuelo, -350px)) scale(1.8); } // Sube más alto y más grande
-  100% { transform: translateY(0) scale(1); } // Cae al punto original
-}
-
-@keyframes giroAcumulado {
-  // A mayor fuerza, más vueltas da (por ejemplo, 10 vueltas completas = 3600deg)
-  // Reemplazamos el giro infinito por este giro acumulado
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(var(--giros-totales, 3600deg)); }
-}
-
-@keyframes shineEffect {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+.fuerza-meter-bar {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  width: calc(100% - 4px);
+  border-radius: 8px;
+  transition: height 0.05s ease-out;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
 // --- TEXTOS ---
 .swipe-hint {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   text-transform: uppercase;
   color: #64ffda;
   letter-spacing: 3px;
   animation: breathe 2s infinite;
-  margin-top: 20px;
+  margin-top: 10px;
+  text-align: center;
+  text-shadow: 0 0 8px rgba(100, 255, 218, 0.6);
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.5; }
+  0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
-}
-
-@keyframes vueloParabola {
-  0% { bottom: 0; }
-  50% { bottom: var(--altura-vuelo); transform: scale(1.6); }
-  100% { bottom: 0; transform: scale(1.1); }
-}
-
-@keyframes girarRapido {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
 }
 
 /* ══════════════════════════════════════════════════════════════

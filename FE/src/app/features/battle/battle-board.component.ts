@@ -310,6 +310,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private lastPreloadState: Partida | null = null;
   private finalizarPreloadFn: ((state?: Partida | null) => void) | null = null;
 
+  // 3D Coin Flip Properties
+  coinFlipCanvasInitialized = false;
+  private coinFlipScene?: THREE.Scene;
+  private coinFlipCamera?: THREE.PerspectiveCamera;
+  private coinFlipRenderer?: THREE.WebGLRenderer;
+  private coinFlipHandModel?: THREE.Object3D;
+  private coinFlipCoinModel?: THREE.Group;
+  private coinFlipAnimationId?: number;
+  private coinFlipClock = new THREE.Clock();
+  private coinFlipParticles: { mesh: THREE.Mesh; vx: number; vy: number; vz: number; life: number; maxLife: number; }[] = [];
+  fuerzaActual = 0;
+  arrastrando = false;
+  private xStart = 0;
+  private coinFlipVuelo = false;
+  private coinVy = 0;
+  private coinVx = 0;
+  private coinVz = 0;
+  private coinOmegaX = 0;
+  private coinOmegaY = 0;
+  private coinOmegaZ = 0;
+  private coinRebotes = 0;
+  private coinFlipResultadoListo = false;
+  private coinFlipResultadoEsperado?: 'CARA' | 'CRUZ';
+  private backendResultPromise?: Promise<Partida>;
+  private loadingCoinModels = false;
+
   // Standalone Board Trainers 3D Scene Properties
   playerTrainerCanvasInitialized = false;
   opponentTrainerCanvasInitialized = false;
@@ -1555,25 +1581,39 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       clearInterval(this.pollingSorteo);
       this.pollingSorteo = null;
     }
+    
     this.estadoCoinFlip = 'GIRANDO';
     this.lanzada = true;
     this.girando = true;
+    this.cdr.detectChanges();
 
-    const duracionVuelo = 1.8;
-    const vueltasBase = 7;
-    const fuerza = 200;
+    // Esperar a que la escena se monte y cargue
+    while (this.loadingCoinModels && this.coinFlipCanvasInitialized) {
+      await this.delay(50);
+    }
+    await this.delay(400); // Pausa dramática
 
-    document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza}px`);
-    document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
+    // Disparar físicas automatizadas en 3D
+    this.coinFlipVuelo = true;
+    this.coinRebotes = 0;
+    
+    const fuerzaSimulada = 200 + Math.random() * 150;
+    this.coinVy = 6.5 + (fuerzaSimulada / 400) * 11.0; 
+    this.coinVx = (Math.random() - 0.5) * 1.5;
+    this.coinVz = (Math.random() - 0.5) * 1.0;
+    this.coinOmegaX = 20.0 + (fuerzaSimulada / 400) * 25.0 + Math.random() * 10;
+    this.coinOmegaY = (Math.random() - 0.5) * 8;
+    this.coinOmegaZ = (Math.random() - 0.5) * 8;
 
     this.resultadoMoneda = data.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
-    this.anguloFinal = this.resultadoMoneda === 'CARA' ? vueltasBase * 360 : vueltasBase * 360 + 180;
-
+    this.coinFlipResultadoEsperado = this.resultadoMoneda;
+    this.coinFlipResultadoListo = true;
     this.cdr.detectChanges();
 
-    await this.delay(duracionVuelo * 1000 - 300);
-    this.girando = false;
-    this.cdr.detectChanges();
+    // Esperar fin de parábola
+    while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
+      await this.delay(50);
+    }
 
     await this.delay(1200);
 
@@ -1589,16 +1629,33 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   onCoinPointerDown(event: PointerEvent) {
-    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO' || this.loadingCoinModels) return;
     event.preventDefault();
     this.coinPointerId = event.pointerId;
     this.yStart = event.clientY;
+    this.xStart = event.clientX;
+    this.arrastrando = true;
+    this.fuerzaActual = 0;
     (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+  }
+
+  onCoinPointerMove(event: PointerEvent) {
+    if (!this.arrastrando || event.pointerId !== this.coinPointerId) return;
+    event.preventDefault();
+    
+    const deltaY = event.clientY - this.yStart;
+    const deltaX = event.clientX - this.xStart;
+    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    this.fuerzaActual = Math.min(Math.max(dist, 0), 400);
+    this.cdr.detectChanges();
   }
 
   onCoinPointerCancel(event: PointerEvent) {
     if (event.pointerId !== this.coinPointerId) return;
     this.coinPointerId = null;
+    this.arrastrando = false;
+    this.fuerzaActual = 0;
+    this.cdr.detectChanges();
   }
 
   interTurnOverlay: InterTurnOverlayState | null = null;
@@ -1674,60 +1731,92 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
     if (this.coinPointerId !== null && event.pointerId !== this.coinPointerId) return;
     event.preventDefault();
+    
     this.coinPointerId = null;
+    this.arrastrando = false;
 
-    this.yEnd = event.clientY;
-    const diferencia = this.yStart - this.yEnd;
-    const fuerza = Math.min(Math.max(diferencia, 80), 400);
+    // Medir fuerza final
+    const deltaY = event.clientY - this.yStart;
+    const deltaX = event.clientX - this.xStart;
+    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const fuerzaFinal = Math.min(Math.max(dist, 0), 400);
 
-    if (fuerza >= 70) {
+    if (fuerzaFinal >= 50) {
       this.lanzada = true;
+      this.fuerzaActual = fuerzaFinal;
+      this.cdr.detectChanges();
+      await this.lanzarMoneda3D(fuerzaFinal);
+    } else {
+      this.fuerzaActual = 0;
+      this.cdr.detectChanges();
+    }
+  }
+
+  getFuerzaColor(): string {
+    const ratio = this.fuerzaActual / 400;
+    if (ratio < 0.4) {
+      return '#10b981'; // verde
+    } else if (ratio < 0.75) {
+      return '#fbbf24'; // amarillo/naranja
+    } else {
+      return '#ef4444'; // rojo brillante
+    }
+  }
+
+  private async lanzarMoneda3D(fuerza: number): Promise<void> {
+    try {
+      this.coinFlipVuelo = true;
+      this.coinRebotes = 0;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';
 
-      const duracionVuelo = 1.8;
-      const vueltasBase = 5 + Math.floor(fuerza / 50);
-
-      document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza * 1.3}px`);
-      document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
-
+      // Configurar impulsos físicos de Three.js
+      this.coinVy = 6.5 + (fuerza / 400) * 11.0; 
+      this.coinVx = (Math.random() - 0.5) * 1.5;
+      this.coinVz = (Math.random() - 0.5) * 1.0;
+      this.coinOmegaX = 20.0 + (fuerza / 400) * 25.0 + Math.random() * 10;
+      this.coinOmegaY = (Math.random() - 0.5) * 8;
+      this.coinOmegaZ = (Math.random() - 0.5) * 8;
+      
       this.cdr.detectChanges();
 
-      try {
-        const estadoSorteo = await firstValueFrom(
-          this.battleService.lanzarMoneda(this.matchId!, this.eleccionJugador),
-        );
-        this.partida = estadoSorteo;
-        this.resultadoMoneda = estadoSorteo.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
+      // Solicitar sorteo al backend
+      const estadoSorteo = await firstValueFrom(
+        this.battleService.lanzarMoneda(this.matchId!, this.eleccionJugador),
+      );
+      this.partida = estadoSorteo;
+      this.resultadoMoneda = estadoSorteo.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
 
-        this.anguloFinal =
-          this.resultadoMoneda === 'CARA' ? vueltasBase * 360 : vueltasBase * 360 + 180;
+      // Sincronizar el resultado con las físicas
+      this.coinFlipResultadoEsperado = this.resultadoMoneda;
+      this.coinFlipResultadoListo = true;
 
-        await this.delay(duracionVuelo * 1000 - 300);
-        this.girando = false;
-        this.cdr.detectChanges();
-
-        await this.delay(1200);
-
-        if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
-          this.estadoCoinFlip = 'ELEGIR_TURNO';
-        } else {
-          this.estadoCoinFlip = 'RESULTADO_BOT';
-          this.cdr.detectChanges();
-          if (this.esPartidaOnline(estadoSorteo)) {
-            this.iniciarPollingSorteo();
-          } else {
-            await this.delay(2000);
-            await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
-            this.finalizarCoinFlip();
-          }
-        }
-      } catch (e) {
-        console.error('Error en sorteo:', e);
-        this.finalizarCoinFlip();
+      // Esperar a que la física complete la parábola e impactos
+      while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
+        await this.delay(50);
       }
-      this.cdr.detectChanges();
+
+      // Delay estético de resultado
+      await this.delay(1200);
+
+      if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        this.estadoCoinFlip = 'ELEGIR_TURNO';
+      } else {
+        this.estadoCoinFlip = 'RESULTADO_BOT';
+        this.cdr.detectChanges();
+        if (this.esPartidaOnline(estadoSorteo)) {
+          this.iniciarPollingSorteo();
+        } else {
+          await this.delay(2000);
+          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
+          this.finalizarCoinFlip();
+        }
+      }
+    } catch (e) {
+      console.error('Error en sorteo 3D:', e);
+      this.finalizarCoinFlip();
     }
+    this.cdr.detectChanges();
   }
 
   clearHoveredCard() {
@@ -4424,6 +4513,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  @ViewChild('coinFlipCanvas') set coinFlipCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element) {
+      if (!this.coinFlipCanvasInitialized) {
+        this.coinFlipCanvasInitialized = true;
+        setTimeout(() => this.initCoinFlipScene(element.nativeElement), 0);
+      }
+    } else {
+      if (this.coinFlipCanvasInitialized) {
+        this.cleanupCoinFlipScene();
+      }
+    }
+  }
+
   @ViewChild('handshakeCanvas') set handshakeCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
     if (element && !this.canvasInitialized) {
       this.canvasInitialized = true;
@@ -5653,12 +5755,415 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.playerTrainerCamera = undefined;
     this.opponentTrainerCamera = undefined;
 
-    if (this.handshakeRenderer) {
-      this.handshakeRenderer.dispose();
-      this.handshakeRenderer = undefined;
-    }
     this.handshakeScene = undefined;
     this.handshakeCamera = undefined;
+  }
+
+  private initCoinFlipScene(canvas: HTMLCanvasElement): void {
+    if (this.loadingCoinModels) return;
+    this.loadingCoinModels = true;
+
+    this.coinRebotes = 0;
+    this.coinFlipVuelo = false;
+    this.coinFlipResultadoListo = false;
+    this.coinFlipResultadoEsperado = undefined;
+    this.coinFlipParticles = [];
+    this.fuerzaActual = 0;
+    this.arrastrando = false;
+    this.coinFlipClock.getDelta(); // reset clock
+
+    const width = canvas.clientWidth || 400;
+    const height = canvas.clientHeight || 380;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: true,
+      antialias: !this.isPotato && window.devicePixelRatio < 2,
+      powerPreference: 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false,
+      depth: true
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.coinFlipRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    this.coinFlipScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 50);
+    camera.position.set(0, 1.2, 3.8);
+    camera.lookAt(0, -0.2, 0);
+    this.coinFlipCamera = camera;
+
+    // Iluminación
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    scene.add(ambientLight);
+
+    const goldLight = new THREE.DirectionalLight(0xfccd4d, 5.0);
+    goldLight.position.set(2.0, 4.0, 3.0);
+    scene.add(goldLight);
+
+    const cyanLight = new THREE.DirectionalLight(0x00f0ff, 3.5);
+    cyanLight.position.set(-3.0, -1.0, 1.0);
+    scene.add(cyanLight);
+
+    // Cargar modelos
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    const activeRenderer = renderer;
+    if (activeRenderer) {
+      const ktx2 = this.getKtx2Loader(activeRenderer);
+      loader.setKTX2Loader(ktx2);
+    }
+
+    // 1. Cargar mano
+    loader.load('/assets/models/hand_gesture_1.glb', (gltfHand) => {
+      this.coinFlipHandModel = gltfHand.scene;
+      
+      this.coinFlipHandModel.position.set(0, -1.6, 0.2);
+      this.coinFlipHandModel.rotation.set(0.1, Math.PI, 0);
+      
+      const handBox = new THREE.Box3().setFromObject(this.coinFlipHandModel);
+      const handSize = new THREE.Vector3();
+      handBox.getSize(handSize);
+      const maxHandDim = Math.max(handSize.x, handSize.y, handSize.z);
+      if (maxHandDim > 0) {
+        const handScale = 2.0 / maxHandDim;
+        this.coinFlipHandModel.scale.setScalar(handScale);
+      }
+
+      scene.add(this.coinFlipHandModel);
+
+      // 2. Cargar moneda
+      loader.load('/assets/models/video_game_coin.glb', (gltfCoin) => {
+        const coinGroup = new THREE.Group();
+        this.coinFlipCoinModel = coinGroup;
+
+        const coinMesh = gltfCoin.scene;
+        const coinBox = new THREE.Box3().setFromObject(coinMesh);
+        const coinSize = new THREE.Vector3();
+        coinBox.getSize(coinSize);
+        const maxCoinDim = Math.max(coinSize.x, coinSize.y, coinSize.z);
+        if (maxCoinDim > 0) {
+          const coinScale = 0.65 / maxCoinDim;
+          coinMesh.scale.setScalar(coinScale);
+        }
+        coinGroup.add(coinMesh);
+
+        // Crear tapas de cara y cruz dinámicas
+        const circleGeom = new THREE.CircleGeometry(0.31, 32);
+        
+        const caraMat = new THREE.MeshStandardMaterial({
+          map: this.crearTexturaCara(),
+          roughness: 0.15,
+          metalness: 0.85,
+          side: THREE.FrontSide
+        });
+
+        const cruzMat = new THREE.MeshStandardMaterial({
+          map: this.crearTexturaCruz(),
+          roughness: 0.15,
+          metalness: 0.85,
+          side: THREE.FrontSide
+        });
+
+        const caraMesh = new THREE.Mesh(circleGeom, caraMat);
+        caraMesh.position.set(0, 0, 0.045);
+
+        const cruzMesh = new THREE.Mesh(circleGeom, cruzMat);
+        cruzMesh.position.set(0, 0, -0.045);
+        cruzMesh.rotation.y = Math.PI;
+
+        coinGroup.add(caraMesh);
+        coinGroup.add(cruzMesh);
+
+        coinGroup.position.set(0, -0.45, 0.4);
+        coinGroup.rotation.set(Math.PI / 6, 0, 0);
+        scene.add(coinGroup);
+
+        this.loadingCoinModels = false;
+        this.cdr.detectChanges();
+      }, undefined, (err) => {
+        console.error('Error cargando moneda 3D:', err);
+        this.loadingCoinModels = false;
+      });
+
+    }, undefined, (err) => {
+      console.error('Error cargando mano 3D:', err);
+      this.loadingCoinModels = false;
+    });
+
+    // Iniciar loop de animación
+    const animate = () => {
+      if (!this.coinFlipCanvasInitialized) return;
+      this.coinFlipAnimationId = requestAnimationFrame(animate);
+
+      const dt = Math.min(this.coinFlipClock.getDelta(), 0.03);
+
+      const currWidth = canvas.clientWidth || 400;
+      const currHeight = canvas.clientHeight || 380;
+      if (canvas.width !== currWidth || canvas.height !== currHeight) {
+        renderer.setSize(currWidth, currHeight, false);
+        camera.aspect = currWidth / currHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      // Animaciones de física
+      if (this.coinFlipVuelo && this.coinFlipCoinModel) {
+        this.coinVy -= 18.0 * dt;
+
+        this.coinFlipCoinModel.position.x += this.coinVx * dt;
+        this.coinFlipCoinModel.position.y += this.coinVy * dt;
+        this.coinFlipCoinModel.position.z += this.coinVz * dt;
+
+        this.coinFlipCoinModel.rotateX(this.coinOmegaX * dt);
+        this.coinFlipCoinModel.rotateY(this.coinOmegaY * dt);
+        this.coinFlipCoinModel.rotateZ(this.coinOmegaZ * dt);
+
+        if (Math.random() < 0.6) {
+          this.emitirParticulaCoin(this.coinFlipCoinModel.position);
+        }
+
+        const targetCamY = Math.max(1.2, this.coinFlipCoinModel.position.y + 0.6);
+        camera.position.y += (targetCamY - camera.position.y) * 0.15;
+        const targetCamZ = 3.8 + Math.max(0, this.coinFlipCoinModel.position.y * 0.15);
+        camera.position.z += (targetCamZ - camera.position.z) * 0.1;
+        camera.lookAt(this.coinFlipCoinModel.position.x, this.coinFlipCoinModel.position.y, this.coinFlipCoinModel.position.z);
+
+        if (this.coinVy < 0 && this.coinFlipCoinModel.position.y <= -0.9) {
+          if (this.coinRebotes < 2) {
+            this.coinFlipCoinModel.position.y = -0.9;
+            this.coinVy = -this.coinVy * 0.35;
+            this.coinVx *= 0.4;
+            this.coinVz *= 0.4;
+            
+            this.coinOmegaX *= 0.35;
+            this.coinOmegaY *= 0.35;
+            this.coinOmegaZ *= 0.35;
+            this.coinRebotes++;
+          } else {
+            this.coinFlipVuelo = false;
+            this.coinFlipCoinModel.position.set(0, -0.9, 0.6);
+            
+            this.girando = false;
+            this.cdr.detectChanges();
+          }
+        }
+      }
+
+      if (!this.coinFlipVuelo && this.coinFlipCoinModel && this.coinFlipResultadoListo) {
+        let targetQuat = new THREE.Quaternion();
+        if (this.coinFlipResultadoEsperado === 'CARA') {
+          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 4, 0, 0));
+        } else {
+          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 4, Math.PI, 0));
+        }
+        this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.15);
+
+        camera.position.y += (1.2 - camera.position.y) * 0.1;
+        camera.position.z += (3.8 - camera.position.z) * 0.1;
+        camera.lookAt(0, -0.2, 0);
+      }
+
+      if (this.arrastrando && this.coinFlipHandModel && this.coinFlipCoinModel && !this.coinFlipVuelo) {
+        const offset = (this.fuerzaActual / 400) * 0.35;
+        this.coinFlipHandModel.position.y = -1.6 - offset;
+        this.coinFlipCoinModel.position.y = -0.45 - offset;
+      } else if (!this.coinFlipVuelo && this.coinFlipHandModel && this.coinFlipCoinModel) {
+        this.coinFlipHandModel.position.y += (-1.6 - this.coinFlipHandModel.position.y) * 0.1;
+        if (!this.coinFlipResultadoListo) {
+          this.coinFlipCoinModel.position.y += (-0.45 - this.coinFlipCoinModel.position.y) * 0.1;
+          this.coinFlipCoinModel.position.x += (0 - this.coinFlipCoinModel.position.x) * 0.1;
+          this.coinFlipCoinModel.position.z += (0.4 - this.coinFlipCoinModel.position.z) * 0.1;
+        }
+      }
+
+      this.actualizarParticulasCoin(dt);
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+  }
+
+  private emitirParticulaCoin(pos: THREE.Vector3): void {
+    if (!this.coinFlipScene) return;
+    const color = Math.random() > 0.5 ? 0xfccd4d : 0x00f0ff;
+    const geom = new THREE.SphereGeometry(0.035 + Math.random() * 0.035, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.85
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(pos);
+    mesh.position.x += (Math.random() - 0.5) * 0.12;
+    mesh.position.y += (Math.random() - 0.5) * 0.12;
+    mesh.position.z += (Math.random() - 0.5) * 0.12;
+
+    this.coinFlipScene.add(mesh);
+
+    this.coinFlipParticles.push({
+      mesh,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6 - 0.3,
+      vz: (Math.random() - 0.5) * 0.6,
+      life: 0,
+      maxLife: 25 + Math.random() * 15
+    });
+  }
+
+  private actualizarParticulasCoin(dt: number): void {
+    for (let i = this.coinFlipParticles.length - 1; i >= 0; i--) {
+      const p = this.coinFlipParticles[i];
+      p.life++;
+      if (p.life >= p.maxLife) {
+        this.coinFlipScene?.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        if (Array.isArray(p.mesh.material)) {
+          p.mesh.material.forEach(m => m.dispose());
+        } else {
+          p.mesh.material.dispose();
+        }
+        this.coinFlipParticles.splice(i, 1);
+      } else {
+        const ratio = 1.0 - p.life / p.maxLife;
+        p.mesh.position.x += p.vx * dt;
+        p.mesh.position.y += p.vy * dt;
+        p.mesh.position.z += p.vz * dt;
+        p.mesh.scale.setScalar(ratio);
+        if (!Array.isArray(p.mesh.material)) {
+          p.mesh.material.opacity = ratio * 0.85;
+        }
+      }
+    }
+  }
+
+  private cleanupCoinFlipScene(): void {
+    this.coinFlipCanvasInitialized = false;
+    if (this.coinFlipAnimationId) {
+      cancelAnimationFrame(this.coinFlipAnimationId);
+      this.coinFlipAnimationId = undefined;
+    }
+
+    this.coinFlipParticles.forEach(p => {
+      this.coinFlipScene?.remove(p.mesh);
+      p.mesh.geometry.dispose();
+      if (Array.isArray(p.mesh.material)) {
+        p.mesh.material.forEach(m => m.dispose());
+      } else {
+        p.mesh.material.dispose();
+      }
+    });
+    this.coinFlipParticles = [];
+
+    if (this.coinFlipHandModel) {
+      this.disposeModelMaterials(this.coinFlipHandModel);
+      this.coinFlipScene?.remove(this.coinFlipHandModel);
+      this.coinFlipHandModel = undefined;
+    }
+
+    if (this.coinFlipCoinModel) {
+      this.disposeModelMaterials(this.coinFlipCoinModel);
+      this.coinFlipScene?.remove(this.coinFlipCoinModel);
+      this.coinFlipCoinModel = undefined;
+    }
+
+    if (this.coinFlipRenderer) {
+      this.coinFlipRenderer.dispose();
+      this.coinFlipRenderer = undefined;
+    }
+
+    this.coinFlipScene = undefined;
+    this.coinFlipCamera = undefined;
+  }
+
+  private crearTexturaCara(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+    gradient.addColorStop(0, '#ffe066');
+    gradient.addColorStop(0.5, '#f59e0b');
+    gradient.addColorStop(1, '#b45309');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.shadowColor = '#78350f';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CARA', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.shadowBlur = 0;
+    ctx.fillText('★', 128, 55);
+    ctx.fillText('★', 128, 201);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  private crearTexturaCruz(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+    gradient.addColorStop(0, '#e2e8f0');
+    gradient.addColorStop(0.5, '#64748b');
+    gradient.addColorStop(1, '#1e293b');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.shadowColor = '#0f172a';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CRUZ', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.shadowBlur = 0;
+    ctx.fillText('✦', 128, 55);
+    ctx.fillText('✦', 128, 201);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
   }
 
   private initPlayerTrainerScene(canvas: HTMLCanvasElement): void {
