@@ -3913,14 +3913,30 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return this.battleBoardUi.getSpriteFront(carta);
   }
 
-  onSpriteError(event: Event, cardId: string): void {
+  onSpriteError(event: Event, carta: any): void {
     const img = event.target as HTMLImageElement;
-    const fallbackSrc = this.battleBoardUi.getImagenCarta(cardId);
-    if (!img.src.includes(fallbackSrc)) {
-      img.src = fallbackSrc;
-      img.classList.add('fallback-sprite'); // Add class for styling
+    if (!carta) {
+      img.style.display = 'none';
+      return;
+    }
+
+    const num = (this.battleBoardUi as any).getPokemonNum(carta);
+    const triedOnline = img.getAttribute('data-tried-online') === 'true';
+
+    if (num > 0 && !triedOnline) {
+      img.setAttribute('data-tried-online', 'true');
+      const esTrasero = img.classList.contains('sprite-back');
+      img.src = esTrasero
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${num}.gif`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num}.gif`;
     } else {
-      img.style.display = 'none'; // If even the fallback fails, hide it
+      const fallbackSrc = this.battleBoardUi.getImagenCarta(carta.id);
+      if (!img.src.includes(fallbackSrc)) {
+        img.src = fallbackSrc;
+        img.classList.add('fallback-sprite');
+      } else {
+        img.style.display = 'none';
+      }
     }
   }
 

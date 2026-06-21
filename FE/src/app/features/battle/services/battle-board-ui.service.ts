@@ -117,7 +117,18 @@ export class BattleBoardUiService {
     chespin: 650, quilladin: 651, chesnaught: 652,
     fennekin: 653, braixen: 654, delphox: 655, froakie: 656,
     fletchinder: 662, talonflame: 663, litleo: 667, pyroar: 668,
-    sylveon: 700, xerneas: 716, yveltal: 717
+    sylveon: 700, xerneas: 716, yveltal: 717,
+    simisear: 514, panpour: 515, simipour: 516, frogadier: 657, greninja: 658,
+    emolga: 587, spoink: 325, grumpig: 326, venipede: 543, whirlipede: 544,
+    scolipede: 545, phantump: 708, trevenant: 709, rhyperior: 464, timburr: 532,
+    gurdurr: 533, conkeldurr: 534, sandile: 551, krokorok: 552, krookodile: 553,
+    zorua: 570, zoroark: 571, inkay: 686, malamar: 687, pawniard: 624,
+    bisharp: 625, honedge: 679, doublade: 680, spritzee: 682, aromatisse: 683,
+    swirlix: 684, slurpuff: 685, taillow: 276, swellow: 277, skitty: 300,
+    delcatty: 301, bidoof: 399, bibarel: 400, lillipup: 506, herdier: 507,
+    stoutland: 508, bunnelby: 659, diggersby: 660, fletchling: 661, furfrou: 676,
+    scatterbug: 664, spewpa: 665, vivillon: 666, skiddo: 672, gogoat: 673,
+    pumpkaboo: 710, gourgeist: 711, aegislash: 681
   };
 
   constructor(private sanitizer: DomSanitizer) {}
