@@ -1667,8 +1667,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     await this.delay(1200);
 
     if (data.coinFlipWinner === this.jugadorNombre) {
+      if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+      if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
       this.estadoCoinFlip = 'ELEGIR_TURNO';
     } else {
+      if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+      if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
       this.estadoCoinFlip = 'RESULTADO_BOT';
       if (this.esPartidaOnline(data)) {
         this.iniciarPollingSorteo();
@@ -1852,6 +1856,20 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';
 
+      if (this.playerCoinFlipMixer) {
+        const throwHints = ['attack', 'slash', 'shoot', 'throw', 'run'];
+        let throwAction: THREE.AnimationAction | undefined;
+        for (const hint of throwHints) {
+          throwAction = this.playerCoinFlipActions.get(hint);
+          if (throwAction) break;
+        }
+        if (throwAction) {
+          this.playerCoinFlipActions.get('idle')?.fadeOut(0.15);
+          throwAction.reset().fadeIn(0.1).setLoop(THREE.LoopOnce, 1).play();
+          throwAction.clampWhenFinished = true;
+        }
+      }
+
       if (this.coinFlipControls) this.coinFlipControls.enabled = false;
 
       // Impulsos físicos basados en swipe vector (dirección opuesta con resortera/flick)
@@ -1887,8 +1905,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       await this.delay(1200);
 
       if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+        if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
         this.estadoCoinFlip = 'ELEGIR_TURNO';
       } else {
+        if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+        if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
         this.estadoCoinFlip = 'RESULTADO_BOT';
         this.cdr.detectChanges();
         if (this.esPartidaOnline(estadoSorteo)) {
@@ -5634,6 +5656,50 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  private setCelebrationAnimation(mixer: THREE.AnimationMixer, actions: Map<string, THREE.AnimationAction>) {
+    const hints = ['dance', 'victory', 'win', 'jump', 'happy', 'wave', 'run'];
+    let chosenAction: THREE.AnimationAction | undefined;
+    for (const hint of hints) {
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
+      if (chosenAction) break;
+    }
+    if (!chosenAction) {
+      for (const [name, act] of actions.entries()) {
+        if (!name.includes('idle') && !name.includes('stand')) {
+          chosenAction = act;
+          break;
+        }
+      }
+    }
+    if (chosenAction) {
+      actions.forEach(act => act.fadeOut(0.2));
+      chosenAction.reset().fadeIn(0.2).play();
+    }
+  }
+
+  private setDefeatAnimation(mixer: THREE.AnimationMixer, actions: Map<string, THREE.AnimationAction>) {
+    const hints = ['lose', 'defeat', 'sad', 'cry', 'idle'];
+    let chosenAction: THREE.AnimationAction | undefined;
+    for (const hint of hints) {
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
+      if (chosenAction) break;
+    }
+    if (chosenAction) {
+      actions.forEach(act => act.fadeOut(0.2));
+      chosenAction.reset().fadeIn(0.2).play();
+    }
+  }
+
   private applyProceduralArm(
     arm: THREE.Bone | undefined,
     forearm: THREE.Bone | undefined,
@@ -6224,7 +6290,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
 
         // Seguir a la moneda con una cámara cinemática fija sobre el hombro estable
-        targetCameraPos.set(0.8, 1.8, 3.2);
+        targetCameraPos.set(0.6, 0.5, 2.7);
         // Acompañar sutilmente el avance del tiro en el aire
         targetCameraPos.x += (this.coinFlipCoinModel.position.x * 0.5);
         targetCameraPos.y += (this.coinFlipCoinModel.position.y * 0.3);
@@ -6273,9 +6339,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } else {
         // 3. Fase estática e interactiva de selección o espera
         if (this.confirmadoLado) {
-          // Pose detrás del hombro (Tercera persona listo para tirar) - Mayor amplitud y altura
-          targetCameraPos.set(0.8, 1.6, 3.4);
-          targetCameraLook.set(0.0, 0.2, -1.0);
+          // Pose detrás del hombro (Tercera persona listo para lanzar)
+          targetCameraPos.set(0.6, 0.5, 2.7);
+          targetCameraLook.set(0.0, -0.2, -0.5);
         } else if (this.eleccionTemporal) {
           // Zoom dramático a la mano y moneda
           targetCameraPos.copy(handWorldPos).add(new THREE.Vector3(0.05, 0.12, 0.42));
