@@ -1685,39 +1685,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO' || this.loadingCoinModels) return;
     if (!this.coinFlipCanvasInitialized || !this.coinFlipCamera || !this.coinFlipCoinModel || !this.coinFlipRenderer) return;
 
-    // Raycasting para detectar si hizo clic en la moneda
+    // Permitir arrastrar desde cualquier parte del canvas para mayor accesibilidad
     const canvas = this.coinFlipRenderer.domElement;
-    const rect = canvas.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    if (this.coinFlipControls) this.coinFlipControls.enabled = false;
 
-    const raycaster = new THREE.Raycaster();
-    raycaster.setFromCamera(new THREE.Vector2(x, y), this.coinFlipCamera);
-    const intersects = raycaster.intersectObjects(this.coinFlipScene?.children || [], true);
-
-    let tocoMoneda = false;
-    for (const hit of intersects) {
-      let obj: THREE.Object3D | null = hit.object;
-      while (obj) {
-        if (obj === this.coinFlipCoinModel) {
-          tocoMoneda = true;
-          break;
-        }
-        obj = obj.parent;
-      }
-    }
-
-    if (tocoMoneda) {
-      if (this.coinFlipControls) this.coinFlipControls.enabled = false;
-
-      event.preventDefault();
-      this.coinPointerId = event.pointerId;
-      this.yStart = event.clientY;
-      this.xStart = event.clientX;
-      this.arrastrando = true;
-      this.fuerzaActual = 0;
-      canvas.setPointerCapture?.(event.pointerId);
-    }
+    event.preventDefault();
+    this.coinPointerId = event.pointerId;
+    this.yStart = event.clientY;
+    this.xStart = event.clientX;
+    this.arrastrando = true;
+    this.fuerzaActual = 0;
+    canvas.setPointerCapture?.(event.pointerId);
   }
 
   onCoinPointerMove(event: PointerEvent) {
@@ -6047,6 +6025,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
       if (idleAction) {
         idleAction.play();
+        this.playerCoinFlipMixer.update(0.001);
       }
 
       scene.add(playerModel);
@@ -6179,7 +6158,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       }
 
       // Actualizar mixers de animación de los personajes
-      if (this.playerCoinFlipMixer) this.playerCoinFlipMixer.update(dt);
+      if (this.playerCoinFlipMixer) {
+        if (this.coinFlipVuelo || this.coinFlipResultadoListo) {
+          this.playerCoinFlipMixer.update(dt);
+        }
+      }
       if (this.opponentCoinFlipMixer) this.opponentCoinFlipMixer.update(dt);
 
       if (this.coinFlipControls && this.coinFlipControls.enabled) {
@@ -6289,14 +6272,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           this.emitirParticulaCoin(this.coinFlipCoinModel.position);
         }
 
-        // Seguir a la moneda con una cámara cinemática fija sobre el hombro estable
-        targetCameraPos.set(0.6, 0.5, 2.7);
-        // Acompañar sutilmente el avance del tiro en el aire
-        targetCameraPos.x += (this.coinFlipCoinModel.position.x * 0.5);
-        targetCameraPos.y += (this.coinFlipCoinModel.position.y * 0.3);
-        targetCameraPos.z += (this.coinFlipCoinModel.position.z * 0.2);
+        // Seguir a la moneda: la cámara se coloca detrás de la moneda en su trayectoria de vuelo y la sigue de cerca
+        targetCameraPos.set(
+          this.coinFlipCoinModel.position.x,
+          this.coinFlipCoinModel.position.y + 0.6,
+          this.coinFlipCoinModel.position.z + 1.2
+        );
         
-        camera.position.lerp(targetCameraPos, 0.08);
+        camera.position.lerp(targetCameraPos, 0.12);
         camera.lookAt(this.coinFlipCoinModel.position);
 
         if (this.coinVy < 0 && this.coinFlipCoinModel.position.y <= -0.9) {
@@ -6324,9 +6307,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         // 2. Resultado revelado en el suelo: zoom dramático de primer plano
         let targetQuat = new THREE.Quaternion();
         if (this.coinFlipResultadoEsperado === 'CARA') {
-          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+          targetQuat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
         } else {
-          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 2, Math.PI, 0));
+          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
         }
         this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.15);
 
