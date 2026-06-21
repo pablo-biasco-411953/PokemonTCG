@@ -686,7 +686,7 @@ transition: width 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 /* ══════════════════════════════════════════════════════════════
    SPRITES Y ANIMACIONES
    ══════════════════════════════════════════════════════════════ */
-.sprite-wrap { position: relative; width: 90px; height: 80px; display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0; }
+.sprite-wrap { position: relative; width: 120px; height: 110px; display: flex; align-items: flex-end; justify-content: center; flex-shrink: 0; }
 .poke-sprite { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,.65)); &.sprite-back { animation: sfb 3.2s ease-in-out infinite; } &.sprite-front { animation: sff 2.8s ease-in-out infinite; } }
 .player-sprite-wrap .poke-sprite { scale: -1 1; }
 @keyframes sfb { 0%,to{transform:translateY(0)} 50%{transform:translateY(-5px)} }
@@ -996,7 +996,7 @@ bot-sprite-wrap {
   }
   .active-card { width: 100px; height: 140px; }
   .hp-bar-ext  { width: 100px; }
-  .sprite-wrap { width: 75px; height: 66px; }
+  .sprite-wrap { width: 95px; height: 85px; }
   .bench-row.player-bench { margin-bottom: 24px; }
   .bench-slot.occupied img { width: 52px; }
   .bot-combatant { margin-top: 6px; }
@@ -1288,8 +1288,8 @@ bot-sprite-wrap {
   }
 
   .sprite-wrap {
-    width: 50px;
-    height: 44px;
+    width: 65px;
+    height: 58px;
   }
 
   .energy-badge {

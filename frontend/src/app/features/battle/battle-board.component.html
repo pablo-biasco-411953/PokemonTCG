@@ -586,7 +586,7 @@
                [class.shake-level-2]="carasAcumuladas >= 3 && carasAcumuladas <= 4"
                [class.shake-level-3]="carasAcumuladas >= 5">
             <img [src]="getSpriteFront(attacker.card)"
-                 (error)="onSpriteError($event, attacker.card.id)"
+                 (error)="onSpriteError($event, attacker.card)"
                  class="acf-sprite-img" />
           </div>
 
@@ -958,7 +958,7 @@
                   <img
                     class="poke-sprite sprite-front"
                     [src]="getSpriteFront(partida.bot.activo.card)"
-                    (error)="onSpriteError($event, partida.bot.activo.card.id)"
+                    (error)="onSpriteError($event, partida.bot.activo.card)"
                   />
                   <div class="sprite-shadow"></div>
                   <div class="cure-paralysis-fx" *ngIf="curingParalysisBot"></div>
@@ -1134,7 +1134,7 @@
                   <img
                     class="poke-sprite sprite-back"
                     [src]="getSpriteBack(partida.jugador.activo.card)"
-                    (error)="onSpriteError($event, partida.jugador.activo.card.id)"
+                    (error)="onSpriteError($event, partida.jugador.activo.card)"
                   />
                   <div class="sprite-shadow"></div>
                   <div
