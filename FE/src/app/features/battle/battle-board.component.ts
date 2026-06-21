@@ -325,6 +325,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   arrastrando = false;
   private xStart = 0;
   private coinFlipVuelo = false;
+  private coinFlipReleaseTime = 0;
   private coinVy = 0;
   private coinVx = 0;
   private coinVz = 0;
@@ -1830,6 +1831,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private async lanzarMoneda3DConAngulos(fuerza: number, deltaX: number, deltaY: number): Promise<void> {
     try {
       this.coinFlipVuelo = true;
+      this.coinFlipReleaseTime = 0;
       this.coinRebotes = 0;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';
@@ -1880,15 +1882,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.coinFlipControls.target.copy(this.coinFlipCoinModel.position);
       }
 
-      await this.delay(1200);
-
+      // Baile de celebración/derrota justo después de caer
       if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
         if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
         if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
-        this.estadoCoinFlip = 'ELEGIR_TURNO';
       } else {
         if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
         if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+      }
+      this.cdr.detectChanges();
+
+      // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
+      await this.delay(5000);
+
+      if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        this.estadoCoinFlip = 'ELEGIR_TURNO';
+      } else {
         this.estadoCoinFlip = 'RESULTADO_BOT';
         this.cdr.detectChanges();
         if (this.esPartidaOnline(estadoSorteo)) {
@@ -6177,32 +6186,35 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         handWorldPos.set(0.2, 0.0, 1.1);
       }
 
-      // --- PROCEDURAL ARM POSING (ESTIRADO/TOMAR IMPULSO) ---
+      // --- PROCEDURAL ARM POSING (ESTIRADO/TOMAR IMPULSO/LANZAMIENTO PROCEDIMENTAL) ---
       if (!this.coinFlipVuelo) {
         if (this.arrastrando) {
-          // Tomar impulso inclinando el brazo hacia atrás
+          const tension = this.fuerzaActual / 400; // 0 a 1
+          // Tomar impulso inclinando el brazo hacia atrás y abajo proporcionalmente
           if (this.coinFlipPlayerRightArm) {
             const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
             if (armQ) {
-              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 0.3)); // pitch hacia atrás
-              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.7)); 
+              // A mayor tensión, más hacia atrás en X y más abierto en Z
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.6 * tension)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.7 * tension)); 
               this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.15);
             }
           }
           if (this.coinFlipPlayerRightForeArm) {
             const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm)?.clone();
             if (foreQ) {
-              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.8)); // doblado
+              // Doblar el codo proporcionalmente
+              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.1 * tension)); 
               this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.15);
             }
           }
         } else {
-          // Brazo estirado hacia adelante para sostener la moneda
+          // Brazo estirado hacia adelante listo para tirar
           if (this.coinFlipPlayerRightArm) {
             const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
             if (armQ) {
-              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.0)); // pitch al frente
-              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.15)); // yaw
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.0)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.1)); 
               this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.1);
             }
           }
@@ -6215,14 +6227,37 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           }
         }
       } else {
-        // En pleno vuelo, retornar brazo suavemente a pose idle
-        if (this.coinFlipPlayerRightArm) {
-          const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm);
-          if (armQ) this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.1);
-        }
-        if (this.coinFlipPlayerRightForeArm) {
-          const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm);
-          if (foreQ) this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.1);
+        // En pleno vuelo: simulamos el lanzamiento procedimental en los primeros 0.20 segundos
+        this.coinFlipReleaseTime += dt;
+        if (this.coinFlipReleaseTime < 0.22) {
+          const progress = Math.min(this.coinFlipReleaseTime / 0.12, 1.0); // Flick ultra rápido
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
+            if (armQ) {
+              // Brazo extendido hacia arriba y al frente con fuerza
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.55)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.45)); 
+              this.coinFlipPlayerRightArm.quaternion.slerp(armQ, progress);
+            }
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm)?.clone();
+            if (foreQ) {
+              // Codo casi estirado en el flick
+              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.1)); 
+              this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, progress);
+            }
+          }
+        } else {
+          // Retornar brazo suavemente a pose idle
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm);
+            if (armQ) this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.08);
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm);
+            if (foreQ) this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.08);
+          }
         }
       }
 
@@ -6322,9 +6357,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       } else {
         // 3. Fase estática e interactiva de selección o espera
         if (this.confirmadoLado) {
-          // Pose detrás del hombro (Tercera persona listo para lanzar)
-          targetCameraPos.set(0.6, 0.5, 2.7);
-          targetCameraLook.set(0.0, -0.2, -0.5);
+          if (this.arrastrando) {
+            const tension = this.fuerzaActual / 400; // 0 a 1
+            // Alejar ligeramente la cámara al tensionar el tiro (mayor Z y un poco más alta en Y)
+            targetCameraPos.set(0.6, 0.5 + tension * 0.4, 2.7 + tension * 0.9);
+            targetCameraLook.set(0.0, -0.2, -0.5);
+          } else {
+            // Pose detrás del hombro (Tercera persona listo para lanzar)
+            targetCameraPos.set(0.6, 0.5, 2.7);
+            targetCameraLook.set(0.0, -0.2, -0.5);
+          }
         } else if (this.eleccionTemporal) {
           // Zoom dramático a la mano y moneda
           targetCameraPos.copy(handWorldPos).add(new THREE.Vector3(0.05, 0.12, 0.42));
