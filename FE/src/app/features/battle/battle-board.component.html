@@ -296,54 +296,75 @@
       </div>
     </ng-container>
 
-    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
-      <h2 class="sorteo-title">{{ 'battle.initialDraw' | t }}</h2>
-      <p class="sorteo-sub">{{ 'battle.youCallCoin' | t:{rival: nombreRival} }}</p>
-      <div class="choice-buttons">
-        <button class="btn-choice heads" type="button" (click)="iniciarSorteo('CARA')">
-          <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
-          <b>{{ 'battle.heads' | t }}</b>
-          <small>{{ 'battle.headsHint' | t }}</small>
-        </button>
-        <button class="btn-choice tails" type="button" (click)="iniciarSorteo('CRUZ')">
-          <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
-          <b>{{ 'battle.tails' | t }}</b>
-          <small>{{ 'battle.tailsHint' | t }}</small>
-        </button>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
-      <div class="resultado-panel">
-        <p class="res-ganaste">{{ 'battle.initialDraw' | t }}</p>
-        <p class="res-sub">{{ 'battle.rivalCallingCoin' | t:{rival: nombreRival} }}</p>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
+    <!-- 1. ESCENA 3D DEL COIN FLIP (Persistente durante todo el sorteo) -->
+    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL' || estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
       <div
         class="throw-zone"
         (pointerdown)="onCoinPointerDown($event)"
         (pointermove)="onCoinPointerMove($event)"
         (pointerup)="onCoinPointerUp($event)"
         (pointercancel)="onCoinPointerCancel($event)"
-        [class.pointer-events-none]="lanzada"
+        [class.pointer-events-none]="lanzada || estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL'"
       >
-        <p class="swipe-hint" *ngIf="!lanzada">{{ 'battle.swipeHint' | t }}</p>
-
         <div class="coin-canvas-container">
           <canvas #coinFlipCanvas class="coinflip-canvas"></canvas>
         </div>
 
-        <!-- Medidor de fuerza vertical -->
+        <!-- Medidor de fuerza vertical (sólo al arrastrar) -->
         <div class="fuerza-meter-container" *ngIf="arrastrando && fuerzaActual > 0">
           <div class="fuerza-meter-bar" [style.height.%]="(fuerzaActual / 400) * 100" [style.background]="getFuerzaColor()"></div>
         </div>
 
-        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">{{ 'battle.coinDecides' | t }}</p>
+        <!-- A. Interfaz flotante de Selección (ELEGIR_LADO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
+          <h2 class="sorteo-title">{{ 'battle.initialDraw' | t }}</h2>
+          
+          <div class="choice-buttons" *ngIf="!eleccionTemporal">
+            <p class="sorteo-sub">{{ 'battle.youCallCoin' | t:{rival: nombreRival} }}</p>
+            <div class="choice-row">
+              <button class="btn-choice heads" type="button" (click)="seleccionarCaraCruzTemporal('CARA')">
+                <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
+                <b>{{ 'battle.heads' | t }}</b>
+                <small>{{ 'battle.headsHint' | t }}</small>
+              </button>
+              <button class="btn-choice tails" type="button" (click)="seleccionarCaraCruzTemporal('CRUZ')">
+                <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
+                <b>{{ 'battle.tails' | t }}</b>
+                <small>{{ 'battle.tailsHint' | t }}</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="confirm-selection-panel" *ngIf="eleccionTemporal && !confirmadoLado">
+            <p class="sorteo-sub">Elegiste <b>{{ eleccionTemporal === 'CARA' ? ('battle.heads' | t) : ('battle.tails' | t) }}</b>. ¿Confirmar selección?</p>
+            <div class="confirm-buttons-row">
+              <button class="btn-confirm" (click)="confirmarSeleccionLado()">Confirmar</button>
+              <button class="btn-cancel" (click)="cancelarSeleccionLado()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Interfaz flotante de Esperando Rival (ESPERANDO_RIVAL) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
+          <div class="resultado-panel">
+            <p class="res-ganaste">{{ 'battle.initialDraw' | t }}</p>
+            <p class="res-sub">{{ 'battle.rivalCallingCoin' | t:{rival: nombreRival} }}</p>
+          </div>
+        </div>
+
+        <!-- C. Interfaz flotante de Esperando Tiro (ESPERANDO_TIRO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' && !lanzada">
+          <p class="swipe-hint">{{ 'battle.swipeHint' | t }}</p>
+        </div>
+
+        <!-- D. Interfaz flotante de Girando (GIRANDO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'GIRANDO'">
+          <p class="anim-text">{{ 'battle.coinDecides' | t }}</p>
+        </div>
       </div>
     </ng-container>
 
+    <!-- 2. ELEGIR_TURNO -->
     <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
       <div class="resultado-panel">
         <p class="res-ganaste">{{ 'battle.wonDraw' | t }}</p>
@@ -354,6 +375,7 @@
       </div>
     </ng-container>
 
+    <!-- 3. RESULTADO_BOT -->
     <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
       <div class="resultado-panel">
         <p class="res-perdiste">{{ 'battle.lostDraw' | t }}</p>
