@@ -2271,16 +2271,113 @@ bot-sprite-wrap {
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
 }
 
-// --- TEXTOS ---
+// --- OVERLAYS FLOTANTES Y BOTONES DE COIN FLIP CINEMÁTICO ---
+.sorteo-overlay-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  pointer-events: auto;
+  text-align: center;
+}
+
+.sorteo-title {
+  position: absolute;
+  top: -460px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.choice-row {
+  display: flex;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.confirm-selection-panel {
+  background: rgba(10, 18, 36, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  border-radius: 12px;
+  padding: 16px 28px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  animation: slideUp 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.confirm-buttons-row {
+  display: flex;
+  gap: 16px;
+}
+
+.btn-confirm, .btn-cancel {
+  padding: 10px 24px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm {
+  background: linear-gradient(135deg, #00f0ff 0%, #0072ff 100%);
+  border: none;
+  color: #030712;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.7);
+  }
+}
+
+.btn-cancel {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
 .swipe-hint {
-  font-size: 1.2rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.3rem;
   text-transform: uppercase;
   color: #64ffda;
   letter-spacing: 3px;
   animation: breathe 2s infinite;
-  margin-top: 10px;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(100, 255, 218, 0.6);
+  pointer-events: none;
   text-align: center;
-  text-shadow: 0 0 8px rgba(100, 255, 218, 0.6);
 }
 
 @keyframes breathe {
