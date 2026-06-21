@@ -155,7 +155,7 @@
   </div>
   <div class="endgame-card">
     <small>{{ isVictory ? ('battle.gameCompleted' | t) : ('battle.combatFinished' | t) }}</small>
-    <h1>{{ isVictory ? 'VICTORY' : 'DEFEAT' }}</h1>
+    <h1>{{ isVictory ? ('battle.victoryTitle' | t) : ('battle.defeatTitle' | t) }}</h1>
     <p>{{ isVictory ? ('battle.victoryText' | t) : ('battle.defeatText' | t) }}</p>
     <div class="endgame-reason">
       <span>{{ 'battle.endReasonLabel' | t }}</span>
