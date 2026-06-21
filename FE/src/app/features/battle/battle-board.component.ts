@@ -1116,7 +1116,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private esPartidaOnline(estado: Partida | null | undefined = this.partida): boolean {
-    return !estado?.botUsername;
+    return !!estado?.botUsername && estado.botUsername !== 'BOT';
   }
 
   trackByCardId(index: number, item: any): string {
@@ -1602,22 +1602,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           }
 
           this.resultadoMoneda = data.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
+          console.log('[Polling Sorteo] Moneda lanzada detectada en backend. Winner:', data.coinFlipWinner, 'Jugador:', this.jugadorNombre);
           if (data.coinFlipWinner === this.jugadorNombre) {
+            console.log('[Polling Sorteo] El jugador ganó. Pasando a ELEGIR_TURNO');
             this.estadoCoinFlip = 'ELEGIR_TURNO';
           } else {
+            console.log('[Polling Sorteo] El bot ganó. Pasando a RESULTADO_BOT');
             this.estadoCoinFlip = 'RESULTADO_BOT';
             this.cdr.detectChanges();
-            if (!this.esPartidaOnline(data)) {
+            const online = this.esPartidaOnline(data);
+            console.log('[Polling Sorteo] ¿Es partida online?', online);
+            if (!online) {
+              console.log('[Polling Sorteo] Deteniendo polling del sorteo para proceder...');
               if (this.pollingSorteo) {
                 clearInterval(this.pollingSorteo);
                 this.pollingSorteo = null;
               }
+              console.log('[Polling Sorteo] Esperando delay de 2s...');
               await this.delay(2000);
+              console.log('[Polling Sorteo] Enviando elegirTurno para bot:', this.nombreRival);
               try {
                 await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+                console.log('[Polling Sorteo] elegirTurno bot exitoso!');
               } catch (err) {
-                console.error('Error al elegir turno del bot en polling:', err);
+                console.error('[Polling Sorteo] Error al elegir turno del bot en polling:', err);
               }
+              console.log('[Polling Sorteo] Finalizando coin flip');
               this.finalizarCoinFlip();
             }
           }
@@ -1692,21 +1702,30 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
     await this.delay(5000);
 
+    console.log('[Sorteo Rival] Fin animación. Winner:', data.coinFlipWinner, 'Jugador:', this.jugadorNombre);
     if (data.coinFlipWinner === this.jugadorNombre) {
+      console.log('[Sorteo Rival] El jugador ganó. Pasando a ELEGIR_TURNO');
       this.estadoCoinFlip = 'ELEGIR_TURNO';
     } else {
+      console.log('[Sorteo Rival] El bot ganó. Pasando a RESULTADO_BOT');
       this.estadoCoinFlip = 'RESULTADO_BOT';
       this.cdr.detectChanges();
-      if (this.esPartidaOnline(data)) {
+      const online = this.esPartidaOnline(data);
+      console.log('[Sorteo Rival] ¿Es partida online?', online);
+      if (online) {
+        console.log('[Sorteo Rival] Iniciando polling del sorteo...');
         this.iniciarPollingSorteo();
       } else {
-        // En partida offline (contra bot), el bot elige su turno de forma simulada tras 2 segundos
+        console.log('[Sorteo Rival] Partida offline. Iniciando delay de 2s para elección del bot...');
         await this.delay(2000);
+        console.log('[Sorteo Rival] Enviando elegirTurno para bot:', this.nombreRival);
         try {
           await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+          console.log('[Sorteo Rival] elegirTurno bot exitoso!');
         } catch (err) {
-          console.error('Error al elegir turno del bot en animacion:', err);
+          console.error('[Sorteo Rival] Error al elegir turno del bot en animacion:', err);
         }
+        console.log('[Sorteo Rival] Finalizando coin flip');
         this.finalizarCoinFlip();
       }
     }
@@ -1926,20 +1945,30 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
       await this.delay(5000);
 
+      console.log('[Sorteo Manual] Tiro realizado. Winner:', estadoSorteo.coinFlipWinner, 'Jugador:', this.jugadorNombre);
       if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        console.log('[Sorteo Manual] El jugador ganó. Pasando a ELEGIR_TURNO');
         this.estadoCoinFlip = 'ELEGIR_TURNO';
       } else {
+        console.log('[Sorteo Manual] El bot ganó. Pasando a RESULTADO_BOT');
         this.estadoCoinFlip = 'RESULTADO_BOT';
         this.cdr.detectChanges();
-        if (this.esPartidaOnline(estadoSorteo)) {
+        const online = this.esPartidaOnline(estadoSorteo);
+        console.log('[Sorteo Manual] ¿Es partida online?', online);
+        if (online) {
+          console.log('[Sorteo Manual] Iniciando polling del sorteo...');
           this.iniciarPollingSorteo();
         } else {
+          console.log('[Sorteo Manual] Partida offline. Iniciando delay de 2s...');
           await this.delay(2000);
+          console.log('[Sorteo Manual] Enviando elegirTurno para bot:', this.nombreRival);
           try {
             await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+            console.log('[Sorteo Manual] elegirTurno bot exitoso!');
           } catch (err) {
-            console.error('Error al elegir turno del bot en manual:', err);
+            console.error('[Sorteo Manual] Error al elegir turno del bot en manual:', err);
           }
+          console.log('[Sorteo Manual] Finalizando coin flip');
           this.finalizarCoinFlip();
         }
       }
