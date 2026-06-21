@@ -1682,8 +1682,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.estadoCoinFlip = 'ELEGIR_TURNO';
     } else {
       this.estadoCoinFlip = 'RESULTADO_BOT';
+      this.cdr.detectChanges();
       if (this.esPartidaOnline(data)) {
         this.iniciarPollingSorteo();
+      } else {
+        // En partida offline (contra bot), el bot elige su turno de forma simulada tras 2 segundos
+        await this.delay(2000);
+        await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
+        this.finalizarCoinFlip();
       }
     }
     this.cdr.detectChanges();
@@ -5923,7 +5929,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvas,
-      alpha: true,
+      alpha: false, // Desactivar alpha para controlar de forma exacta el fondo de la escena 3D
       antialias: !this.isPotato && window.devicePixelRatio < 2,
       powerPreference: 'high-performance',
       precision: this.isPotato ? 'mediump' : 'highp',
@@ -5936,10 +5942,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.coinFlipRenderer = renderer;
 
     const scene = new THREE.Scene();
+    // Fondo azul espacial profundo cinemático
+    scene.background = new THREE.Color(0x060d1b);
     this.coinFlipScene = scene;
 
-    // Niebla densa para disolver el horizonte sin skyboxes pesados
-    scene.fog = new THREE.FogExp2(0x020408, 0.08);
+    // Niebla densa a tono con el fondo espacial
+    scene.fog = new THREE.FogExp2(0x060d1b, 0.08);
 
     const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 50);
     // Posición general inicial de la cámara
@@ -6114,16 +6122,28 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
           const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
           
+          // Relieve 3D para la Cara
+          const caraBumpCanvas = this.crearBumpMapCara();
+          const caraBumpTex = new THREE.CanvasTexture(caraBumpCanvas);
+
           const caraMat = new THREE.MeshStandardMaterial({
             map: this.crearTexturaCara(),
-            roughness: 0.1,
+            bumpMap: caraBumpTex,
+            bumpScale: 0.008,
+            roughness: 0.22,
             metalness: 0.9,
             side: THREE.FrontSide
           });
 
+          // Relieve 3D para la Cruz
+          const cruzBumpCanvas = this.crearBumpMapCruz();
+          const cruzBumpTex = new THREE.CanvasTexture(cruzBumpCanvas);
+
           const cruzMat = new THREE.MeshStandardMaterial({
             map: this.crearTexturaCruz(),
-            roughness: 0.1,
+            bumpMap: cruzBumpTex,
+            bumpScale: 0.008,
+            roughness: 0.22,
             metalness: 0.9,
             side: THREE.FrontSide
           });
@@ -6280,19 +6300,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
         // Rotación de canto o mostrando cara/cruz
         if (!this.confirmadoLado) {
+          let rotX = 0;
+          let rotY = 0;
           if (this.eleccionTemporal === 'CARA') {
-            coinTargetRotY = 0; // Cara de frente
+            rotX = -Math.PI / 2; // Cara mirando arriba
           } else if (this.eleccionTemporal === 'CRUZ') {
-            coinTargetRotY = Math.PI; // Cruz de frente
+            rotX = Math.PI / 2;  // Cruz mirando arriba
           } else {
-            coinTargetRotY = Math.PI / 2; // De canto vertical neutro
+            rotX = 0; // De canto vertical neutro
+            rotY = Math.PI / 2;
           }
           
-          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(Math.PI / 2, coinTargetRotY, 0));
+          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX, rotY, 0));
           this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.1);
         } else {
-          // Si ya está confirmado, la moneda reposa horizontal en la mano para tirar
-          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, 0));
+          // Si ya está confirmado, la moneda reposa horizontal en la mano para tirar (con Cara arriba)
+          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
           this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.1);
         }
       }
@@ -6514,6 +6537,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private crearTexturaCara(): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
+    canvas.width = 256;
     canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
 
@@ -6595,6 +6619,82 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
     return texture;
+  }
+
+  private crearBumpMapCara(): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Fondo gris base
+    ctx.fillStyle = '#666666';
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde exterior elevado
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Borde fino interior
+    ctx.strokeStyle = '#999999';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Textos elevados
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CARA', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.fillText('★', 128, 55);
+    ctx.fillText('★', 128, 201);
+
+    return canvas;
+  }
+
+  private crearBumpMapCruz(): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Fondo gris base
+    ctx.fillStyle = '#666666';
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde exterior elevado
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Borde fino interior
+    ctx.strokeStyle = '#999999';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Textos elevados
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CRUZ', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.fillText('✦', 128, 55);
+    ctx.fillText('✦', 128, 201);
+
+    return canvas;
   }
 
   private initPlayerTrainerScene(canvas: HTMLCanvasElement): void {

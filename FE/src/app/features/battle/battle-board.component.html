@@ -361,25 +361,39 @@
         <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'GIRANDO'">
           <p class="anim-text">{{ 'battle.coinDecides' | t }}</p>
         </div>
-      </div>
-    </ng-container>
 
-    <!-- 2. ELEGIR_TURNO -->
-    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
-      <div class="resultado-panel">
-        <p class="res-ganaste">{{ 'battle.wonDraw' | t }}</p>
-        <div class="choice-buttons small">
-          <button (click)="seleccionarTurno(true)">{{ 'battle.youFirst' | t }}</button>
-          <button (click)="seleccionarTurno(false)">{{ 'battle.rivalFirst' | t:{rival: nombreRival} }}</button>
+        <!-- E. Interfaz flotante de ELEGIR_TURNO -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
+          <div class="resultado-modal-overlay">
+            <h2 class="res-ganaste-title">🏆 ¡GANASTE EL SORTEO!</h2>
+            <p class="sorteo-sub">Decide el destino de la batalla. ¿Quién inicia la partida?</p>
+            <div class="choice-row compact">
+              <button class="btn-choice-modern first-turn-btn" type="button" (click)="seleccionarTurno(true)">
+                <span class="btn-icon">⚔️</span>
+                <b>Jugar Primero</b>
+                <small>Tomas la iniciativa ofensiva</small>
+              </button>
+              <button class="btn-choice-modern second-turn-btn" type="button" (click)="seleccionarTurno(false)">
+                <span class="btn-icon">🛡️</span>
+                <b>Jugar Segundo</b>
+                <small>Robas carta en tu primer turno</small>
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-    </ng-container>
 
-    <!-- 3. RESULTADO_BOT -->
-    <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
-      <div class="resultado-panel">
-        <p class="res-perdiste">{{ 'battle.lostDraw' | t }}</p>
-        <p class="res-sub">{{ 'battle.winnerChose' | t:{winner: nombreGanadorSorteo} }}</p>
+        <!-- F. Interfaz flotante de RESULTADO_BOT -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
+          <div class="resultado-modal-overlay perdiste">
+            <h2 class="res-perdiste-title">💀 PERDISTE EL SORTEO</h2>
+            <p class="sorteo-sub">El oponente está decidiendo quién irá primero...</p>
+            <div class="loader-dots-container">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-container>
   </div>
