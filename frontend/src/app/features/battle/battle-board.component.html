@@ -297,7 +297,7 @@
     </ng-container>
 
     <!-- 1. ESCENA 3D DEL COIN FLIP (Persistente durante todo el sorteo) -->
-    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL' || estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
+    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL' || estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO' || estadoCoinFlip === 'ELEGIR_TURNO' || estadoCoinFlip === 'RESULTADO_BOT'">
       <div
         class="throw-zone"
         (pointerdown)="onCoinPointerDown($event)"
