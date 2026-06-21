@@ -435,7 +435,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (!this.isSpectator) {
       this.iniciarPresenciaBatalla();
     }
-    this.iniciarPollingSalaBatalla();
     this.cargarCatalogoGodMode();
     this.showIntro = true;
     setTimeout(() => (this.introFadingOut = true), 2000);
@@ -494,6 +493,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private hidratarEstadoInicial(data: Partida): void {
     if (!data) return;
     this.partida = data;
+    if (this.esPartidaOnline(data) && !this.battleRoomPolling) {
+      this.iniciarPollingSalaBatalla();
+    }
     this.lastAppliedStateSignature = this.crearFirmaPartida(data);
     this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
     this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
