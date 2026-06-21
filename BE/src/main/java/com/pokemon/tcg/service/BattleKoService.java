@@ -90,16 +90,16 @@ public class BattleKoService {
                 partida.transicionarA(new EstadoFinPartida());
                 partida.setGanador(partida.getJugadorUsername());
                 partida.setRazonFinPartida(jugadorSinPremios
-                        ? "El ganador tomo todos sus premios."
-                        : "El rival se quedo sin Pokemon en juego.");
+                        ? "El ganador tomó todos sus premios."
+                        : "El rival se quedó sin Pokémon en juego.");
                 return;
             } else {
                 partida.transicionarA(new EstadoFinPartida());
                 String ganadorBot = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
                 partida.setGanador(ganadorBot);
                 partida.setRazonFinPartida(botSinPremios
-                        ? "El ganador tomo todos sus premios."
-                        : "El rival se quedo sin Pokemon en juego.");
+                        ? "El ganador tomó todos sus premios."
+                        : "El rival se quedó sin Pokémon en juego.");
                 return;
             }
         }

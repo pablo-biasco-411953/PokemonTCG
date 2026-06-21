@@ -2216,13 +2216,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return danioTotal;
   }
 
-  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): {
-    cantidadMonedas: number;
-    danioBase: number;
-    danioExtraPorCara: number;
-    descripcion: string;
-    esSoloEstado: boolean;
-  } | null {
+  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): CoinFlipConfig | null {
     return this.battleBoardAttack.detectarCoinFlipAtaque(
       ataque,
       (texto, cantidadMonedas, danioExtraPorCara, esMultiplicador, esFalloCruz, esSoloEstado) =>
@@ -3156,12 +3150,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (coinConfig) {
         const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
         if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
-        const carasReales = this.contarCarasServidor(estadoFinal)
-          ?? this.battleBoardTurn.resolverCarasBot(
-            coinConfig,
-            estadoFinal,
-            danioHecho,
-          );
+        let carasReales = this.contarCarasServidor(estadoFinal);
+        if (carasReales === null) {
+          if (coinConfig.tipoEfecto === 'self-damage') {
+            const hpPropioAntes = this.partida?.bot?.activo?.hpActual || 0;
+            const hpPropioDespues = estadoFinal.bot?.activo?.hpActual || 0;
+            const autodanioHecho = hpPropioAntes - hpPropioDespues;
+            carasReales = autodanioHecho > 0 ? 0 : 1;
+          } else {
+            carasReales = this.battleBoardTurn.resolverCarasBot(
+              coinConfig,
+              estadoFinal,
+              danioHecho,
+            );
+          }
+        }
         this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
           coinConfig.cantidadMonedas,
           carasReales,
@@ -4331,13 +4334,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
     const danioHecho = this.battleBoardCombat.calcularDanioHecho(hpBotAntes, hpBotDespues);
 
-    const carasReales = this.contarCarasServidor(estadoFinal)
-      ?? this.battleBoardTurn.resolverCarasJugador(
-        coinConfig,
-        habilidad,
-        estadoFinal,
-        danioHecho,
-      );
+    let carasReales = this.contarCarasServidor(estadoFinal);
+    if (carasReales === null) {
+      if (coinConfig.tipoEfecto === 'self-damage') {
+        const hpPropioAntes = this.partida?.jugador?.activo?.hpActual || 0;
+        const hpPropioDespues = estadoFinal.jugador?.activo?.hpActual || 0;
+        const autodanioHecho = hpPropioAntes - hpPropioDespues;
+        carasReales = autodanioHecho > 0 ? 0 : 1;
+      } else {
+        carasReales = this.battleBoardTurn.resolverCarasJugador(
+          coinConfig,
+          habilidad,
+          estadoFinal,
+          danioHecho,
+        );
+      }
+    }
     this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
       coinConfig.cantidadMonedas,
       carasReales,
