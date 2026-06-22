@@ -226,6 +226,25 @@
             <div><i [style.width.%]="botLoadingPercentage"></i></div>
           </div>
         </div>
+
+        <!-- Tarjeta de canción reproduciendo -->
+        <div class="cinematic-song-announcement" 
+             [class.minimized]="battleSongAnnouncementMinimized"
+             *ngIf="currentSong$ | async as song"
+             (click)="toggleSongAnnouncement()">
+          <div class="song-card-body">
+            <div class="song-card-info">
+              <span class="song-card-badge">BATTLE BGM</span>
+              <h6 class="song-card-title">{{ song.getTitle() }}</h6>
+              <span class="song-card-artist">{{ song.getArtist() }}</span>
+            </div>
+            <div class="song-card-right">
+              <div class="song-card-disc" [class.spinning]="isPlaying$ | async">
+                <span class="disc-center"></span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-container>
 

@@ -3,9 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node generate-playlist.js",
     "start": "ng serve",
+    "prebuild": "node generate-playlist.js",
     "build": "ng build",
-    "watch": "ng build --watch --configuration development",
+    "watch": "node generate-playlist.js && ng build --watch --configuration development",
     "test": "ng test",
     "test:unit": "vitest run src/app/services/battle-board-attack.service.spec.ts --globals"
   },

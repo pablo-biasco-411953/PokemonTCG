@@ -15,7 +15,7 @@ import {
 } from './services/battle-board-attack.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
 import { Card } from '../../shared/models/card';
 import { BattleActionCard, CartaEnJuego, Partida } from '../../shared/models/battle';
@@ -25,6 +25,7 @@ import { BattleBoardStateService } from './services/battle-board-state.service';
 import { BattleBoardTurnService } from './services/battle-board-turn.service';
 import { BattleNotificationService } from './services/battle-notification';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
+import { MusicPlayerService } from '../../core/services/music-player.service';
 import { JugadorService } from '../../core/services/jugador.service';
 import { LobbyRoomReaction, LobbyRoomService, LobbyRoomSnapshot } from '../lobby/services/lobby-room.service';
 import * as THREE from 'three';
@@ -48,7 +49,15 @@ const CHARACTER_OPTIONS = [
   { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
   { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
   { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'] },
-  { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'] }
+  { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'] },
+  // Nuevos personajes (Pibes)
+  { id: 'adaman', label: 'Adaman', path: '/models-optimized/characters/adaman_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'giovanni-sygna', label: 'Giovanni Sygna', path: '/models-optimized/characters/giovanni_sygna_10.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'hugh', label: 'Hugh', path: '/models-optimized/characters/hugh_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  // Nuevos personajes (Pibas)
+  { id: 'courtney', label: 'Courtney', path: '/models-optimized/characters/courtney_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'irida', label: 'Irida', path: '/models-optimized/characters/irida_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'zinnia', label: 'Zinnia', path: '/models-optimized/characters/zinnia_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] }
 ];
 
 const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations: THREE.AnimationClip[] }>();
@@ -71,6 +80,13 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
   ],
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
+  battleSongAnnouncementMinimized = false;
+  get currentSong$(): Observable<any> { return this.musicPlayer.currentSong$; }
+  get isPlaying$(): Observable<boolean> { return this.musicPlayer.isPlaying$; }
+  toggleSongAnnouncement() {
+    this.battleSongAnnouncementMinimized = !this.battleSongAnnouncementMinimized;
+  }
+
   mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
     if (tipo === 'error') {
       this.battleNotificationService.showModal('Error', mensaje, tipo);
@@ -166,6 +182,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
   private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
   private pendingEndGameTimeout: ReturnType<typeof setTimeout> | null = null;
+  private battleMusicTimeout: ReturnType<typeof setTimeout> | null = null;
+  private introAudioPlayingListener: (() => void) | null = null;
+  private introAudioTimeUpdateListener: (() => void) | null = null;
+  private introAudioFallbackTimeout: any = null;
+  private introFadeOutTimeout: any = null;
+  private introHideTimeout: any = null;
+  private introRevealTimeout: any = null;
+  private versusPreloadFinished = false;
+  private versusSequenceTriggered = false;
   showEndGameOverlay = false;
   isVictory = false;
   coinsEarned = 0;
@@ -415,6 +440,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleNotificationService: BattleNotificationService,
     private lobbyRoomService: LobbyRoomService,
     public i18n: I18nService,
+    private musicPlayer: MusicPlayerService,
   ) {}
 
   ngOnInit(): void {
@@ -436,13 +462,56 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.iniciarPresenciaBatalla();
     }
     this.cargarCatalogoGodMode();
-    setTimeout(() => {
-      this.introFadingOut = true;
-      this.cdr.detectChanges();
-    }, 2000);
-    setTimeout(() => {
-      this.showIntro = false;
-      this.cdr.detectChanges();
+    this.battleMusicTimeout = setTimeout(() => {
+      this.musicPlayer.playSong('battle');
+    }, 0);
+
+    let triggered = false;
+    const triggerReveal = () => {
+      if (triggered) return;
+      triggered = true;
+
+      if (this.musicPlayer?.audioElement) {
+        if (this.introAudioPlayingListener) {
+          this.musicPlayer.audioElement.removeEventListener('playing', this.introAudioPlayingListener);
+        }
+        if (this.introAudioTimeUpdateListener) {
+          this.musicPlayer.audioElement.removeEventListener('timeupdate', this.introAudioTimeUpdateListener);
+        }
+      }
+      if (this.introAudioFallbackTimeout) clearTimeout(this.introAudioFallbackTimeout);
+
+      this.introFadeOutTimeout = setTimeout(() => {
+        this.introFadingOut = true;
+        this.cdr.detectChanges();
+      }, 2200);
+      this.introHideTimeout = setTimeout(() => {
+        this.showIntro = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      this.introRevealTimeout = setTimeout(() => {
+        this.versusSequenceTriggered = true;
+        this.tryStartVersusSequence();
+      }, 3550);
+    };
+
+    this.introAudioPlayingListener = () => {
+      triggerReveal();
+    };
+
+    this.introAudioTimeUpdateListener = () => {
+      if (this.musicPlayer?.audioElement && this.musicPlayer.audioElement.currentTime > 0) {
+        triggerReveal();
+      }
+    };
+
+    if (this.musicPlayer?.audioElement) {
+      this.musicPlayer.audioElement.addEventListener('playing', this.introAudioPlayingListener);
+      this.musicPlayer.audioElement.addEventListener('timeupdate', this.introAudioTimeUpdateListener);
+    }
+
+    this.introAudioFallbackTimeout = setTimeout(() => {
+      triggerReveal();
     }, 3000);
 
     this.battleService.getState(this.matchId).subscribe({
@@ -461,6 +530,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
     if (this.pendingEndGameTimeout) clearTimeout(this.pendingEndGameTimeout);
+    if (this.battleMusicTimeout) clearTimeout(this.battleMusicTimeout);
+    if (this.musicPlayer?.audioElement) {
+      if (this.introAudioPlayingListener) {
+        this.musicPlayer.audioElement.removeEventListener('playing', this.introAudioPlayingListener);
+      }
+      if (this.introAudioTimeUpdateListener) {
+        this.musicPlayer.audioElement.removeEventListener('timeupdate', this.introAudioTimeUpdateListener);
+      }
+    }
+    if (this.introAudioFallbackTimeout) clearTimeout(this.introAudioFallbackTimeout);
+    if (this.introFadeOutTimeout) clearTimeout(this.introFadeOutTimeout);
+    if (this.introHideTimeout) clearTimeout(this.introHideTimeout);
+    if (this.introRevealTimeout) clearTimeout(this.introRevealTimeout);
     this.cleanupBattleAtmosphere();
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
@@ -4566,7 +4648,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private randomizeBotCustomization(): void {
-    const characters = ['ash', 'lillie', 'hilda-sygna', 'robot'];
+    const characters = ['ash', 'lillie', 'hilda-sygna', 'robot', 'adaman', 'giovanni-sygna', 'hugh', 'courtney', 'irida', 'zinnia'];
     const skins = ['#ffe0bd', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
     const hairs = ['#5c4033', '#2c1e18', '#b55229', '#e6c875', '#ffffff', '#2563eb', '#16a34a', '#db2777', '#7c3aed'];
     const eyes = ['#2563eb', '#16a34a', '#7c3aed', '#b45309', '#475569', '#db2777'];
@@ -5701,12 +5783,24 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     model.traverse((child: any) => {
       if (child.isBone) {
         const name = child.name.toLowerCase();
-        if (name.includes('rightarm')) rightArm = child;
-        else if (name.includes('rightforearm')) rightForeArm = child;
-        else if (name.includes('righthand') || name.includes('right_hand')) rightHand = child;
-        else if (name.includes('leftarm')) leftArm = child;
-        else if (name.includes('leftforearm')) leftForeArm = child;
-        else if (name.includes('lefthand') || name.includes('left_hand')) leftHand = child;
+        
+        // --- RIGHT SIDE ---
+        if (name.includes('rightarm') || name.includes('rarm') || name.includes('upperarm.r') || name.includes('upperarm_r') || (name.includes('arm.r') && !name.includes('lower'))) {
+          rightArm = child;
+        } else if (name.includes('rightforearm') || name.includes('rforearm') || name.includes('lowerarm.r') || name.includes('lowerarm_r') || name.includes('arm_r_03') || name.includes('forearm.r')) {
+          rightForeArm = child;
+        } else if (name.includes('righthand') || name.includes('rhand') || name.includes('hand.r') || name.includes('hand_r')) {
+          rightHand = child;
+        }
+        
+        // --- LEFT SIDE ---
+        else if (name.includes('leftarm') || name.includes('larm') || name.includes('upperarm.l') || name.includes('upperarm_l') || (name.includes('arm.l') && !name.includes('lower'))) {
+          leftArm = child;
+        } else if (name.includes('leftforearm') || name.includes('lforearm') || name.includes('lowerarm.l') || name.includes('lowerarm_l') || name.includes('arm_l_03') || name.includes('forearm.l')) {
+          leftForeArm = child;
+        } else if (name.includes('lefthand') || name.includes('lhand') || name.includes('hand.l') || name.includes('hand_l')) {
+          leftHand = child;
+        }
       }
     });
     return { rightArm, rightForeArm, rightHand, leftArm, leftForeArm, leftHand };
@@ -5724,7 +5818,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     let chosenAction: THREE.AnimationAction | undefined;
 
     for (const hint of hints) {
-      chosenAction = actions.get(hint);
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
       if (chosenAction) break;
     }
     if (!chosenAction) {
@@ -6128,7 +6227,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       const hints = ['idle', 'standing', 'house'];
       let idleAction: THREE.AnimationAction | undefined;
       for (const hint of hints) {
-        idleAction = this.playerCoinFlipActions.get(hint);
+        for (const [name, act] of this.playerCoinFlipActions.entries()) {
+          if (name.includes(hint)) {
+            idleAction = act;
+            break;
+          }
+        }
         if (idleAction) break;
       }
       if (idleAction) {
@@ -6159,7 +6263,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         // Iniciar animación idle en el bot
         let botIdleAction: THREE.AnimationAction | undefined;
         for (const hint of hints) {
-          botIdleAction = this.opponentCoinFlipActions.get(hint);
+          for (const [name, act] of this.opponentCoinFlipActions.entries()) {
+            if (name.includes(hint)) {
+              botIdleAction = act;
+              break;
+            }
+          }
           if (botIdleAction) break;
         }
         if (botIdleAction) {
@@ -7163,7 +7272,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (this.cinematicAssetsReady) {
         this.versusPlayerMixer?.update(dt);
         this.versusOpponentMixer?.update(dt);
-        if (sequenceElapsed >= 10.0 && this.serverLoadingComplete && this.finalizarPreloadFn) {
+        if (sequenceElapsed >= 13.0 && this.serverLoadingComplete && this.finalizarPreloadFn) {
           this.finalizarPreloadFn(this.lastPreloadState);
         }
       }
@@ -7184,9 +7293,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         { time: 0,   tx: 0.0, ty: 1.15, tz: 3.5,  lx: 0.0, ly: 0.95, tilt: -0.03 },
         { time: 2.0, tx: 0.0, ty: 1.12, tz: 3.8,  lx: 0.0, ly: 0.92, tilt: -0.01 },
         { time: 4.0, tx: 0.0, ty: 1.09, tz: 4.2,  lx: 0.0, ly: 0.89, tilt: 0.01 },
-        { time: 6.0, tx: 0.0, ty: 1.07, tz: 4.7,  lx: 0.0, ly: 0.86, tilt: 0.03 },
-        { time: 8.0, tx: 0.0, ty: 1.06, tz: 5.2,  lx: 0.0, ly: 0.84, tilt: 0.01 },
-        { time: 10.0,tx: 0.0, ty: 1.05, tz: 5.6,  lx: 0.0, ly: 0.82, tilt: 0.0 }
+        { time: 7.0, tx: 0.0, ty: 1.07, tz: 4.7,  lx: 0.0, ly: 0.86, tilt: 0.03 },
+        { time: 10.0,tx: 0.0, ty: 1.06, tz: 5.2,  lx: 0.0, ly: 0.84, tilt: 0.01 },
+        { time: 13.0,tx: 0.0, ty: 1.05, tz: 5.6,  lx: 0.0, ly: 0.82, tilt: 0.0 }
       ];
 
       let k1 = keyframes[0];
@@ -7341,9 +7450,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private setCinematicAssetsReady(): void {
+    this.versusPreloadFinished = true;
+    this.tryStartVersusSequence();
+  }
+
+  private tryStartVersusSequence(): void {
+    if (!this.versusPreloadFinished || !this.versusSequenceTriggered) return;
     if (this.cinematicAssetsReady) return;
+
     this.cinematicAssetsReady = true;
-    
+    this.versusSequenceStartedAt = performance.now();
+    this.cdr.detectChanges();
+
     // Show loading bars with a delay of 2.0s after players start revealing
     setTimeout(() => {
       this.cinematicLoadingBarsVisible = true;
@@ -7366,8 +7484,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     warmup.catch(() => undefined).finally(() => {
       if (!this.versusRenderer) return;
       this.cinematicSceneLoadingPercentage = 100;
-      this.setCinematicAssetsReady();
-      this.versusSequenceStartedAt = performance.now();
+      this.versusPreloadFinished = true;
+      this.tryStartVersusSequence();
       this.cdr.detectChanges();
     });
   }
@@ -7397,7 +7515,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private getVersusAnimationPlan(characterId: string): Array<{ at: number; token: string }> {
-    if (characterId === 'hilda-sygna') {
+    if (characterId === 'hilda-sygna' || characterId === 'adaman' || characterId === 'giovanni-sygna' || characterId === 'hugh' || characterId === 'courtney' || characterId === 'zinnia') {
       return [
         { at: 0, token: 'appearance_2' },
         { at: 2.35, token: 'cutin_trainer' },
@@ -7405,7 +7523,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         { at: 7.35, token: 'start_battle' }
       ];
     }
-    if (characterId === 'lillie') {
+    if (characterId === 'lillie' || characterId === 'irida') {
       return [
         { at: 0, token: 'appearance_1' },
         { at: 2.2, token: 'greeting_1' },
