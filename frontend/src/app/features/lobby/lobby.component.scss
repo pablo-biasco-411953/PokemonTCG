@@ -5550,3 +5550,506 @@ kbd {
 }
 
 
+
+
+/* ==========================================================================
+   FLOATING MUSIC PLAYER HUD SYSTEM
+   ========================================================================== */
+.lobby-music-player-panel {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  width: 420px;
+  height: 74px;
+  transition: right 0.45s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s;
+  
+  /* Glassmorphism */
+  background: rgba(10, 18, 30, 0.78);
+  backdrop-filter: blur(12px) saturate(1.25);
+  -webkit-backdrop-filter: blur(12px) saturate(1.25);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+  border-right: 4px solid #00f0ff; /* Border glow on the right edge since it slides from right */
+  border-radius: 10px 0 0 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    box-shadow: 0 12px 36px rgba(0, 240, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  &.minimized {
+    right: -364px; /* Leaves exactly 56px visible (border + left section with disc) */
+    
+    &:hover {
+      right: -354px; /* Slide out slightly on hover to invite click */
+      border-color: rgba(0, 240, 255, 0.45);
+    }
+  }
+
+  .lobby-music-body {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Handle / Disc area on the left */
+  .lobby-music-left {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 100%;
+    flex-shrink: 0;
+    cursor: pointer;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .lobby-music-disc {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: repeating-radial-gradient(circle, #202028, #0e0e13 3px);
+    border: 2px solid #00f0ff;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4), inset 0 0 8px rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.spinning {
+      animation: spinVinyl 4s linear infinite;
+    }
+  }
+
+  .disc-center {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00f0ff;
+    box-shadow: 0 0 4px #00f0ff;
+  }
+
+  /* Content area on the right */
+  .lobby-music-content {
+    display: flex;
+    flex-direction: column;
+    width: 360px;
+    height: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
+
+  .lobby-music-info-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 32px;
+  }
+
+  .lobby-music-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex-grow: 1;
+    text-align: left;
+    line-height: 1.1;
+
+    .music-badge {
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      color: #00f0ff;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px rgba(0, 240, 255, 0.5);
+    }
+
+    .music-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 1px 0 0;
+      padding: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .music-artist {
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.72);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .lobby-music-canvas {
+    width: 90px;
+    height: 28px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Bottom controls row */
+  .lobby-music-control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    height: 24px;
+  }
+
+  .lobby-playback-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-lobby-music {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: all 0.2s;
+
+    &:hover {
+      color: #00f0ff;
+      background: rgba(0, 240, 255, 0.1);
+      transform: scale(1.15);
+    }
+
+    &.play-pause {
+      font-size: 13px;
+      color: #00f0ff;
+      background: rgba(0, 240, 255, 0.06);
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      width: 22px;
+      height: 22px;
+
+      &:hover {
+        background: #00f0ff;
+        color: #0c1830;
+      }
+    }
+  }
+
+  .lobby-music-progress {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-grow: 1;
+    min-width: 0;
+  }
+
+  .lobby-progress-container {
+    flex-grow: 1;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 1.5px;
+    overflow: hidden;
+  }
+
+  .lobby-progress-fill {
+    height: 100%;
+    background: #00f0ff;
+    width: 0%;
+  }
+
+  .lobby-time {
+    font-size: 8px;
+    color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+  }
+
+  .lobby-music-volume {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    width: 72px;
+
+    .vol-icon {
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .lobby-volume-slider {
+      width: 100%;
+      height: 3px;
+      -webkit-appearance: none;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 1.5px;
+      outline: none;
+
+      &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #00f0ff;
+        cursor: pointer;
+      }
+    }
+  }
+
+  /* Playlist Dropdown */
+  .lobby-playlist-dropdown {
+    position: absolute;
+    bottom: 108%;
+    right: 0;
+    width: 360px;
+    background: rgba(10, 18, 30, 0.94);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 240, 255, 0.28);
+    border-radius: 8px;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    max-height: 200px;
+    overflow: hidden;
+    z-index: 1001;
+
+    .playlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+      h5 {
+        margin: 0;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 1px;
+        font-family: 'Orbitron', sans-serif;
+      }
+
+      button {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 14px;
+        cursor: pointer;
+        &:hover { color: #00f0ff; }
+      }
+    }
+
+    .playlist-tracks {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding: 4px 0;
+
+      &::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: rgba(0, 240, 255, 0.2);
+        border-radius: 2px;
+      }
+
+      .track-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(0, 240, 255, 0.05);
+        }
+
+        &.active {
+          background: rgba(0, 240, 255, 0.1);
+          border-left: 3px solid #00f0ff;
+          padding-left: 9px;
+
+          .track-title {
+            color: #00f0ff;
+            font-weight: 700;
+          }
+        }
+
+        .track-number {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.3);
+          width: 12px;
+        }
+
+        .track-details {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+          min-width: 0;
+          text-align: left;
+
+          .track-title {
+            font-size: 11px;
+            color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+
+          .track-artist {
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.4);
+          }
+        }
+
+        .track-duration {
+          font-size: 10px;
+          color: rgba(255, 255, 255, 0.3);
+        }
+      }
+    }
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE LAYOUT CLEANUP (SMALL SCREENS)
+   ========================================================================== */
+@media (max-width: 980px) {
+  /* Reducir tamaño de chips en barra superior */
+  .hub-top-hud {
+    top: 10px !important;
+    left: 12px !important;
+    right: 12px !important;
+    gap: 8px !important;
+  }
+  
+  .trainer-chip,
+  .resource-chip {
+    padding: 6px 10px !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+    
+    small {
+      font-size: 8px !important;
+    }
+    
+    strong {
+      font-size: 11px !important;
+    }
+  }
+
+  .trainer-chip em {
+    display: none !important; /* Ocultar etiqueta de personaje en móvil para ahorrar espacio */
+  }
+
+  .hub-title {
+    padding: 6px 12px !important;
+    span {
+      font-size: 8px !important;
+    }
+    strong {
+      font-size: 11px !important;
+    }
+  }
+}
+
+@media (max-width: 820px) {
+  /* Evitar superposición desordenada de paneles flotantes draggeables */
+  .floating-hud-panel {
+    position: fixed !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.65) !important;
+  }
+
+  /* Re-posicionar Mazos para que no se oculte en mobile, sino que se ubique arriba del chat */
+  .lobby-3d-shell:not(.pack-opening) .deck-preview-strip {
+    display: flex !important;
+    top: auto !important;
+    bottom: 275px !important;
+    height: 140px !important;
+    max-height: 140px !important;
+    width: auto !important;
+    resize: none !important;
+  }
+
+  /* Re-posicionar Chat abajo de los Mazos */
+  .lobby-chat-container {
+    top: auto !important;
+    bottom: 96px !important;
+    height: 170px !important;
+    max-height: 170px !important;
+    width: auto !important;
+    resize: none !important;
+  }
+
+  /* Ajustar widget de música para pantallas pequeñas */
+  .lobby-music-player-panel {
+    bottom: 12px !important;
+    right: 12px !important;
+    left: 12px !important;
+    width: auto !important;
+    max-width: none !important;
+    
+    &.minimized {
+      right: -254px; /* Deja 56px visibles */
+      
+      &:hover {
+        right: -244px;
+      }
+    }
+
+    .lobby-music-content {
+      width: calc(100vw - 80px);
+    }
+    
+    .lobby-playlist-dropdown {
+      width: 100%;
+    }
+    
+    .lobby-music-volume {
+      display: none !important; /* Ocultar volumen en pantallas pequeñas */
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  /* Apilar y centrar chips superiores en mobile portrait */
+  .hub-top-hud {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 6px !important;
+  }
+  
+  .hud-left,
+  .hud-center,
+  .hud-right {
+    width: 100% !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+  
+  .hub-title {
+    display: none !important; /* Ocultar título central en mobile para ganar espacio vertical */
+  }
+}
+
+@keyframes spinVinyl {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

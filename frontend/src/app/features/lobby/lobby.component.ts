@@ -25,6 +25,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { MusicPlayerService } from '../../core/services/music-player.service';
 
 // Datos usados por el zoom flotante de una carta.
 export interface PokemonZoomUI {
@@ -396,9 +397,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get filteredCharacterOptions(): CharacterOption[] {
     if (this.customizerGender === 'pibe') {
-      return this.characterOptions.filter(o => o.id === 'ash' || o.id === 'robot');
+      return this.characterOptions.filter(o => o.id === 'ash' || o.id === 'robot' || o.id === 'adaman' || o.id === 'giovanni-sygna' || o.id === 'hugh');
     } else {
-      return this.characterOptions.filter(o => o.id === 'hilda-sygna' || o.id === 'lillie');
+      return this.characterOptions.filter(o => o.id === 'hilda-sygna' || o.id === 'lillie' || o.id === 'courtney' || o.id === 'irida' || o.id === 'zinnia');
     }
   }
 
@@ -406,7 +407,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
     { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
     { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, rotationY: Math.PI, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'], runHints: ['walking'] },
-    { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] }
+    { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] },
+    
+    // Nuevos personajes (Pibes)
+    { id: 'adaman', label: 'Adaman', path: '/models-optimized/characters/adaman_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'giovanni-sygna', label: 'Giovanni Sygna', path: '/models-optimized/characters/giovanni_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'hugh', label: 'Hugh', path: '/models-optimized/characters/hugh_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    
+    // Nuevos personajes (Pibas)
+    { id: 'courtney', label: 'Courtney', path: '/models-optimized/characters/courtney_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'irida', label: 'Irida', path: '/models-optimized/characters/irida_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'zinnia', label: 'Zinnia', path: '/models-optimized/characters/zinnia_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] }
   ];
   hubSpots: HubSpot[] = [
     {
@@ -460,6 +471,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   hubVisualProgress = 0;
   private visualProgressInterval?: any;
 
+  // Estado de la UI del Reproductor de Música
+  musicPlayerMinimized = false;
+  musicPlayerPlaylistOpen = false;
+  musicVolume = 50;
+  
+  @ViewChild('musicVisualizerCanvas') musicVisualizerCanvas?: ElementRef<HTMLCanvasElement>;
+
+  // Observables para el template
+  get currentSong$() { return this.musicPlayer.currentSong$; }
+  get isPlaying$() { return this.musicPlayer.isPlaying$; }
+  get timeProgress$() { return this.musicPlayer.timeProgress$; }
+
+  get songsList() {
+    return this.musicPlayer.getSongsList();
+  }
+
+  get currentTrackIndex(): number {
+    return this.musicPlayer.getCurrentTrackIndex();
+  }
+
+  private visualizerSubscription?: any;
+
   constructor(
     private sobreService: SobreService,
     private mazoService: MazoService,
@@ -471,7 +504,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
-    public i18n: I18nService
+    public i18n: I18nService,
+    private musicPlayer: MusicPlayerService
   ) {
     this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
       if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
@@ -682,6 +716,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Recupera al jugador guardado y carga su estado inicial.
   ngOnInit(): void {
+    this.musicPlayer.playSong('lobby');
     const storedQuality = localStorage.getItem('ptcg_graphics_quality') as 'low' | 'medium' | 'high' | null;
     if (storedQuality) {
       this.graphicsQuality = storedQuality;
@@ -1062,6 +1097,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.initHubWorld();
       this.connectWebSocket();
       this.animateHub();
+      this.visualizerSubscription = this.musicPlayer.frequencyData$.subscribe(data => {
+        this.drawVisualizer(data);
+      });
       
       if (this.showFirstTimeSetup) {
         this.initPreviewScene();
@@ -1071,6 +1109,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.lobbyDestroyed = true;
+    if (this.visualizerSubscription) {
+      this.visualizerSubscription.unsubscribe();
+    }
     this.cleanupPokedexTransition();
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -8106,6 +8147,61 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
     return this.i18n.translate('lobby.fairOffer');
+  }
+
+  drawVisualizer(data: Uint8Array | null): void {
+    if (!this.musicVisualizerCanvas || !data) return;
+    const canvas = this.musicVisualizerCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const barWidth = (width / data.length) * 1.6;
+    let barHeight;
+    let x = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      barHeight = (data[i] / 255) * height;
+
+      const grad = ctx.createLinearGradient(0, height, 0, height - barHeight);
+      grad.addColorStop(0, '#a855f7');
+      grad.addColorStop(1, '#06b6d4');
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+
+      x += barWidth;
+    }
+  }
+
+  togglePlay(): void {
+    this.musicPlayer.togglePlay();
+  }
+
+  nextSong(): void {
+    this.musicPlayer.next();
+  }
+
+  prevSong(): void {
+    this.musicPlayer.prev();
+  }
+
+  randomSong(): void {
+    this.musicPlayer.selectRandomTrack();
+  }
+
+  selectTrack(index: number): void {
+    this.musicPlayer.selectTrack(index);
+  }
+
+  setVolume(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const vol = parseInt(input.value, 10);
+    this.musicVolume = vol;
+    this.musicPlayer.audioElement.volume = vol / 100;
   }
 }
 
