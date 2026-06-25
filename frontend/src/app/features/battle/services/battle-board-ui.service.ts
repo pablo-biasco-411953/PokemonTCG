@@ -1,8 +1,11 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { CardService } from '../../../core/services/card.service';
 
 @Injectable({ providedIn: 'root' })
 export class BattleBoardUiService {
+  private cardService = inject(CardService);
+
   // Diccionario para resolver sprites animados por nombre.
   private readonly pokedexNum: Record<string, number> = {
     bulbasaur: 1, ivysaur: 2, venusaur: 3,
@@ -199,11 +202,7 @@ export class BattleBoardUiService {
 
   // Arma la ruta publica de una imagen de carta.
   getImagenCarta(id: string): string {
-    if (/^xy/i.test(id)) {
-      return `/images/cards/${id}.png`;
-    }
-
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   // Genera placeholders para completar los slots de banca.
@@ -219,6 +218,11 @@ export class BattleBoardUiService {
   // Identifica si una carta es Pokemon.
   esPokemon(carta: any): boolean {
     return carta?.supertype === 'Pokémon' || carta?.supertype === 'Pokemon';
+  }
+
+  // Identifica si una carta es Entrenador.
+  esTrainer(carta: any): boolean {
+    return carta?.supertype === 'Trainer';
   }
 
   // Traduce el tipo de energia a una etiqueta legible.

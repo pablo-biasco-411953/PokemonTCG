@@ -1,0 +1,1840 @@
+[
+  {
+    "id": "xy1-1",
+    "nombre": "Venusaur EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pó Venenoso",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado."
+      },
+      {
+        "nombre": "Martelo da Selva",
+        "texto": "Cure 30 de danos deste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-2",
+    "nombre": "M Venusaur EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Crise de Vinha",
+        "texto": "O Pokémon Ativo do seu oponente agora está Paralisado e Envenenado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-3",
+    "nombre": "Weedle",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mastigar Folhas",
+        "texto": "Se o Pokémon Ativo do seu oponente for um Pokémon Grass, esse ataque causará 20 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-4",
+    "nombre": "Kakuna",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Endurecer",
+        "texto": "Durante a próxima vez de jogar do seu oponente, se esse Pokémon estiver prestes a sofrer danos causados por um ataque, impedirá os danos causados pelo ataque a esse Pokémon se eles forem 60 ou menos."
+      }
+    ]
+  },
+  {
+    "id": "xy1-5",
+    "nombre": "Beedrill",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Golpe Envenenado",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado."
+      },
+      {
+        "nombre": "Agulha Veloz",
+        "texto": "Jogue 3 moedas. Esse ataque causa 40 de danos vezes o número de caras. Se todas elas forem cara, todos os efeitos de ataques, incluindo danos causados a este Pokémon, serão impedidos durante a próxima vez de jogar do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-6",
+    "nombre": "Ledyba",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ataque Giratório",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-7",
+    "nombre": "Ledian",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Investida",
+        "texto": ""
+      },
+      {
+        "nombre": "Soco Mach",
+        "texto": "Esse ataque causa 10 de danos a 1 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      }
+    ]
+  },
+  {
+    "id": "xy1-8",
+    "nombre": "Volbeat",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Brilho Sedutor",
+        "texto": "Troque 1 dos Pokémon no Banco do seu oponente pelo Pokémon Ativo desse oponente."
+      },
+      {
+        "nombre": "Feixe Sinalizador",
+        "texto": "O Pokémon Ativo do seu oponente agora está Confuso."
+      }
+    ]
+  },
+  {
+    "id": "xy1-9",
+    "nombre": "Illumise",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Feromovimento",
+        "texto": "Procure um Pokémon Grass em seu baralho, revele-o e coloque-o em sua mão. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Ataque Rápido",
+        "texto": "Jogue uma moeda. Se sair cara, este ataque causará 20 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-10",
+    "nombre": "Pansage",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Chicote de Vinha",
+        "texto": ""
+      },
+      {
+        "nombre": "Semente Sanguessuga",
+        "texto": "Cure 10 de danos deste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-11",
+    "nombre": "Simisage",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Atormentar",
+        "texto": "Escolha 1 dos ataques do Pokémon Ativo do seu oponente. Esse Pokémon não poderá usar esse ataque durante a próxima vez de jogar do seu oponente."
+      },
+      {
+        "nombre": "Raio Solar",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-12",
+    "nombre": "Chespin",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Míssil de Espinhos",
+        "texto": "Jogue 4 moedas. Esse ataque causa 10 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-13",
+    "nombre": "Quilladin",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Esmigalhar",
+        "texto": "Jogue uma moeda. Se sair cara, impedirá todos os danos causados a este Pokémon por ataques durante a próxima vez de jogar do seu oponente."
+      },
+      {
+        "nombre": "Martelo de Madeira",
+        "texto": "Este Pokémon causa 10 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-14",
+    "nombre": "Chesnaught",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Aterrissagem",
+        "texto": "Cure 20 de danos deste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-15",
+    "nombre": "Scatterbug",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Picada",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-16",
+    "nombre": "Spewpa",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Picada",
+        "texto": ""
+      },
+      {
+        "nombre": "Esporos Atordoantes",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-17",
+    "nombre": "Vivillon",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pó da Conversão",
+        "texto": "Escolha entre Adormecido e Envenenado. O Pokémon Ativo do seu oponente agora é afetado por essa Condição Especial."
+      },
+      {
+        "nombre": "Vento Colorido",
+        "texto": "Esse ataque causa 30 de danos adicionais para cada tipo diferente de Energia básica ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-18",
+    "nombre": "Skiddo",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Liderar",
+        "texto": "Jogue uma moeda. Se sair cara, procure em seu baralho um card de Apoiador, revele-o e coloque em sua mão. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Investida",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-19",
+    "nombre": "Gogoat",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Liderar",
+        "texto": "Procure em seu baralho até 2 cards de Apoiador, revele-os e coloque-os em sua mão. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Rasgo Feroz",
+        "texto": "Você pode causar 20 de danos adicionais. Se você fizer isso, o Pokémon causará 20 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-20",
+    "nombre": "Slugma",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Lança-chamas",
+        "texto": "Descarte uma Energia Fire ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-21",
+    "nombre": "Magcargo",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Manto de Magma",
+        "texto": "Você pode descartar o card do topo do seu baralho. Se esse card for um card de Energia Fire, esse ataque causará 50 de danos adicionais."
+      },
+      {
+        "nombre": "Raio de Calor",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-22",
+    "nombre": "Pansear",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Carvão Vivo",
+        "texto": ""
+      },
+      {
+        "nombre": "Fogos de Artifício",
+        "texto": "Descarte uma Energia ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-23",
+    "nombre": "Simisear",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bocejo",
+        "texto": "O Pokémon Ativo do seu oponente agora está Adormecido."
+      },
+      {
+        "nombre": "Lança-chamas",
+        "texto": "Descarte uma Energia Fire ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-24",
+    "nombre": "Fennekin",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Fogo Fátuo",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-25",
+    "nombre": "Braixen",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Olho Clarividente",
+        "texto": "Olhe os 3 cards de cima do seu baralho e coloque-os de volta em cima do seu baralho em qualquer ordem."
+      },
+      {
+        "nombre": "Tapa de Cauda de Fogo",
+        "texto": "Descarte uma Energia Fire ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-26",
+    "nombre": "Delphox",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bola de Fogo",
+        "texto": "Esse ataque causa 20 de danos adicionais para cada Energia Fire ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-27",
+    "nombre": "Fletchinder",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ataque de Chamas",
+        "texto": "Procure em seu baralho um card de Energia Fire e ligue-o a este Pokémon. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Asa de Fogo",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-28",
+    "nombre": "Talonflame",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Vento Devastador",
+        "texto": "Seu oponente embaralha a mão no próprio deck e compra 4 cards."
+      },
+      {
+        "nombre": "Blitz de Labaredas",
+        "texto": "Descarte toda a Energia Fire ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-29",
+    "nombre": "Blastoise EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Giro Rápido",
+        "texto": "Troque este Pokémon por 1 dos seus Pokémon do Banco. Em seguida, seu oponente troca o Pokémon Ativo por 1 dos Pokémon no Banco dele ou dela."
+      },
+      {
+        "nombre": "Bomba Borrifante",
+        "texto": "Jogue uma moeda. Se sair coroa, esse Pokémon causará 30 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-30",
+    "nombre": "M-Blastoise EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bombardeio de Água",
+        "texto": "Esse ataque causa 30 de danos a 2 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      }
+    ]
+  },
+  {
+    "id": "xy1-31",
+    "nombre": "Shellder",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Chuva Borrifante",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-32",
+    "nombre": "Cloyster",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Captura Esmagadora",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado e uma Energia ligada a ele deverá ser descartada."
+      },
+      {
+        "nombre": "Canhão de Espinhos",
+        "texto": "Jogue 5 moedas. Esse ataque causa 30 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-33",
+    "nombre": "Staryu",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Carga Indomável",
+        "texto": "Este Pokémon causa 10 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-34",
+    "nombre": "Starmie",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Recuperação",
+        "texto": "Descarte uma Energia ligada a este Pokémon e cure todos os danos desse Pokémon."
+      },
+      {
+        "nombre": "Núcleo Borrifante",
+        "texto": "Se este Pokémon possuir alguma Energia Psychic ligada a ele, esse ataque causará 30 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-35",
+    "nombre": "Lapras",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Viagem Marítima",
+        "texto": "Jogue 3 moedas. Para cada cara, ligue um card de Energia Water da sua pilha de descarte no seu Pokémon no Banco do jeito que desejar."
+      },
+      {
+        "nombre": "Jato d'Água",
+        "texto": "Esse ataque causa 20 de danos adicionais para cada Energia Water ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-36",
+    "nombre": "Corsola",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Refrescar",
+        "texto": "Cure 30 de danos e remova todas as Condições Especiais deste Pokémon."
+      },
+      {
+        "nombre": "Arremetida Espinhosa",
+        "texto": "Jogue uma moeda até sair coroa. Esse ataque causa 20 de danos adicionais para cada cara."
+      }
+    ]
+  },
+  {
+    "id": "xy1-37",
+    "nombre": "Panpour",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Onda Borrifante",
+        "texto": ""
+      },
+      {
+        "nombre": "Espirro d'Água",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 20 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-38",
+    "nombre": "Simipour",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Reciclagem",
+        "texto": "Coloque um card da sua pilha de descarte em cima do seu baralho."
+      },
+      {
+        "nombre": "Surfar",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-39",
+    "nombre": "Froakie",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ricochete",
+        "texto": "Jogue uma moeda. Se sair cara, troque este Pokémon por 1 dos seus Pokémon no Banco."
+      }
+    ]
+  },
+  {
+    "id": "xy1-40",
+    "nombre": "Frogadier",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Lambida",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-41",
+    "nombre": "Greninja",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Golpe de Névoa",
+        "texto": "Os danos desse ataque não são afetados por Fraqueza, Resistência, ou qualquer outro efeito no Pokémon Ativo do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-42",
+    "nombre": "Pikachu",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Fosso",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      },
+      {
+        "nombre": "Ataque Rápido",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 10 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-43",
+    "nombre": "Raichu",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Circuito Circular",
+        "texto": "Esse ataque causa 20 de danos vezes o número de Pokémon no seu Banco."
+      },
+      {
+        "nombre": "Relâmpago",
+        "texto": "Descarte toda a Energia ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-44",
+    "nombre": "Voltorb",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Rolagem",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-45",
+    "nombre": "Electrode",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Impulso Misterioso",
+        "texto": "Jogue uma moeda. Se sair cara, descarte uma Energia ligada a 1 dos Pokémon do seu oponente."
+      },
+      {
+        "nombre": "Rolagem",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-46",
+    "nombre": "Emolga EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Planeio de Energia",
+        "texto": "Procure em seu baralho um card de Energia Lightning e ligue-o a este Pokémon. Em seguida, embaralhe seus cards. Se você ligou Energia desta forma, troque este Pokémon por 1 dos seus Pokémon no Banco."
+      },
+      {
+        "nombre": "Esmagamento de Elétrons",
+        "texto": "Você pode descartar uma Energia ligada a este Pokémon. Se fizer isso, esse ataque causará 30 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-47",
+    "nombre": "Ekans",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mordida",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-48",
+    "nombre": "Arbok",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ácido Gástrico",
+        "texto": "O Pokémon Defensor não terá Habilidades até o final da sua próxima vez de jogar."
+      },
+      {
+        "nombre": "Golpe Envenenado",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-49",
+    "nombre": "Spoink",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Borrifada",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-50",
+    "nombre": "Grumpig",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Passos Ardilosos",
+        "texto": "Você pode mover um card de Energia ligado ao Pokémon Ativo do seu oponente para 1 dos Pokémon no Banco desse oponente."
+      },
+      {
+        "nombre": "Feixe Psíquico",
+        "texto": "O Pokémon Ativo do seu oponente agora está Confuso."
+      }
+    ]
+  },
+  {
+    "id": "xy1-51",
+    "nombre": "Venipede",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ferrão Venenoso",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-52",
+    "nombre": "Whirlipede",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Tombo Contínuo",
+        "texto": "Jogue uma moeda até sair coroa. Esse ataque causa 30 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-53",
+    "nombre": "Scolipede",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bicada Aleatória",
+        "texto": "Jogue 2 moedas. Esse ataque causa 20 de danos adicionais para cada cara."
+      },
+      {
+        "nombre": "Anel de Veneno",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado. Esse Pokémon não poderá recuar durante a próxima vez de jogar do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-54",
+    "nombre": "Phantump",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Abismar",
+        "texto": "Escolha um card aleatório da mão do seu oponente. Seu oponente revela esse card e o embaralha de volta no baralho dele ou dela."
+      },
+      {
+        "nombre": "Gancho",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-55",
+    "nombre": "Trevenant",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pancada de Árvore",
+        "texto": "Esse ataque causa 20 de danos a 2 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      }
+    ]
+  },
+  {
+    "id": "xy1-56",
+    "nombre": "Pumpkaboo",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Raio da Confusão",
+        "texto": "O Pokémon Ativo do seu oponente agora está Confuso."
+      }
+    ]
+  },
+  {
+    "id": "xy1-57",
+    "nombre": "Gourgeist",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Voz Misteriosa",
+        "texto": "Coloque 2 contadores de danos em cada um dos Pokémon do seu oponente."
+      },
+      {
+        "nombre": "Grito Espiritual",
+        "texto": "Coloque contadores de danos em ambos os Pokémon Ativos até o PS restante de cada Pokémon ser 10."
+      }
+    ]
+  },
+  {
+    "id": "xy1-58",
+    "nombre": "Diglett",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mina",
+        "texto": "Olhe o card de cima do baralho do seu oponente. Em seguida, você poderá fazer com que seu oponente o embaralhe."
+      },
+      {
+        "nombre": "Tapa de Lama",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-59",
+    "nombre": "Dugtrio",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Terremoto",
+        "texto": "Esse ataque causa 10 de danos a cada um dos seus Pokémon no Banco. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      },
+      {
+        "nombre": "Desabamento de Pedras",
+        "texto": "Os danos deste ataque não são afetados por Resistência."
+      }
+    ]
+  },
+  {
+    "id": "xy1-60",
+    "nombre": "Rhyhorn",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Escavar",
+        "texto": "Descarte o card de cima do seu baralho. Se esse card for um card de Energia Fighting, ligue-o a este Pokémon."
+      },
+      {
+        "nombre": "Chifre Broca",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-61",
+    "nombre": "Rhydon",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Chifre Broca",
+        "texto": ""
+      },
+      {
+        "nombre": "Montanha Louca",
+        "texto": "Jogue 2 moedas. Se ambas forem cara, descarte o card de cima do baralho do seu oponente para cada contador de danos neste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-62",
+    "nombre": "Rhyperior",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Explosão de Rocha",
+        "texto": "Jogue uma moeda para cada Energia Fighting ligada a este Pokémon. Esse ataque causa 50 de danos vezes o número de caras."
+      },
+      {
+        "nombre": "Demolidor de Pedras",
+        "texto": "Os danos desse ataque não são afetados por Fraqueza ou Resistência. Este Pokémon não poderá atacar durante sua próxima vez de jogar."
+      }
+    ]
+  },
+  {
+    "id": "xy1-63",
+    "nombre": "Lunatone",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Compra Dupla",
+        "texto": "Compre 2 cards."
+      },
+      {
+        "nombre": "Explosão Lunar",
+        "texto": "Durante a próxima vez de jogar do seu oponente, qualquer dano causado por ataques ao Pokémon Defensor será reduzido em 20 (antes da aplicação de Fraqueza e Resistência)."
+      }
+    ]
+  },
+  {
+    "id": "xy1-64",
+    "nombre": "Solrock",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Giro Cósmico",
+        "texto": "Se Lunatone estiver em seu Banco, esse ataque causará 30 de danos adicionais."
+      },
+      {
+        "nombre": "Raio Solar",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-65",
+    "nombre": "Timburr",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Esmurrar",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 20 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-66",
+    "nombre": "Gurdurr",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Esmurrar",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 20 de danos adicionais."
+      },
+      {
+        "nombre": "Braço de Martelo",
+        "texto": "Descarte o card de cima do baralho do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-67",
+    "nombre": "Conkeldurr",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Tapa do Despertar",
+        "texto": "Se o Pokémon Ativo do seu oponente estiver sendo afetado por uma Condição Especial, esse ataque causará 60 de danos adicionais. Depois, remova todas as Condições Especiais desse Pokémon."
+      },
+      {
+        "nombre": "Soco Dinâmico",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 40 de danos adicionais e o Pokémon Ativo do seu oponente ficará Confuso."
+      }
+    ]
+  },
+  {
+    "id": "xy1-68",
+    "nombre": "Sableye",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Furtar",
+        "texto": "Compre um card."
+      },
+      {
+        "nombre": "Garra Dilacerante",
+        "texto": "Jogue uma moeda. Se sair cara, descarte uma Energia ligada ao Pokémon Ativo do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-69",
+    "nombre": "Sandile",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Aríete",
+        "texto": ""
+      },
+      {
+        "nombre": "Presa Sombria",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-70",
+    "nombre": "Krokorok",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mastigada",
+        "texto": "Jogue uma moeda. Se sair cara, descarte uma Energia ligada ao Pokémon Ativo do seu oponente."
+      },
+      {
+        "nombre": "Presa Sombria",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-71",
+    "nombre": "Krookodile",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Azucrinar",
+        "texto": "Jogue uma moeda. Se sair cara, seu oponente não poderá jogar nenhum card de Apoiador da mão dele ou dela durante a próxima vez de jogar desse oponente."
+      },
+      {
+        "nombre": "Jogar de Volta",
+        "texto": "Seu oponente troca o Pokémon Ativo por 1 dos Pokémon no Banco dele ou dela."
+      }
+    ]
+  },
+  {
+    "id": "xy1-72",
+    "nombre": "Zorua",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Arranhão",
+        "texto": ""
+      },
+      {
+        "nombre": "Trama Maldosa",
+        "texto": "Procure um card em seu baralho e coloque-o em sua mão. Em seguida, embaralhe seus cards."
+      }
+    ]
+  },
+  {
+    "id": "xy1-73",
+    "nombre": "Zoroark",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Quina",
+        "texto": "O Pokémon Defensor não poderá recuar durante a próxima vez de jogar do seu oponente."
+      },
+      {
+        "nombre": "Garra Noturna",
+        "texto": "Jogue uma moeda. Se sair coroa, descarte 2 Energias ligadas a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-74",
+    "nombre": "Inkay",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Onda de Confusão",
+        "texto": "Ambos os Pokémon Ativos agora estão Confusos."
+      }
+    ]
+  },
+  {
+    "id": "xy1-75",
+    "nombre": "Inkay",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Investida",
+        "texto": ""
+      },
+      {
+        "nombre": "Perfuração",
+        "texto": "Os danos deste ataque não são afetados por Resistência."
+      }
+    ]
+  },
+  {
+    "id": "xy1-76",
+    "nombre": "Malamar",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Lixo Mental",
+        "texto": "Seu oponente joga 4 moedas. Para cada coroa, ele ou ela descarta um card da própria mão."
+      },
+      {
+        "nombre": "Raio da Distorção",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente ficará Adormecido. Se sair coroa, o Pokémon Ativo do seu oponente ficará Confuso."
+      }
+    ]
+  },
+  {
+    "id": "xy1-77",
+    "nombre": "Malamar",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pânico Mental",
+        "texto": "Se o Pokémon Defensor tentar atacar durante a próxima vez de jogar do seu oponente, seu oponente jogará uma moeda. Se sair coroa, o ataque não fará nada."
+      },
+      {
+        "nombre": "Perfuração",
+        "texto": "Os danos deste ataque não são afetados por Resistência."
+      }
+    ]
+  },
+  {
+    "id": "xy1-78",
+    "nombre": "Yveltal",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Asa do Esquecimento",
+        "texto": "Ligue um card de Energia Darkness da sua pilha de descarte a 1 dos seus Pokémon no Banco."
+      },
+      {
+        "nombre": "Lâmina Sombria",
+        "texto": "Jogue uma moeda. Se sair coroa, este Pokémon não poderá atacar durante sua próxima vez de jogar."
+      }
+    ]
+  },
+  {
+    "id": "xy1-79",
+    "nombre": "Yveltal EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bola Maligna",
+        "texto": "Esse ataque causa 20 de danos adicionais vezes a quantidade de Energia ligada a ambos os Pokémon Ativos."
+      },
+      {
+        "nombre": "Ciclone Y",
+        "texto": "Mova uma Energia deste Pokémon para 1 dos seus Pokémon no Banco."
+      }
+    ]
+  },
+  {
+    "id": "xy1-80",
+    "nombre": "Skarmory EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Justar",
+        "texto": "Antes de causar danos, descarte todos os cards de Ferramenta Pokémon ligados ao Pokémon Ativo do seu oponente."
+      },
+      {
+        "nombre": "Bate Estaca de Cauda",
+        "texto": "Se o Pokémon Ativo do seu oponente já possuir contadores de danos, esse ataque causará 40 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-81",
+    "nombre": "Pawniard",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Corte",
+        "texto": "Jogue uma moeda. Se sair cara, descarte uma Energia ligada ao Pokémon Ativo do seu oponente."
+      },
+      {
+        "nombre": "Garra de Metal",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-82",
+    "nombre": "Bisharp",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Som de Metal",
+        "texto": "O Pokémon Ativo do seu oponente agora está Confuso."
+      },
+      {
+        "nombre": "Batida Metálica",
+        "texto": "Durante sua próxima vez de jogar, o ataque Batida Metálica deste Pokémon causará 40 de danos adicionais (antes da aplicação de Fraqueza e Resistência)."
+      }
+    ]
+  },
+  {
+    "id": "xy1-83",
+    "nombre": "Honedge",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Perfurar",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-84",
+    "nombre": "Doublade",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Lâminas Duplas",
+        "texto": "Jogue 2 moedas. Esse ataque causa 30 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-85",
+    "nombre": "Aegislash",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Gingado",
+        "texto": "Os danos deste ataque não são afetados por Resistência."
+      }
+    ]
+  },
+  {
+    "id": "xy1-86",
+    "nombre": "Aegislash",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Escudo do Rei",
+        "texto": "Impede todos os danos causados a este Pokémon por ataques durante a próxima vez de jogar do seu oponente. Este Pokémon não poderá usar o Escudo do Rei em sua próxima vez de jogar."
+      }
+    ]
+  },
+  {
+    "id": "xy1-87",
+    "nombre": "Jigglypuff",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Rolagem",
+        "texto": ""
+      },
+      {
+        "nombre": "Canção Sincera",
+        "texto": "Descarte uma Energia Darkness ligada ao Pokémon Ativo do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-88",
+    "nombre": "Jigglypuff",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pancada Corporal",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-89",
+    "nombre": "Wigglytuff",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Acumular Energia",
+        "texto": "Procure em seu baralho um card de Energia básica e ligue-o a 1 dos seus Pokémon. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Hocus Pinkus",
+        "texto": "O Pokémon Defensor não poderá atacar durante a próxima vez de jogar do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-90",
+    "nombre": "Wigglytuff",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Barricada de Balões",
+        "texto": "Esse ataque causa 20 de danos vezes a quantidade de Energia ligada a este Pokémon."
+      },
+      {
+        "nombre": "Faca de Dois Gumes",
+        "texto": "Este Pokémon causa 10 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-91",
+    "nombre": "Mr. Mime",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Massagem",
+        "texto": "Cure 60 de danos de 1 dos seus Pokémon no Banco."
+      },
+      {
+        "nombre": "Ataque Violento",
+        "texto": "Jogue 2 moedas. Esse ataque causa 20 de danos adicionais para cada cara."
+      }
+    ]
+  },
+  {
+    "id": "xy1-92",
+    "nombre": "Spritzee",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Aroma Doce",
+        "texto": "Cure 20 de danos de 1 dos seus Pokémon."
+      },
+      {
+        "nombre": "Baque",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-93",
+    "nombre": "Aromatisse",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Vento de Fada",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-94",
+    "nombre": "Swirlix",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Investida",
+        "texto": ""
+      },
+      {
+        "nombre": "Vento de Fada",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-95",
+    "nombre": "Slurpuff",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Beijo Drenante",
+        "texto": "Cure 30 de danos deste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-96",
+    "nombre": "Xerneas",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Geomancia",
+        "texto": "Escolha 2 dos seus Pokémon no Banco. Para cada um desses Pokémon, procure em seu baralho um card de Energia Fairy e ligue-o a esse Pokémon. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Lança Arco-Íris",
+        "texto": "Descarte uma Energia ligada a este Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-97",
+    "nombre": "Xerneas EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Atravessar",
+        "texto": "Esse ataque causa 30 de danos a 1 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      },
+      {
+        "nombre": "Explosão X",
+        "texto": "Este Pokémon não poderá usar Explosão X na sua próxima vez de jogar."
+      }
+    ]
+  },
+  {
+    "id": "xy1-98",
+    "nombre": "Doduo",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Golpe Duplo",
+        "texto": "Jogue 2 moedas. Esse ataque causa 30 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-99",
+    "nombre": "Dodrio",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ira",
+        "texto": "Esse ataque causa 10 de danos adicionais para cada contador de danos neste Pokémon."
+      },
+      {
+        "nombre": "Esforço",
+        "texto": "Jogue 2 moedas. Esse ataque causa 20 de danos adicionais para cada cara."
+      }
+    ]
+  },
+  {
+    "id": "xy1-100",
+    "nombre": "Tauros",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Desmantelar",
+        "texto": "Este Pokémon causa 10 de danos a ele mesmo."
+      },
+      {
+        "nombre": "Fúria Fervente",
+        "texto": "Jogue uma moeda para cada contador de danos neste Pokémon. Esse ataque causa 30 de danos vezes o número de caras."
+      }
+    ]
+  },
+  {
+    "id": "xy1-101",
+    "nombre": "Dunsparce",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Olhar Penetrante",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      },
+      {
+        "nombre": "Segunda Mordida",
+        "texto": "Esse ataque causa 10 de danos adicionais para cada contador de danos no Pokémon Ativo do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-102",
+    "nombre": "Taillow",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ás dos Ares",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 30 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-103",
+    "nombre": "Swellow",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Ataque de Asa",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-104",
+    "nombre": "Skitty",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Sino da Cura",
+        "texto": "Cure 10 de danos de cada um dos seus Pokémon."
+      },
+      {
+        "nombre": "Surra de Cauda",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-105",
+    "nombre": "Delcatty",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Salão de Energia",
+        "texto": "Procure no seu baralho até 3 tipos diferentes de cards de Energia básica, revele-os e coloque-os na sua mão. Em seguida, embaralhe seus cards."
+      },
+      {
+        "nombre": "Fingimento",
+        "texto": "Jogue uma moeda. Se sair cara, o Pokémon Ativo do seu oponente será Paralisado."
+      }
+    ]
+  },
+  {
+    "id": "xy1-106",
+    "nombre": "Bidoof",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Hiperpresa",
+        "texto": "Jogue uma moeda. Se sair coroa, esse ataque não fará nada."
+      }
+    ]
+  },
+  {
+    "id": "xy1-107",
+    "nombre": "Bibarel",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Cabeçada Dupla",
+        "texto": "Jogue 2 moedas. Esse ataque causa 30 de danos vezes o número de caras."
+      },
+      {
+        "nombre": "Cabeçada Hipnótica",
+        "texto": "Você pode causar 30 de danos adicionais. Se você fizer isso, este Pokémon ficará Adormecido."
+      }
+    ]
+  },
+  {
+    "id": "xy1-108",
+    "nombre": "Lillipup",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Investida",
+        "texto": ""
+      },
+      {
+        "nombre": "Mordida",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-109",
+    "nombre": "Herdier",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mordida",
+        "texto": ""
+      },
+      {
+        "nombre": "Pular em Cima",
+        "texto": "Jogue uma moeda. Se sair cara, esse ataque causará 20 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-110",
+    "nombre": "Stoutland",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Mordida Estraçalhante",
+        "texto": "Se o Pokémon Ativo do seu oponente for um Pokémon-EX, esse ataque causará 60 de danos adicionais."
+      },
+      {
+        "nombre": "Latido Selvagem",
+        "texto": "Esse ataque causa 20 de danos a 1 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      }
+    ]
+  },
+  {
+    "id": "xy1-111",
+    "nombre": "Bunnelby",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Cavar",
+        "texto": "Jogue uma moeda. Se sair cara, impedirá todos os efeitos de ataques causados a este Pokémon, inclusive danos, durante a próxima vez de jogar do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-112",
+    "nombre": "Diggersby",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pegar",
+        "texto": "Coloque 2 cards de Item da sua pilha de descarte em sua mão."
+      },
+      {
+        "nombre": "Cavar",
+        "texto": "Jogue uma moeda. Se sair cara, impedirá todos os efeitos de ataques causados a este Pokémon, inclusive danos, durante a próxima vez de jogar do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-113",
+    "nombre": "Fletchling",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Primeiro Eu",
+        "texto": "Compre um card."
+      },
+      {
+        "nombre": "Bicada",
+        "texto": ""
+      }
+    ]
+  },
+  {
+    "id": "xy1-114",
+    "nombre": "Furfrou",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Corte de Energia",
+        "texto": "Jogue uma moeda. Se sair cara, descarte uma Energia ligada ao Pokémon Ativo do seu oponente."
+      }
+    ]
+  },
+  {
+    "id": "xy1-115",
+    "nombre": "Cassius",
+    "reglas": [
+      "Embaralhe 1 dos seus Pokémon e todos os cards ligados a ele em seu baralho."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-116",
+    "nombre": "Evosoda",
+    "reglas": [
+      "Procure em seu baralho um Pokémon que evolua de 1 dos seus Pokémon e coloque-o naquele Pokémon. (Isso conta como evoluir esse Pokémon.) Em seguida, embaralhe seus cards. Você não poderá usar esse card em sua primeira vez de jogar ou em um Pokémon que foi colocado em jogo na vez de jogar atual."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-117",
+    "nombre": "Jardim das Fadas",
+    "reglas": [
+      "Qualquer Pokémon que possuir alguma Energia Fairy ligada a ele (seu e do seu oponente) não terá Custo para Recuar."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-118",
+    "nombre": "Grande Bola",
+    "reglas": [
+      "Olhe os 7 cards de cima do seu baralho. Você poderá revelar um Pokémon que encontrar lá e colocá-lo em sua mão. Embaralhe os demais cards de volta."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-119",
+    "nombre": "Encanto Severo",
+    "reglas": [
+      "Qualquer dano causado ao Pokémon ao qual esse card está ligado pelo ataque de um oponente será reduzido em 20 (após a aplicação de Fraqueza e Resistência)."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-120",
+    "nombre": "Máximo Reviver",
+    "reglas": [
+      "Coloque um Pokémon da sua pilha de descarte em cima do seu baralho."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-121",
+    "nombre": "Faixa Musculosa",
+    "reglas": [
+      "Os ataques do Pokémon ao qual este card está ligado causam 20 de danos adicionais ao Pokémon Ativo do seu oponente (antes da aplicação de Fraqueza e Resistência)."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-122",
+    "nombre": "Professor Sycamore",
+    "reglas": [
+      "Descarte sua mão e compre 7 cards."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-123",
+    "nombre": "Carta do Professor",
+    "reglas": [
+      "Procure em seu baralho por até 2 cards de Energia básica, revele-os e coloque-os em sua mão. Em seguida, embaralhe seus cards."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-124",
+    "nombre": "Cartão Vermelho",
+    "reglas": [
+      "Seu oponente embaralha a mão no próprio deck e compra 4 cards."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-125",
+    "nombre": "Patins",
+    "reglas": [
+      "Jogue uma moeda. Se sair cara, compre 3 cards."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-126",
+    "nombre": "Círculo das Sombras",
+    "reglas": [
+      "Qualquer Pokémon que possuir alguma Energia Darkness ligada a ele (seu e do seu oponente) não terá Fraqueza."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-127",
+    "nombre": "Shauna",
+    "reglas": [
+      "Embaralhe sua mão em seu baralho. Em seguida, compre 5 cards."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-128",
+    "nombre": "Super Poção",
+    "reglas": [
+      "Cure 60 de danos de 1 dos seus Pokémon. Se fizer isso, descarte uma Energia ligada àquele Pokémon."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-129",
+    "nombre": "Grunhido da Equipe Flare",
+    "reglas": [
+      "Descarte uma Energia ligada ao Pokémon Ativo do seu oponente."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-130",
+    "nombre": "Energia Incolor Dupla",
+    "reglas": [
+      "A Energia Incolor Dupla fornece Energias ColorlessColorless ."
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-131",
+    "nombre": "Energia Arco-Íris",
+    "reglas": [
+      "Ligue Energia de Arco-íris a 1 Pokémon. Durante o jogo, a Energia de Arco-íris fornece todo tipo de Energia, mas fornece apenas 1 Energia por vez. (Só tem efeito para fornecer Energia.) Quando você ligar o card de sua mão a 1 Pokémon seu, coloque um marcador de dano nesse Pokémon. (Enquanto não joga, a Energia de Arco-íris conta como Energia de Colorless.)"
+    ],
+    "ataques": []
+  },
+  {
+    "id": "xy1-132",
+    "nombre": "Energia de Grama",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-133",
+    "nombre": "Energia de Fogo",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-134",
+    "nombre": "Energia de Água",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-135",
+    "nombre": "Energia de Raios",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-136",
+    "nombre": "Energia Psíquica",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-137",
+    "nombre": "Energia de Luta",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-138",
+    "nombre": "Energia de Escuridão",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-139",
+    "nombre": "Energia de Metal",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-140",
+    "nombre": "Energia de Fada",
+    "reglas": [],
+    "ataques": []
+  },
+  {
+    "id": "xy1-141",
+    "nombre": "Venusaur EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Pó Venenoso",
+        "texto": "O Pokémon Ativo do seu oponente agora está Envenenado."
+      },
+      {
+        "nombre": "Martelo da Selva",
+        "texto": "Cure 30 de danos deste Pokémon."
+      }
+    ]
+  },
+  {
+    "id": "xy1-142",
+    "nombre": "Blastoise EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Giro Rápido",
+        "texto": "Troque este Pokémon por 1 dos seus Pokémon do Banco. Em seguida, seu oponente troca o Pokémon Ativo por 1 dos Pokémon no Banco dele ou dela."
+      },
+      {
+        "nombre": "Bomba Borrifante",
+        "texto": "Jogue uma moeda. Se sair coroa, esse Pokémon causará 30 de danos a ele mesmo."
+      }
+    ]
+  },
+  {
+    "id": "xy1-143",
+    "nombre": "Emolga EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Planeio de Energia",
+        "texto": "Procure em seu baralho um card de Energia Lightning e ligue-o a este Pokémon. Em seguida, embaralhe seus cards. Se você ligou Energia desta forma, troque este Pokémon por 1 dos seus Pokémon no Banco."
+      },
+      {
+        "nombre": "Esmagamento de Elétrons",
+        "texto": "Você pode descartar uma Energia ligada a este Pokémon. Se fizer isso, esse ataque causará 30 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-144",
+    "nombre": "Yveltal EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Bola Maligna",
+        "texto": "Esse ataque causa 20 de danos adicionais vezes a quantidade de Energia ligada a ambos os Pokémon Ativos."
+      },
+      {
+        "nombre": "Ciclone Y",
+        "texto": "Mova uma Energia deste Pokémon para 1 dos seus Pokémon no Banco."
+      }
+    ]
+  },
+  {
+    "id": "xy1-145",
+    "nombre": "Skarmory EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Justar",
+        "texto": "Antes de causar danos, descarte todos os cards de Ferramenta Pokémon ligados ao Pokémon Ativo do seu oponente."
+      },
+      {
+        "nombre": "Bate Estaca de Cauda",
+        "texto": "Se o Pokémon Ativo do seu oponente já possuir contadores de danos, esse ataque causará 40 de danos adicionais."
+      }
+    ]
+  },
+  {
+    "id": "xy1-146",
+    "nombre": "Xerneas EX",
+    "reglas": [],
+    "ataques": [
+      {
+        "nombre": "Atravessar",
+        "texto": "Esse ataque causa 30 de danos a 1 dos Pokémon no Banco do seu oponente. (Não aplique Fraqueza e Resistência a Pokémon no Banco.)"
+      },
+      {
+        "nombre": "Explosão X",
+        "texto": "Este Pokémon não poderá usar Explosão X na sua próxima vez de jogar."
+      }
+    ]
+  }
+]

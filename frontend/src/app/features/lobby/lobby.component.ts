@@ -888,6 +888,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectLanguage(language: LanguageCode) {
     this.i18n.setLanguage(language);
+    this.cargarCatalogoGodMode();
     this.cdr.detectChanges();
   }
 
@@ -1494,7 +1495,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getImagenDebugCarta(id: string): string {
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   getImagenReal(carta: Card): string {
@@ -1502,17 +1503,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getImagenCarta(id: string): string {
-    if (/^xy/i.test(id)) {
-      return `/images/cards/${id}.png`;
-    }
-
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (!img || img.src.endsWith('/images/cards/back.png')) return;
-    img.src = '/images/cards/back.png';
+    this.cardService.handleCardImageError(img);
   }
 
   // Abre un sobre y dispara la animacion de revelado.

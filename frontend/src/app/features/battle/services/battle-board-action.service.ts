@@ -11,6 +11,7 @@ export type CardActionType =
   | 'evolucionar'
   | 'requiere-promocion'
   | 'bajar-pokemon'
+  | 'jugar-trainer'
   | 'sin-accion';
 
 export interface CardActionDecision {
@@ -33,6 +34,10 @@ export class BattleBoardActionService {
     carta: BattleActionCard | Card | null | undefined,
   ): CardActionDecision {
     if (!partida || !carta) return { tipo: 'sin-accion' };
+
+    if (carta.supertype === 'Trainer') {
+      return { tipo: 'jugar-trainer' };
+    }
 
     if (this.esEnergia(carta)) {
       return { tipo: 'unir-energia' };
@@ -60,18 +65,31 @@ export class BattleBoardActionService {
   }
 
   // Indica si el activo actual tiene energía suficiente para retirarse.
-  puedePagarRetiro(activo: CartaEnJuego | null | undefined): boolean {
+  puedePagarRetiro(activo: CartaEnJuego | null | undefined, activeStadium?: any): boolean {
     if (!activo) return false;
     const disponible = activo.energiasUnidas.reduce((total, energia) => {
       const nombre = (energia.nombre || '').toLowerCase();
       return total + (nombre.includes('double colorless') || nombre.includes('incolora doble') || nombre.includes('doble incolora') ? 2 : 1);
     }, 0);
+    
+    // Apply Fairy Garden
+    const isFairyGardenActive = activeStadium?.id === 'xy1-117' || activeStadium?.nombre?.toLowerCase() === 'fairy garden';
+    const hasFairyEnergy = activo.energiasUnidas?.some(e => e.tipo?.toLowerCase() === 'fairy' || e.nombre?.toLowerCase().includes('fairy energy'));
+    if (isFairyGardenActive && hasFairyEnergy) {
+      return true;
+    }
+    
     return disponible >= (activo.card.costoRetirada ?? 0);
   }
 
   // Construye el texto de confirmación al retirar un Pokémon activo.
-  construirMensajeRetirada(activo: CartaEnJuego): string {
-    const costo = activo.card.costoRetirada ?? 0;
+  construirMensajeRetirada(activo: CartaEnJuego, activeStadium?: any): string {
+    let costo = activo.card.costoRetirada ?? 0;
+    const isFairyGardenActive = activeStadium?.id === 'xy1-117' || activeStadium?.nombre?.toLowerCase() === 'fairy garden';
+    const hasFairyEnergy = activo.energiasUnidas?.some(e => e.tipo?.toLowerCase() === 'fairy' || e.nombre?.toLowerCase().includes('fairy energy'));
+    if (isFairyGardenActive && hasFairyEnergy) {
+      costo = 0;
+    }
     return this.i18n.translate('confirm.retreat', { name: activo.card.nombre, cost: costo.toString() });
   }
 
@@ -88,6 +106,12 @@ export class BattleBoardActionService {
   // Juega un Pokémon desde la mano y devuelve el nuevo estado.
   async jugarPokemonYRecargar(matchId: string, cartaId: string): Promise<Partida> {
     await firstValueFrom(this.battleService.jugarPokemon(matchId, cartaId));
+    return await firstValueFrom(this.battleService.getState(matchId));
+  }
+
+  // Juega una carta de Entrenador y devuelve el nuevo estado.
+  async jugarTrainerYRecargar(matchId: string, cartaId: string): Promise<Partida> {
+    await firstValueFrom(this.battleService.jugarTrainer(matchId, cartaId));
     return await firstValueFrom(this.battleService.getState(matchId));
   }
 

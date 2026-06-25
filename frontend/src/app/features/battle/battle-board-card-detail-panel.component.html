@@ -1,7 +1,7 @@
 <div class="card-detail-panel" [class.show]="hoveredCard">
   <ng-container *ngIf="hoveredCard">
     <div class="cd-left-col">
-      <img [src]="resolveImage(hoveredCard.id)" class="cd-big-img" />
+      <img [src]="resolveImage(hoveredCard.id)" class="cd-big-img" (error)="onCardImageError($event)" />
     </div>
 
     <div class="cd-right-col">

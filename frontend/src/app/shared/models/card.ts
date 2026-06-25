@@ -14,6 +14,10 @@ export interface Ataque {
   costo: string[];
   interactionType?: 'CHOOSE_STATUS' | 'CHOOSE_OPPONENT_ATTACK' | 'YES_NO_PROMPT' | 'CHOOSE_BENCHED_ENERGY_TARGETS' | null;
   interactionPrompt?: string | null;
+  // Nombre original en inglés, preservado al traducir para comunicación con el backend.
+  nombreOriginal?: string;
+  // Texto original en inglés, preservado para el parsing de reglas y monedas en el frontend.
+  textoOriginal?: string;
 }
 
 // Modelo base de una carta recibido desde backend.
@@ -28,6 +32,7 @@ export interface Card {
   costoRetirada?: number;
   pokemonId?: number;
   attacks?: string;
+  reglas?: string[];
   ataques?: Ataque[];
   subtypes?: string[];
   debilidades?: CardWeakness[];

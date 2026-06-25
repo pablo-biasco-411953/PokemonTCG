@@ -122,6 +122,13 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         if (peligroDeMuerte || estancado || muriendoPorEstados) {
             int costoRetirada = miActivo.getCard().getCostoRetirada();
+            boolean isFairyGardenActive = partida.getActiveStadium() != null 
+                    && ("xy1-117".equals(partida.getActiveStadium().getId()) || "Fairy Garden".equalsIgnoreCase(partida.getActiveStadium().getNombre()));
+            boolean hasFairyEnergy = miActivo.getEnergiasUnidas() != null 
+                    && miActivo.getEnergiasUnidas().stream().anyMatch(e -> "Fairy".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("fairy energy")));
+            if (isFairyGardenActive && hasFairyEnergy) {
+                costoRetirada = 0;
+            }
 
             if (miActivo.getEnergiasUnidas().size() >= costoRetirada) {
                 CartaEnJuego mejorSuplente = bot.getBanca().stream()

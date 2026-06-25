@@ -27,6 +27,7 @@ import { BattleNotificationService } from './services/battle-notification';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { MusicPlayerService } from '../../core/services/music-player.service';
 import { JugadorService } from '../../core/services/jugador.service';
+import { CardService } from '../../core/services/card.service';
 import { LobbyRoomReaction, LobbyRoomService, LobbyRoomSnapshot } from '../lobby/services/lobby-room.service';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -100,7 +101,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   readonly benchDropListId = 'player-bench-dropzone';
   readonly playableDropListIds = [this.handDropListId, this.activeDropListId, this.benchDropListId];
   matchId: string | null = null;
-  partida: Partida | null = null;
+  private _partida: Partida | null = null;
+  get partida(): Partida | null {
+    return this._partida;
+  }
+  set partida(value: Partida | null) {
+    this._partida = value ? this.cardService.translatePartida(value) : null;
+  }
   jugadorNombre = '';
   isSpectator = false;
   battleRoom: LobbyRoomSnapshot | null = null;
@@ -441,6 +448,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private lobbyRoomService: LobbyRoomService,
     public i18n: I18nService,
     private musicPlayer: MusicPlayerService,
+    private cardService: CardService,
   ) {}
 
   ngOnInit(): void {
@@ -462,6 +470,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.iniciarPresenciaBatalla();
     }
     this.cargarCatalogoGodMode();
+    this.cardService.getAll().subscribe({
+      next: () => {
+        if (this.partida) {
+          this.partida = { ...this.partida };
+        }
+      }
+    });
     this.battleMusicTimeout = setTimeout(() => {
       this.musicPlayer.playSong('battle');
     }, 0);
@@ -1327,6 +1342,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
           break;
         }
+        case 'TRAINER_PLAYED': {
+          const cardName = parts[2];
+          this.mostrarNotificacion(
+            this.i18nService.translate(esMiAccion ? 'battle.playedTrainerSelf' : 'battle.playedTrainerOpponent', { card: cardName }),
+            'info'
+          );
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
+          break;
+        }
         case 'KNOCK_OUT': {
           const objetivo = esMiAccion ? 'bot' : 'jugador';
           this.mostrarTextoFlotante(objetivo, '¡FUERA DE COMBATE!', 'ko');
@@ -1612,11 +1636,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       && this.pendingEffectSelection.size <= pending.maxSelections;
   }
 
-  confirmPendingEffect(): void {
-    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+  ejecutarResolverEfecto(estadoAntiguo: any, selectedIds: string[]): void {
     this.cargandoAccion = true;
-    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
-    this.battleService.resolverEfecto(this.matchId, [...this.pendingEffectSelection]).subscribe({
+    this.battleService.resolverEfecto(this.matchId!, selectedIds).subscribe({
       next: async (estado) => {
         this.pendingEffectSelection.clear();
         if (estado.turnoActual === 'BOT' && estadoAntiguo?.turnoActual === 'JUGADOR') {
@@ -1632,6 +1654,59 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.mostrarNotificacion(error?.error || 'No se pudo resolver el efecto.', 'warning');
       },
     });
+  }
+
+  confirmPendingEffect(): void {
+    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+    this.cargandoAccion = true;
+    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
+    const selectedIds = [...this.pendingEffectSelection];
+
+    const pending = this.partida?.pendingAction;
+    if (pending && pending.type === 'DISCARD_RECOVERY' && selectedIds.length > 0) {
+      const targetCardId = selectedIds[0];
+      const card = this.partida?.jugador?.pilaDescarte?.find((c: any) => c.id === targetCardId);
+      if (card) {
+        this.bloqueadoPorAnimacion = true;
+        const spriteUrl = this.getSpriteFront(card);
+        this.reviveAnimationActive = {
+          visible: true,
+          cardId: card.id,
+          cardNombre: card.nombre,
+          spriteUrl: spriteUrl || '',
+          hpProgress: 0,
+          card: card
+        };
+        this.cdr.detectChanges();
+        
+        setTimeout(() => {
+          if (!this.reviveAnimationActive) return;
+          const interval = setInterval(() => {
+            if (!this.reviveAnimationActive) {
+              clearInterval(interval);
+              return;
+            }
+            if (this.reviveAnimationActive.hpProgress < 100) {
+              this.reviveAnimationActive.hpProgress += 5;
+              this.cdr.detectChanges();
+            } else {
+              clearInterval(interval);
+            }
+          }, 70);
+          
+          setTimeout(() => {
+            this.reviveAnimationActive = null;
+            this.bloqueadoPorAnimacion = false;
+            this.cdr.detectChanges();
+            this.ejecutarResolverEfecto(estadoAntiguo, selectedIds);
+          }, 2200);
+          
+        }, 1000);
+        return;
+      }
+    }
+
+    this.ejecutarResolverEfecto(estadoAntiguo, selectedIds);
   }
 
   private mostrarFeedbackImpacto(actor: string, kind: 'effective' | 'resisted'): void {
@@ -2605,6 +2680,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     esMiAccion: boolean;
   } | null = null;
 
+  reviveAnimationActive: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    spriteUrl: string;
+    hpProgress: number;
+    card?: any;
+  } | null = null;
+
   triggerAttackBanner(attackName: string, isOpponent: boolean) {
     this.attackBannerActive = {
       visible: true,
@@ -2619,7 +2703,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   triggerCardSplash(cardName: string, isOpponent: boolean) {
-    const card = this.debugFilteredCatalog.find((c: any) => c.nombre === cardName || c.name === cardName);
+    const term = cardName.trim().toLowerCase();
+    const card = this.debugFullCatalog.find((c: any) => 
+      (c.nombre && c.nombre.trim().toLowerCase() === term) || 
+      (c.name && c.name.trim().toLowerCase() === term) ||
+      (c.id && c.id.trim().toLowerCase() === term)
+    ) || this.debugFilteredCatalog.find((c: any) => 
+      (c.nombre && c.nombre.trim().toLowerCase() === term) || 
+      (c.name && c.name.trim().toLowerCase() === term) ||
+      (c.id && c.id.trim().toLowerCase() === term)
+    );
     const cardId = card ? card.id : '';
     this.cardSplashActive = {
       visible: true,
@@ -3220,7 +3313,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (nombreAtaqueBot) {
         const normalizedLogName = nombreAtaqueBot.replace(':', '-').toLowerCase();
         habilidadBot = activoBotDespues.card.ataques.find(
-          (a: any) => (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName
+          (a: any) => 
+            (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName ||
+            (a.nombreOriginal || '').replace(':', '-').toLowerCase() === normalizedLogName
         );
       }
       if (!habilidadBot) {
@@ -3242,6 +3337,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           } else {
             carasReales = this.battleBoardTurn.resolverCarasBot(
               coinConfig,
+              habilidadBot,
               estadoFinal,
               danioHecho,
             );
@@ -3483,7 +3579,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) return;
 
-    if (nombreAtaque === 'Conversion Powder') {
+    // Buscar por nombre visible (puede estar traducido) o por nombreOriginal
+    const habilidad = (activoJugador.card.ataques ?? []).find(
+      (a: any) => a.nombre === nombreAtaque || a.nombreOriginal === nombreAtaque,
+    );
+
+    // Usar el nombre original (inglés) para comunicarse con el backend
+    const nombreParaBackend = habilidad?.nombreOriginal || nombreAtaque;
+
+    if (nombreParaBackend === 'Conversion Powder') {
       this.mostrarConversionModal = true;
       return;
     }
@@ -3492,9 +3596,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cargandoAccion = true;
     this.ataqueRealizado = true;
 
-    const habilidad = (activoJugador.card.ataques ?? []).find(
-      (a: any) => a.nombre === nombreAtaque,
-    );
     if (!habilidad) {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
@@ -3511,7 +3612,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const estadoFinal = await this.battleBoardCombat.atacarYRecargar(this.matchId!, nombreAtaque);
+      const estadoFinal = await this.battleBoardCombat.atacarYRecargar(this.matchId!, nombreParaBackend);
       await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
       await this.reproducirImpactoAtaqueJugador(tipoEnergia, estadoFinal);
       await this.finalizarSecuenciaAtaque(estadoFinal);
@@ -3533,12 +3634,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     
     try {
       // Usar la función de ataque de battle.service directamente pasando el param, 
-      // y luego recargar el estado como en atacarYRecargar
+      // y luego recargar el estado como en atacarYRecargar.
+      // Se usa el nombre en inglés para el backend.
       await firstValueFrom(this.battleService.atacar(this.matchId, 'Conversion Powder', estado));
       const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId));
       
       const activoJugador = this.partida?.jugador?.activo;
-      const habilidad = (activoJugador?.card.ataques ?? []).find((a: any) => a.nombre === 'Conversion Powder');
+      const habilidad = (activoJugador?.card.ataques ?? []).find(
+        (a: any) => a.nombreOriginal === 'Conversion Powder' || a.nombre === 'Conversion Powder'
+      );
       const tipoEnergia = habilidad?.costo?.[0] || 'Grass';
       
       await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
@@ -3626,6 +3730,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.mostrarNotificacion(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }), 'warning');
       return;
     }
+    // Pasar el nombre (puede ser traducido); ejecutarAtaqueSecuencia resolverá el nombreOriginal
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
   }
 
@@ -3779,6 +3884,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       case 'bajar-pokemon':
         this.gestionarBajadaPokemon(carta);
         return;
+      case 'jugar-trainer':
+        await this.ejecutarJugarTrainer(carta);
+        return;
       default:
         return;
     }
@@ -3863,7 +3971,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   async retirarPokemon(suplente: any) {
     const activoJugador = this.partida?.jugador?.activo;
     if (this.cargandoAccion || this.partida?.turnoActual !== 'JUGADOR' || !activoJugador) return;
-    if (confirm(this.battleBoardAction.construirMensajeRetirada(activoJugador))) {
+    if (confirm(this.battleBoardAction.construirMensajeRetirada(activoJugador, this.partida?.activeStadium))) {
       this.cargandoAccion = true;
       try {
         const nuevoEstado = await this.battleBoardAction.retirarPokemonYRecargar(
@@ -3892,6 +4000,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.gestionarUnionEnergia(cartaArrastrada);
     } else if (this.esPokemon(cartaArrastrada)) {
       this.jugarCarta(cartaArrastrada);
+    } else if (this.esTrainer(cartaArrastrada)) {
+      this.jugarCarta(cartaArrastrada);
     }
   }
 
@@ -3910,6 +4020,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         console.error(err);
         this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotPlayPokemon'), 'error');
       });
+  }
+
+  private async ejecutarJugarTrainer(carta: any): Promise<void> {
+    if (this.cargandoAccion) return;
+    this.cargandoAccion = true;
+    try {
+      const nuevoEstado = await this.battleBoardAction.jugarTrainerYRecargar(this.matchId!, carta.id);
+      this.aplicarEstadoRefrescado(nuevoEstado);
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      this.cargandoAccion = false;
+      console.error(err);
+      this.mostrarNotificacion(err.error || 'No se pudo jugar la carta de Entrenador.', 'error');
+    }
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
@@ -3934,7 +4059,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   puedePagarRetiro(): boolean {
-    return this.battleBoardAction.puedePagarRetiro(this.partida?.jugador?.activo);
+    return this.battleBoardAction.puedePagarRetiro(this.partida?.jugador?.activo, this.partida?.activeStadium);
   }
 
   puedeAtacar(): boolean {
@@ -4024,8 +4149,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (!img || img.src.endsWith('/images/cards/back.png')) return;
-    img.src = '/images/cards/back.png';
+    this.cardService.handleCardImageError(img);
   }
 
   tieneCondicionEspecial(quien: 'JUGADOR' | 'BOT', condicion: string): boolean {
@@ -4037,8 +4161,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return (this.partida?.jugador?.activo?.card.ataques as BattleBoardAttack[] | undefined) ?? [];
   }
 
+  tieneEnergiaHAD(activo: any): boolean {
+    if (!activo || !activo.energiasUnidas) return false;
+    return activo.energiasUnidas.some((e: any) => e.tipo === 'HAD' || e.tipo === 'Fairy' || e.tipo?.toLowerCase() === 'fairy');
+  }
+
   getCostoRetiradaActivoJugador(): number {
-    return this.partida?.jugador?.activo?.card.costoRetirada ?? 0;
+    const cost = this.partida?.jugador?.activo?.card.costoRetirada ?? 0;
+    if (this.partida?.activeStadium?.id === 'xy1-125' && this.tieneEnergiaHAD(this.partida?.jugador?.activo)) {
+      return 0;
+    }
+    return cost;
   }
 
   esHoverSobreManoJugador(): boolean {
@@ -4157,6 +4290,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
   esPokemon(carta: any): boolean {
     return this.battleBoardUi.esPokemon(carta);
+  }
+  esTrainer(carta: any): boolean {
+    return this.battleBoardUi.esTrainer(carta);
   }
 
   get manoAgrupada(): any[][] {

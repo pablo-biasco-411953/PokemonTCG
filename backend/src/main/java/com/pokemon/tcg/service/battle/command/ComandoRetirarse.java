@@ -44,6 +44,13 @@ public class ComandoRetirarse implements ComandoTurno {
                 .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
 
         int costo = activoViejo.getCard().getCostoRetirada();
+        boolean isFairyGardenActive = partida.getActiveStadium() != null 
+                && ("xy1-117".equals(partida.getActiveStadium().getId()) || "Fairy Garden".equalsIgnoreCase(partida.getActiveStadium().getNombre()));
+        boolean hasFairyEnergy = activoViejo.getEnergiasUnidas() != null 
+                && activoViejo.getEnergiasUnidas().stream().anyMatch(e -> "Fairy".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("fairy energy")));
+        if (isFairyGardenActive && hasFairyEnergy) {
+            costo = 0;
+        }
         int energiaDisponible = activoViejo.getEnergiasUnidas().stream()
                 .mapToInt(com.pokemon.tcg.service.battle.EnergyCostCalculator::colorlessValue)
                 .sum();

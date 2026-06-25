@@ -107,6 +107,7 @@ C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\c
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoEvolucionar.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoUnirEnergia.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\PendingBattleAction.java
+C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\service\battle\command\ComandoJugarTrainer.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\dto\LobbyMessage.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\AtaquePotenciadoSiguienteTurnoCommand.java
 C:\Users\pabli\PokemonTCG\backend\src\main\java\com\pokemon\tcg\model\battle\command\SearchDeckCommand.java

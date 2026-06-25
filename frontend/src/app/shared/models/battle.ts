@@ -14,6 +14,7 @@ export interface CartaEnJuego {
   debeLanzarMonedaSiAtaca?: boolean;
   turnoEntrada?: number;
   ataqueBloqueadoSiguienteTurno?: string;
+  attachedTools?: Card[];
 }
 
 // Zonas visibles de un jugador durante la partida.
@@ -39,6 +40,9 @@ export interface Partida {
   botUsername?: string;
   yaSeRetiroEsteTurno: boolean;
   yaSeUnioEnergiaEsteTurno?: boolean;
+  activeStadium?: Card | null;
+  playedSupporterThisTurn?: boolean;
+  playedStadiumThisTurn?: boolean;
   ultimasMonedasLanzadas?: boolean[];
   ganador?: string;
   razonFinPartida?: string;

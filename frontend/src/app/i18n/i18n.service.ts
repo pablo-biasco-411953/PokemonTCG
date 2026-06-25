@@ -98,6 +98,7 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'battle.heads': 'HEADS',
     'battle.tails': 'TAILS',
     'battle.swipe': 'Swipe up to toss!',
+    'battle.reviving': 'MAX REVIVE',
     'battle.flipping': 'Flipping coin...',
     'battle.wonDraw': 'YOU WON THE DRAW!',
     'battle.youFirst': 'ME FIRST',
@@ -386,7 +387,9 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'lobby.quest.santoroUnlocked': 'Santoro unlocked',
     'lobby.quest.findSantoro': 'Find Santoro',
     'lobby.quest.santoroUnlockedDesc': 'You can talk to him again to manage your deck.',
-    'lobby.quest.findSantoroDesc': 'The teacher is waiting for you on campus with initial help.'
+    'lobby.quest.findSantoroDesc': 'The teacher is waiting for you on campus with initial help.',
+    'battle.playedTrainerSelf': '{card} played!',
+    'battle.playedTrainerOpponent': 'Rival played {card}!'
   },
   es: {
     'lang.label': 'Idioma',
@@ -469,6 +472,7 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'battle.heads': 'CARA',
     'battle.tails': 'CRUZ',
     'battle.swipe': '¡Deslizá hacia arriba para lanzar!',
+    'battle.reviving': 'MÁXIMO REVIVIR',
     'battle.flipping': 'Lanzando moneda...',
     'battle.wonDraw': '¡GANASTE EL SORTEO!',
     'battle.youFirst': 'YO PRIMERO',
@@ -757,7 +761,9 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'lobby.quest.santoroUnlocked': 'Santoro desbloqueado',
     'lobby.quest.findSantoro': 'Busca a Santoro',
     'lobby.quest.santoroUnlockedDesc': 'Podés volver a hablar con él para gestionar tu mazo.',
-    'lobby.quest.findSantoroDesc': 'El profe te espera en el campus con tu primera ayuda.'
+    'lobby.quest.findSantoroDesc': 'El profe te espera en el campus con tu primera ayuda.',
+    'battle.playedTrainerSelf': '¡Se jugó {card}!',
+    'battle.playedTrainerOpponent': '¡El rival jugó {card}!'
   },
   pt: {
     'lang.label': 'Idioma',
@@ -840,6 +846,7 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'battle.heads': 'CARA',
     'battle.tails': 'COROA',
     'battle.swipe': 'Deslize para cima para lançar!',
+    'battle.reviving': 'MÁXIMO REVIVER',
     'battle.flipping': 'Lançando moeda...',
     'battle.wonDraw': 'VOCÊ GANHOU O SORTEIO!',
     'battle.youFirst': 'EU PRIMEIRO',
@@ -1128,7 +1135,9 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'lobby.quest.santoroUnlocked': 'Santoro desbloqueado',
     'lobby.quest.findSantoro': 'Encontre Santoro',
     'lobby.quest.santoroUnlockedDesc': 'Você pode falar com ele novamente para gerenciar seu baralho.',
-    'lobby.quest.findSantoroDesc': 'O professor está esperando por você no campus com ajuda inicial.'
+    'lobby.quest.findSantoroDesc': 'O professor está esperando por você no campus com ajuda inicial.',
+    'battle.playedTrainerSelf': '{card} jogada!',
+    'battle.playedTrainerOpponent': 'O rival jogou {card}!'
   },
   ja: {
     'lang.label': '言語',
@@ -1211,6 +1220,7 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'battle.heads': '表',
     'battle.tails': '裏',
     'battle.swipe': '上にスワイプしてトス！',
+    'battle.reviving': 'げんきのかたまり',
     'battle.flipping': 'コインを投げています...',
     'battle.wonDraw': 'コイントスに勝ちました！',
     'battle.youFirst': '先攻',
@@ -1499,7 +1509,9 @@ const TRANSLATIONS: Record<LanguageCode, Record<string, string>> = {
     'lobby.quest.santoroUnlocked': 'サントーロ解放完了',
     'lobby.quest.findSantoro': 'サントーロ先生を探す',
     'lobby.quest.santoroUnlockedDesc': 'もう一度話しかけてデッキを調整できます。',
-    'lobby.quest.findSantoroDesc': '先生が最初の支援を用意してキャンパスで待っています。'
+    'lobby.quest.findSantoroDesc': '先生が最初の支援を用意してキャンパスで待っています。',
+    'battle.playedTrainerSelf': '{card} がプレイされました！',
+    'battle.playedTrainerOpponent': '相手が {card} をプレイしました！'
   }
 };
 

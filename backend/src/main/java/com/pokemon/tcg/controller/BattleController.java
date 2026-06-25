@@ -307,6 +307,18 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/play-trainer")
+    public ResponseEntity<?> jugarTrainer(@PathVariable String matchId,
+                                          @RequestHeader(value = "X-Username", required = false) String username,
+                                          @RequestBody java.util.Map<String, String> request) {
+        try {
+            battleEngine.jugarTrainer(matchId, request.get("cartaId"), username);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/attach-energy")
     public ResponseEntity<?> unirEnergia(@PathVariable String matchId,
                                          @RequestHeader(value = "X-Username", required = false) String username,
