@@ -7,7 +7,7 @@
 
     <div class="dmc-grid custom-scrollbar">
       <div *ngFor="let carta of cartas" class="dmc-card-item">
-        <img [src]="resolveImage(carta.id)" [alt]="carta.nombre" />
+        <img [src]="resolveImage(carta.id)" [alt]="carta.nombre" (error)="onCardImageError($event)" />
         <p>{{ carta.nombre }}</p>
       </div>
     </div>

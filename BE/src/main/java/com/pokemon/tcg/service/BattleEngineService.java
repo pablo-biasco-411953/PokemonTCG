@@ -602,6 +602,268 @@ public class BattleEngineService {
         agregarLog(partida, "POKEMON_PLAYED", callerUsername, nombreCarta(carta));
     }
 
+    public void jugarTrainer(String matchId, String cartaId, String callerUsername) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurno(partida, callerUsername);
+
+        TableroJugador tablero = getTableroDeJugador(partida, callerUsername);
+        Card carta = encontrarCartaEnMano(tablero, cartaId);
+
+        if (carta == null) throw new IllegalArgumentException("La carta no está en tu mano.");
+        if (!"Trainer".equalsIgnoreCase(carta.getSupertype())) {
+            throw new IllegalArgumentException("Solo podés jugar cartas de Entrenador.");
+        }
+
+        ejecutarComando(partida, new ComandoJugarTrainer(carta, tablero, p -> ejecutarEfectoTrainer(p, carta, tablero, callerUsername)));
+        agregarLog(partida, "TRAINER_PLAYED", callerUsername, nombreCarta(carta));
+    }
+
+    private void ejecutarEfectoTrainer(Partida partida, Card card, TableroJugador tablero, String callerUsername) {
+        String id = card.getId();
+        Random rnd = new Random();
+
+        if ("xy1-115".equals(id)) { // Cassius
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("SELECT_POKEMON_CASSIUS");
+            pending.setPrompt("Cassius: Seleccioná 1 de tus Pokémon en juego para barajarlo en tu mazo con todas sus cartas unidas");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            if (tablero.getActivo() != null) {
+                options.add(new PendingBattleAction.Option(tablero.getActivo().getCard().getId(), tablero.getActivo().getCard().getNombre(), tablero.getActivo().getCard().getImagen()));
+            }
+            for (CartaEnJuego b : tablero.getBanca()) {
+                options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+            }
+            pending.setOptions(options);
+            if (options.isEmpty()) {
+                throw new IllegalArgumentException("No tenés ningún Pokémon en juego.");
+            }
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-116".equals(id)) { // Evosoda
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("SELECT_POKEMON_EVOSODA");
+            pending.setPrompt("Evosoda: Seleccioná 1 Pokémon en juego para buscar su evolución en tu mazo");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            
+            if (tablero.getActivo() != null) {
+                CartaEnJuego act = tablero.getActivo();
+                boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> act.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
+                if (canEvolve) {
+                    options.add(new PendingBattleAction.Option(act.getCard().getId(), act.getCard().getNombre(), act.getCard().getImagen()));
+                }
+            }
+            for (CartaEnJuego b : tablero.getBanca()) {
+                boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> b.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
+                if (canEvolve) {
+                    options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            if (options.isEmpty()) {
+                throw new IllegalArgumentException("Ninguno de tus Pokémon en juego puede evolucionar con cartas de tu mazo.");
+            }
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-117".equals(id)) { // Fairy Garden
+            agregarLog(partida, "STADIUM_ACTIVE", callerUsername, card.getNombre());
+
+        } else if ("xy1-118".equals(id)) { // Great Ball
+            List<Card> top7 = tablero.getMazo().subList(0, Math.min(7, tablero.getMazo().size()));
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("SEARCH_DECK");
+            pending.setPrompt("Great Ball: Seleccioná 1 Pokémon de los primeros 7 de tu mazo");
+            pending.setMinSelections(0);
+            pending.setMaxSelections(1);
+            pending.setDestination("HAND");
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            for (Card c : top7) {
+                if ("Pokémon".equalsIgnoreCase(c.getSupertype()) || "Pokemon".equalsIgnoreCase(c.getSupertype())) {
+                    options.add(new PendingBattleAction.Option(c.getId(), c.getNombre(), c.getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-119".equals(id) || "xy1-121".equals(id)) { // Hard Charm or Muscle Band
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("ATTACH_TOOL");
+            pending.setPrompt("Attach " + card.getNombre() + ": Seleccioná 1 Pokémon para unirle esta Herramienta");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            if (tablero.getActivo() != null) {
+                CartaEnJuego act = tablero.getActivo();
+                if (act.getAttachedTools() == null || act.getAttachedTools().isEmpty()) {
+                    options.add(new PendingBattleAction.Option(act.getCard().getId(), act.getCard().getNombre(), act.getCard().getImagen()));
+                }
+            }
+            for (CartaEnJuego b : tablero.getBanca()) {
+                if (b.getAttachedTools() == null || b.getAttachedTools().isEmpty()) {
+                    options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            if (options.isEmpty()) {
+                throw new IllegalArgumentException("No tenés ningún Pokémon en juego sin Herramienta Pokémon unida.");
+            }
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-120".equals(id)) { // Max Revive
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("DISCARD_RECOVERY");
+            pending.setPrompt("Max Revive: Seleccioná 1 Pokémon de tu pila de descarte para ponerlo arriba de tu mazo");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            for (Card c : tablero.getPilaDescarte()) {
+                if ("Pokémon".equalsIgnoreCase(c.getSupertype()) || "Pokemon".equalsIgnoreCase(c.getSupertype())) {
+                    options.add(new PendingBattleAction.Option(c.getId(), c.getNombre(), c.getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            if (options.isEmpty()) {
+                throw new IllegalArgumentException("No tenés cartas de Pokémon en tu pila de descarte.");
+            }
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-122".equals(id)) { // Professor Sycamore
+            List<Card> toDiscard = new ArrayList<>(tablero.getMano());
+            tablero.getMano().clear();
+            tablero.getPilaDescarte().addAll(toDiscard);
+            for (int i = 0; i < 7; i++) {
+                robarCarta(tablero);
+            }
+            agregarLog(partida, "HAND_DISCARDED", callerUsername);
+
+        } else if ("xy1-123".equals(id)) { // Professor's Letter
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("SEARCH_DECK");
+            pending.setPrompt("Professor's Letter: Seleccioná hasta 2 Energías Básicas de tu mazo");
+            pending.setMinSelections(0);
+            pending.setMaxSelections(2);
+            pending.setDestination("HAND");
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            for (Card c : tablero.getMazo()) {
+                if ("Energy".equalsIgnoreCase(c.getSupertype()) && c.getSubtypes() != null && c.getSubtypes().contains("Basic")) {
+                    options.add(new PendingBattleAction.Option(c.getId(), c.getNombre(), c.getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-124".equals(id)) { // Red Card
+            TableroJugador opponent = getTableroOponente(partida, callerUsername);
+            String opponentName = callerUsername.equals(partida.getJugadorUsername()) ? partida.getBotUsername() : partida.getJugadorUsername();
+            
+            List<Card> opponentHand = new ArrayList<>(opponent.getMano());
+            opponent.getMano().clear();
+            opponent.getMazo().addAll(opponentHand);
+            Collections.shuffle(opponent.getMazo());
+            
+            for (int i = 0; i < 4; i++) {
+                robarCarta(opponent);
+            }
+            agregarLog(partida, "RED_CARD_RESOLVED", opponentName);
+
+        } else if ("xy1-125".equals(id)) { // Roller Skates
+            boolean heads = rnd.nextBoolean();
+            partida.getUltimasMonedasLanzadas().clear();
+            partida.getUltimasMonedasLanzadas().add(heads);
+            agregarLog(partida, "COIN_FLIPPED", callerUsername, heads ? "CARA" : "CRUZ");
+            
+            if (heads) {
+                for (int i = 0; i < 3; i++) {
+                    robarCarta(tablero);
+                }
+            }
+
+        } else if ("xy1-126".equals(id)) { // Shadow Circle
+            agregarLog(partida, "STADIUM_ACTIVE", callerUsername, card.getNombre());
+
+        } else if ("xy1-127".equals(id)) { // Shauna
+            List<Card> hand = new ArrayList<>(tablero.getMano());
+            tablero.getMano().clear();
+            tablero.getMazo().addAll(hand);
+            Collections.shuffle(tablero.getMazo());
+            
+            for (int i = 0; i < 5; i++) {
+                robarCarta(tablero);
+            }
+            agregarLog(partida, "HAND_SHUFFLED", callerUsername);
+
+        } else if ("xy1-128".equals(id)) { // Super Potion
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("SELECT_POKEMON_SUPER_POTION");
+            pending.setPrompt("Super Potion: Seleccioná 1 de tus Pokémon con daño y energía para curarle 60 HP");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            if (tablero.getActivo() != null) {
+                CartaEnJuego act = tablero.getActivo();
+                int maxHp = Integer.parseInt(act.getCard().getHp());
+                if (act.getHpActual() < maxHp && !act.getEnergiasUnidas().isEmpty()) {
+                    options.add(new PendingBattleAction.Option(act.getCard().getId(), act.getCard().getNombre(), act.getCard().getImagen()));
+                }
+            }
+            for (CartaEnJuego b : tablero.getBanca()) {
+                int maxHp = Integer.parseInt(b.getCard().getHp());
+                if (b.getHpActual() < maxHp && !b.getEnergiasUnidas().isEmpty()) {
+                    options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                }
+            }
+            pending.setOptions(options);
+            if (options.isEmpty()) {
+                throw new IllegalArgumentException("No tenés ningún Pokémon dañado con energías en juego.");
+            }
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+
+        } else if ("xy1-129".equals(id)) { // Team Flare Grunt
+            TableroJugador opponent = getTableroOponente(partida, callerUsername);
+            CartaEnJuego opponentActive = opponent.getActivo();
+            if (opponentActive == null || opponentActive.getEnergiasUnidas().isEmpty()) {
+                throw new IllegalArgumentException("El Pokémon Activo del rival no tiene energías unidas.");
+            }
+            
+            PendingBattleAction pending = new PendingBattleAction();
+            pending.setActor(callerUsername);
+            pending.setType("DISCARD_OPPONENT_ACTIVE_ENERGY");
+            pending.setPrompt("Team Flare Grunt: Seleccioná 1 Energía del Pokémon Activo rival para descartar");
+            pending.setMinSelections(1);
+            pending.setMaxSelections(1);
+            
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            for (Card energy : opponentActive.getEnergiasUnidas()) {
+                options.add(new PendingBattleAction.Option(energy.getId(), energy.getNombre(), energy.getImagen()));
+            }
+            pending.setOptions(options);
+            partida.setPendingAction(pending);
+            partida.transicionarA(new EstadoEsperandoInteraccion());
+        }
+    }
+
     public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurno(partida, callerUsername);
@@ -658,7 +920,11 @@ public class BattleEngineService {
         agregarLog(partida, "ATTACK_USED", callerUsername, nombreAtaqueElegido, nombreCarta(defensorAntes), danio > 0 ? String.valueOf(danio) : "");
         if (defensorAntes != null && tableroAtacante.getActivo() != null) {
             String tipoAtacante = tableroAtacante.getActivo().getCard().getTipo();
-            if (coincideTipo(defensorAntes.getCard().getDebilidades(), tipoAtacante)) {
+            boolean isShadowCircleActive = partida.getActiveStadium() != null && ("xy1-126".equals(partida.getActiveStadium().getId()) || "Shadow Circle".equalsIgnoreCase(partida.getActiveStadium().getNombre()));
+            boolean hasDarknessEnergy = defensorAntes.getEnergiasUnidas() != null && defensorAntes.getEnergiasUnidas().stream().anyMatch(e -> "Darkness".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("darkness energy")));
+            boolean applyWeakness = !(isShadowCircleActive && hasDarknessEnergy);
+
+            if (applyWeakness && coincideTipo(defensorAntes.getCard().getDebilidades(), tipoAtacante)) {
                 agregarLog(partida, "SUPER_EFFECTIVE", callerUsername, nombreCarta(defensorAntes));
             } else if (coincideTipo(defensorAntes.getCard().getResistencias(), tipoAtacante)) {
                 agregarLog(partida, "RESISTED", callerUsername, nombreCarta(defensorAntes));
@@ -791,6 +1057,8 @@ public class BattleEngineService {
 
         partida.setYaSeRetiroEsteTurno(false);
         partida.setYaSeUnioEnergiaEsteTurno(false);
+        partida.setPlayedSupporterThisTurn(false);
+        partida.setPlayedStadiumThisTurn(false);
         agregarLog(partida, "TURN_PASSED", callerUsername);
 
         aplicarMantenimientoEntreTurnos(partida);
@@ -869,7 +1137,242 @@ public class BattleEngineService {
         }
 
         TableroJugador board = getTableroDeJugador(partida, callerUsername);
-        if ("DISCARD_TO_TOP_DECK".equals(pending.getType())) {
+        if ("SELECT_POKEMON_CASSIUS".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String targetId = ids.get(0);
+            CartaEnJuego target = null;
+            boolean isActive = false;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                target = board.getActivo();
+                isActive = true;
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetId)) {
+                        target = b;
+                        break;
+                    }
+                }
+            }
+            if (target == null) throw new IllegalArgumentException("Pokémon no encontrado en el tablero.");
+            
+            List<Card> toShuffle = new ArrayList<>();
+            toShuffle.add(target.getCard());
+            toShuffle.addAll(target.getEnergiasUnidas());
+            if (target.getAttachedTools() != null) {
+                toShuffle.addAll(target.getAttachedTools());
+            }
+            
+            if (isActive) {
+                board.setActivo(null);
+            } else {
+                board.getBanca().remove(target);
+            }
+            
+            board.getMazo().addAll(toShuffle);
+            Collections.shuffle(board.getMazo());
+            agregarLog(partida, "CASSIUS_RESOLVED", callerUsername, target.getCard().getNombre());
+
+        } else if ("SELECT_POKEMON_EVOSODA".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String targetId = ids.get(0);
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                target = board.getActivo();
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetId)) {
+                        target = b;
+                        break;
+                    }
+                }
+            }
+            if (target == null) throw new IllegalArgumentException("Pokémon no encontrado.");
+            
+            PendingBattleAction evolutionAction = new PendingBattleAction();
+            evolutionAction.setActor(callerUsername);
+            evolutionAction.setType("SEARCH_EVOLUTION");
+            evolutionAction.setPrompt("Evosoda: Seleccioná la evolución para " + target.getCard().getNombre());
+            evolutionAction.setMinSelections(0);
+            evolutionAction.setMaxSelections(1);
+            evolutionAction.setDestination("EVOLVE_TARGET:" + targetId);
+            
+            final CartaEnJuego finalTarget = target;
+            List<PendingBattleAction.Option> options = new ArrayList<>();
+            for (Card c : board.getMazo()) {
+                if (finalTarget.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom())) {
+                    options.add(new PendingBattleAction.Option(c.getId(), c.getNombre(), c.getImagen()));
+                }
+            }
+            evolutionAction.setOptions(options);
+            partida.setPendingAction(evolutionAction);
+            return partida;
+
+        } else if ("SEARCH_EVOLUTION".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                Collections.shuffle(board.getMazo());
+                agregarLog(partida, "DECK_SEARCH_CANCELLED", callerUsername);
+            } else {
+                String targetId = pending.getDestination().split(":")[1];
+                CartaEnJuego target = null;
+                if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                    target = board.getActivo();
+                } else {
+                    for (CartaEnJuego b : board.getBanca()) {
+                        if (b.getCard().getId().equals(targetId)) {
+                            target = b;
+                            break;
+                        }
+                    }
+                }
+                if (target == null) throw new IllegalArgumentException("Pokémon objetivo ya no está en juego.");
+                
+                String selectedId = ids.get(0);
+                Card evoCard = board.getMazo().stream()
+                        .filter(c -> c.getId().equals(selectedId))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("La carta elegida no está en el mazo."));
+                
+                board.getMazo().remove(evoCard);
+                
+                int hpMaximoAnterior = Integer.parseInt(target.getCard().getHp());
+                int danioAcumulado = hpMaximoAnterior - target.getHpActual();
+                
+                target.setCard(evoCard);
+                int nuevoHpMaximo = Integer.parseInt(evoCard.getHp());
+                target.setHpActual(Math.max(0, nuevoHpMaximo - danioAcumulado));
+                target.limpiarCondiciones();
+                
+                Collections.shuffle(board.getMazo());
+                agregarLog(partida, "EVOLVED_EVOSODA", callerUsername, evoCard.getNombre());
+            }
+
+        } else if ("ATTACH_TOOL".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String targetId = ids.get(0);
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                target = board.getActivo();
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetId)) {
+                        target = b;
+                        break;
+                    }
+                }
+            }
+            if (target == null) throw new IllegalArgumentException("Pokémon no encontrado.");
+            
+            Card toolCard = board.getMano().stream()
+                    .filter(c -> "Trainer".equalsIgnoreCase(c.getSupertype()) && (c.getSubtypes() != null && c.getSubtypes().stream().anyMatch(s -> s.equalsIgnoreCase("Pokémon Tool") || s.equalsIgnoreCase("Pokemon Tool"))))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Herramienta no encontrada en tu mano."));
+            
+            board.getMano().remove(toolCard);
+            if (target.getAttachedTools() == null) {
+                target.setAttachedTools(new ArrayList<>());
+            }
+            target.getAttachedTools().add(toolCard);
+            agregarLog(partida, "TOOL_ATTACHED", callerUsername, toolCard.getNombre() + " -> " + target.getCard().getNombre());
+
+        } else if ("DISCARD_RECOVERY".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String selectedId = ids.get(0);
+            Card card = board.getPilaDescarte().stream()
+                    .filter(c -> c.getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("La carta no está en la pila de descarte."));
+            
+            board.getPilaDescarte().remove(card);
+            board.getMazo().add(0, card);
+            agregarLog(partida, "MAX_REVIVE_RESOLVED", callerUsername, card.getNombre());
+
+        } else if ("SELECT_POKEMON_SUPER_POTION".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String targetId = ids.get(0);
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                target = board.getActivo();
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetId)) {
+                        target = b;
+                        break;
+                    }
+                }
+            }
+            if (target == null) throw new IllegalArgumentException("Pokémon no encontrado.");
+            
+            int maxHp = Integer.parseInt(target.getCard().getHp());
+            target.setHpActual(Math.min(maxHp, target.getHpActual() + 60));
+            agregarLog(partida, "HEALED", callerUsername, target.getCard().getId() + ":60");
+            
+            if (target.getEnergiasUnidas().size() <= 1) {
+                if (!target.getEnergiasUnidas().isEmpty()) {
+                    Card energy = target.getEnergiasUnidas().remove(0);
+                    board.getPilaDescarte().add(energy);
+                    agregarLog(partida, "ENERGY_DISCARDED", callerUsername, energy.getNombre());
+                }
+            } else {
+                PendingBattleAction energyDiscardAction = new PendingBattleAction();
+                energyDiscardAction.setActor(callerUsername);
+                energyDiscardAction.setType("DISCARD_POTION_ENERGY");
+                energyDiscardAction.setPrompt("Super Potion: Seleccioná 1 Energía para descartar de " + target.getCard().getNombre());
+                energyDiscardAction.setMinSelections(1);
+                energyDiscardAction.setMaxSelections(1);
+                energyDiscardAction.setDestination("POTION_ENERGY_TARGET:" + targetId);
+                
+                List<PendingBattleAction.Option> options = new ArrayList<>();
+                for (Card energy : target.getEnergiasUnidas()) {
+                    options.add(new PendingBattleAction.Option(energy.getId(), energy.getNombre(), energy.getImagen()));
+                }
+                energyDiscardAction.setOptions(options);
+                partida.setPendingAction(energyDiscardAction);
+                return partida;
+            }
+
+        } else if ("DISCARD_POTION_ENERGY".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar una energía.");
+            String targetId = pending.getDestination().split(":")[1];
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetId)) {
+                target = board.getActivo();
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetId)) {
+                        target = b;
+                        break;
+                    }
+                }
+            }
+            if (target == null) throw new IllegalArgumentException("Pokémon objetivo no encontrado.");
+            
+            String selectedId = ids.get(0);
+            Card energy = target.getEnergiasUnidas().stream()
+                    .filter(e -> e.getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Energía no encontrada unida al Pokémon."));
+            
+            target.getEnergiasUnidas().remove(energy);
+            board.getPilaDescarte().add(energy);
+            agregarLog(partida, "ENERGY_DISCARDED", callerUsername, energy.getNombre());
+
+        } else if ("DISCARD_OPPONENT_ACTIVE_ENERGY".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar una energía.");
+            TableroJugador opponent = getTableroOponente(partida, callerUsername);
+            CartaEnJuego opponentActive = opponent.getActivo();
+            if (opponentActive == null) throw new IllegalArgumentException("Pokémon Activo del rival no encontrado.");
+            
+            String selectedId = ids.get(0);
+            Card energy = opponentActive.getEnergiasUnidas().stream()
+                    .filter(e -> e.getId().equals(selectedId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("Energía no encontrada unida al Pokémon del rival."));
+            
+            opponentActive.getEnergiasUnidas().remove(energy);
+            opponent.getPilaDescarte().add(energy);
+            agregarLog(partida, "ENERGY_DISCARDED", opponentActive.getCard().getNombre(), energy.getNombre());
+
+        } else if ("DISCARD_TO_TOP_DECK".equals(pending.getType())) {
             for (String id : ids) {
                 Card card = board.getPilaDescarte().stream()
                         .filter(candidate -> id.equals(candidate.getId()))

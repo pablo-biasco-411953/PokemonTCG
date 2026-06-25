@@ -16,9 +16,9 @@ public class CardController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Card>> getAll() {
+    public ResponseEntity<List<Card>> getAll(@RequestParam(value = "lang", required = false) String lang) {
         try {
-            List<Card> cards = cardCatalogService.getCatalogo();
+            List<Card> cards = cardCatalogService.getCatalogo(lang);
             return ResponseEntity.ok(cards);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

@@ -28,7 +28,7 @@ export class BattleBoardAttackService {
   ): CoinFlipConfig | null {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
-    const texto: string = (ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
+    const texto: string = (ataque.textoOriginal || ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
     const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
     if (!flipMatch) return null;
 

@@ -1,6 +1,7 @@
-import { Component, ElementRef, OnInit, ViewChild, OnDestroy, HostListener, Input, Output, EventEmitter, ChangeDetectorRef } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, OnDestroy, HostListener, Input, Output, EventEmitter, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
+import { CardService } from '../../../../core/services/card.service';
 
 @Component({
   selector: 'app-apertura-sobre',
@@ -10,6 +11,7 @@ import * as THREE from 'three';
   styleUrl: './apertura-sobre.scss'
 })
 export class AperturaSobreComponent implements OnInit, OnDestroy {
+  private cardService = inject(CardService);
   @ViewChild('rendererContainer', { static: true }) rendererContainer!: ElementRef;
 
   @Input() cartas: any[] = [];
@@ -422,17 +424,12 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
   }
 
   getImagenCarta(id: string): string {
-    if (/^xy/i.test(id)) {
-      return `/images/cards/${id}.png`;
-    }
-
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (!img || img.src.endsWith('/images/cards/back.png')) return;
-    img.src = '/images/cards/back.png';
+    this.cardService.handleCardImageError(img);
   }
 
   private crearCartasAntiBug() {

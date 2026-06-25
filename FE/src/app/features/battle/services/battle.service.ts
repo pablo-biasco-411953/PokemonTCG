@@ -126,6 +126,11 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/play-pokemon`, { cartaId }, this.getHeaders());
   }
 
+  // Juega una carta de Entrenador (Item, Supporter, Stadium, Tool).
+  jugarTrainer(matchId: string, cartaId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/play-trainer`, { cartaId }, this.getHeaders());
+  }
+
   // Une una energia al Pokemon indicado.
   unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {

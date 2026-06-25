@@ -452,6 +452,28 @@
   </div>
 </div>
 
+<!-- Max Revive Cinematic Overlay -->
+<div class="revive-cinematic-overlay" *ngIf="reviveAnimationActive">
+  <div class="revive-backdrop"></div>
+  <div class="revive-stage">
+    <div class="revive-title">{{ 'battle.reviving' | t }}</div>
+    <div class="revive-pokemon-container">
+      <img [src]="reviveAnimationActive.spriteUrl" class="revive-sprite" [class.revived]="reviveAnimationActive.hpProgress > 0" (error)="onSpriteError($event, reviveAnimationActive.card)" />
+      <!-- Golden drop element -->
+      <div class="golden-drop" [class.dropping]="reviveAnimationActive.hpProgress > 0"></div>
+      <div class="revive-glow" [class.glowing]="reviveAnimationActive.hpProgress > 0"></div>
+    </div>
+    <div class="revive-hp-container">
+      <div class="revive-hp-label">HP</div>
+      <div class="revive-hp-bar-bg">
+        <div class="revive-hp-bar-fill" [style.width.%]="reviveAnimationActive.hpProgress"></div>
+      </div>
+      <div class="revive-hp-value">{{ reviveAnimationActive.hpProgress }}%</div>
+    </div>
+    <div class="revive-card-name">{{ reviveAnimationActive.cardNombre }}</div>
+  </div>
+</div>
+
 <div class="impact-flash" [class.active]="showImpactFlash"></div>
 <div class="guided-effect-overlay" *ngIf="pendingAction as pending">
   <section class="guided-effect-panel" [class.reorder-mode]="isReorderMode">
@@ -820,6 +842,18 @@
               <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
             </div>
           </div>
+          <!-- Attached Tools -->
+          <div class="attached-tools-row" *ngIf="!b.bocaAbajo && b.attachedTools?.length">
+            <div
+              *ngFor="let tool of b.attachedTools"
+              class="attached-tool-badge"
+              [title]="tool.nombre"
+              (mouseenter)="setHoveredCard(tool)"
+              (mouseleave)="clearHoveredCard()"
+            >
+              <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div class="bench-bar" *ngIf="!b.bocaAbajo">
             <div
               class="bench-fill"
@@ -854,6 +888,15 @@
     </div>
 
     <div class="arena">
+      <!-- Active Stadium Slot -->
+      <div
+        class="stadium-slot"
+        *ngIf="partida.activeStadium"
+        (mouseenter)="setHoveredCard(partida.activeStadium)"
+        (mouseleave)="clearHoveredCard()"
+      >
+        <img [src]="getImagenCarta(partida.activeStadium.id)" [alt]="partida.activeStadium.nombre" (error)="onCardImageError($event)" />
+      </div>
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
@@ -865,6 +908,18 @@
           >
             <ng-container *ngIf="partida.bot.activo">
               <img [src]="getImagenCartaEnJuego(partida.bot.activo)" (error)="onCardImageError($event)" />
+              <!-- Attached Tools -->
+              <div class="attached-tools-row" *ngIf="!partida.bot.activo.bocaAbajo && partida.bot.activo.attachedTools?.length">
+                <div
+                  *ngFor="let tool of partida.bot.activo.attachedTools"
+                  class="attached-tool-badge"
+                  [title]="tool.nombre"
+                  (mouseenter)="setHoveredCard(tool)"
+                  (mouseleave)="clearHoveredCard()"
+                >
+                  <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+                </div>
+              </div>
             </ng-container>
           </div>
 
@@ -1237,6 +1292,18 @@
                     [style.backgroundColor]="getEnergyColor(energia.tipo)"
                   ></div>
                 </div>
+                <!-- Attached Tools -->
+                <div class="attached-tools-row" *ngIf="!partida.jugador.activo.bocaAbajo && partida.jugador.activo.attachedTools?.length">
+                  <div
+                    *ngFor="let tool of partida.jugador.activo.attachedTools"
+                    class="attached-tool-badge"
+                    [title]="tool.nombre"
+                    (mouseenter)="setHoveredCard(tool)"
+                    (mouseleave)="clearHoveredCard()"
+                  >
+                    <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+                  </div>
+                </div>
               </ng-container>
             </div>
           </div>
@@ -1286,6 +1353,18 @@
               [title]="energia.nombre"
             >
               <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
+          <!-- Attached Tools -->
+          <div class="attached-tools-row" *ngIf="!b.bocaAbajo && b.attachedTools?.length">
+            <div
+              *ngFor="let tool of b.attachedTools"
+              class="attached-tool-badge"
+              [title]="tool.nombre"
+              (mouseenter)="setHoveredCard(tool)"
+              (mouseleave)="clearHoveredCard()"
+            >
+              <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
             </div>
           </div>
           <div

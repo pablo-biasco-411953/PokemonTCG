@@ -14,6 +14,7 @@ public class CartaEnJuego {
     private Card card; // referencia a la carta original
     private int hpActual;
     private List<Card> energiasUnidas = new ArrayList<>();
+    private List<Card> attachedTools = new ArrayList<>();
     private boolean puedeAtacar = true;
     private int reduccionDanioRecibido = 0;
     private int aumentoDanioCausado = 0;
@@ -109,4 +110,7 @@ public class CartaEnJuego {
     public void setCard(Card card) {
         this.card = card;
     }
+
+    public List<Card> getAttachedTools() { return attachedTools; }
+    public void setAttachedTools(List<Card> attachedTools) { this.attachedTools = attachedTools; }
 }

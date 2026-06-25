@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { SafeHtml } from '@angular/platform-browser';
 import { BattleActionCard, CartaEnJuego } from '../../shared/models/battle';
 import { Card } from '../../shared/models/card';
 import { BattleBoardAttack, CardGlossaryEntry } from './battle-board.types';
+import { CardService } from '../../core/services/card.service';
 
 @Component({
   selector: 'app-battle-board-card-detail-panel',
@@ -13,6 +14,8 @@ import { BattleBoardAttack, CardGlossaryEntry } from './battle-board.types';
   styleUrls: ['./battle-board-card-detail-panel.component.scss'],
 })
 export class BattleBoardCardDetailPanelComponent {
+  private cardService = inject(CardService);
+
   @Input() hoveredCard: Card | BattleActionCard | null = null;
   @Input() hoveredInPlayCard: CartaEnJuego | null = null;
   @Input() hoveredCardStatuses: CardGlossaryEntry[] = [];
@@ -20,6 +23,11 @@ export class BattleBoardCardDetailPanelComponent {
   @Input() getImagenCarta: ((id: string) => string) | null = null;
   @Input() getEnergyColor: ((tipo: string) => string) | null = null;
   @Input() formatTextoAtaque: ((texto: string) => SafeHtml) | null = null;
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    this.cardService.handleCardImageError(img);
+  }
 
   asAttackList(ataques?: BattleBoardAttack[]): BattleBoardAttack[] {
     return ataques ?? [];

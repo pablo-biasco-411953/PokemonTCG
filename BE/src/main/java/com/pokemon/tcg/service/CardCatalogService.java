@@ -3,6 +3,7 @@ package com.pokemon.tcg.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.repository.CardRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,12 +12,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.text.Normalizer;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CardCatalogService {
     private final CardRepository cardRepo;
     private final ObjectMapper objectMapper;
+    private final Map<String, List<TranslatedCard>> translations = new ConcurrentHashMap<>();
 
     public CardCatalogService(CardRepository cardRepo, ObjectMapper objectMapper) {
         this.cardRepo = cardRepo;
@@ -158,5 +162,110 @@ public class CardCatalogService {
         if (value == null) return "";
         return Normalizer.normalize(value.trim().toLowerCase(), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
+    }
+
+    @Transactional
+    public List<Card> getCatalogo(String lang) {
+        List<Card> baseList = getCatalogo();
+        if (lang == null || lang.trim().isEmpty() || "en".equalsIgnoreCase(lang)) {
+            return baseList;
+        }
+        return baseList.stream()
+                .map(card -> localizarCarta(card, lang))
+                .toList();
+    }
+
+    private Card localizarCarta(Card card, String lang) {
+        if (lang == null || lang.equalsIgnoreCase("en")) {
+            return card;
+        }
+        List<TranslatedCard> list = getTranslationsFor(lang);
+        if (list == null || list.isEmpty()) return card;
+        TranslatedCard tr = list.stream().filter(t -> t.getId().equals(card.getId())).findFirst().orElse(null);
+        if (tr == null) return card;
+
+        Card clone = new Card();
+        clone.setId(card.getId());
+        clone.setNombre(tr.getNombre());
+        clone.setHp(card.getHp());
+        clone.setTipo(card.getTipo());
+        clone.setImagen(card.getImagen());
+        clone.setCostoRetirada(card.getCostoRetirada());
+        clone.setSupertype(card.getSupertype());
+        clone.setEvolvesFrom(card.getEvolvesFrom());
+        clone.setSubtypes(card.getSubtypes() != null ? new ArrayList<>(card.getSubtypes()) : new ArrayList<>());
+        clone.setReglas(tr.getReglas() != null ? new ArrayList<>(tr.getReglas()) : (card.getReglas() != null ? new ArrayList<>(card.getReglas()) : new ArrayList<>()));
+        clone.setDebilidades(card.getDebilidades() != null ? new ArrayList<>(card.getDebilidades()) : new ArrayList<>());
+        clone.setResistencias(card.getResistencias() != null ? new ArrayList<>(card.getResistencias()) : new ArrayList<>());
+
+        List<Ataque> attacks = new ArrayList<>();
+        if (card.getAtaques() != null) {
+            for (int i = 0; i < card.getAtaques().size(); i++) {
+                Ataque baseAtk = card.getAtaques().get(i);
+                Ataque cloneAtk = new Ataque();
+                cloneAtk.setId(baseAtk.getId());
+                cloneAtk.setDanio(baseAtk.getDanio());
+                cloneAtk.setTiposEnergia(baseAtk.getCosto() != null ? new ArrayList<>(baseAtk.getCosto()) : new ArrayList<>());
+                cloneAtk.setInteractionType(baseAtk.getInteractionType());
+                cloneAtk.setInteractionPrompt(baseAtk.getInteractionPrompt());
+
+                if (tr.getAtaques() != null && i < tr.getAtaques().size()) {
+                    TranslatedAttack trAtk = tr.getAtaques().get(i);
+                    cloneAtk.setNombre(trAtk.getNombre());
+                    cloneAtk.setTexto(trAtk.getTexto());
+                } else {
+                    cloneAtk.setNombre(baseAtk.getNombre());
+                    cloneAtk.setTexto(baseAtk.getTexto());
+                }
+                attacks.add(cloneAtk);
+            }
+        }
+        clone.reemplazarAtaques(attacks);
+        return clone;
+    }
+
+    private List<TranslatedCard> getTranslationsFor(String lang) {
+        return translations.computeIfAbsent(lang.toLowerCase(), l -> {
+            try (InputStream inputStream = getClass().getResourceAsStream("/cards_" + l + ".json")) {
+                if (inputStream == null) {
+                    System.out.println("⚠️ Translation file /cards_" + l + ".json not found in resources.");
+                    return new ArrayList<>();
+                }
+                return objectMapper.readValue(inputStream, new TypeReference<List<TranslatedCard>>() {});
+            } catch (IOException e) {
+                System.err.println("❌ Error reading translations for " + l + ": " + e.getMessage());
+                return new ArrayList<>();
+            }
+        });
+    }
+
+    public static class TranslatedAttack {
+        private String nombre;
+        private String texto;
+
+        public TranslatedAttack() {}
+
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+        public String getTexto() { return texto; }
+        public void setTexto(String texto) { this.texto = texto; }
+    }
+
+    public static class TranslatedCard {
+        private String id;
+        private String nombre;
+        private List<String> reglas;
+        private List<TranslatedAttack> ataques;
+
+        public TranslatedCard() {}
+
+        public String getId() { return id; }
+        public void setId(String id) { this.id = id; }
+        public String getNombre() { return nombre; }
+        public void setNombre(String nombre) { this.nombre = nombre; }
+        public List<String> getReglas() { return reglas; }
+        public void setReglas(List<String> reglas) { this.reglas = reglas; }
+        public List<TranslatedAttack> getAtaques() { return ataques; }
+        public void setAtaques(List<TranslatedAttack> ataques) { this.ataques = ataques; }
     }
 }
