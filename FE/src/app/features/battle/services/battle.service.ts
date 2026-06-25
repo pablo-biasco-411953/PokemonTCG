@@ -113,13 +113,22 @@ export class BattleService {
   }
 
   // Define quien toma el primer turno.
-  elegirTurno(matchId: string, vaPrimero: boolean): Observable<void> {
-    return this.http.post<void>(`${this.base}/${matchId}/choose-turn`, { vaPrimero }, this.getHeaders());
+  elegirTurno(matchId: string, vaPrimero: boolean, usernameOverride?: string): Observable<void> {
+    let headers = this.getHeaders().headers;
+    if (usernameOverride) {
+      headers = headers.set('X-Username', usernameOverride);
+    }
+    return this.http.post<void>(`${this.base}/${matchId}/choose-turn`, { vaPrimero }, { headers });
   }
 
   // Baja un Pokemon desde la mano al tablero.
   jugarPokemon(matchId: string, cartaId: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/play-pokemon`, { cartaId }, this.getHeaders());
+  }
+
+  // Juega una carta de Entrenador (Item, Supporter, Stadium, Tool).
+  jugarTrainer(matchId: string, cartaId: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/play-trainer`, { cartaId }, this.getHeaders());
   }
 
   // Une una energia al Pokemon indicado.

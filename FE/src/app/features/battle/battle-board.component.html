@@ -1,5 +1,6 @@
 <app-battle-board-debug-panel
   [show]="showDebugPanel"
+  [isAdmin]="isAdmin"
   [fps]="fps"
   [memoryUsage]="memoryUsage"
   [matchId]="matchId"
@@ -154,7 +155,7 @@
   </div>
   <div class="endgame-card">
     <small>{{ isVictory ? ('battle.gameCompleted' | t) : ('battle.combatFinished' | t) }}</small>
-    <h1>{{ isVictory ? 'VICTORY' : 'DEFEAT' }}</h1>
+    <h1>{{ isVictory ? ('battle.victoryTitle' | t) : ('battle.defeatTitle' | t) }}</h1>
     <p>{{ isVictory ? ('battle.victoryText' | t) : ('battle.defeatText' | t) }}</p>
     <div class="endgame-reason">
       <span>{{ 'battle.endReasonLabel' | t }}</span>
@@ -162,7 +163,7 @@
     </div>
     <div class="santocoin-reward">
       <b></b>
-      <strong>+{{ coinsEarned }} SantoCoins</strong>
+      <strong>+{{ coinsEarned }} SantoroPoints</strong>
     </div>
     <button class="endgame-accept" type="button" (click)="volverAlLobby()">
       {{ 'battle.acceptReward' | t }}
@@ -174,33 +175,75 @@
   <div class="coin-stars" aria-hidden="true">
     <span *ngFor="let s of [1,2,3,4,5,6,7,8]"></span>
   </div>
-  <div class="panel">
-    <div class="coin-stage-header">
+  <div class="panel" [class.cinematic-panel]="estadoCoinFlip === 'CARGANDO_VS'">
+    <div class="coin-stage-header" *ngIf="estadoCoinFlip !== 'CARGANDO_VS'">
       <span>{{ 'battle.preparations' | t }}</span>
       <strong>{{ 'battle.gameStartTitle' | t }}</strong>
       <small>{{ jugadorNombre || ('battle.unknown' | t) }} vs {{ nombreRival }}</small>
     </div>
 
     <ng-container *ngIf="estadoCoinFlip === 'CARGANDO_VS'">
-      <div class="vs-loading-card">
-        <div class="vs-player-card">
-          <span class="vs-side-label">Local</span>
-          <strong>{{ jugadorNombre }}</strong>
-          <small>{{ getCharacterLabel(localPlayerCharacterId) }}</small>
-          <div class="vs-progress">
-            <span [style.width.%]="jugadorLoadingPercentage"></span>
-          </div>
-          <b>{{ Math.floor(jugadorLoadingPercentage) }}%</b>
+      <div class="cinematic-vs" [class.low-power]="isPotato" [class.models-ready]="cinematicAssetsReady">
+        <canvas #versusCanvas class="cinematic-vs-canvas"></canvas>
+        <div class="cinematic-side cinematic-side-player"></div>
+        <div class="cinematic-side cinematic-side-rival"></div>
+        <div class="cinematic-pokeball" aria-hidden="true">
+          <span class="cinematic-pokeball-top"></span>
+          <span class="cinematic-pokeball-band"></span>
+          <span class="cinematic-pokeball-core"></span>
         </div>
-        <div class="vs-mark">VS</div>
-        <div class="vs-player-card rival">
-          <span class="vs-side-label">Rival</span>
+        <div class="cinematic-panels" aria-hidden="true">
+          <span *ngFor="let panel of [1,2,3,4,5,6]" [style.--panel]="panel"></span>
+        </div>
+        <div class="cinematic-speed-lines" aria-hidden="true"></div>
+        <div class="cinematic-lightning" aria-hidden="true">
+          <i *ngFor="let bolt of [1,2,3,4,5,6,7,8]" [style.--bolt]="bolt"></i>
+        </div>
+        <div class="cinematic-eye-flare" aria-hidden="true"></div>
+        <div class="cinematic-white-strike" aria-hidden="true"></div>
+        <div class="cinematic-divider" aria-hidden="true"><span>VS</span></div>
+
+        <section class="cinematic-nameplate cinematic-nameplate-player">
+          <small>P1 · {{ getCharacterLabel(localPlayerCharacterId) }}</small>
+          <strong>{{ jugadorNombre || ('battle.unknown' | t) }}</strong>
+        </section>
+        <section class="cinematic-nameplate cinematic-nameplate-rival">
+          <small>RIVAL · {{ getCharacterLabel(opponentCharacterId) }}</small>
           <strong>{{ nombreRival }}</strong>
-          <small>{{ getCharacterLabel(opponentCharacterId) }}</small>
-          <div class="vs-progress">
-            <span [style.width.%]="botLoadingPercentage"></span>
+        </section>
+
+        <div class="cinematic-loading-status" [class.visible]="cinematicLoadingBarsVisible">
+          <div class="cinematic-loading-stage player-loading">
+            <header><b>{{ jugadorNombre || 'JUGADOR' }}</b><span>{{ Math.floor(jugadorLoadingPercentage) }}%</span></header>
+            <div><i [style.width.%]="jugadorLoadingPercentage"></i></div>
           </div>
-          <b>{{ Math.floor(botLoadingPercentage) }}%</b>
+          <div class="cinematic-loading-center">
+            <strong>{{ cinematicAssetsReady ? 'ENTRENADORES LISTOS' : 'PREPARANDO COMBATE' }}</strong>
+            <span>ESCENA 3D: {{ Math.floor(cinematicSceneLoadingPercentage) }}%</span>
+          </div>
+          <div class="cinematic-loading-stage rival-loading">
+            <header><b>{{ nombreRival }}</b><span>{{ Math.floor(botLoadingPercentage) }}%</span></header>
+            <div><i [style.width.%]="botLoadingPercentage"></i></div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de canción reproduciendo -->
+        <div class="cinematic-song-announcement" 
+             [class.minimized]="battleSongAnnouncementMinimized"
+             *ngIf="currentSong$ | async as song"
+             (click)="toggleSongAnnouncement()">
+          <div class="song-card-body">
+            <div class="song-card-info">
+              <span class="song-card-badge">BATTLE BGM</span>
+              <h6 class="song-card-title">{{ song.getTitle() }}</h6>
+              <span class="song-card-artist">{{ song.getArtist() }}</span>
+            </div>
+            <div class="song-card-right">
+              <div class="song-card-disc" [class.spinning]="isPlaying$ | async">
+                <span class="disc-center"></span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </ng-container>
@@ -272,70 +315,104 @@
       </div>
     </ng-container>
 
-    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
-      <h2 class="sorteo-title">{{ 'battle.initialDraw' | t }}</h2>
-      <p class="sorteo-sub">{{ 'battle.youCallCoin' | t:{rival: nombreRival} }}</p>
-      <div class="choice-buttons">
-        <button class="btn-choice heads" type="button" (click)="iniciarSorteo('CARA')">
-          <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
-          <b>{{ 'battle.heads' | t }}</b>
-          <small>{{ 'battle.headsHint' | t }}</small>
-        </button>
-        <button class="btn-choice tails" type="button" (click)="iniciarSorteo('CRUZ')">
-          <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
-          <b>{{ 'battle.tails' | t }}</b>
-          <small>{{ 'battle.tailsHint' | t }}</small>
-        </button>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
-      <div class="resultado-panel">
-        <p class="res-ganaste">{{ 'battle.initialDraw' | t }}</p>
-        <p class="res-sub">{{ 'battle.rivalCallingCoin' | t:{rival: nombreRival} }}</p>
-      </div>
-    </ng-container>
-
-    <ng-container *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO'">
+    <!-- 1. ESCENA 3D DEL COIN FLIP (Persistente durante todo el sorteo) -->
+    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL' || estadoCoinFlip === 'ESPERANDO_TIRO' || estadoCoinFlip === 'GIRANDO' || estadoCoinFlip === 'ELEGIR_TURNO' || estadoCoinFlip === 'RESULTADO_BOT'">
       <div
         class="throw-zone"
         (pointerdown)="onCoinPointerDown($event)"
+        (pointermove)="onCoinPointerMove($event)"
         (pointerup)="onCoinPointerUp($event)"
         (pointercancel)="onCoinPointerCancel($event)"
-        [class.pointer-events-none]="lanzada"
+        [class.pointer-events-none]="lanzada || estadoCoinFlip === 'ELEGIR_LADO' || estadoCoinFlip === 'ESPERANDO_RIVAL'"
       >
-        <p class="swipe-hint" *ngIf="!lanzada">{{ 'battle.swipeHint' | t }}</p>
+        <div class="coin-canvas-container">
+          <canvas #coinFlipCanvas class="coinflip-canvas"></canvas>
+        </div>
 
-        <div class="moneda-scene">
-          <div class="moneda-sombra" [class.active]="lanzada"></div>
-          <div
-            class="moneda-inner"
-            [class.animar-vuelo]="lanzada"
-            [class.girando]="lanzada && girando"
-            [style.transform]="!girando && lanzada ? 'rotateY(' + anguloFinal + 'deg)' : null"
-          >
-            <div class="cara front"><img src="/coin-heads.png" draggable="false" /></div>
-            <div class="cruz back"><img src="/coin-tails.png" draggable="false" /></div>
+        <!-- Medidor de fuerza vertical (sólo al arrastrar) -->
+        <div class="fuerza-meter-container" *ngIf="arrastrando && fuerzaActual > 0">
+          <div class="fuerza-meter-bar" [style.height.%]="(fuerzaActual / 400) * 100" [style.background]="getFuerzaColor()"></div>
+        </div>
+
+        <!-- A. Interfaz flotante de Selección (ELEGIR_LADO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ELEGIR_LADO'">
+          <h2 class="sorteo-title">{{ 'battle.initialDraw' | t }}</h2>
+          
+          <div class="choice-buttons" *ngIf="!eleccionTemporal">
+            <p class="sorteo-sub">{{ 'battle.youCallCoin' | t:{rival: nombreRival} }}</p>
+            <div class="choice-row">
+              <button class="btn-choice heads" type="button" (click)="seleccionarCaraCruzTemporal('CARA')">
+                <span class="choice-coin"><img src="/coin-heads.png" draggable="false" /></span>
+                <b>{{ 'battle.heads' | t }}</b>
+                <small>{{ 'battle.headsHint' | t }}</small>
+              </button>
+              <button class="btn-choice tails" type="button" (click)="seleccionarCaraCruzTemporal('CRUZ')">
+                <span class="choice-coin"><img src="/coin-tails.png" draggable="false" /></span>
+                <b>{{ 'battle.tails' | t }}</b>
+                <small>{{ 'battle.tailsHint' | t }}</small>
+              </button>
+            </div>
+          </div>
+
+          <div class="confirm-selection-panel" *ngIf="eleccionTemporal && !confirmadoLado">
+            <p class="sorteo-sub">Elegiste <b>{{ eleccionTemporal === 'CARA' ? ('battle.heads' | t) : ('battle.tails' | t) }}</b>. ¿Confirmar selección?</p>
+            <div class="confirm-buttons-row">
+              <button class="btn-confirm" (click)="confirmarSeleccionLado()">Confirmar</button>
+              <button class="btn-cancel" (click)="cancelarSeleccionLado()">Cancelar</button>
+            </div>
           </div>
         </div>
-        <p class="anim-text" *ngIf="estadoCoinFlip === 'GIRANDO'">{{ 'battle.coinDecides' | t }}</p>
-      </div>
-    </ng-container>
 
-    <ng-container *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
-      <div class="resultado-panel">
-        <p class="res-ganaste">{{ 'battle.wonDraw' | t }}</p>
-        <div class="choice-buttons small">
-          <button (click)="seleccionarTurno(true)">{{ 'battle.youFirst' | t }}</button>
-          <button (click)="seleccionarTurno(false)">{{ 'battle.rivalFirst' | t:{rival: nombreRival} }}</button>
+        <!-- B. Interfaz flotante de Esperando Rival (ESPERANDO_RIVAL) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ESPERANDO_RIVAL'">
+          <div class="resultado-panel">
+            <p class="res-ganaste">{{ 'battle.initialDraw' | t }}</p>
+            <p class="res-sub">{{ 'battle.rivalCallingCoin' | t:{rival: nombreRival} }}</p>
+          </div>
         </div>
-      </div>
-    </ng-container>
 
-    <ng-container *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
-      <div class="resultado-panel">
-        <p class="res-perdiste">{{ 'battle.lostDraw' | t }}</p>
-        <p class="res-sub">{{ 'battle.winnerChose' | t:{winner: nombreGanadorSorteo} }}</p>
+        <!-- C. Interfaz flotante de Esperando Tiro (ESPERANDO_TIRO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ESPERANDO_TIRO' && !lanzada">
+          <p class="swipe-hint">{{ 'battle.swipeHint' | t }}</p>
+        </div>
+
+        <!-- D. Interfaz flotante de Girando (GIRANDO) -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'GIRANDO'">
+          <p class="anim-text">{{ 'battle.coinDecides' | t }}</p>
+        </div>
+
+        <!-- E. Interfaz flotante de ELEGIR_TURNO -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'ELEGIR_TURNO'">
+          <div class="resultado-modal-overlay">
+            <h2 class="res-ganaste-title">🏆 ¡GANASTE EL SORTEO!</h2>
+            <p class="sorteo-sub">Decide el destino de la batalla. ¿Quién inicia la partida?</p>
+            <div class="choice-row compact">
+              <button class="btn-choice-modern first-turn-btn" type="button" (click)="seleccionarTurno(true)">
+                <span class="btn-icon">⚔️</span>
+                <b>Jugar Primero</b>
+                <small>Tomas la iniciativa ofensiva</small>
+              </button>
+              <button class="btn-choice-modern second-turn-btn" type="button" (click)="seleccionarTurno(false)">
+                <span class="btn-icon">🛡️</span>
+                <b>Jugar Segundo</b>
+                <small>Robas carta en tu primer turno</small>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- F. Interfaz flotante de RESULTADO_BOT -->
+        <div class="sorteo-overlay-content" *ngIf="estadoCoinFlip === 'RESULTADO_BOT'">
+          <div class="resultado-modal-overlay perdiste">
+            <h2 class="res-perdiste-title">💀 PERDISTE EL SORTEO</h2>
+            <p class="sorteo-sub">El oponente está decidiendo quién irá primero...</p>
+            <div class="loader-dots-container">
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+              <span class="loading-dot"></span>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-container>
   </div>
@@ -372,6 +449,28 @@
   <div class="cab-stripes"></div>
   <div class="cab-content">
     <div class="cab-text">{{ attackBannerActive.attackName }}</div>
+  </div>
+</div>
+
+<!-- Max Revive Cinematic Overlay -->
+<div class="revive-cinematic-overlay" *ngIf="reviveAnimationActive">
+  <div class="revive-backdrop"></div>
+  <div class="revive-stage">
+    <div class="revive-title">{{ 'battle.reviving' | t }}</div>
+    <div class="revive-pokemon-container">
+      <img [src]="reviveAnimationActive.spriteUrl" class="revive-sprite" [class.revived]="reviveAnimationActive.hpProgress > 0" (error)="onSpriteError($event, reviveAnimationActive.card)" />
+      <!-- Golden drop element -->
+      <div class="golden-drop" [class.dropping]="reviveAnimationActive.hpProgress > 0"></div>
+      <div class="revive-glow" [class.glowing]="reviveAnimationActive.hpProgress > 0"></div>
+    </div>
+    <div class="revive-hp-container">
+      <div class="revive-hp-label">HP</div>
+      <div class="revive-hp-bar-bg">
+        <div class="revive-hp-bar-fill" [style.width.%]="reviveAnimationActive.hpProgress"></div>
+      </div>
+      <div class="revive-hp-value">{{ reviveAnimationActive.hpProgress }}%</div>
+    </div>
+    <div class="revive-card-name">{{ reviveAnimationActive.cardNombre }}</div>
   </div>
 </div>
 
@@ -432,73 +531,117 @@
     </button>
   </section>
 </div>
-<div class="attack-coinflip-overlay" *ngIf="coinFlipAtaque">
+<div class="attack-coinflip-overlay" [class.screen-shake-effect]="screenShaking" *ngIf="coinFlipAtaque">
   <div class="acf-backdrop"></div>
-  <div class="acf-panel">
-    <p class="acf-attack-name">{{ coinFlipAtaque.nombreAtaque }}</p>
+  <div class="acf-panel" [ngClass]="getCoinFlipThemeClass()">
+    <div class="acf-header">
+      <span class="acf-theme-icon">{{ getCoinFlipThemeIcon() }}</span>
+      <div class="acf-copy">
+        <p class="acf-attack-name">{{ coinFlipAtaque.nombreAtaque }}</p>
 
-    <p class="acf-description" *ngIf="coinFlipAtaque.descripcion">
-      {{ coinFlipAtaque.descripcion }}
-    </p>
-
-    <div class="acf-coins-row">
-      <div
-        *ngFor="let moneda of coinFlipAtaque.monedas; let i = index"
-        class="acf-coin"
-        [class.flipping]="moneda.estado === 'girando'"
-        [class.cara]="moneda.estado === 'cara'"
-        [class.cruz]="moneda.estado === 'cruz'"
-      >
-        <span *ngIf="moneda.estado === 'cara'">🌟</span>
-        <span *ngIf="moneda.estado === 'cruz'">🌑</span>
-        <span *ngIf="moneda.estado === 'girando'">🪙</span>
+        <p class="acf-description" *ngIf="coinFlipAtaque.descripcion">
+          {{ coinFlipAtaque.descripcion }}
+        </p>
       </div>
     </div>
 
-    <div class="acf-progress" *ngIf="!coinFlipAtaque.terminado">
-      <div class="acf-progress-fill" [style.width.%]="coinFlipAtaque.progreso"></div>
-    </div>
+    <div class="acf-layout-body" [class.has-attacker]="coinFlipAttacker">
+      <div class="acf-left-col">
+        <div class="acf-coins-row">
+          <div
+            *ngFor="let moneda of coinFlipAtaque.monedas; let i = index"
+            class="acf-coin"
+            [class.flipping]="moneda.estado === 'girando'"
+            [class.cara]="moneda.estado === 'cara'"
+            [class.cruz]="moneda.estado === 'cruz'"
+            [style.--coin-index]="i"
+          >
+            <span *ngIf="moneda.estado === 'cara'">🌟</span>
+            <span *ngIf="moneda.estado === 'cruz'">🌑</span>
+            <span *ngIf="moneda.estado === 'girando'">🪙</span>
 
-    <div class="acf-results-row" *ngIf="coinFlipAtaque.terminado">
-      <div
-        *ngFor="let moneda of coinFlipAtaque.monedas"
-        class="acf-result-label"
-        [class.cara]="moneda.estado === 'cara'"
-        [class.cruz]="moneda.estado === 'cruz'"
-        [class.pending]="moneda.estado === 'girando'"
-      >
-        {{ moneda.estado === 'cara' ? ('battle.heads' | t) : moneda.estado === 'cruz' ? ('battle.tails' | t) : '...' }}
+            <ng-container *ngIf="moneda.estado === 'cara' && coinFlipAttacker && !coinFlipAtaque.esSoloEstado">
+              <div class="acf-power-orb orb-1"></div>
+              <div class="acf-power-orb orb-2"></div>
+              <div class="acf-power-orb orb-3"></div>
+              <div class="acf-power-orb orb-4"></div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="acf-progress" *ngIf="!coinFlipAtaque.terminado">
+          <div class="acf-progress-fill" [style.width.%]="coinFlipAtaque.progreso"></div>
+        </div>
+
+        <div class="acf-results-row" *ngIf="coinFlipAtaque.terminado">
+          <div
+            *ngFor="let moneda of coinFlipAtaque.monedas"
+            class="acf-result-label"
+            [class.cara]="moneda.estado === 'cara'"
+            [class.cruz]="moneda.estado === 'cruz'"
+            [class.pending]="moneda.estado === 'girando'"
+          >
+            {{ moneda.estado === 'cara' ? ('battle.heads' | t) : moneda.estado === 'cruz' ? ('battle.tails' | t) : '...' }}
+          </div>
+        </div>
+
+        <div
+          class="acf-damage-summary"
+          *ngIf="
+            coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0
+          "
+        >
+          <span>+{{ coinFlipAtaque.danioTotal }}</span> {{ 'battle.extraDamage' | t }}
+        </div>
+
+        <div
+          class="acf-damage-summary"
+          *ngIf="
+            coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0
+          "
+        >
+          {{ 'battle.noExtraDamage' | t }}
+        </div>
+
+        <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
+          <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
+            {{
+              coinFlipAtaque.tipoEfecto === 'protection'
+                ? (resultadoMoneda === 'CARA' ? '¡PROTECCIÓN ACTIVADA!' : 'NO SE ACTIVÓ LA PROTECCIÓN')
+                : coinFlipAtaque.tipoEfecto === 'self-damage'
+                  ? (resultadoMoneda === 'CRUZ' ? '¡RECIBE DAÑO DE RETROCESO!' : 'SIN DAÑO DE RETROCESO')
+                  : (resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t))
+            }}
+          </span>
+        </div>
       </div>
-    </div>
 
-    <div
-      class="acf-damage-summary"
-      *ngIf="
-        coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0
-      "
-    >
-      <span>+{{ coinFlipAtaque.danioTotal }}</span> {{ 'battle.extraDamage' | t }}
-    </div>
+      <div class="acf-right-col" *ngIf="coinFlipAttacker as attacker">
+        <div class="acf-pokemon-display-box">
+          <div class="acf-attacker-wrapper"
+               [class.glow-level-1]="carasAcumuladas === 1"
+               [class.glow-level-2]="carasAcumuladas === 2"
+               [class.glow-level-3]="carasAcumuladas === 3"
+               [class.glow-level-4]="carasAcumuladas >= 4"
+               [class.shake-level-1]="carasAcumuladas >= 1 && carasAcumuladas <= 2"
+               [class.shake-level-2]="carasAcumuladas >= 3 && carasAcumuladas <= 4"
+               [class.shake-level-3]="carasAcumuladas >= 5">
+            <img [src]="getSpriteFront(attacker.card)"
+                 (error)="onSpriteError($event, attacker.card)"
+                 class="acf-sprite-img" />
+          </div>
 
-    <div
-      class="acf-damage-summary"
-      *ngIf="
-        coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0
-      "
-    >
-      {{ 'battle.noExtraDamage' | t }}
-    </div>
-
-    <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
-      <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
-        {{
-          coinFlipAtaque.tipoEfecto === 'protection'
-            ? (resultadoMoneda === 'CARA' ? '¡PROTECCIÓN ACTIVADA!' : 'NO SE ACTIVÓ LA PROTECCIÓN')
-            : coinFlipAtaque.tipoEfecto === 'self-damage'
-              ? (resultadoMoneda === 'CRUZ' ? '¡RECIBE DAÑO DE RETROCESO!' : 'SIN DAÑO DE RETROCESO')
-              : (resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t))
-        }}
-      </span>
+          <div class="acf-pokemon-stats" *ngIf="!coinFlipAtaque.esSoloEstado">
+            <p class="acf-stat-label">DAÑO ACUMULADO</p>
+            <p class="acf-stat-value" [class.high-damage]="danioAcumulado >= 80">{{ danioAcumulado }}</p>
+            <p class="acf-stat-sub">{{ carasAcumuladas }} Caras</p>
+          </div>
+          <div class="acf-pokemon-stats" *ngIf="coinFlipAtaque.esSoloEstado">
+            <p class="acf-stat-label">POKÉMON ACTIVO</p>
+            <p class="acf-stat-pokemon-name">{{ attacker.card.nombre }}</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -699,6 +842,18 @@
               <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
             </div>
           </div>
+          <!-- Attached Tools -->
+          <div class="attached-tools-row" *ngIf="!b.bocaAbajo && b.attachedTools?.length">
+            <div
+              *ngFor="let tool of b.attachedTools"
+              class="attached-tool-badge"
+              [title]="tool.nombre"
+              (mouseenter)="setHoveredCard(tool)"
+              (mouseleave)="clearHoveredCard()"
+            >
+              <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
           <div class="bench-bar" *ngIf="!b.bocaAbajo">
             <div
               class="bench-fill"
@@ -733,6 +888,15 @@
     </div>
 
     <div class="arena">
+      <!-- Active Stadium Slot -->
+      <div
+        class="stadium-slot"
+        *ngIf="partida.activeStadium"
+        (mouseenter)="setHoveredCard(partida.activeStadium)"
+        (mouseleave)="clearHoveredCard()"
+      >
+        <img [src]="getImagenCarta(partida.activeStadium.id)" [alt]="partida.activeStadium.nombre" (error)="onCardImageError($event)" />
+      </div>
 
       <div class="arena-half arena-top">
         <div class="combatant bot-combatant">
@@ -744,6 +908,18 @@
           >
             <ng-container *ngIf="partida.bot.activo">
               <img [src]="getImagenCartaEnJuego(partida.bot.activo)" (error)="onCardImageError($event)" />
+              <!-- Attached Tools -->
+              <div class="attached-tools-row" *ngIf="!partida.bot.activo.bocaAbajo && partida.bot.activo.attachedTools?.length">
+                <div
+                  *ngFor="let tool of partida.bot.activo.attachedTools"
+                  class="attached-tool-badge"
+                  [title]="tool.nombre"
+                  (mouseenter)="setHoveredCard(tool)"
+                  (mouseleave)="clearHoveredCard()"
+                >
+                  <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+                </div>
+              </div>
             </ng-container>
           </div>
 
@@ -856,7 +1032,7 @@
                   <img
                     class="poke-sprite sprite-front"
                     [src]="getSpriteFront(partida.bot.activo.card)"
-                    (error)="onSpriteError($event, partida.bot.activo.card.id)"
+                    (error)="onSpriteError($event, partida.bot.activo.card)"
                   />
                   <div class="sprite-shadow"></div>
                   <div class="cure-paralysis-fx" *ngIf="curingParalysisBot"></div>
@@ -1032,7 +1208,7 @@
                   <img
                     class="poke-sprite sprite-back"
                     [src]="getSpriteBack(partida.jugador.activo.card)"
-                    (error)="onSpriteError($event, partida.jugador.activo.card.id)"
+                    (error)="onSpriteError($event, partida.jugador.activo.card)"
                   />
                   <div class="sprite-shadow"></div>
                   <div
@@ -1116,6 +1292,18 @@
                     [style.backgroundColor]="getEnergyColor(energia.tipo)"
                   ></div>
                 </div>
+                <!-- Attached Tools -->
+                <div class="attached-tools-row" *ngIf="!partida.jugador.activo.bocaAbajo && partida.jugador.activo.attachedTools?.length">
+                  <div
+                    *ngFor="let tool of partida.jugador.activo.attachedTools"
+                    class="attached-tool-badge"
+                    [title]="tool.nombre"
+                    (mouseenter)="setHoveredCard(tool)"
+                    (mouseleave)="clearHoveredCard()"
+                  >
+                    <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
+                  </div>
+                </div>
               </ng-container>
             </div>
           </div>
@@ -1165,6 +1353,18 @@
               [title]="energia.nombre"
             >
               <img [src]="getImagenCarta(energia.id)" [alt]="energia.nombre" (error)="onCardImageError($event)" />
+            </div>
+          </div>
+          <!-- Attached Tools -->
+          <div class="attached-tools-row" *ngIf="!b.bocaAbajo && b.attachedTools?.length">
+            <div
+              *ngFor="let tool of b.attachedTools"
+              class="attached-tool-badge"
+              [title]="tool.nombre"
+              (mouseenter)="setHoveredCard(tool)"
+              (mouseleave)="clearHoveredCard()"
+            >
+              <img [src]="getImagenCarta(tool.id)" [alt]="tool.nombre" (error)="onCardImageError($event)" />
             </div>
           </div>
           <div
@@ -1519,8 +1719,8 @@
 <div class="conversion-modal-overlay" *ngIf="mostrarConversionModal">
   <div class="conversion-modal">
     <button class="conversion-close" (click)="cerrarConversionModal()">&times;</button>
-    <h2 class="conversion-title">Eleg� un estado</h2>
-    <p class="conversion-subtitle">El Pok�mon Defensor pasar� a estar Dormido o Envenenado.</p>
+    <h2 class="conversion-title">Eleg� un estado</h2>
+    <p class="conversion-subtitle">El Pok�mon Defensor pasar� a estar Dormido o Envenenado.</p>
     <div class="conversion-options">
       <div class="conversion-card sleep-card" (click)="seleccionarEstadoConversion('Asleep')">
         <div class="sleep-anim-container">

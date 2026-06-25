@@ -122,6 +122,13 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         if (peligroDeMuerte || estancado || muriendoPorEstados) {
             int costoRetirada = miActivo.getCard().getCostoRetirada();
+            boolean isFairyGardenActive = partida.getActiveStadium() != null 
+                    && ("xy1-117".equals(partida.getActiveStadium().getId()) || "Fairy Garden".equalsIgnoreCase(partida.getActiveStadium().getNombre()));
+            boolean hasFairyEnergy = miActivo.getEnergiasUnidas() != null 
+                    && miActivo.getEnergiasUnidas().stream().anyMatch(e -> "Fairy".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("fairy energy")));
+            if (isFairyGardenActive && hasFairyEnergy) {
+                costoRetirada = 0;
+            }
 
             if (miActivo.getEnergiasUnidas().size() >= costoRetirada) {
                 CartaEnJuego mejorSuplente = bot.getBanca().stream()
@@ -396,6 +403,11 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         for (Ataque atk : ataques) {
             if (!puedePagarCosto(activoBot, atk)) continue;
+            if (activoBot.getAtaqueBloqueadoSiguienteTurno() != null
+                    && activoBot.getAtaqueBloqueadoSiguienteTurno().equalsIgnoreCase(atk.getNombre())) {
+                System.out.println("🤖 [BOT] Saltando ataque bloqueado: " + atk.getNombre());
+                continue;
+            }
 
             int score = calcularDanioFinal(activoBot, activoJugador, atk);
             String txt = (atk.getTexto() != null) ? atk.getTexto().toLowerCase() : "";

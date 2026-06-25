@@ -5,7 +5,7 @@ export interface Jugador {
   id?: number;
   username: string;
   sobresDisponibles: number;
-  santoCoins?: number;
+  santoroPoints?: number;
   cantidadCartas?: number;
   nivel?: number;
   coleccion?: Card[];
@@ -16,13 +16,14 @@ export interface Jugador {
   eyeColor?: string;
   height?: number;
   pikachuCompanion?: boolean;
+  admin?: boolean;
 }
 
 // Respuesta resumida para el header del lobby.
 export interface JugadorDatosResponse {
   username: string;
   sobresDisponibles: number;
-  santoCoins?: number;
+  santoroPoints?: number;
   cantidadCartas: number;
   cartasObtenidas?: Card[];
   characterId?: string;
@@ -31,4 +32,5 @@ export interface JugadorDatosResponse {
   eyeColor?: string;
   height?: number;
   pikachuCompanion?: boolean;
+  admin?: boolean;
 }

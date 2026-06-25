@@ -307,6 +307,18 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/play-trainer")
+    public ResponseEntity<?> jugarTrainer(@PathVariable String matchId,
+                                          @RequestHeader(value = "X-Username", required = false) String username,
+                                          @RequestBody java.util.Map<String, String> request) {
+        try {
+            battleEngine.jugarTrainer(matchId, request.get("cartaId"), username);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/attach-energy")
     public ResponseEntity<?> unirEnergia(@PathVariable String matchId,
                                          @RequestHeader(value = "X-Username", required = false) String username,
@@ -368,10 +380,15 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/debug/draw")
-    public ResponseEntity<?> debugDrawCard(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<?> debugDrawCard(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody java.util.Map<String, String> payload) {
         try {
             String cardId = payload.get("cardId");
-            Partida partidaActualizada = battleEngine.debugRobarCarta(matchId, cardId);
+            Partida partidaActualizada = battleEngine.debugRobarCarta(matchId, cardId, username);
+            if (username != null && username.equals(partidaActualizada.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partidaActualizada));
+            }
             return ResponseEntity.ok(partidaActualizada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error en God Mode (Robar): " + e.getMessage());
@@ -379,12 +396,17 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/debug/status")
-    public ResponseEntity<?> debugForzarEstado(@PathVariable String matchId, @RequestBody java.util.Map<String, String> payload) {
+    public ResponseEntity<?> debugForzarEstado(@PathVariable String matchId,
+                                               @RequestHeader(value = "X-Username", required = false) String username,
+                                               @RequestBody java.util.Map<String, String> payload) {
         try {
             String objetivo = payload.get("objetivo");
             String estado = payload.get("estado");
 
-            Partida partidaActualizada = battleEngine.debugForzarEstado(matchId, objetivo, estado);
+            Partida partidaActualizada = battleEngine.debugForzarEstado(matchId, objetivo, estado, username);
+            if (username != null && username.equals(partidaActualizada.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partidaActualizada));
+            }
             return ResponseEntity.ok(partidaActualizada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error en God Mode (Estado): " + e.getMessage());
@@ -392,12 +414,17 @@ public class BattleController {
     }
 
     @PostMapping("/{matchId}/debug/hp")
-    public ResponseEntity<?> debugSetHp(@PathVariable String matchId, @RequestBody java.util.Map<String, Object> payload) {
+    public ResponseEntity<?> debugSetHp(@PathVariable String matchId,
+                                        @RequestHeader(value = "X-Username", required = false) String username,
+                                        @RequestBody java.util.Map<String, Object> payload) {
         try {
             String objetivo = (String) payload.get("objetivo");
             int hp = Integer.parseInt(payload.get("hp").toString());
 
-            Partida partidaActualizada = battleEngine.debugSetHp(matchId, objetivo, hp);
+            Partida partidaActualizada = battleEngine.debugSetHp(matchId, objetivo, hp, username);
+            if (username != null && username.equals(partidaActualizada.getBotUsername())) {
+                return ResponseEntity.ok(swapPerspective(partidaActualizada));
+            }
             return ResponseEntity.ok(partidaActualizada);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error en God Mode (HP): " + e.getMessage());

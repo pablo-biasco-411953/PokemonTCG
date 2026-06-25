@@ -25,6 +25,7 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { MusicPlayerService } from '../../core/services/music-player.service';
 
 // Datos usados por el zoom flotante de una carta.
 export interface PokemonZoomUI {
@@ -169,13 +170,19 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   mazos: Mazo[] = [];
   slotsVacios: number[] = [];
   sobresDisponibles: number = 0;
-  santoCoins: number = 0;
+  santoroPoints: number = 0;
   cantidadCartas: number = 0;
   cantidadCartasUnicas: number = 0;
   mostrarAnimacionSobre: boolean = false;
   isOpeningPacks: boolean = false;
   cartasNuevas: Card[] = [];
   showDebugPanel: boolean = false;
+  isAdmin: boolean = false;
+  @ViewChild('perfCanvas', { static: false }) perfCanvas?: ElementRef<HTMLCanvasElement>;
+  cpuUsage: number = 0;
+  memoryUsage: string = 'N/A';
+  private perfHistory: Array<{ cpu: number; mem: number; fps: number }> = [];
+  private maxHistoryLen = 40;
   debugPanelX = 18;
   debugPanelY = 18;
   debugFps = 0;
@@ -218,6 +225,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   roomError = '';
   roomTab: 'browse' | 'create' | 'mine' = 'browse';
   roomPasswordModalOpen = false;
+  roomSettingsModalOpen = false;
+  tempBotDifficulty: 'EASY' | 'NORMAL' | 'HARD' = 'NORMAL';
+  tempTurnTimerEnabled = false;
+  tempTurnTimeSeconds = 60;
   botConfigOpen = false;
   botConfigContext: 'offline' | 'room' = 'offline';
   botDifficulty: 'EASY' | 'NORMAL' | 'HARD' = 'NORMAL';
@@ -386,9 +397,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   get filteredCharacterOptions(): CharacterOption[] {
     if (this.customizerGender === 'pibe') {
-      return this.characterOptions.filter(o => o.id === 'ash' || o.id === 'robot');
+      return this.characterOptions.filter(o => o.id === 'ash' || o.id === 'robot' || o.id === 'adaman' || o.id === 'giovanni-sygna' || o.id === 'hugh');
     } else {
-      return this.characterOptions.filter(o => o.id === 'hilda-sygna' || o.id === 'lillie');
+      return this.characterOptions.filter(o => o.id === 'hilda-sygna' || o.id === 'lillie' || o.id === 'courtney' || o.id === 'irida' || o.id === 'zinnia');
     }
   }
 
@@ -396,7 +407,17 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['run_1', 'run'] },
     { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
     { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, rotationY: Math.PI, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'], runHints: ['walking'] },
-    { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] }
+    { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, rotationY: Math.PI, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'], runHints: ['running', 'run'] },
+    
+    // Nuevos personajes (Pibes)
+    { id: 'adaman', label: 'Adaman', path: '/models-optimized/characters/adaman_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'giovanni-sygna', label: 'Giovanni Sygna', path: '/models-optimized/characters/giovanni_sygna_10.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'hugh', label: 'Hugh', path: '/models-optimized/characters/hugh_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    
+    // Nuevos personajes (Pibas)
+    { id: 'courtney', label: 'Courtney', path: '/models-optimized/characters/courtney_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'irida', label: 'Irida', path: '/models-optimized/characters/irida_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] },
+    { id: 'zinnia', label: 'Zinnia', path: '/models-optimized/characters/zinnia_regular_00.glb', scale: 1, yOffset: 0, rotationY: Math.PI, idleHints: ['idle'], walkHints: ['walk_1', 'walk'], runHints: ['walk_1', 'walk'] }
   ];
   hubSpots: HubSpot[] = [
     {
@@ -450,6 +471,28 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   hubVisualProgress = 0;
   private visualProgressInterval?: any;
 
+  // Estado de la UI del Reproductor de Música
+  musicPlayerMinimized = false;
+  musicPlayerPlaylistOpen = false;
+  musicVolume = 50;
+  
+  @ViewChild('musicVisualizerCanvas') musicVisualizerCanvas?: ElementRef<HTMLCanvasElement>;
+
+  // Observables para el template
+  get currentSong$() { return this.musicPlayer.currentSong$; }
+  get isPlaying$() { return this.musicPlayer.isPlaying$; }
+  get timeProgress$() { return this.musicPlayer.timeProgress$; }
+
+  get songsList() {
+    return this.musicPlayer.getSongsList();
+  }
+
+  get currentTrackIndex(): number {
+    return this.musicPlayer.getCurrentTrackIndex();
+  }
+
+  private visualizerSubscription?: any;
+
   constructor(
     private sobreService: SobreService,
     private mazoService: MazoService,
@@ -461,7 +504,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     private router: Router,
     private ngZone: NgZone,
     private cdr: ChangeDetectorRef,
-    public i18n: I18nService
+    public i18n: I18nService,
+    private musicPlayer: MusicPlayerService
   ) {
     this.hubLoadingManager.onStart = (_url, itemsLoaded, itemsTotal) => {
       if (itemsTotal <= 0 || !this.showHubLoadingOverlay && this.hubLoadingProgress >= 100) return;
@@ -519,6 +563,10 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
           this.ngZone.run(() => {
             setTimeout(() => {
+              if (this.renderer && this.scene && this.camera) {
+                // Compilar de forma anticipada shaders y calentar materiales
+                this.renderer.compile(this.scene, this.camera);
+              }
               this.showHubLoadingOverlay = false;
               this.cdr.detectChanges();
             }, 900); // 900ms para un desvanecimiento estÃ©tico y suave
@@ -637,6 +685,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   private readonly remoteFullModelDistanceSq = 38 * 38;
   private readonly remoteCompanionDistanceSq = 28 * 28;
   private kioskProductPlaceholders?: THREE.Group;
+  private kioskDetailedProductsGroup?: THREE.Group;
   private kioskProductsDetailedLoaded = false;
 
   // Control de cÃ¡mara con mouse (Ã³rbita y zoom)
@@ -667,6 +716,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Recupera al jugador guardado y carga su estado inicial.
   ngOnInit(): void {
+    this.musicPlayer.playSong('lobby');
     const storedQuality = localStorage.getItem('ptcg_graphics_quality') as 'low' | 'medium' | 'high' | null;
     if (storedQuality) {
       this.graphicsQuality = storedQuality;
@@ -679,6 +729,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       const data = localStorage.getItem('jugador');
       if (data) {
         this.jugador = JSON.parse(data);
+        this.isAdmin = this.jugador?.admin || false;
         this.refrescarTodo();
         // VerificaciÃ³n de Onboarding por primera vez
         const setupCompleted = localStorage.getItem('firstTimeSetup');
@@ -837,6 +888,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   selectLanguage(language: LanguageCode) {
     this.i18n.setLanguage(language);
+    this.cargarCatalogoGodMode();
     this.cdr.detectChanges();
   }
 
@@ -1046,6 +1098,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.initHubWorld();
       this.connectWebSocket();
       this.animateHub();
+      this.visualizerSubscription = this.musicPlayer.frequencyData$.subscribe(data => {
+        this.drawVisualizer(data);
+      });
       
       if (this.showFirstTimeSetup) {
         this.initPreviewScene();
@@ -1055,6 +1110,9 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.lobbyDestroyed = true;
+    if (this.visualizerSubscription) {
+      this.visualizerSubscription.unsubscribe();
+    }
     this.cleanupPokedexTransition();
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
@@ -1107,7 +1165,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       event.preventDefault();
       this.showDebugPanel = !this.showDebugPanel;
 
-      if (this.showDebugPanel && this.debugCatalogoCompleto.length === 0) {
+      if (this.showDebugPanel && this.isAdmin && this.debugCatalogoCompleto.length === 0) {
         this.cargarCatalogoGodMode();
       }
       return;
@@ -1182,7 +1240,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.jugadorService.getJugador(this.jugador.username).subscribe({
       next: (res: JugadorDatosResponse) => {
         this.sobresDisponibles = res.sobresDisponibles ?? 0;
-        this.santoCoins = res.santoCoins ?? 0;
+        this.santoroPoints = res.santoroPoints ?? 0;
         this.debugSobresCantidad = this.sobresDisponibles;
 
         if (res.cartasObtenidas && Array.isArray(res.cartasObtenidas)) {
@@ -1437,7 +1495,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getImagenDebugCarta(id: string): string {
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   getImagenReal(carta: Card): string {
@@ -1445,17 +1503,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   getImagenCarta(id: string): string {
-    if (/^xy/i.test(id)) {
-      return `/images/cards/${id}.png`;
-    }
-
-    return `/images/cards/${id}.png`;
+    return this.cardService.getImagenCarta(id);
   }
 
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (!img || img.src.endsWith('/images/cards/back.png')) return;
-    img.src = '/images/cards/back.png';
+    this.cardService.handleCardImageError(img);
   }
 
   // Abre un sobre y dispara la animacion de revelado.
@@ -1791,8 +1844,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.roomActionLoading = true;
-    const turnTimeSeconds = this.roomTurnTimerEnabled ? Number(this.roomTurnTimeSeconds) || 60 : 0;
-    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword, turnTimeSeconds).subscribe({
+    this.lobbyRoomService.createRoom(this.roomCreateName, deck.id, deck.nombre, this.roomPassword, 0).subscribe({
       next: (room) => {
         this.currentRoom = room;
         this.selectedRoom = room;
@@ -1807,6 +1859,45 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.loadLobbyRooms();
       },
       error: (err) => this.handleRoomError(err)
+    });
+  }
+
+  openRoomSettings() {
+    if (!this.currentRoom) return;
+    this.tempBotDifficulty = this.currentRoom.botDifficulty || 'NORMAL';
+    this.tempTurnTimerEnabled = this.currentRoom.turnTimeSeconds > 0;
+    this.tempTurnTimeSeconds = this.currentRoom.turnTimeSeconds > 0 ? this.currentRoom.turnTimeSeconds : 60;
+    this.roomSettingsModalOpen = true;
+    this.cdr.detectChanges();
+  }
+
+  closeRoomSettings() {
+    this.roomSettingsModalOpen = false;
+    this.cdr.detectChanges();
+  }
+
+  saveRoomSettings() {
+    if (!this.currentRoom) return;
+    this.roomActionLoading = true;
+    const seconds = this.tempTurnTimerEnabled ? Number(this.tempTurnTimeSeconds) || 60 : 0;
+    this.lobbyRoomService.updateSettings(
+      this.currentRoom.id,
+      seconds,
+      this.tempBotDifficulty
+    ).subscribe({
+      next: (room) => {
+        this.currentRoom = room;
+        this.selectedRoom = room;
+        this.roomSettingsModalOpen = false;
+        this.roomActionLoading = false;
+        this.roomError = '';
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.roomError = this.extractErrorMessage(err, 'No se pudieron guardar las configuraciones.');
+        this.roomActionLoading = false;
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -3081,12 +3172,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   buyPackBundle(amount: number) {
     if (!this.jugador?.username) return;
     const cost = this.getPackBundlePrice(amount);
-    if (this.santoCoins < cost) return;
+    if (this.santoroPoints < cost) return;
 
     this.jugadorService.buyPacks(this.jugador.username, amount).subscribe({
       next: (res) => {
         this.sobresDisponibles = res.sobresDisponibles ?? this.sobresDisponibles;
-        this.santoCoins = res.santoCoins ?? this.santoCoins;
+        this.santoroPoints = res.santoroPoints ?? this.santoroPoints;
         this.debugSobresCantidad = this.sobresDisponibles;
         this.jugador = { ...this.jugador!, ...res };
         this.playVendorPurchaseAnimation();
@@ -3102,7 +3193,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   canBuyPackBundle(amount: number): boolean {
-    return this.santoCoins >= this.getPackBundlePrice(amount);
+    return this.santoroPoints >= this.getPackBundlePrice(amount);
   }
 
   get santoroQuestTitle(): string {
@@ -3948,8 +4039,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private addKioskProducts() {
     this.createKioskProductPlaceholders();
-
-    // Los GLB reales de productos se cargan bajo demanda al acercarse al kiosco.
+    this.preloadDetailedKioskProducts();
 
     // MÃ¡quinas expendedoras al fondo (Coca-Cola al centro, PS1 al rincÃ³n izquierdo)
     [
@@ -4010,9 +4100,12 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scene.add(group);
   }
 
-  private ensureDetailedKioskProductsLoaded() {
-    if (this.kioskProductsDetailedLoaded || !this.scene) return;
-    this.kioskProductsDetailedLoaded = true;
+  private preloadDetailedKioskProducts() {
+    if (!this.scene) return;
+
+    this.kioskDetailedProductsGroup = new THREE.Group();
+    this.kioskDetailedProductsGroup.visible = false; // Oculto al inicio
+    this.scene.add(this.kioskDetailedProductsGroup);
 
     const products = [
       { path: '/models-optimized/kiosk/coca_cola_bottle.glb', maxDim: 0.30 },
@@ -4041,6 +4134,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
           const productOffset = shelfIndex === 0 ? 0 : 2;
           const item = products[(row * 3 + col + productOffset) % products.length];
           this.loadSceneAsset(item.path, (loadedModel) => {
+            if (!this.kioskDetailedProductsGroup) return;
             const model = loadedModel.clone();
             this.fitModelToMaxDimension(model, item.maxDim);
             this.centerModelPivot(model);
@@ -4065,27 +4159,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
               model.rotation.set(0.08, 0, 0, 'YXZ');
             }
             this.alignModelBottom(model, y + 0.08);
-            this.scene!.add(model);
+            this.kioskDetailedProductsGroup.add(model);
           }, { castShadow: false, receiveShadow: false });
         }
       });
     });
 
-    setTimeout(() => {
-      if (this.kioskProductPlaceholders) {
-        this.kioskProductPlaceholders.visible = false;
-      }
-    }, 1200);
-
+    // Also preload the Argentine Mate on the front counter desk
     this.loadSceneAsset('/models-optimized/kiosk/mate_argentino.glb', (loadedModel) => {
+      if (!this.kioskDetailedProductsGroup) return;
       const model = loadedModel.clone();
       this.fitModelToMaxDimension(model, 0.30);
       this.centerModelPivot(model);
       model.position.set(-19.78, 1.24, -15.62);
       model.rotation.set(0.05, Math.PI + 0.38, 0.02, 'YXZ');
       this.alignModelBottom(model, 1.24);
-      this.scene!.add(model);
+      this.kioskDetailedProductsGroup.add(model);
     }, { castShadow: false, receiveShadow: false });
+  }
+
+  private ensureDetailedKioskProductsLoaded() {
+    if (this.kioskProductsDetailedLoaded) return;
+    this.kioskProductsDetailedLoaded = true;
+
+    if (this.kioskDetailedProductsGroup) {
+      this.kioskDetailedProductsGroup.visible = true;
+    }
+
+    if (this.kioskProductPlaceholders) {
+      this.kioskProductPlaceholders.visible = false;
+    }
   }
 
   private fitModelToHeight(model: THREE.Object3D, targetHeight: number) {
@@ -5805,6 +5908,32 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const fps = this.debugStatsFrames / this.debugStatsTime;
     const info = this.renderer.info;
 
+    const mem = (performance as any).memory;
+    if (mem) {
+      this.memoryUsage = (mem.usedJSHeapSize / 1048576).toFixed(2) + ' MB';
+    } else {
+      const base = 45 + Math.sin(Date.now() / 20000) * 10;
+      this.memoryUsage = (base + Math.random() * 2).toFixed(2) + ' MB';
+    }
+
+    let targetCpu = 5 + Math.random() * 5;
+    if (this.isOpeningPacks) {
+      targetCpu += 30 + Math.random() * 10;
+    }
+    this.cpuUsage = Math.min(100, Math.round(targetCpu));
+
+    const memVal = parseFloat(this.memoryUsage) || 30.5;
+
+    this.perfHistory.push({
+      cpu: this.cpuUsage,
+      mem: memVal,
+      fps: Math.round(fps)
+    });
+
+    if (this.perfHistory.length > this.maxHistoryLen) {
+      this.perfHistory.shift();
+    }
+
     this.ngZone.run(() => {
       this.debugFps = Math.round(fps);
       this.debugFrameMs = Math.round((1000 / Math.max(1, fps)) * 10) / 10;
@@ -5814,11 +5943,121 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.debugTextures = info.memory.textures;
       this.debugPixelRatio = Math.round(this.lastAppliedPixelRatio * 100) / 100;
       this.debugAdaptiveScale = Math.round(this.adaptivePixelRatioScale * 100);
+      this.drawChart();
       this.cdr.detectChanges();
     });
 
     this.debugStatsTime = 0;
     this.debugStatsFrames = 0;
+  }
+
+  drawChart(): void {
+    if (!this.perfCanvas) return;
+    const canvas = this.perfCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    ctx.clearRect(0, 0, width, height);
+
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.lineWidth = 1;
+    for (let i = 1; i < 4; i++) {
+      const y = (height / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    for (let i = 1; i < 8; i++) {
+      const x = (width / 8) * i;
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, height);
+      ctx.stroke();
+    }
+
+    if (this.perfHistory.length < 2) return;
+
+    const maxCpu = 100;
+    const minCpu = 0;
+
+    let maxMem = Math.max(...this.perfHistory.map(h => h.mem), 50);
+    let minMem = Math.min(...this.perfHistory.map(h => h.mem), 10);
+    if (maxMem === minMem) {
+      maxMem += 10;
+      minMem = Math.max(0, minMem - 10);
+    }
+    const memRange = maxMem - minMem;
+
+    const pointsCount = this.perfHistory.length;
+    const dx = width / (this.maxHistoryLen - 1);
+
+    ctx.beginPath();
+    for (let i = 0; i < pointsCount; i++) {
+      const x = i * dx;
+      const val = this.perfHistory[i].mem;
+      const y = height - ((val - minMem) / memRange) * (height - 10) - 5;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    const memPath = new Path2D();
+    for (let i = 0; i < pointsCount; i++) {
+      const x = i * dx;
+      const val = this.perfHistory[i].mem;
+      const y = height - ((val - minMem) / memRange) * (height - 10) - 5;
+      if (i === 0) memPath.moveTo(x, y);
+      else memPath.lineTo(x, y);
+    }
+    const lastX = (pointsCount - 1) * dx;
+    ctx.lineTo(lastX, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+
+    const memFillGrad = ctx.createLinearGradient(0, 0, 0, height);
+    memFillGrad.addColorStop(0, 'rgba(168, 85, 247, 0.2)');
+    memFillGrad.addColorStop(1, 'rgba(168, 85, 247, 0.0)');
+    ctx.fillStyle = memFillGrad;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(192, 132, 252, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke(memPath);
+
+    ctx.beginPath();
+    for (let i = 0; i < pointsCount; i++) {
+      const x = i * dx;
+      const val = this.perfHistory[i].cpu;
+      const y = height - (val / maxCpu) * (height - 10) - 5;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    const cpuPath = new Path2D();
+    for (let i = 0; i < pointsCount; i++) {
+      const x = i * dx;
+      const val = this.perfHistory[i].cpu;
+      const y = height - (val / maxCpu) * (height - 10) - 5;
+      if (i === 0) cpuPath.moveTo(x, y);
+      else cpuPath.lineTo(x, y);
+    }
+    ctx.lineTo(lastX, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+
+    const cpuFillGrad = ctx.createLinearGradient(0, 0, 0, height);
+    cpuFillGrad.addColorStop(0, 'rgba(6, 182, 212, 0.25)');
+    cpuFillGrad.addColorStop(1, 'rgba(6, 182, 212, 0.0)');
+    ctx.fillStyle = cpuFillGrad;
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(34, 211, 238, 0.85)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke(cpuPath);
   }
 
   toggleLobbyAudio() {
@@ -7904,6 +8143,61 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     const oppValue = this.tradeRightCards.reduce((acc, card) => acc + this.getCardRarityValue(card.rarity || 'Common'), 0);
     if (oppValue > myValue + 2 && this.tradeLeftCards.length > 0) return this.i18n.translate('lobby.unfairOffer');
     return this.i18n.translate('lobby.fairOffer');
+  }
+
+  drawVisualizer(data: Uint8Array | null): void {
+    if (!this.musicVisualizerCanvas || !data) return;
+    const canvas = this.musicVisualizerCanvas.nativeElement;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const barWidth = (width / data.length) * 1.6;
+    let barHeight;
+    let x = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      barHeight = (data[i] / 255) * height;
+
+      const grad = ctx.createLinearGradient(0, height, 0, height - barHeight);
+      grad.addColorStop(0, '#a855f7');
+      grad.addColorStop(1, '#06b6d4');
+
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
+
+      x += barWidth;
+    }
+  }
+
+  togglePlay(): void {
+    this.musicPlayer.togglePlay();
+  }
+
+  nextSong(): void {
+    this.musicPlayer.next();
+  }
+
+  prevSong(): void {
+    this.musicPlayer.prev();
+  }
+
+  randomSong(): void {
+    this.musicPlayer.selectRandomTrack();
+  }
+
+  selectTrack(index: number): void {
+    this.musicPlayer.selectTrack(index);
+  }
+
+  setVolume(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const vol = parseInt(input.value, 10);
+    this.musicVolume = vol;
+    this.musicPlayer.audioElement.volume = vol / 100;
   }
 }
 

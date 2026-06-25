@@ -96,13 +96,31 @@ export class BattleBoardTurnService {
   }
 
   // Estima cuántas caras reales produjo el ataque del bot según el daño/estado final.
-  resolverCarasBot(config: CoinFlipConfig, estadoFinal: Partida, danioHecho: number): number {
+  resolverCarasBot(
+    config: CoinFlipConfig,
+    habilidad: Ataque,
+    estadoFinal: Partida,
+    danioHecho: number,
+  ): number {
     if (config.esSoloEstado) {
       const jugadorActivo = estadoFinal.jugador?.activo;
       const tieneEstado = ['Paralyzed', 'Asleep', 'Confused', 'Poisoned'].some((condicion) =>
         this.tieneCondicion(jugadorActivo, condicion),
       );
       return tieneEstado ? 1 : 0;
+    }
+
+    const texto = (habilidad.textoOriginal || habilidad.texto || '').toLowerCase();
+    if (texto.includes('does nothing')) {
+      return danioHecho > 0 ? 1 : 0;
+    }
+
+    if (texto.includes('heads') && config.danioExtraPorCara > 0) {
+      const base = texto.includes('more') || texto.includes('plus') ? config.danioBase : 0;
+      return Math.min(
+        config.cantidadMonedas,
+        Math.round(Math.max(0, danioHecho - base) / config.danioExtraPorCara),
+      );
     }
 
     return danioHecho > 0 ? 1 : 0;
@@ -123,7 +141,7 @@ export class BattleBoardTurnService {
       return tieneEstado ? 1 : 0;
     }
 
-    const texto = (habilidad.texto || '').toLowerCase();
+    const texto = (habilidad.textoOriginal || habilidad.texto || '').toLowerCase();
     if (texto.includes('does nothing')) {
       return danioHecho > 0 ? 1 : 0;
     }

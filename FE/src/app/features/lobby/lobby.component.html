@@ -59,6 +59,45 @@
     </section>
   </div>
 
+  <div class="room-password-overlay settings-overlay" *ngIf="roomSettingsModalOpen && currentRoom as room">
+    <section class="room-password-modal settings-modal">
+      <small>Configuración de Sala</small>
+      <h3>{{ room.name }}</h3>
+      
+      <div class="setting-item">
+        <label for="settingsBotDifficulty">Dificultad del Bot</label>
+        <select id="settingsBotDifficulty" [(ngModel)]="tempBotDifficulty">
+          <option value="EASY">Fácil</option>
+          <option value="NORMAL">Normal</option>
+          <option value="HARD">Difícil</option>
+        </select>
+      </div>
+
+      <div class="setting-item">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="tempTurnTimerEnabled">
+          <span>Habilitar límite de tiempo por turno</span>
+        </label>
+        <div class="timer-input-container" *ngIf="tempTurnTimerEnabled">
+          <input
+            type="number"
+            id="settingsTurnTimeSeconds"
+            min="15"
+            max="300"
+            step="15"
+            [(ngModel)]="tempTurnTimeSeconds"
+          >
+          <span>segundos</span>
+        </div>
+      </div>
+
+      <div class="room-password-actions">
+        <button type="button" (click)="closeRoomSettings()">Cancelar</button>
+        <button type="button" class="primary-action" (click)="saveRoomSettings()" [disabled]="roomActionLoading">Guardar</button>
+      </div>
+    </section>
+  </div>
+
   <!-- PANTALLA DE CARGA GLOBAL DE APERTURA DE SOBRES -->
   <div class="loading-overlay pokedex-chassis pack-loader-overlay" *ngIf="isOpeningPacks" style="z-index: 1000000; position: absolute; top: 0; left: 0; width: 100%; height: 100%;">
     <div class="loading-content">
@@ -190,13 +229,25 @@
       <p><span>{{ 'lobby.quality' | t }}</span> {{ graphicsQualityLabel }} · <span>{{ 'lobby.cycle' | t }}</span> {{ dayPhaseLabel | t }}</p>
     </div>
 
+    <div class="ddp-section ddp-charts">
+      <div style="display: flex; justify-content: space-between; font-size: 10px; opacity: 0.8; margin-bottom: 4px;">
+        <span>📉 GRÁFICOS DE RENDIMIENTO</span>
+        <span style="color: #22d3ee; font-weight: bold;">CPU: {{ cpuUsage }}%</span>
+      </div>
+      <canvas #perfCanvas width="280" height="70" style="width: 100%; height: 70px; background: rgba(0,0,0,0.25); border-radius: 4px; display: block; border: 1px solid rgba(255,255,255,0.08);"></canvas>
+      <div style="display: flex; justify-content: space-between; font-size: 8px; opacity: 0.5; margin-top: 2px;">
+        <span style="color: #c084fc; font-weight: bold;">🟣 MEMORIA: {{ memoryUsage }}</span>
+        <span style="color: #22d3ee; font-weight: bold;">🔵 CPU (%)</span>
+      </div>
+    </div>
+
     <div class="ddp-section">
       <p><span>{{ 'lobby.playerLabel' | t }}</span> {{ jugador?.username || ('lobby.noneLabel' | t) }}</p>
       <p><span>{{ 'lobby.currentPacks' | t }}</span> {{ sobresDisponibles }}</p>
       <p><span>{{ 'lobby.decksLabel' | t }}</span> {{ mazos.length }}</p>
     </div>
 
-    <div class="ddp-section">
+    <div class="ddp-section" *ngIf="isAdmin">
       <p class="godmode-title">SOBRES</p>
       <div class="gm-row">
         <input type="number" min="0" class="gm-input" [(ngModel)]="debugSobresCantidad">
@@ -204,7 +255,7 @@
       </div>
     </div>
 
-    <div class="ddp-section">
+    <div class="ddp-section" *ngIf="isAdmin">
       <p class="godmode-title">{{ 'lobby.injectCard' | t }}</p>
 
       <div class="gm-filters">
@@ -273,9 +324,9 @@
         </div>
       </button>
 
-      <div class="resource-chip santocoins-chip">
-        <small>SANTOCOINS</small>
-        <strong>{{ santoCoins }}</strong>
+      <div class="resource-chip santoropoints-chip">
+        <small>SANTOROPOINTS</small>
+        <strong>{{ santoroPoints }}</strong>
       </div>
 
       <div class="resource-chip packs-available-chip">
@@ -432,24 +483,6 @@
     </div>
   </section>
 
-  <aside
-    class="hub-help-panel floating-hud-panel"
-    [class.minimized]="helpPanelMinimized"
-    [style.left.px]="helpPanelX"
-    [style.top.px]="helpPanelY"
-  >
-    <div class="floating-panel-header help-panel-header" (pointerdown)="startFloatingPanelDrag('help', $event)">
-      <span>Teclas</span>
-      <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleHelpPanelMinimized($event)">{{ helpPanelMinimized ? '+' : '-' }}</button>
-    </div>
-    <div class="help-panel-body" *ngIf="!helpPanelMinimized">
-      <div class="help-key"><kbd>W</kbd><kbd>S</kbd><span>{{ 'lobby.move' | t }}</span></div>
-      <div class="help-key"><kbd>A</kbd><kbd>D</kbd><span>{{ 'lobby.rotation3dLabel' | t }}</span></div>
-      <div class="help-key"><kbd>Shift</kbd><span>{{ 'lobby.run' | t }}</span></div>
-      <div class="help-key"><kbd>E</kbd><span>{{ 'lobby.interactKey' | t }}</span></div>
-    </div>
-  </aside>
-
   <div
     class="mobile-analog-pad"
     aria-label="Movimiento analogico"
@@ -572,22 +605,6 @@
 
           <div class="room-create-grid" *ngIf="!currentRoom && roomTab === 'create'">
             <input class="room-name-input" [(ngModel)]="roomCreateName" placeholder="Nombre de sala">
-            <label class="room-turn-timer">
-              <span>Tiempo por turno</span>
-              <div>
-                <input type="checkbox" [(ngModel)]="roomTurnTimerEnabled">
-                <input
-                  type="number"
-                  min="15"
-                  max="300"
-                  step="15"
-                  [(ngModel)]="roomTurnTimeSeconds"
-                  [disabled]="!roomTurnTimerEnabled"
-                  aria-label="Segundos por turno"
-                >
-                <em>seg</em>
-              </div>
-            </label>
             <div class="room-pin-lock" [class.complete]="roomPinComplete" (click)="roomPinInput.focus()">
               <span>Codigo secreto</span>
               <input
@@ -655,9 +672,24 @@
           <div class="room-detail current-room" *ngIf="roomTab === 'mine' && currentRoom as room">
             <div class="room-detail-head">
               <div>
-                <small>Tu sala</small>
+                <small class="room-small-tag">
+                  Tu sala
+                  <button
+                    *ngIf="isCurrentRoomOwner && room.status === 'OPEN'"
+                    type="button"
+                    class="room-settings-btn"
+                    (click)="openRoomSettings()"
+                    title="Configuración de sala"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="gear-icon">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                  </button>
+                </small>
                 <h3>{{ room.name }}</h3>
                 <p class="room-rules" *ngIf="room.turnTimeSeconds > 0">Tiempo por turno: {{ room.turnTimeSeconds }}s</p>
+                <p class="room-rules" *ngIf="room.guestBot">Dificultad del bot: {{ room.botDifficulty === 'EASY' ? 'Fácil' : (room.botDifficulty === 'HARD' ? 'Difícil' : 'Normal') }}</p>
               </div>
               <span [class.ready]="isCurrentUserReady">{{ isCurrentRoomSpectator ? 'MIRANDO' : (isCurrentUserReady ? 'LISTO' : 'NO LISTO') }}</span>
             </div>
@@ -1431,6 +1463,86 @@
   <div class="pokedex-deck-transition" *ngIf="pokedexTransitionOpen" aria-hidden="true">
     <div class="pokedex-transition-aura"></div>
     <canvas #pokedexTransitionCanvas class="pokedex-transition-canvas"></canvas>
+  </div>
+
+  <!-- ================= FLOATING MUSIC PLAYER HUD ================= -->
+  <div class="lobby-music-player-panel" 
+       [class.minimized]="musicPlayerMinimized"
+       [class.playlist-open]="musicPlayerPlaylistOpen">
+    <div class="lobby-music-body">
+      <!-- Left side: Disc handle -->
+      <div class="lobby-music-left" (click)="musicPlayerMinimized = !musicPlayerMinimized">
+        <div class="lobby-music-disc" [class.spinning]="isPlaying$ | async">
+          <span class="disc-center"></span>
+        </div>
+      </div>
+      
+      <!-- Right side: Info and Controls (hidden when minimized) -->
+      <div class="lobby-music-content">
+        <div class="lobby-music-info-row">
+          <div class="lobby-music-info">
+            <span class="music-badge">PokeUTN Soundsystem</span>
+            <h6 class="music-title" [title]="(currentSong$ | async)?.getTitle()">{{ (currentSong$ | async)?.getTitle() || 'Sin reproducción' }}</h6>
+            <span class="music-artist">{{ (currentSong$ | async)?.getArtist() || 'Desconocido' }}</span>
+          </div>
+          
+          <!-- Visualizer -->
+          <canvas #musicVisualizerCanvas width="90" height="28" class="lobby-music-canvas"></canvas>
+        </div>
+
+        <div class="lobby-music-control-row">
+          <!-- Playback Controls -->
+          <div class="lobby-playback-controls">
+            <button type="button" class="btn-lobby-music" (click)="prevSong()" title="Anterior">⏮</button>
+            <button type="button" class="btn-lobby-music play-pause" (click)="togglePlay()" title="Reproducir/Pausar">
+              {{ (isPlaying$ | async) ? '⏸' : '▶' }}
+            </button>
+            <button type="button" class="btn-lobby-music" (click)="nextSong()" title="Siguiente">⏭</button>
+            <button type="button" class="btn-lobby-music" (click)="randomSong()" title="Aleatorio">🔀</button>
+            <button type="button" class="btn-lobby-music" (click)="musicPlayerPlaylistOpen = !musicPlayerPlaylistOpen" title="Ver Playlist">
+              🎵
+            </button>
+          </div>
+
+          <!-- Progress -->
+          <div class="lobby-music-progress">
+            <div class="lobby-progress-container">
+              <div class="lobby-progress-fill" [style.width.%]="(timeProgress$ | async)?.pct || 0"></div>
+            </div>
+            <span class="lobby-time">{{ (timeProgress$ | async)?.current || '0:00' }} / {{ (timeProgress$ | async)?.total || '0:00' }}</span>
+          </div>
+
+          <!-- Volume -->
+          <div class="lobby-music-volume">
+            <span class="vol-icon">🔊</span>
+            <input type="range" min="0" max="100" [value]="musicVolume" (input)="setVolume($event)" class="lobby-volume-slider">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playlist dropdown -->
+    <div class="lobby-playlist-dropdown" *ngIf="musicPlayerPlaylistOpen && !musicPlayerMinimized">
+      <div class="playlist-header">
+        <h5>Tracks Disponibles</h5>
+        <button type="button" (click)="musicPlayerPlaylistOpen = false">×</button>
+      </div>
+      <div class="playlist-tracks">
+        <div 
+          class="track-item" 
+          *ngFor="let song of songsList; let i = index" 
+          [class.active]="i === currentTrackIndex"
+          (click)="selectTrack(i)"
+        >
+          <span class="track-number">{{ i + 1 }}</span>
+          <div class="track-details">
+            <span class="track-title">{{ song.getTitle() }}</span>
+            <span class="track-artist">{{ song.getArtist() }}</span>
+          </div>
+          <span class="track-duration">{{ song.getDuration() }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">

@@ -39,7 +39,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   loadingProgress = 0;
   filtroNombre = '';
   filtroTipo = 'Todos';
-  tipos: string[] = ['Todos', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless'];
+  tipos: string[] = ['Todos', 'Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Dragon', 'Colorless', 'Trainer', 'Energy'];
 
   showInspeccion = false;
   cardFocus: Card | null = null;
@@ -91,7 +91,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   private cargarMazoParaEditar(mazo: Mazo | null) {
     if (!mazo) {
       this.idMazoAEditar = null;
-      this.nombreMazo = 'Mi Nuevo Mazo';
+      this.nombreMazo = '';
       this.mazoEnProceso = [];
       this.cantidadesEnMazo = {};
       return;
@@ -141,7 +141,12 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
         setTimeout(() => {
           this.isLoadingImages = false;
           this.cdr.detectChanges();
-        }, 600);
+        }, 300);
+      },
+      error: (err) => {
+        console.error('Error cargando imagenes:', err);
+        this.isLoadingImages = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -168,7 +173,18 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   get coleccionFiltrada() {
     return this.coleccion.filter(c => {
       const matchNombre = c.nombre.toLowerCase().includes(this.filtroNombre.toLowerCase());
-      const matchTipo = this.filtroTipo === 'Todos' || c.tipo === this.filtroTipo;
+      
+      let matchTipo = false;
+      if (this.filtroTipo === 'Todos') {
+        matchTipo = true;
+      } else if (this.filtroTipo === 'Trainer') {
+        matchTipo = c.supertype === 'Trainer';
+      } else if (this.filtroTipo === 'Energy') {
+        matchTipo = c.supertype === 'Energy';
+      } else {
+        matchTipo = c.tipo === this.filtroTipo;
+      }
+      
       return matchNombre && matchTipo;
     });
   }
@@ -223,7 +239,12 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
 
   getImagenReal(id: string): string {
     const archivo = this.mapaFotos[id] || id;
-    return `/images/cards/${archivo}.png`;
+    return this.cardService.getImagenCarta(archivo);
+  }
+
+  onCardImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    this.cardService.handleCardImageError(img);
   }
 
   mostrarDetalleCarta(card: Card) {

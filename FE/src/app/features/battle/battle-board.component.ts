@@ -15,7 +15,7 @@ import {
 } from './services/battle-board-attack.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { SafeHtml } from '@angular/platform-browser';
 import { Card } from '../../shared/models/card';
 import { BattleActionCard, CartaEnJuego, Partida } from '../../shared/models/battle';
@@ -25,10 +25,13 @@ import { BattleBoardStateService } from './services/battle-board-state.service';
 import { BattleBoardTurnService } from './services/battle-board-turn.service';
 import { BattleNotificationService } from './services/battle-notification';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
+import { MusicPlayerService } from '../../core/services/music-player.service';
 import { JugadorService } from '../../core/services/jugador.service';
+import { CardService } from '../../core/services/card.service';
 import { LobbyRoomReaction, LobbyRoomService, LobbyRoomSnapshot } from '../lobby/services/lobby-room.service';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { KTX2Loader } from 'three/examples/jsm/loaders/KTX2Loader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
@@ -47,7 +50,15 @@ const CHARACTER_OPTIONS = [
   { id: 'hilda-sygna', label: 'Hilda Sygna', path: '/models-optimized/characters/hilda_sygna_10.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
   { id: 'lillie', label: 'Lillie', path: '/models-optimized/characters/lillie__anniversary_50.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
   { id: 'ash', label: 'Ash', path: '/models-optimized/characters/ash_ketchup_-_pokemon.glb', scale: 0.82, yOffset: 0, idleHints: ['house', 'talking', 'walking'], walkHints: ['walking'] },
-  { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'] }
+  { id: 'robot', label: 'Robot CC0', path: '/models-optimized/player/RobotExpressive.glb', scale: 0.42, yOffset: 0, idleHints: ['idle', 'standing'], walkHints: ['walking', 'walk'] },
+  // Nuevos personajes (Pibes)
+  { id: 'adaman', label: 'Adaman', path: '/models-optimized/characters/adaman_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'giovanni-sygna', label: 'Giovanni Sygna', path: '/models-optimized/characters/giovanni_sygna_10.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'hugh', label: 'Hugh', path: '/models-optimized/characters/hugh_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  // Nuevos personajes (Pibas)
+  { id: 'courtney', label: 'Courtney', path: '/models-optimized/characters/courtney_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'irida', label: 'Irida', path: '/models-optimized/characters/irida_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] },
+  { id: 'zinnia', label: 'Zinnia', path: '/models-optimized/characters/zinnia_regular_00.glb', scale: 1.0, yOffset: 0, idleHints: ['idle'], walkHints: ['walk_1', 'walk'] }
 ];
 
 const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations: THREE.AnimationClip[] }>();
@@ -70,6 +81,13 @@ const HANDSHAKE_GLTF_CACHE = new Map<string, { scene: THREE.Object3D, animations
   ],
 })
 export class BattleBoardComponent implements OnInit, OnDestroy {
+  battleSongAnnouncementMinimized = false;
+  get currentSong$(): Observable<any> { return this.musicPlayer.currentSong$; }
+  get isPlaying$(): Observable<boolean> { return this.musicPlayer.isPlaying$; }
+  toggleSongAnnouncement() {
+    this.battleSongAnnouncementMinimized = !this.battleSongAnnouncementMinimized;
+  }
+
   mostrarNotificacion(mensaje: string, tipo: 'info' | 'success' | 'warning' | 'error' = 'info') {
     if (tipo === 'error') {
       this.battleNotificationService.showModal('Error', mensaje, tipo);
@@ -83,7 +101,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   readonly benchDropListId = 'player-bench-dropzone';
   readonly playableDropListIds = [this.handDropListId, this.activeDropListId, this.benchDropListId];
   matchId: string | null = null;
-  partida: Partida | null = null;
+  private _partida: Partida | null = null;
+  get partida(): Partida | null {
+    return this._partida;
+  }
+  set partida(value: Partida | null) {
+    this._partida = value ? this.cardService.translatePartida(value) : null;
+  }
   jugadorNombre = '';
   isSpectator = false;
   battleRoom: LobbyRoomSnapshot | null = null;
@@ -165,6 +189,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private pollingSorteo: ReturnType<typeof setInterval> | null = null;
   private battlePresenceInterval: ReturnType<typeof setInterval> | null = null;
   private pendingEndGameTimeout: ReturnType<typeof setTimeout> | null = null;
+  private battleMusicTimeout: ReturnType<typeof setTimeout> | null = null;
+  private introAudioPlayingListener: (() => void) | null = null;
+  private introAudioTimeUpdateListener: (() => void) | null = null;
+  private introAudioFallbackTimeout: any = null;
+  private introFadeOutTimeout: any = null;
+  private introHideTimeout: any = null;
+  private introRevealTimeout: any = null;
+  private versusPreloadFinished = false;
+  private versusSequenceTriggered = false;
   showEndGameOverlay = false;
   isVictory = false;
   coinsEarned = 0;
@@ -191,6 +224,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   tituloDescarteActual = '';
   mostrarConversionModal = false;
 
+  // Animaciones de moneda acumulativas y temblor de pantalla
+  public carasAcumuladas = 0;
+  public danioAcumulado = 0;
+  public screenShaking = false;
+
   puedeEvolucionar(cartaMano: BattleActionCard | Card): boolean {
     return this.battleBoardState.puedeEvolucionar(this.partida, cartaMano);
   }
@@ -204,7 +242,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     | 'ELEGIR_TURNO'
     | 'RESULTADO_BOT'
     | 'ESPERANDO_RIVAL'
-    | 'OCULTO' = 'CARGANDO_VS';
+    | 'OCULTO' = 'OCULTO';
   eleccionJugador: 'CARA' | 'CRUZ' = 'CARA';
   resultadoMoneda: CoinSide = 'CARA';
   public girando = false;
@@ -212,6 +250,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   jugadorLoadingPercentage = 0;
   botLoadingPercentage = 0;
   loadingPhaseFinished = false;
+  isAdmin = false;
+
+  get battleLoadingCombined(): number {
+    return (this.jugadorLoadingPercentage + this.botLoadingPercentage) / 2;
+  }
   private preloadPollingId: any = null;
   private preloadTimeoutId: any = null;
 
@@ -270,6 +313,76 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private playerActions = new Map<string, THREE.AnimationAction>();
   private opponentActions = new Map<string, THREE.AnimationAction>();
   private currentAnims = new Map<THREE.AnimationMixer, { state: string, action: THREE.AnimationAction }>();
+
+  // Versus Scene Cinematic Properties
+  preloadCinematicStartedAt = 0;
+  cinematicSceneLoadingPercentage = 0;
+  cinematicAssetsReady = false;
+  cinematicLoadingBarsVisible = false;
+
+  private versusStartedAt = 0;
+  private versusSequenceStartedAt = 0;
+  private versusModelsLoaded = 0;
+  private versusLastShotIndex = 0;
+  private versusCameraTilt = 0;
+  private versusPlayerClips = new Map<string, THREE.AnimationAction>();
+  private versusOpponentClips = new Map<string, THREE.AnimationAction>();
+  private versusPlayerCurrentClip = '';
+  private versusOpponentCurrentClip = '';
+  private versusPlayerModel: THREE.Object3D | undefined;
+  private versusOpponentModel: THREE.Object3D | undefined;
+  private versusPlayerMixer: THREE.AnimationMixer | undefined;
+  private versusOpponentMixer: THREE.AnimationMixer | undefined;
+  private versusAnimationId: number | undefined;
+  versusCanvasInitialized = false;
+  private versusScene: THREE.Scene | undefined;
+  private versusCamera: THREE.PerspectiveCamera | undefined;
+  private versusRenderer: THREE.WebGLRenderer | undefined;
+  private versusProgressLastRender = 0;
+  private serverLoadingComplete = false;
+  private lastPreloadState: Partida | null = null;
+  private finalizarPreloadFn: ((state?: Partida | null) => void) | null = null;
+
+  // 3D Coin Flip Properties
+  coinFlipCanvasInitialized = false;
+  private coinFlipScene?: THREE.Scene;
+  private coinFlipCamera?: THREE.PerspectiveCamera;
+  private coinFlipRenderer?: THREE.WebGLRenderer;
+  private coinFlipCoinModel?: THREE.Group;
+  private coinFlipAnimationId?: number;
+  private coinFlipControls?: OrbitControls;
+  private coinFlipClock = new THREE.Clock();
+  private coinFlipParticles: { mesh: THREE.Mesh; vx: number; vy: number; vz: number; life: number; maxLife: number; }[] = [];
+  fuerzaActual = 0;
+  arrastrando = false;
+  private xStart = 0;
+  private coinFlipVuelo = false;
+  private coinFlipReleaseTime = 0;
+  private coinVy = 0;
+  private coinVx = 0;
+  private coinVz = 0;
+  private coinOmegaX = 0;
+  private coinOmegaY = 0;
+  private coinOmegaZ = 0;
+  private coinRebotes = 0;
+  private coinFlipResultadoListo = false;
+  private coinFlipResultadoEsperado?: 'CARA' | 'CRUZ';
+  private backendResultPromise?: Promise<Partida>;
+  private loadingCoinModels = false;
+
+  // Cinematic character state & selection variables
+  eleccionTemporal: 'CARA' | 'CRUZ' | null = null;
+  confirmadoLado = false;
+  private playerCoinFlipModel?: THREE.Object3D;
+  private opponentCoinFlipModel?: THREE.Object3D;
+  private playerCoinFlipMixer?: THREE.AnimationMixer;
+  private opponentCoinFlipMixer?: THREE.AnimationMixer;
+  private playerCoinFlipActions = new Map<string, THREE.AnimationAction>();
+  private opponentCoinFlipActions = new Map<string, THREE.AnimationAction>();
+  private coinFlipPlayerRightArm?: any;
+  private coinFlipPlayerRightForeArm?: any;
+  private coinFlipPlayerRightHand?: any;
+  private coinFlipDefaultQuaternions = new Map<any, any>();
 
   // Standalone Board Trainers 3D Scene Properties
   playerTrainerCanvasInitialized = false;
@@ -334,9 +447,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     private battleNotificationService: BattleNotificationService,
     private lobbyRoomService: LobbyRoomService,
     public i18n: I18nService,
+    private musicPlayer: MusicPlayerService,
+    private cardService: CardService,
   ) {}
 
   ngOnInit(): void {
+    try {
+      const jugadorData = localStorage.getItem('jugador');
+      if (jugadorData) {
+        this.isAdmin = JSON.parse(jugadorData).admin || false;
+      }
+    } catch (e) {
+      this.isAdmin = false;
+    }
     this.isPotato = (navigator as any).hardwareConcurrency <= 4 || /Mobi|Android|iPhone/i.test(navigator.userAgent);
     this.requestLandscapeOrientation();
     this.matchId = this.route.snapshot.paramMap.get('id');
@@ -346,11 +469,65 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (!this.isSpectator) {
       this.iniciarPresenciaBatalla();
     }
-    this.iniciarPollingSalaBatalla();
     this.cargarCatalogoGodMode();
-    this.showIntro = true;
-    setTimeout(() => (this.introFadingOut = true), 2000);
-    setTimeout(() => (this.showIntro = false), 3000);
+    this.cardService.getAll().subscribe({
+      next: () => {
+        if (this.partida) {
+          this.partida = { ...this.partida };
+        }
+      }
+    });
+    this.battleMusicTimeout = setTimeout(() => {
+      this.musicPlayer.playSong('battle');
+    }, 0);
+
+    let triggered = false;
+    const triggerReveal = () => {
+      if (triggered) return;
+      triggered = true;
+
+      if (this.musicPlayer?.audioElement) {
+        if (this.introAudioPlayingListener) {
+          this.musicPlayer.audioElement.removeEventListener('playing', this.introAudioPlayingListener);
+        }
+        if (this.introAudioTimeUpdateListener) {
+          this.musicPlayer.audioElement.removeEventListener('timeupdate', this.introAudioTimeUpdateListener);
+        }
+      }
+      if (this.introAudioFallbackTimeout) clearTimeout(this.introAudioFallbackTimeout);
+
+      this.introFadeOutTimeout = setTimeout(() => {
+        this.introFadingOut = true;
+        this.cdr.detectChanges();
+      }, 2200);
+      this.introHideTimeout = setTimeout(() => {
+        this.showIntro = false;
+        this.cdr.detectChanges();
+      }, 3000);
+      this.introRevealTimeout = setTimeout(() => {
+        this.versusSequenceTriggered = true;
+        this.tryStartVersusSequence();
+      }, 3550);
+    };
+
+    this.introAudioPlayingListener = () => {
+      triggerReveal();
+    };
+
+    this.introAudioTimeUpdateListener = () => {
+      if (this.musicPlayer?.audioElement && this.musicPlayer.audioElement.currentTime > 0) {
+        triggerReveal();
+      }
+    };
+
+    if (this.musicPlayer?.audioElement) {
+      this.musicPlayer.audioElement.addEventListener('playing', this.introAudioPlayingListener);
+      this.musicPlayer.audioElement.addEventListener('timeupdate', this.introAudioTimeUpdateListener);
+    }
+
+    this.introAudioFallbackTimeout = setTimeout(() => {
+      triggerReveal();
+    }, 3000);
 
     this.battleService.getState(this.matchId).subscribe({
       next: (data) => this.hidratarEstadoInicial(data),
@@ -368,6 +545,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.battlePresenceInterval) clearInterval(this.battlePresenceInterval);
     if (this.battleRoomPolling) clearInterval(this.battleRoomPolling);
     if (this.pendingEndGameTimeout) clearTimeout(this.pendingEndGameTimeout);
+    if (this.battleMusicTimeout) clearTimeout(this.battleMusicTimeout);
+    if (this.musicPlayer?.audioElement) {
+      if (this.introAudioPlayingListener) {
+        this.musicPlayer.audioElement.removeEventListener('playing', this.introAudioPlayingListener);
+      }
+      if (this.introAudioTimeUpdateListener) {
+        this.musicPlayer.audioElement.removeEventListener('timeupdate', this.introAudioTimeUpdateListener);
+      }
+    }
+    if (this.introAudioFallbackTimeout) clearTimeout(this.introAudioFallbackTimeout);
+    if (this.introFadeOutTimeout) clearTimeout(this.introFadeOutTimeout);
+    if (this.introHideTimeout) clearTimeout(this.introHideTimeout);
+    if (this.introRevealTimeout) clearTimeout(this.introRevealTimeout);
     this.cleanupBattleAtmosphere();
     this.detenerPollingHandshake();
     if (this.handshakeInterval) clearInterval(this.handshakeInterval);
@@ -405,6 +595,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private hidratarEstadoInicial(data: Partida): void {
     if (!data) return;
     this.partida = data;
+    if (this.esPartidaOnline(data) && !this.battleRoomPolling) {
+      this.iniciarPollingSalaBatalla();
+    }
     this.lastAppliedStateSignature = this.crearFirmaPartida(data);
     this.manoAnteriorIds = new Set((data.jugador?.mano || []).map((c: any) => c.id));
     this.manoAnteriorIdsBot = new Set((data.bot?.mano || []).map((c: any) => c.id));
@@ -419,7 +612,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     if (data.faseActual === 'LANZAMIENTO_MONEDA') {
       this.boardVisible = false;
-      if (this.estadoCoinFlip === 'CARGANDO_VS') {
+      if (!this.loadingPhaseFinished) {
         this.startPreloadSequence(data);
       } else {
         this.hidratarPreparativosIniciales(data);
@@ -540,6 +733,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
     this.estadoCoinFlip = 'CARGANDO_VS';
+
+    this.preloadCinematicStartedAt = performance.now();
+    this.cinematicSceneLoadingPercentage = 4;
+    this.cinematicAssetsReady = false;
+    this.cinematicLoadingBarsVisible = false;
+
     this.jugadorLoadingPercentage = data.jugadorLoadingPercentage ?? 0;
     this.botLoadingPercentage = data.botLoadingPercentage ?? 0;
 
@@ -559,8 +758,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     extractImages(data.bot);
 
     // Texturas de tablero base
-    imageUrls.add('/assets/mat.png');
-    imageUrls.add('/assets/mat_bot.png');
     imageUrls.add('/images/cards/back.png');
 
     const totalItems = imageUrls.size;
@@ -573,6 +770,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     const finalizarPreload = (state: Partida | null = null) => {
       if (this.loadingPhaseFinished) return;
+      this.finalizarPreloadFn = null;
       if (this.preloadPollingId) {
         clearInterval(this.preloadPollingId);
         this.preloadPollingId = null;
@@ -589,14 +787,27 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     };
 
-    this.preloadTimeoutId = setTimeout(() => finalizarPreload(), 3500);
+    this.finalizarPreloadFn = finalizarPreload;
+    this.serverLoadingComplete = false;
+    this.lastPreloadState = data;
+
+    this.preloadTimeoutId = setTimeout(() => {
+      this.serverLoadingComplete = true;
+      if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+        this.finalizarPreloadFn(this.lastPreloadState);
+      }
+    }, 20000);
 
     this.preloadPollingId = setInterval(() => {
       this.battleService.getState(this.matchId!).subscribe(state => {
         if (state) {
+          this.lastPreloadState = state;
           this.botLoadingPercentage = state.botLoadingPercentage ?? 0;
           if (this.jugadorLoadingPercentage >= 99 && this.botLoadingPercentage >= 98) {
-            finalizarPreload(state);
+            this.serverLoadingComplete = true;
+            if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+              this.finalizarPreloadFn(state);
+            }
           } else if (!this.esPartidaOnline(state) && this.botLoadingPercentage < 100) {
              this.updateLoadingPercentage(Math.min(100, this.botLoadingPercentage + 18));
           }
@@ -612,7 +823,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.jugadorLoadingPercentage = pct;
         this.updateLoadingPercentage(pct);
         if (pct >= 100 && (!this.esPartidaOnline(data) || this.botLoadingPercentage >= 98)) {
-          finalizarPreload();
+          this.serverLoadingComplete = true;
+          if (!this.versusCanvasInitialized && this.finalizarPreloadFn) {
+            this.finalizarPreloadFn(this.lastPreloadState);
+          }
         }
       };
       img.src = url;
@@ -883,6 +1097,29 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  seleccionarCaraCruzTemporal(eleccion: 'CARA' | 'CRUZ') {
+    if (this.isSpectator || this.confirmadoLado) return;
+    this.eleccionTemporal = eleccion;
+    this.cdr.detectChanges();
+  }
+
+  confirmarSeleccionLado() {
+    if (!this.eleccionTemporal) return;
+    this.confirmadoLado = true;
+    this.eleccionJugador = this.eleccionTemporal;
+    
+    // Cambiar estado a esperando tiro
+    this.estadoCoinFlip = 'ESPERANDO_TIRO';
+    this.lanzada = false;
+    this.cdr.detectChanges();
+  }
+
+  cancelarSeleccionLado() {
+    this.confirmadoLado = false;
+    this.eleccionTemporal = null;
+    this.cdr.detectChanges();
+  }
+
   iniciarSorteo(eleccion: 'CARA' | 'CRUZ') {
     if (this.isSpectator) return;
     if (!this.puedeCantarSorteo(this.partida)) {
@@ -890,10 +1127,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.iniciarPollingSorteo();
       return;
     }
-    this.eleccionJugador = eleccion;
-    this.estadoCoinFlip = 'ESPERANDO_TIRO';
-    this.lanzada = false;
-    this.cdr.detectChanges();
+    this.eleccionTemporal = eleccion;
+    this.confirmarSeleccionLado();
   }
 
   async seleccionarTurno(yoVoyPrimero: boolean) {
@@ -983,7 +1218,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   private esPartidaOnline(estado: Partida | null | undefined = this.partida): boolean {
-    return !!estado?.botUsername;
+    return !!estado?.botUsername && estado.botUsername !== 'BOT';
   }
 
   trackByCardId(index: number, item: any): string {
@@ -1104,6 +1339,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         }
         case 'POKEMON_PLAYED': {
           const cardName = parts[2];
+          if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
+          break;
+        }
+        case 'TRAINER_PLAYED': {
+          const cardName = parts[2];
+          this.mostrarNotificacion(
+            this.i18nService.translate(esMiAccion ? 'battle.playedTrainerSelf' : 'battle.playedTrainerOpponent', { card: cardName }),
+            'info'
+          );
           if (cardName) this.triggerCardSplash(cardName, !esMiAccion);
           break;
         }
@@ -1392,11 +1636,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       && this.pendingEffectSelection.size <= pending.maxSelections;
   }
 
-  confirmPendingEffect(): void {
-    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+  ejecutarResolverEfecto(estadoAntiguo: any, selectedIds: string[]): void {
     this.cargandoAccion = true;
-    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
-    this.battleService.resolverEfecto(this.matchId, [...this.pendingEffectSelection]).subscribe({
+    this.battleService.resolverEfecto(this.matchId!, selectedIds).subscribe({
       next: async (estado) => {
         this.pendingEffectSelection.clear();
         if (estado.turnoActual === 'BOT' && estadoAntiguo?.turnoActual === 'JUGADOR') {
@@ -1412,6 +1654,59 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.mostrarNotificacion(error?.error || 'No se pudo resolver el efecto.', 'warning');
       },
     });
+  }
+
+  confirmPendingEffect(): void {
+    if (!this.matchId || !this.canConfirmPendingEffect()) return;
+    this.cargandoAccion = true;
+    const estadoAntiguo = this.battleBoardState.clonarPartida(this.partida);
+    const selectedIds = [...this.pendingEffectSelection];
+
+    const pending = this.partida?.pendingAction;
+    if (pending && pending.type === 'DISCARD_RECOVERY' && selectedIds.length > 0) {
+      const targetCardId = selectedIds[0];
+      const card = this.partida?.jugador?.pilaDescarte?.find((c: any) => c.id === targetCardId);
+      if (card) {
+        this.bloqueadoPorAnimacion = true;
+        const spriteUrl = this.getSpriteFront(card);
+        this.reviveAnimationActive = {
+          visible: true,
+          cardId: card.id,
+          cardNombre: card.nombre,
+          spriteUrl: spriteUrl || '',
+          hpProgress: 0,
+          card: card
+        };
+        this.cdr.detectChanges();
+        
+        setTimeout(() => {
+          if (!this.reviveAnimationActive) return;
+          const interval = setInterval(() => {
+            if (!this.reviveAnimationActive) {
+              clearInterval(interval);
+              return;
+            }
+            if (this.reviveAnimationActive.hpProgress < 100) {
+              this.reviveAnimationActive.hpProgress += 5;
+              this.cdr.detectChanges();
+            } else {
+              clearInterval(interval);
+            }
+          }, 70);
+          
+          setTimeout(() => {
+            this.reviveAnimationActive = null;
+            this.bloqueadoPorAnimacion = false;
+            this.cdr.detectChanges();
+            this.ejecutarResolverEfecto(estadoAntiguo, selectedIds);
+          }, 2200);
+          
+        }, 1000);
+        return;
+      }
+    }
+
+    this.ejecutarResolverEfecto(estadoAntiguo, selectedIds);
   }
 
   private mostrarFeedbackImpacto(actor: string, kind: 'effective' | 'resisted'): void {
@@ -1469,10 +1764,34 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           }
 
           this.resultadoMoneda = data.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
+          console.log('[Polling Sorteo] Moneda lanzada detectada en backend. Winner:', data.coinFlipWinner, 'Jugador:', this.jugadorNombre);
           if (data.coinFlipWinner === this.jugadorNombre) {
+            console.log('[Polling Sorteo] El jugador ganó. Pasando a ELEGIR_TURNO');
             this.estadoCoinFlip = 'ELEGIR_TURNO';
           } else {
+            console.log('[Polling Sorteo] El bot ganó. Pasando a RESULTADO_BOT');
             this.estadoCoinFlip = 'RESULTADO_BOT';
+            this.cdr.detectChanges();
+            const online = this.esPartidaOnline(data);
+            console.log('[Polling Sorteo] ¿Es partida online?', online);
+            if (!online) {
+              console.log('[Polling Sorteo] Deteniendo polling del sorteo para proceder...');
+              if (this.pollingSorteo) {
+                clearInterval(this.pollingSorteo);
+                this.pollingSorteo = null;
+              }
+              console.log('[Polling Sorteo] Esperando delay de 2s...');
+              await this.delay(2000);
+              console.log('[Polling Sorteo] Enviando elegirTurno para bot:', this.nombreRival);
+              try {
+                await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+                console.log('[Polling Sorteo] elegirTurno bot exitoso!');
+              } catch (err) {
+                console.error('[Polling Sorteo] Error al elegir turno del bot en polling:', err);
+              }
+              console.log('[Polling Sorteo] Finalizando coin flip');
+              this.finalizarCoinFlip();
+            }
           }
           this.cdr.detectChanges();
         },
@@ -1485,50 +1804,131 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       clearInterval(this.pollingSorteo);
       this.pollingSorteo = null;
     }
+    
     this.estadoCoinFlip = 'GIRANDO';
     this.lanzada = true;
     this.girando = true;
+    this.cdr.detectChanges();
 
-    const duracionVuelo = 1.8;
-    const vueltasBase = 7;
-    const fuerza = 200;
+    // Esperar a que la escena se monte y cargue
+    while (this.loadingCoinModels && this.coinFlipCanvasInitialized) {
+      await this.delay(50);
+    }
+    await this.delay(400); // Pausa dramática
 
-    document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza}px`);
-    document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
+    if (this.coinFlipControls) this.coinFlipControls.enabled = false;
+
+    // Posicionar la moneda inicialmente en la mano derecha del bot
+    if (this.coinFlipCoinModel) {
+      this.coinFlipCoinModel.position.set(-0.2, 0.0, -2.1);
+    }
+
+    // Disparar físicas automatizadas en 3D
+    this.coinFlipVuelo = true;
+    this.coinRebotes = 0;
+    
+    const fuerzaSimulada = 200 + Math.random() * 150;
+    this.coinVy = 7.0 + (fuerzaSimulada / 400) * 11.5; 
+    this.coinVx = (Math.random() - 0.5) * 1.5;
+    // Lanzar hacia adelante en Z positivo (hacia el jugador)
+    this.coinVz = 1.8 + (fuerzaSimulada / 400) * 2.5; 
+    this.coinOmegaX = 25.0 + (fuerzaSimulada / 400) * 30.0 + Math.random() * 10;
+    this.coinOmegaY = (Math.random() - 0.5) * 8;
+    this.coinOmegaZ = (Math.random() - 0.5) * 8;
 
     this.resultadoMoneda = data.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
-    this.anguloFinal = this.resultadoMoneda === 'CARA' ? vueltasBase * 360 : vueltasBase * 360 + 180;
-
+    this.coinFlipResultadoEsperado = this.resultadoMoneda;
+    this.coinFlipResultadoListo = true;
     this.cdr.detectChanges();
 
-    await this.delay(duracionVuelo * 1000 - 300);
-    this.girando = false;
-    this.cdr.detectChanges();
+    // Esperar fin de parábola
+    while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
+      await this.delay(50);
+    }
 
-    await this.delay(1200);
+    if (this.coinFlipControls && this.coinFlipCoinModel) {
+      this.coinFlipControls.enabled = true;
+      this.coinFlipControls.target.copy(this.coinFlipCoinModel.position);
+    }
 
+    // Baile de celebración/derrota justo después de caer
     if (data.coinFlipWinner === this.jugadorNombre) {
+      if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+      if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+    } else {
+      if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+      if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+    }
+    this.cdr.detectChanges();
+
+    // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
+    await this.delay(5000);
+
+    console.log('[Sorteo Rival] Fin animación. Winner:', data.coinFlipWinner, 'Jugador:', this.jugadorNombre);
+    if (data.coinFlipWinner === this.jugadorNombre) {
+      console.log('[Sorteo Rival] El jugador ganó. Pasando a ELEGIR_TURNO');
       this.estadoCoinFlip = 'ELEGIR_TURNO';
     } else {
+      console.log('[Sorteo Rival] El bot ganó. Pasando a RESULTADO_BOT');
       this.estadoCoinFlip = 'RESULTADO_BOT';
-      if (this.esPartidaOnline(data)) {
+      this.cdr.detectChanges();
+      const online = this.esPartidaOnline(data);
+      console.log('[Sorteo Rival] ¿Es partida online?', online);
+      if (online) {
+        console.log('[Sorteo Rival] Iniciando polling del sorteo...');
         this.iniciarPollingSorteo();
+      } else {
+        console.log('[Sorteo Rival] Partida offline. Iniciando delay de 2s para elección del bot...');
+        await this.delay(2000);
+        console.log('[Sorteo Rival] Enviando elegirTurno para bot:', this.nombreRival);
+        try {
+          await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+          console.log('[Sorteo Rival] elegirTurno bot exitoso!');
+        } catch (err) {
+          console.error('[Sorteo Rival] Error al elegir turno del bot en animacion:', err);
+        }
+        console.log('[Sorteo Rival] Finalizando coin flip');
+        this.finalizarCoinFlip();
       }
     }
     this.cdr.detectChanges();
   }
 
   onCoinPointerDown(event: PointerEvent) {
-    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
+    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO' || this.loadingCoinModels) return;
+    if (!this.coinFlipCanvasInitialized || !this.coinFlipCamera || !this.coinFlipCoinModel || !this.coinFlipRenderer) return;
+
+    // Permitir arrastrar desde cualquier parte del canvas para mayor accesibilidad
+    const canvas = this.coinFlipRenderer.domElement;
+    if (this.coinFlipControls) this.coinFlipControls.enabled = false;
+
     event.preventDefault();
     this.coinPointerId = event.pointerId;
     this.yStart = event.clientY;
-    (event.currentTarget as HTMLElement | null)?.setPointerCapture?.(event.pointerId);
+    this.xStart = event.clientX;
+    this.arrastrando = true;
+    this.fuerzaActual = 0;
+    canvas.setPointerCapture?.(event.pointerId);
+  }
+
+  onCoinPointerMove(event: PointerEvent) {
+    if (!this.arrastrando || event.pointerId !== this.coinPointerId) return;
+    event.preventDefault();
+    
+    const deltaY = event.clientY - this.yStart;
+    const deltaX = event.clientX - this.xStart;
+    const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    this.fuerzaActual = Math.min(Math.max(dist, 0), 400);
+    this.cdr.detectChanges();
   }
 
   onCoinPointerCancel(event: PointerEvent) {
     if (event.pointerId !== this.coinPointerId) return;
     this.coinPointerId = null;
+    this.arrastrando = false;
+    this.fuerzaActual = 0;
+    if (this.coinFlipControls) this.coinFlipControls.enabled = true;
+    this.cdr.detectChanges();
   }
 
   interTurnOverlay: InterTurnOverlayState | null = null;
@@ -1601,63 +2001,144 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async onCoinPointerUp(event: PointerEvent) {
-    if (this.lanzada || this.estadoCoinFlip !== 'ESPERANDO_TIRO') return;
     if (this.coinPointerId !== null && event.pointerId !== this.coinPointerId) return;
-    event.preventDefault();
-    this.coinPointerId = null;
 
-    this.yEnd = event.clientY;
-    const diferencia = this.yStart - this.yEnd;
-    const fuerza = Math.min(Math.max(diferencia, 80), 400);
+    if (this.arrastrando) {
+      event.preventDefault();
+      this.coinPointerId = null;
+      this.arrastrando = false;
 
-    if (fuerza >= 70) {
-      this.lanzada = true;
+      const deltaY = event.clientY - this.yStart;
+      const deltaX = event.clientX - this.xStart;
+      const dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+      const fuerzaFinal = Math.min(Math.max(dist, 0), 400);
+
+      if (fuerzaFinal >= 50) {
+        this.lanzada = true;
+        this.fuerzaActual = fuerzaFinal;
+        this.cdr.detectChanges();
+        if (this.coinFlipControls) this.coinFlipControls.enabled = true;
+        await this.lanzarMoneda3DConAngulos(fuerzaFinal, deltaX, deltaY);
+      } else {
+        this.fuerzaActual = 0;
+        if (this.coinFlipControls) this.coinFlipControls.enabled = true;
+        this.cdr.detectChanges();
+      }
+    } else {
+      this.coinPointerId = null;
+    }
+  }
+
+  getFuerzaColor(): string {
+    const ratio = this.fuerzaActual / 400;
+    if (ratio < 0.4) {
+      return '#10b981'; // verde
+    } else if (ratio < 0.75) {
+      return '#fbbf24'; // amarillo/naranja
+    } else {
+      return '#ef4444'; // rojo brillante
+    }
+  }
+
+  private async lanzarMoneda3DConAngulos(fuerza: number, deltaX: number, deltaY: number): Promise<void> {
+    try {
+      this.coinFlipVuelo = true;
+      this.coinFlipReleaseTime = 0;
+      this.coinRebotes = 0;
       this.girando = true;
       this.estadoCoinFlip = 'GIRANDO';
 
-      const duracionVuelo = 1.8;
-      const vueltasBase = 5 + Math.floor(fuerza / 50);
+      if (this.playerCoinFlipMixer) {
+        const throwHints = ['attack', 'slash', 'shoot', 'throw', 'run'];
+        let throwAction: THREE.AnimationAction | undefined;
+        for (const hint of throwHints) {
+          throwAction = this.playerCoinFlipActions.get(hint);
+          if (throwAction) break;
+        }
+        if (throwAction) {
+          this.playerCoinFlipActions.get('idle')?.fadeOut(0.15);
+          throwAction.reset().fadeIn(0.1).setLoop(THREE.LoopOnce, 1).play();
+          throwAction.clampWhenFinished = true;
+        }
+      }
 
-      document.documentElement.style.setProperty('--altura-vuelo', `-${fuerza * 1.3}px`);
-      document.documentElement.style.setProperty('--duracion-vuelo', `${duracionVuelo}s`);
+      if (this.coinFlipControls) this.coinFlipControls.enabled = false;
 
+      // Impulsos físicos basados en swipe vector (dirección opuesta con resortera/flick)
+      this.coinVy = 7.0 + (fuerza / 400) * 11.5; 
+      this.coinVx = -deltaX * 0.02;
+      // Lanzar hacia adelante en Z negativo (hacia el bot)
+      this.coinVz = -Math.abs(deltaY) * 0.02 - 1.5;
+
+      this.coinOmegaX = 25.0 + (fuerza / 400) * 35.0;
+      this.coinOmegaY = -deltaX * 0.08;
+      this.coinOmegaZ = deltaY * 0.08;
+      
       this.cdr.detectChanges();
 
-      try {
-        const estadoSorteo = await firstValueFrom(
-          this.battleService.lanzarMoneda(this.matchId!, this.eleccionJugador),
-        );
-        this.partida = estadoSorteo;
-        this.resultadoMoneda = estadoSorteo.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
+      const estadoSorteo = await firstValueFrom(
+        this.battleService.lanzarMoneda(this.matchId!, this.eleccionJugador),
+      );
+      this.partida = estadoSorteo;
+      this.resultadoMoneda = estadoSorteo.coinFlipResult === 'CRUZ' ? 'CRUZ' : 'CARA';
 
-        this.anguloFinal =
-          this.resultadoMoneda === 'CARA' ? vueltasBase * 360 : vueltasBase * 360 + 180;
+      this.coinFlipResultadoEsperado = this.resultadoMoneda;
+      this.coinFlipResultadoListo = true;
 
-        await this.delay(duracionVuelo * 1000 - 300);
-        this.girando = false;
-        this.cdr.detectChanges();
+      while (this.coinFlipVuelo && this.coinFlipCanvasInitialized) {
+        await this.delay(50);
+      }
 
-        await this.delay(1200);
+      if (this.coinFlipControls && this.coinFlipCoinModel) {
+        this.coinFlipControls.enabled = true;
+        this.coinFlipControls.target.copy(this.coinFlipCoinModel.position);
+      }
 
-        if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
-          this.estadoCoinFlip = 'ELEGIR_TURNO';
-        } else {
-          this.estadoCoinFlip = 'RESULTADO_BOT';
-          this.cdr.detectChanges();
-          if (this.esPartidaOnline(estadoSorteo)) {
-            this.iniciarPollingSorteo();
-          } else {
-            await this.delay(2000);
-            await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false));
-            this.finalizarCoinFlip();
-          }
-        }
-      } catch (e) {
-        console.error('Error en sorteo:', e);
-        this.finalizarCoinFlip();
+      // Baile de celebración/derrota justo después de caer
+      if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        if (this.playerCoinFlipMixer) this.setCelebrationAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
+        if (this.opponentCoinFlipMixer) this.setDefeatAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+      } else {
+        if (this.opponentCoinFlipMixer) this.setCelebrationAnimation(this.opponentCoinFlipMixer, this.opponentCoinFlipActions);
+        if (this.playerCoinFlipMixer) this.setDefeatAnimation(this.playerCoinFlipMixer, this.playerCoinFlipActions);
       }
       this.cdr.detectChanges();
+
+      // Enfocar y mostrar el resultado en el piso por 5 segundos enteros (5000 ms) antes de avanzar
+      await this.delay(5000);
+
+      console.log('[Sorteo Manual] Tiro realizado. Winner:', estadoSorteo.coinFlipWinner, 'Jugador:', this.jugadorNombre);
+      if (estadoSorteo.coinFlipWinner === this.jugadorNombre) {
+        console.log('[Sorteo Manual] El jugador ganó. Pasando a ELEGIR_TURNO');
+        this.estadoCoinFlip = 'ELEGIR_TURNO';
+      } else {
+        console.log('[Sorteo Manual] El bot ganó. Pasando a RESULTADO_BOT');
+        this.estadoCoinFlip = 'RESULTADO_BOT';
+        this.cdr.detectChanges();
+        const online = this.esPartidaOnline(estadoSorteo);
+        console.log('[Sorteo Manual] ¿Es partida online?', online);
+        if (online) {
+          console.log('[Sorteo Manual] Iniciando polling del sorteo...');
+          this.iniciarPollingSorteo();
+        } else {
+          console.log('[Sorteo Manual] Partida offline. Iniciando delay de 2s...');
+          await this.delay(2000);
+          console.log('[Sorteo Manual] Enviando elegirTurno para bot:', this.nombreRival);
+          try {
+            await firstValueFrom(this.battleService.elegirTurno(this.matchId!, false, this.nombreRival));
+            console.log('[Sorteo Manual] elegirTurno bot exitoso!');
+          } catch (err) {
+            console.error('[Sorteo Manual] Error al elegir turno del bot en manual:', err);
+          }
+          console.log('[Sorteo Manual] Finalizando coin flip');
+          this.finalizarCoinFlip();
+        }
+      }
+    } catch (e) {
+      console.error('Error en sorteo 3D:', e);
+      this.finalizarCoinFlip();
     }
+    this.cdr.detectChanges();
   }
 
   clearHoveredCard() {
@@ -1892,13 +2373,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return danioTotal;
   }
 
-  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): {
-    cantidadMonedas: number;
-    danioBase: number;
-    danioExtraPorCara: number;
-    descripcion: string;
-    esSoloEstado: boolean;
-  } | null {
+  detectarCoinFlipAtaque(ataque: any, activo?: CartaEnJuego | null): CoinFlipConfig | null {
     return this.battleBoardAttack.detectarCoinFlipAtaque(
       ataque,
       (texto, cantidadMonedas, danioExtraPorCara, esMultiplicador, esFalloCruz, esSoloEstado) =>
@@ -2205,6 +2680,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     esMiAccion: boolean;
   } | null = null;
 
+  reviveAnimationActive: {
+    visible: boolean;
+    cardId: string;
+    cardNombre: string;
+    spriteUrl: string;
+    hpProgress: number;
+    card?: any;
+  } | null = null;
+
   triggerAttackBanner(attackName: string, isOpponent: boolean) {
     this.attackBannerActive = {
       visible: true,
@@ -2219,7 +2703,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   triggerCardSplash(cardName: string, isOpponent: boolean) {
-    const card = this.debugFilteredCatalog.find((c: any) => c.nombre === cardName || c.name === cardName);
+    const term = cardName.trim().toLowerCase();
+    const card = this.debugFullCatalog.find((c: any) => 
+      (c.nombre && c.nombre.trim().toLowerCase() === term) || 
+      (c.name && c.name.trim().toLowerCase() === term) ||
+      (c.id && c.id.trim().toLowerCase() === term)
+    ) || this.debugFilteredCatalog.find((c: any) => 
+      (c.nombre && c.nombre.trim().toLowerCase() === term) || 
+      (c.name && c.name.trim().toLowerCase() === term) ||
+      (c.id && c.id.trim().toLowerCase() === term)
+    );
     const cardId = card ? card.id : '';
     this.cardSplashActive = {
       visible: true,
@@ -2632,7 +3125,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     if (this.endGameRewardSent || !this.jugadorNombre || this.coinsEarned <= 0) return;
     this.endGameRewardSent = true;
     this.jugadorService.rewardCoins(this.jugadorNombre, this.coinsEarned).subscribe({
-      error: (err) => console.error('Error acreditando SantoCoins', err)
+      error: (err) => console.error('Error acreditando SantoroPoints', err)
     });
   }
 
@@ -2820,7 +3313,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (nombreAtaqueBot) {
         const normalizedLogName = nombreAtaqueBot.replace(':', '-').toLowerCase();
         habilidadBot = activoBotDespues.card.ataques.find(
-          (a: any) => (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName
+          (a: any) => 
+            (a.nombre || '').replace(':', '-').toLowerCase() === normalizedLogName ||
+            (a.nombreOriginal || '').replace(':', '-').toLowerCase() === normalizedLogName
         );
       }
       if (!habilidadBot) {
@@ -2832,12 +3327,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       if (coinConfig) {
         const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
         if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
-        const carasReales = this.contarCarasServidor(estadoFinal)
-          ?? this.battleBoardTurn.resolverCarasBot(
-            coinConfig,
-            estadoFinal,
-            danioHecho,
-          );
+        let carasReales = this.contarCarasServidor(estadoFinal);
+        if (carasReales === null) {
+          if (coinConfig.tipoEfecto === 'self-damage') {
+            const hpPropioAntes = this.partida?.bot?.activo?.hpActual || 0;
+            const hpPropioDespues = estadoFinal.bot?.activo?.hpActual || 0;
+            const autodanioHecho = hpPropioAntes - hpPropioDespues;
+            carasReales = autodanioHecho > 0 ? 0 : 1;
+          } else {
+            carasReales = this.battleBoardTurn.resolverCarasBot(
+              coinConfig,
+              habilidadBot,
+              estadoFinal,
+              danioHecho,
+            );
+          }
+        }
         this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
           coinConfig.cantidadMonedas,
           carasReales,
@@ -3074,7 +3579,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const activoJugador = this.partida?.jugador?.activo;
     if (!activoJugador) return;
 
-    if (nombreAtaque === 'Conversion Powder') {
+    // Buscar por nombre visible (puede estar traducido) o por nombreOriginal
+    const habilidad = (activoJugador.card.ataques ?? []).find(
+      (a: any) => a.nombre === nombreAtaque || a.nombreOriginal === nombreAtaque,
+    );
+
+    // Usar el nombre original (inglés) para comunicarse con el backend
+    const nombreParaBackend = habilidad?.nombreOriginal || nombreAtaque;
+
+    if (nombreParaBackend === 'Conversion Powder') {
       this.mostrarConversionModal = true;
       return;
     }
@@ -3083,9 +3596,6 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cargandoAccion = true;
     this.ataqueRealizado = true;
 
-    const habilidad = (activoJugador.card.ataques ?? []).find(
-      (a: any) => a.nombre === nombreAtaque,
-    );
     if (!habilidad) {
       this.bloqueadoPorAnimacion = false;
       this.cargandoAccion = false;
@@ -3102,7 +3612,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      const estadoFinal = await this.battleBoardCombat.atacarYRecargar(this.matchId!, nombreAtaque);
+      const estadoFinal = await this.battleBoardCombat.atacarYRecargar(this.matchId!, nombreParaBackend);
       await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
       await this.reproducirImpactoAtaqueJugador(tipoEnergia, estadoFinal);
       await this.finalizarSecuenciaAtaque(estadoFinal);
@@ -3124,12 +3634,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     
     try {
       // Usar la función de ataque de battle.service directamente pasando el param, 
-      // y luego recargar el estado como en atacarYRecargar
+      // y luego recargar el estado como en atacarYRecargar.
+      // Se usa el nombre en inglés para el backend.
       await firstValueFrom(this.battleService.atacar(this.matchId, 'Conversion Powder', estado));
       const estadoFinal = await firstValueFrom(this.battleService.getState(this.matchId));
       
       const activoJugador = this.partida?.jugador?.activo;
-      const habilidad = (activoJugador?.card.ataques ?? []).find((a: any) => a.nombre === 'Conversion Powder');
+      const habilidad = (activoJugador?.card.ataques ?? []).find(
+        (a: any) => a.nombreOriginal === 'Conversion Powder' || a.nombre === 'Conversion Powder'
+      );
       const tipoEnergia = habilidad?.costo?.[0] || 'Grass';
       
       await this.reproducirCoinFlipAtaqueJugador(habilidad, estadoFinal);
@@ -3217,6 +3730,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.mostrarNotificacion(this.i18n.translate('alert.notEnoughEnergyForAttack', { attack: habilidad.nombre }), 'warning');
       return;
     }
+    // Pasar el nombre (puede ser traducido); ejecutarAtaqueSecuencia resolverá el nombreOriginal
     this.ejecutarAtaqueSecuencia(habilidad.nombre);
   }
 
@@ -3227,10 +3741,14 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     esSoloEstado: boolean,
   ): Promise<void> {
     this.resultadoMoneda = '';
+    this.carasAcumuladas = 0;
+    this.danioAcumulado = config.danioBase;
+    this.screenShaking = false;
 
     this.coinFlipAtaque = {
       nombreAtaque,
       descripcion: config.descripcion,
+      parentesisDetalle: (config as any).parentesisDetalle,
       cantidadMonedas: config.cantidadMonedas,
       danioBase: config.danioBase,
       danioExtraPorCara: config.danioExtraPorCara,
@@ -3259,7 +3777,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         i,
       );
 
-      if (esCara) carasAsignadas++;
+      if (esCara) {
+        carasAsignadas++;
+        this.carasAcumuladas = carasAsignadas;
+        this.danioAcumulado = config.danioBase + (carasAsignadas * config.danioExtraPorCara);
+      }
 
       this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
 
@@ -3283,12 +3805,45 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       carasAsignadas,
     );
     this.coinFlipAtaque!.terminado = true;
+
+    // Vibrar pantalla si el daño total es alto (>= 80)
+    if (this.coinFlipAtaque!.danioTotal >= 80) {
+      this.screenShaking = true;
+      window.setTimeout(() => {
+        this.screenShaking = false;
+        this.cdr.detectChanges();
+      }, 850);
+    }
+
     this.cdr.detectChanges();
 
     await this.delay(3000);
 
     this.coinFlipAtaque = null;
+    this.carasAcumuladas = 0;
+    this.danioAcumulado = 0;
     this.cdr.detectChanges();
+  }
+
+  get coinFlipAttacker(): CartaEnJuego | null {
+    if (!this.partida) return null;
+    return this.partida.turnoActual === 'BOT' ? this.partida.bot?.activo : this.partida.jugador?.activo;
+  }
+
+  getCoinFlipThemeIcon(): string {
+    const effect = this.coinFlipAtaque?.tipoEfecto;
+    if (effect === 'protection') return '🛡️';
+    if (effect === 'discard') return '⚡';
+    if (effect === 'status') return '✨';
+    if (effect === 'search') return '🔎';
+    if (effect === 'self-damage') return '💥';
+    if (effect === 'switch') return '↔';
+    if ((this.coinFlipAtaque?.nombreAtaque || '').toLowerCase().includes('seafaring')) return '🌊';
+    return '🪙';
+  }
+
+  getCoinFlipThemeClass(): string {
+    return `acf-theme-${this.coinFlipAtaque?.tipoEfecto || 'other'}`;
   }
 
   intentarAbrirHabilidades(event?: MouseEvent): void {
@@ -3328,6 +3883,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         return;
       case 'bajar-pokemon':
         this.gestionarBajadaPokemon(carta);
+        return;
+      case 'jugar-trainer':
+        await this.ejecutarJugarTrainer(carta);
         return;
       default:
         return;
@@ -3413,7 +3971,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   async retirarPokemon(suplente: any) {
     const activoJugador = this.partida?.jugador?.activo;
     if (this.cargandoAccion || this.partida?.turnoActual !== 'JUGADOR' || !activoJugador) return;
-    if (confirm(this.battleBoardAction.construirMensajeRetirada(activoJugador))) {
+    if (confirm(this.battleBoardAction.construirMensajeRetirada(activoJugador, this.partida?.activeStadium))) {
       this.cargandoAccion = true;
       try {
         const nuevoEstado = await this.battleBoardAction.retirarPokemonYRecargar(
@@ -3442,6 +4000,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.gestionarUnionEnergia(cartaArrastrada);
     } else if (this.esPokemon(cartaArrastrada)) {
       this.jugarCarta(cartaArrastrada);
+    } else if (this.esTrainer(cartaArrastrada)) {
+      this.jugarCarta(cartaArrastrada);
     }
   }
 
@@ -3460,6 +4020,21 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         console.error(err);
         this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotPlayPokemon'), 'error');
       });
+  }
+
+  private async ejecutarJugarTrainer(carta: any): Promise<void> {
+    if (this.cargandoAccion) return;
+    this.cargandoAccion = true;
+    try {
+      const nuevoEstado = await this.battleBoardAction.jugarTrainerYRecargar(this.matchId!, carta.id);
+      this.aplicarEstadoRefrescado(nuevoEstado);
+      this.cargandoAccion = false;
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      this.cargandoAccion = false;
+      console.error(err);
+      this.mostrarNotificacion(err.error || 'No se pudo jugar la carta de Entrenador.', 'error');
+    }
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {
@@ -3484,7 +4059,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   puedePagarRetiro(): boolean {
-    return this.battleBoardAction.puedePagarRetiro(this.partida?.jugador?.activo);
+    return this.battleBoardAction.puedePagarRetiro(this.partida?.jugador?.activo, this.partida?.activeStadium);
   }
 
   puedeAtacar(): boolean {
@@ -3545,21 +4120,36 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return this.battleBoardUi.getSpriteFront(carta);
   }
 
-  onSpriteError(event: Event, cardId: string): void {
+  onSpriteError(event: Event, carta: any): void {
     const img = event.target as HTMLImageElement;
-    const fallbackSrc = this.battleBoardUi.getImagenCarta(cardId);
-    if (!img.src.includes(fallbackSrc)) {
-      img.src = fallbackSrc;
-      img.classList.add('fallback-sprite'); // Add class for styling
+    if (!carta) {
+      img.style.display = 'none';
+      return;
+    }
+
+    const num = (this.battleBoardUi as any).getPokemonNum(carta);
+    const triedOnline = img.getAttribute('data-tried-online') === 'true';
+
+    if (num > 0 && !triedOnline) {
+      img.setAttribute('data-tried-online', 'true');
+      const esTrasero = img.classList.contains('sprite-back');
+      img.src = esTrasero
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/back/${num}.gif`
+        : `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/showdown/${num}.gif`;
     } else {
-      img.style.display = 'none'; // If even the fallback fails, hide it
+      const fallbackSrc = this.battleBoardUi.getImagenCarta(carta.id);
+      if (!img.src.includes(fallbackSrc)) {
+        img.src = fallbackSrc;
+        img.classList.add('fallback-sprite');
+      } else {
+        img.style.display = 'none';
+      }
     }
   }
 
   onCardImageError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (!img || img.src.endsWith('/images/cards/back.png')) return;
-    img.src = '/images/cards/back.png';
+    this.cardService.handleCardImageError(img);
   }
 
   tieneCondicionEspecial(quien: 'JUGADOR' | 'BOT', condicion: string): boolean {
@@ -3571,8 +4161,17 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     return (this.partida?.jugador?.activo?.card.ataques as BattleBoardAttack[] | undefined) ?? [];
   }
 
+  tieneEnergiaHAD(activo: any): boolean {
+    if (!activo || !activo.energiasUnidas) return false;
+    return activo.energiasUnidas.some((e: any) => e.tipo === 'HAD' || e.tipo === 'Fairy' || e.tipo?.toLowerCase() === 'fairy');
+  }
+
   getCostoRetiradaActivoJugador(): number {
-    return this.partida?.jugador?.activo?.card.costoRetirada ?? 0;
+    const cost = this.partida?.jugador?.activo?.card.costoRetirada ?? 0;
+    if (this.partida?.activeStadium?.id === 'xy1-125' && this.tieneEnergiaHAD(this.partida?.jugador?.activo)) {
+      return 0;
+    }
+    return cost;
   }
 
   esHoverSobreManoJugador(): boolean {
@@ -3691,6 +4290,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
   esPokemon(carta: any): boolean {
     return this.battleBoardUi.esPokemon(carta);
+  }
+  esTrainer(carta: any): boolean {
+    return this.battleBoardUi.esTrainer(carta);
   }
 
   get manoAgrupada(): any[][] {
@@ -3966,13 +4568,22 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const hpBotDespues = estadoFinal.bot?.activo?.hpActual || 0;
     const danioHecho = this.battleBoardCombat.calcularDanioHecho(hpBotAntes, hpBotDespues);
 
-    const carasReales = this.contarCarasServidor(estadoFinal)
-      ?? this.battleBoardTurn.resolverCarasJugador(
-        coinConfig,
-        habilidad,
-        estadoFinal,
-        danioHecho,
-      );
+    let carasReales = this.contarCarasServidor(estadoFinal);
+    if (carasReales === null) {
+      if (coinConfig.tipoEfecto === 'self-damage') {
+        const hpPropioAntes = this.partida?.jugador?.activo?.hpActual || 0;
+        const hpPropioDespues = estadoFinal.jugador?.activo?.hpActual || 0;
+        const autodanioHecho = hpPropioAntes - hpPropioDespues;
+        carasReales = autodanioHecho > 0 ? 0 : 1;
+      } else {
+        carasReales = this.battleBoardTurn.resolverCarasJugador(
+          coinConfig,
+          habilidad,
+          estadoFinal,
+          danioHecho,
+        );
+      }
+    }
     this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
       coinConfig.cantidadMonedas,
       carasReales,
@@ -4104,6 +4715,13 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       return;
     }
     this.opponentLoaded = true;
+
+    if (!this.esPartidaOnline()) {
+      this.randomizeBotCustomization();
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.jugadorService.getJugador(this.nombreRival).subscribe({
       next: (res) => {
         if (res) {
@@ -4128,11 +4746,24 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
             if (this.opponentTrainerScene) {
               this.reloadOpponentTrainerModel();
             }
+            if (this.versusScene) {
+              this.reloadVersusOpponentModel();
+            }
           } else {
             this.loadOpponent3DModel();
             if (this.opponentTrainerModel) {
               this.applyModelCustomization(
                 this.opponentTrainerModel,
+                this.opponentCharacterId,
+                this.opponentSkinColor,
+                this.opponentHairColor,
+                this.opponentEyeColor,
+                this.opponentHeight
+              );
+            }
+            if (this.versusOpponentModel) {
+              this.applyModelCustomization(
+                this.versusOpponentModel,
                 this.opponentCharacterId,
                 this.opponentSkinColor,
                 this.opponentHairColor,
@@ -4146,8 +4777,74 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.warn('No se pudo cargar datos del rival, usando bot por defecto', err);
+        this.randomizeBotCustomization();
+        this.cdr.detectChanges();
       }
     });
+  }
+
+  private randomizeBotCustomization(): void {
+    const characters = ['ash', 'lillie', 'hilda-sygna', 'robot', 'adaman', 'giovanni-sygna', 'hugh', 'courtney', 'irida', 'zinnia'];
+    const skins = ['#ffe0bd', '#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+    const hairs = ['#5c4033', '#2c1e18', '#b55229', '#e6c875', '#ffffff', '#2563eb', '#16a34a', '#db2777', '#7c3aed'];
+    const eyes = ['#2563eb', '#16a34a', '#7c3aed', '#b45309', '#475569', '#db2777'];
+    
+    const oldCharId = this.opponentCharacterId;
+    
+    this.opponentCharacterId = characters[Math.floor(Math.random() * characters.length)];
+    this.opponentSkinColor = skins[Math.floor(Math.random() * skins.length)];
+    this.opponentHairColor = hairs[Math.floor(Math.random() * hairs.length)];
+    this.opponentEyeColor = eyes[Math.floor(Math.random() * eyes.length)];
+    this.opponentHeight = parseFloat((0.92 + Math.random() * 0.16).toFixed(3)); // 0.92 to 1.08
+    
+    console.log('Bot customization randomized:', {
+      id: this.opponentCharacterId,
+      skin: this.opponentSkinColor,
+      hair: this.opponentHairColor,
+      eye: this.opponentEyeColor,
+      height: this.opponentHeight
+    });
+    
+    if (this.opponentCharacterId !== oldCharId) {
+      if (this.handshakeScene) {
+        if (this.opponentModel) {
+          this.disposeModelMaterials(this.opponentModel);
+          this.handshakeScene.remove(this.opponentModel);
+          this.opponentModel = undefined;
+        }
+        this.opponentMixer = undefined;
+        this.opponentActions.clear();
+        this.loadOpponentModelInScene();
+      }
+      if (this.opponentTrainerScene) {
+        this.reloadOpponentTrainerModel();
+      }
+      if (this.versusScene) {
+        this.reloadVersusOpponentModel();
+      }
+    } else {
+      this.loadOpponent3DModel();
+      if (this.opponentTrainerModel) {
+        this.applyModelCustomization(
+          this.opponentTrainerModel,
+          this.opponentCharacterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+      }
+      if (this.versusOpponentModel) {
+        this.applyModelCustomization(
+          this.versusOpponentModel,
+          this.opponentCharacterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+      }
+    }
   }
 
   loadOpponent3DModel(): void {
@@ -4227,10 +4924,32 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  @ViewChild('coinFlipCanvas') set coinFlipCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (element) {
+      if (!this.coinFlipCanvasInitialized) {
+        this.coinFlipCanvasInitialized = true;
+        setTimeout(() => this.initCoinFlipScene(element.nativeElement), 0);
+      }
+    } else {
+      if (this.coinFlipCanvasInitialized) {
+        this.cleanupCoinFlipScene();
+      }
+    }
+  }
+
   @ViewChild('handshakeCanvas') set handshakeCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
     if (element && !this.canvasInitialized) {
       this.canvasInitialized = true;
       setTimeout(() => this.initHandshakeScene(element.nativeElement), 0);
+    }
+  }
+
+  @ViewChild('versusCanvas') set versusCanvas(element: ElementRef<HTMLCanvasElement> | undefined) {
+    if (!element) {
+      this.cleanupVersusScene(true);
+    } else if (!this.versusCanvasInitialized) {
+      this.versusCanvasInitialized = true;
+      setTimeout(() => this.initVersusScene(element.nativeElement), 0);
     }
   }
 
@@ -5200,12 +5919,24 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     model.traverse((child: any) => {
       if (child.isBone) {
         const name = child.name.toLowerCase();
-        if (name.includes('rightarm')) rightArm = child;
-        else if (name.includes('rightforearm')) rightForeArm = child;
-        else if (name.includes('righthand') || name.includes('right_hand')) rightHand = child;
-        else if (name.includes('leftarm')) leftArm = child;
-        else if (name.includes('leftforearm')) leftForeArm = child;
-        else if (name.includes('lefthand') || name.includes('left_hand')) leftHand = child;
+        
+        // --- RIGHT SIDE ---
+        if (name.includes('rightarm') || name.includes('rarm') || name.includes('upperarm.r') || name.includes('upperarm_r') || (name.includes('arm.r') && !name.includes('lower'))) {
+          rightArm = child;
+        } else if (name.includes('rightforearm') || name.includes('rforearm') || name.includes('lowerarm.r') || name.includes('lowerarm_r') || name.includes('arm_r_03') || name.includes('forearm.r')) {
+          rightForeArm = child;
+        } else if (name.includes('righthand') || name.includes('rhand') || name.includes('hand.r') || name.includes('hand_r')) {
+          rightHand = child;
+        }
+        
+        // --- LEFT SIDE ---
+        else if (name.includes('leftarm') || name.includes('larm') || name.includes('upperarm.l') || name.includes('upperarm_l') || (name.includes('arm.l') && !name.includes('lower'))) {
+          leftArm = child;
+        } else if (name.includes('leftforearm') || name.includes('lforearm') || name.includes('lowerarm.l') || name.includes('lowerarm_l') || name.includes('arm_l_03') || name.includes('forearm.l')) {
+          leftForeArm = child;
+        } else if (name.includes('lefthand') || name.includes('lhand') || name.includes('hand.l') || name.includes('hand_l')) {
+          leftHand = child;
+        }
       }
     });
     return { rightArm, rightForeArm, rightHand, leftArm, leftForeArm, leftHand };
@@ -5223,7 +5954,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     let chosenAction: THREE.AnimationAction | undefined;
 
     for (const hint of hints) {
-      chosenAction = actions.get(hint);
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
       if (chosenAction) break;
     }
     if (!chosenAction) {
@@ -5236,6 +5972,50 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         active.action.fadeOut(0.25);
       }
       this.currentAnims.set(mixer, { state, action: chosenAction });
+    }
+  }
+
+  private setCelebrationAnimation(mixer: THREE.AnimationMixer, actions: Map<string, THREE.AnimationAction>) {
+    const hints = ['dance', 'victory', 'win', 'jump', 'happy', 'wave', 'run'];
+    let chosenAction: THREE.AnimationAction | undefined;
+    for (const hint of hints) {
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
+      if (chosenAction) break;
+    }
+    if (!chosenAction) {
+      for (const [name, act] of actions.entries()) {
+        if (!name.includes('idle') && !name.includes('stand')) {
+          chosenAction = act;
+          break;
+        }
+      }
+    }
+    if (chosenAction) {
+      actions.forEach(act => act.fadeOut(0.2));
+      chosenAction.reset().fadeIn(0.2).play();
+    }
+  }
+
+  private setDefeatAnimation(mixer: THREE.AnimationMixer, actions: Map<string, THREE.AnimationAction>) {
+    const hints = ['lose', 'defeat', 'sad', 'cry', 'idle'];
+    let chosenAction: THREE.AnimationAction | undefined;
+    for (const hint of hints) {
+      for (const [name, act] of actions.entries()) {
+        if (name.includes(hint)) {
+          chosenAction = act;
+          break;
+        }
+      }
+      if (chosenAction) break;
+    }
+    if (chosenAction) {
+      actions.forEach(act => act.fadeOut(0.2));
+      chosenAction.reset().fadeIn(0.2).play();
     }
   }
 
@@ -5446,13 +6226,804 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.opponentTrainerScene = undefined;
     this.playerTrainerCamera = undefined;
     this.opponentTrainerCamera = undefined;
+  }
 
-    if (this.handshakeRenderer) {
-      this.handshakeRenderer.dispose();
-      this.handshakeRenderer = undefined;
+  private initCoinFlipScene(canvas: HTMLCanvasElement): void {
+    if (this.loadingCoinModels) return;
+    this.loadingCoinModels = true;
+
+    this.coinRebotes = 0;
+    this.coinFlipVuelo = false;
+    this.coinFlipResultadoListo = false;
+    this.coinFlipResultadoEsperado = undefined;
+    this.coinFlipParticles = [];
+    this.fuerzaActual = 0;
+    this.arrastrando = false;
+    this.eleccionTemporal = null;
+    this.confirmadoLado = false;
+    this.coinFlipClock.getDelta(); // reset clock
+
+    const width = canvas.clientWidth || 400;
+    const height = canvas.clientHeight || 380;
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvas,
+      alpha: false, // Desactivar alpha para controlar de forma exacta el fondo de la escena 3D
+      antialias: !this.isPotato && window.devicePixelRatio < 2,
+      powerPreference: 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false,
+      depth: true
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.coinFlipRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    // Fondo azul espacial profundo cinemático
+    scene.background = new THREE.Color(0x060d1b);
+    this.coinFlipScene = scene;
+
+    // Niebla densa a tono con el fondo espacial
+    scene.fog = new THREE.FogExp2(0x060d1b, 0.08);
+
+    const camera = new THREE.PerspectiveCamera(35, width / height, 0.1, 50);
+    // Posición general inicial de la cámara
+    camera.position.set(2.2, 1.4, 3.8);
+    camera.lookAt(0, 0.4, 0);
+    this.coinFlipCamera = camera;
+
+    // Controles de órbita interactivos para rotar la cámara libremente
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enableZoom = false;
+    controls.minPolarAngle = Math.PI / 6;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    this.coinFlipControls = controls;
+
+    // Suelo de cuadrícula neón ligero
+    const gridHelper = new THREE.GridHelper(60, 60, 0x00f0ff, 0x1e293b);
+    gridHelper.position.y = -0.9;
+    scene.add(gridHelper);
+
+    // Piso físico oscuro
+    const floorGeo = new THREE.PlaneGeometry(100, 100);
+    const floorMat = new THREE.MeshStandardMaterial({
+      color: 0x020408,
+      roughness: 0.9,
+      metalness: 0.1
+    });
+    const floorMesh = new THREE.Mesh(floorGeo, floorMat);
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.position.y = -0.905;
+    scene.add(floorMesh);
+
+    // Iluminación cinemática
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+
+    const goldLight = new THREE.DirectionalLight(0xfccd4d, 5.5);
+    goldLight.position.set(3.0, 5.0, 3.0);
+    scene.add(goldLight);
+
+    const cyanLight = new THREE.DirectionalLight(0x00f0ff, 4.0);
+    cyanLight.position.set(-3.0, -1.0, 2.0);
+    scene.add(cyanLight);
+
+    const rimLight = new THREE.DirectionalLight(0xff00ff, 2.5);
+    rimLight.position.set(0, -2, -3);
+    scene.add(rimLight);
+
+    // Cargar modelos
+    const loader = new GLTFLoader();
+    loader.setMeshoptDecoder(MeshoptDecoder);
+    const activeRenderer = renderer;
+    if (activeRenderer) {
+      const ktx2 = this.getKtx2Loader(activeRenderer);
+      loader.setKTX2Loader(ktx2);
     }
-    this.handshakeScene = undefined;
-    this.handshakeCamera = undefined;
+
+    // 1. Cargar jugador local
+    this.loadHandshakeCharacter(this.localPlayerCharacterId, (playerModel, playerAnims) => {
+      this.playerCoinFlipModel = playerModel;
+      this.playerCoinFlipMixer = new THREE.AnimationMixer(playerModel);
+      playerAnims.forEach(clip => {
+        this.playerCoinFlipActions.set(clip.name.toLowerCase(), this.playerCoinFlipMixer!.clipAction(clip));
+      });
+
+      // Aplicar color de piel/pelo configurados en el lobby
+      const localSkin = localStorage.getItem('lobbySkinColor') || undefined;
+      const localHair = localStorage.getItem('lobbyHairColor') || undefined;
+      const localEye = localStorage.getItem('lobbyEyeColor') || undefined;
+      let localHeight = 1.0;
+      try {
+        const hStr = localStorage.getItem('lobbyHeight');
+        if (hStr) localHeight = parseFloat(hStr);
+      } catch {}
+      this.applyModelCustomization(playerModel, this.localPlayerCharacterId, localSkin, localHair, localEye, localHeight);
+
+      // Posicionar al jugador en (0, -0.9, 1.5) mirando al rival (eje Z negativo)
+      playerModel.position.set(0, -0.9, 1.5);
+      playerModel.rotation.y = Math.PI;
+
+      // Buscar huesos del brazo derecho
+      const bones = this.findBones(playerModel);
+      this.coinFlipPlayerRightArm = bones.rightArm || undefined;
+      this.coinFlipPlayerRightForeArm = bones.rightForeArm || undefined;
+      this.coinFlipPlayerRightHand = bones.rightHand || undefined;
+
+      // Respaldar cuaterniones originales
+      if (this.coinFlipPlayerRightArm) this.coinFlipDefaultQuaternions.set(this.coinFlipPlayerRightArm, this.coinFlipPlayerRightArm.quaternion.clone());
+      if (this.coinFlipPlayerRightForeArm) this.coinFlipDefaultQuaternions.set(this.coinFlipPlayerRightForeArm, this.coinFlipPlayerRightForeArm.quaternion.clone());
+      if (this.coinFlipPlayerRightHand) this.coinFlipDefaultQuaternions.set(this.coinFlipPlayerRightHand, this.coinFlipPlayerRightHand.quaternion.clone());
+
+      // Iniciar animación idle
+      const hints = ['idle', 'standing', 'house'];
+      let idleAction: THREE.AnimationAction | undefined;
+      for (const hint of hints) {
+        for (const [name, act] of this.playerCoinFlipActions.entries()) {
+          if (name.includes(hint)) {
+            idleAction = act;
+            break;
+          }
+        }
+        if (idleAction) break;
+      }
+      if (idleAction) {
+        idleAction.play();
+        this.playerCoinFlipMixer.update(0.001);
+      }
+
+      scene.add(playerModel);
+
+      // 2. Cargar oponente bot
+      this.loadHandshakeCharacter(this.opponentCharacterId, (opponentModel, opponentAnims) => {
+        this.opponentCoinFlipModel = opponentModel;
+        this.opponentCoinFlipMixer = new THREE.AnimationMixer(opponentModel);
+        opponentAnims.forEach(clip => {
+          this.opponentCoinFlipActions.set(clip.name.toLowerCase(), this.opponentCoinFlipMixer!.clipAction(clip));
+        });
+
+        const oppSkin = this.opponentSkinColor || undefined;
+        const oppHair = this.opponentHairColor || undefined;
+        const oppEye = this.opponentEyeColor || undefined;
+        const oppHeight = this.opponentHeight || 1.0;
+        this.applyModelCustomization(opponentModel, this.opponentCharacterId, oppSkin, oppHair, oppEye, oppHeight);
+
+        // Posicionar bot de frente al jugador
+        opponentModel.position.set(0, -0.9, -2.5);
+        opponentModel.rotation.y = 0;
+
+        // Iniciar animación idle en el bot
+        let botIdleAction: THREE.AnimationAction | undefined;
+        for (const hint of hints) {
+          for (const [name, act] of this.opponentCoinFlipActions.entries()) {
+            if (name.includes(hint)) {
+              botIdleAction = act;
+              break;
+            }
+          }
+          if (botIdleAction) break;
+        }
+        if (botIdleAction) {
+          botIdleAction.play();
+        }
+
+        scene.add(opponentModel);
+
+        // 3. Cargar moneda 3D
+        loader.load('/assets/models/video_game_coin.glb', (gltfCoin) => {
+          const coinGroup = new THREE.Group();
+          this.coinFlipCoinModel = coinGroup;
+
+          const coinMesh = gltfCoin.scene;
+
+          // Centrado seguro global de la geometría de la moneda
+          const coinBox = new THREE.Box3().setFromObject(coinMesh);
+          const center = new THREE.Vector3();
+          coinBox.getCenter(center);
+          coinMesh.position.sub(center);
+
+          const coinSize = new THREE.Vector3();
+          coinBox.getSize(coinSize);
+          const maxCoinDim = Math.max(coinSize.x, coinSize.y, coinSize.z);
+          if (maxCoinDim > 0) {
+            const coinScale = 0.22 / maxCoinDim;
+            coinMesh.scale.setScalar(coinScale);
+          }
+          // NOT adding the original GLB coinMesh to prevent duplicate geometry (star vs Cara/Cruz)
+          
+          const espesor = coinSize.z * (0.22 / maxCoinDim);
+          const radio = (Math.max(coinSize.x, coinSize.y) / 2) * (0.22 / maxCoinDim);
+
+          // Crear un canto dorado brillante para el cuerpo de la moneda
+          const cantoGeom = new THREE.CylinderGeometry(radio, radio, espesor, 32);
+          const cantoMat = new THREE.MeshStandardMaterial({
+            color: 0xdca81e, // Color dorado metálico
+            metalness: 0.95,
+            roughness: 0.08
+          });
+          const cantoMesh = new THREE.Mesh(cantoGeom, cantoMat);
+          cantoMesh.rotation.x = Math.PI / 2; // Orientar cilindro de canto
+          coinGroup.add(cantoMesh);
+
+          const circleGeom = new THREE.CircleGeometry(radio * 0.95, 32);
+          
+          // Relieve 3D para la Cara
+          const caraBumpCanvas = this.crearBumpMapCara();
+          const caraBumpTex = new THREE.CanvasTexture(caraBumpCanvas);
+
+          const caraMat = new THREE.MeshStandardMaterial({
+            map: this.crearTexturaCara(),
+            bumpMap: caraBumpTex,
+            bumpScale: 0.008,
+            roughness: 0.22,
+            metalness: 0.9,
+            side: THREE.FrontSide
+          });
+
+          // Relieve 3D para la Cruz
+          const cruzBumpCanvas = this.crearBumpMapCruz();
+          const cruzBumpTex = new THREE.CanvasTexture(cruzBumpCanvas);
+
+          const cruzMat = new THREE.MeshStandardMaterial({
+            map: this.crearTexturaCruz(),
+            bumpMap: cruzBumpTex,
+            bumpScale: 0.008,
+            roughness: 0.22,
+            metalness: 0.9,
+            side: THREE.FrontSide
+          });
+
+          const caraMesh = new THREE.Mesh(circleGeom, caraMat);
+          caraMesh.position.set(0, 0, espesor / 2 + 0.002);
+
+          const cruzMesh = new THREE.Mesh(circleGeom, cruzMat);
+          cruzMesh.position.set(0, 0, -(espesor / 2 + 0.002));
+          cruzMesh.rotation.y = Math.PI;
+
+          coinGroup.add(caraMesh);
+          coinGroup.add(cruzMesh);
+
+          // Posicionar sobre el pulgar estimado inicialmente
+          coinGroup.position.set(0.18, 0.0, 1.1);
+          scene.add(coinGroup);
+
+          this.loadingCoinModels = false;
+          this.cdr.detectChanges();
+        }, undefined, (err: any) => {
+          console.error('Error cargando moneda 3D:', err);
+          this.loadingCoinModels = false;
+        });
+
+      }, renderer);
+
+    }, renderer);
+
+    const targetCameraPos = new THREE.Vector3(2.2, 1.4, 3.8);
+    const targetCameraLook = new THREE.Vector3(0, 0.4, 0);
+    const currentCameraLook = new THREE.Vector3(0, 0.4, 0);
+    let coinTargetRotY = Math.PI / 2;
+
+    // Iniciar loop de animación
+    const animate = () => {
+      if (!this.coinFlipCanvasInitialized) return;
+      this.coinFlipAnimationId = requestAnimationFrame(animate);
+
+      const dt = Math.min(this.coinFlipClock.getDelta(), 0.03);
+
+      const currWidth = canvas.clientWidth || 400;
+      const currHeight = canvas.clientHeight || 380;
+      if (canvas.width !== currWidth || canvas.height !== currHeight) {
+        renderer.setSize(currWidth, currHeight, false);
+        camera.aspect = currWidth / currHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      // Actualizar mixers de animación de los personajes
+      if (this.playerCoinFlipMixer) {
+        if (this.coinFlipVuelo || this.coinFlipResultadoListo) {
+          this.playerCoinFlipMixer.update(dt);
+        }
+      }
+      if (this.opponentCoinFlipMixer) this.opponentCoinFlipMixer.update(dt);
+
+      if (this.coinFlipControls && this.coinFlipControls.enabled) {
+        this.coinFlipControls.update();
+      }
+
+      // Obtener posición absoluta de la mano derecha del jugador
+      const handWorldPos = new THREE.Vector3();
+      if (this.coinFlipPlayerRightHand) {
+        this.coinFlipPlayerRightHand.getWorldPosition(handWorldPos);
+      } else {
+        handWorldPos.set(0.2, 0.0, 1.1);
+      }
+
+      // --- PROCEDURAL ARM POSING (ESTIRADO/TOMAR IMPULSO/LANZAMIENTO PROCEDIMENTAL) ---
+      if (!this.coinFlipVuelo) {
+        if (this.arrastrando) {
+          const tension = this.fuerzaActual / 400; // 0 a 1
+          // Tomar impulso inclinando el brazo hacia atrás y abajo proporcionalmente
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
+            if (armQ) {
+              // A mayor tensión, más hacia atrás en X y más abierto en Z
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), -0.6 * tension)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.7 * tension)); 
+              this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.15);
+            }
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm)?.clone();
+            if (foreQ) {
+              // Doblar el codo proporcionalmente
+              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.1 * tension)); 
+              this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.15);
+            }
+          }
+        } else {
+          // Brazo estirado hacia adelante listo para tirar
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
+            if (armQ) {
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.0)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.1)); 
+              this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.1);
+            }
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm)?.clone();
+            if (foreQ) {
+              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.3)); 
+              this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.1);
+            }
+          }
+        }
+      } else {
+        // En pleno vuelo: simulamos el lanzamiento procedimental en los primeros 0.20 segundos
+        this.coinFlipReleaseTime += dt;
+        if (this.coinFlipReleaseTime < 0.22) {
+          const progress = Math.min(this.coinFlipReleaseTime / 0.12, 1.0); // Flick ultra rápido
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm)?.clone();
+            if (armQ) {
+              // Brazo extendido hacia arriba y al frente con fuerza
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), 1.55)); 
+              armQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -1.45)); 
+              this.coinFlipPlayerRightArm.quaternion.slerp(armQ, progress);
+            }
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm)?.clone();
+            if (foreQ) {
+              // Codo casi estirado en el flick
+              foreQ.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), -0.1)); 
+              this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, progress);
+            }
+          }
+        } else {
+          // Retornar brazo suavemente a pose idle
+          if (this.coinFlipPlayerRightArm) {
+            const armQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightArm);
+            if (armQ) this.coinFlipPlayerRightArm.quaternion.slerp(armQ, 0.08);
+          }
+          if (this.coinFlipPlayerRightForeArm) {
+            const foreQ = this.coinFlipDefaultQuaternions.get(this.coinFlipPlayerRightForeArm);
+            if (foreQ) this.coinFlipPlayerRightForeArm.quaternion.slerp(foreQ, 0.08);
+          }
+        }
+      }
+
+      // --- POSICIÓN Y ROTACIÓN DE LA MONEDA EN REPOSO ---
+      if (!this.coinFlipVuelo && !this.coinFlipResultadoListo && this.coinFlipCoinModel) {
+        const shakeIntensity = this.arrastrando ? (this.fuerzaActual / 400) * 0.04 : 0;
+        const shakeX = Math.sin(Date.now() * 0.18) * shakeIntensity;
+        const shakeY = Math.cos(Date.now() * 0.21) * shakeIntensity;
+        const shakeZ = Math.sin(Date.now() * 0.24) * shakeIntensity;
+
+        // Situar moneda sobre la mano
+        this.coinFlipCoinModel.position.copy(handWorldPos).add(new THREE.Vector3(0.02 + shakeX, 0.05 + shakeY, -0.05 + shakeZ));
+
+        // Rotación de canto o mostrando cara/cruz
+        if (!this.confirmadoLado) {
+          let rotX = 0;
+          let rotY = 0;
+          if (this.eleccionTemporal === 'CARA') {
+            rotX = -Math.PI / 2; // Cara mirando arriba
+          } else if (this.eleccionTemporal === 'CRUZ') {
+            rotX = Math.PI / 2;  // Cruz mirando arriba
+          } else {
+            rotX = 0; // De canto vertical neutro
+            rotY = Math.PI / 2;
+          }
+          
+          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(rotX, rotY, 0));
+          this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.1);
+        } else {
+          // Si ya está confirmado, la moneda reposa horizontal en la mano para tirar (con Cara arriba)
+          let targetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+          this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.1);
+        }
+      }
+
+      // --- CONTROL DE CÁMARA CINEMÁTICA ---
+      if (this.coinFlipVuelo && this.coinFlipCoinModel) {
+        // 1. Fase de vuelo libre: la cámara sigue la trayectoria en espiral
+        this.coinVy -= 18.0 * dt;
+
+        this.coinFlipCoinModel.position.x += this.coinVx * dt;
+        this.coinFlipCoinModel.position.y += this.coinVy * dt;
+        this.coinFlipCoinModel.position.z += this.coinVz * dt;
+
+        this.coinFlipCoinModel.rotateX(this.coinOmegaX * dt);
+        this.coinFlipCoinModel.rotateY(this.coinOmegaY * dt);
+        this.coinFlipCoinModel.rotateZ(this.coinOmegaZ * dt);
+
+        if (Math.random() < 0.65) {
+          this.emitirParticulaCoin(this.coinFlipCoinModel.position);
+        }
+
+        // Seguir a la moneda: la cámara se coloca detrás de la moneda en su trayectoria de vuelo y la sigue de cerca
+        targetCameraPos.set(
+          this.coinFlipCoinModel.position.x,
+          this.coinFlipCoinModel.position.y + 0.6,
+          this.coinFlipCoinModel.position.z + 1.2
+        );
+        
+        camera.position.lerp(targetCameraPos, 0.12);
+        camera.lookAt(this.coinFlipCoinModel.position);
+
+        if (this.coinVy < 0 && this.coinFlipCoinModel.position.y <= -0.9) {
+          if (this.coinRebotes < 2) {
+            this.coinFlipCoinModel.position.y = -0.9;
+            this.coinVy = -this.coinVy * 0.35;
+            this.coinVx *= 0.4;
+            this.coinVz *= 0.4;
+            this.coinOmegaX *= 0.35;
+            this.coinOmegaY *= 0.35;
+            this.coinOmegaZ *= 0.35;
+            this.coinRebotes++;
+          } else {
+            this.coinFlipVuelo = false;
+            this.coinFlipCoinModel.position.y = -0.9;
+            if (this.coinFlipControls) {
+              this.coinFlipControls.enabled = true;
+              this.coinFlipControls.target.copy(this.coinFlipCoinModel.position);
+            }
+            this.girando = false;
+            this.cdr.detectChanges();
+          }
+        }
+      } else if (this.coinFlipResultadoListo && this.coinFlipCoinModel) {
+        // 2. Resultado revelado en el suelo: zoom dramático de primer plano
+        let targetQuat = new THREE.Quaternion();
+        if (this.coinFlipResultadoEsperado === 'CARA') {
+          targetQuat.setFromEuler(new THREE.Euler(-Math.PI / 2, 0, 0));
+        } else {
+          targetQuat.setFromEuler(new THREE.Euler(Math.PI / 2, 0, 0));
+        }
+        this.coinFlipCoinModel.quaternion.slerp(targetQuat, 0.15);
+
+        targetCameraPos.set(this.coinFlipCoinModel.position.x, -0.6, this.coinFlipCoinModel.position.z + 0.65);
+        targetCameraLook.copy(this.coinFlipCoinModel.position);
+        
+        camera.position.lerp(targetCameraPos, 0.08);
+        currentCameraLook.lerp(targetCameraLook, 0.08);
+        camera.lookAt(currentCameraLook);
+      } else {
+        // 3. Fase estática e interactiva de selección o espera
+        if (this.confirmadoLado) {
+          if (this.arrastrando) {
+            const tension = this.fuerzaActual / 400; // 0 a 1
+            // Alejar ligeramente la cámara al tensionar el tiro (mayor Z y un poco más alta en Y)
+            targetCameraPos.set(0.6, 0.5 + tension * 0.4, 2.7 + tension * 0.9);
+            targetCameraLook.set(0.0, -0.2, -0.5);
+          } else {
+            // Pose detrás del hombro (Tercera persona listo para lanzar)
+            targetCameraPos.set(0.6, 0.5, 2.7);
+            targetCameraLook.set(0.0, -0.2, -0.5);
+          }
+        } else if (this.eleccionTemporal) {
+          // Zoom dramático a la mano y moneda
+          targetCameraPos.copy(handWorldPos).add(new THREE.Vector3(0.05, 0.12, 0.42));
+          targetCameraLook.copy(handWorldPos);
+        } else {
+          // Vista general inicial
+          targetCameraPos.set(2.2, 1.4, 3.8);
+          targetCameraLook.set(0, 0.4, 0);
+        }
+
+        camera.position.lerp(targetCameraPos, 0.08);
+        currentCameraLook.lerp(targetCameraLook, 0.08);
+        camera.lookAt(currentCameraLook);
+      }
+
+      this.actualizarParticulasCoin(dt);
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+  }
+
+  private emitirParticulaCoin(pos: THREE.Vector3): void {
+    if (!this.coinFlipScene) return;
+    const color = Math.random() > 0.5 ? 0xfccd4d : 0x00f0ff;
+    const geom = new THREE.SphereGeometry(0.03 + Math.random() * 0.03, 6, 6);
+    const mat = new THREE.MeshBasicMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.85
+    });
+    const mesh = new THREE.Mesh(geom, mat);
+    mesh.position.copy(pos);
+    mesh.position.x += (Math.random() - 0.5) * 0.12;
+    mesh.position.y += (Math.random() - 0.5) * 0.12;
+    mesh.position.z += (Math.random() - 0.5) * 0.12;
+
+    this.coinFlipScene.add(mesh);
+
+    this.coinFlipParticles.push({
+      mesh,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: (Math.random() - 0.5) * 0.6 - 0.3,
+      vz: (Math.random() - 0.5) * 0.6,
+      life: 0,
+      maxLife: 25 + Math.random() * 15
+    });
+  }
+
+  private actualizarParticulasCoin(dt: number): void {
+    for (let i = this.coinFlipParticles.length - 1; i >= 0; i--) {
+      const p = this.coinFlipParticles[i];
+      p.life++;
+      if (p.life >= p.maxLife) {
+        this.coinFlipScene?.remove(p.mesh);
+        p.mesh.geometry.dispose();
+        if (Array.isArray(p.mesh.material)) {
+          p.mesh.material.forEach(m => m.dispose());
+        } else {
+          p.mesh.material.dispose();
+        }
+        this.coinFlipParticles.splice(i, 1);
+      } else {
+        const ratio = 1.0 - p.life / p.maxLife;
+        p.mesh.position.x += p.vx * dt;
+        p.mesh.position.y += p.vy * dt;
+        p.mesh.position.z += p.vz * dt;
+        p.mesh.scale.setScalar(ratio);
+        if (!Array.isArray(p.mesh.material)) {
+          p.mesh.material.opacity = ratio * 0.85;
+        }
+      }
+    }
+  }
+
+  private cleanupCoinFlipScene(): void {
+    this.coinFlipCanvasInitialized = false;
+    this.confirmadoLado = false;
+    this.eleccionTemporal = null;
+
+    if (this.coinFlipAnimationId) {
+      cancelAnimationFrame(this.coinFlipAnimationId);
+      this.coinFlipAnimationId = undefined;
+    }
+
+    if (this.coinFlipControls) {
+      this.coinFlipControls.dispose();
+      this.coinFlipControls = undefined;
+    }
+
+    this.coinFlipParticles.forEach(p => {
+      this.coinFlipScene?.remove(p.mesh);
+      p.mesh.geometry.dispose();
+      if (Array.isArray(p.mesh.material)) {
+        p.mesh.material.forEach(m => m.dispose());
+      } else {
+        p.mesh.material.dispose();
+      }
+    });
+    this.coinFlipParticles = [];
+
+    if (this.playerCoinFlipModel) {
+      this.disposeModelMaterials(this.playerCoinFlipModel);
+      this.coinFlipScene?.remove(this.playerCoinFlipModel);
+      this.playerCoinFlipModel = undefined;
+    }
+
+    if (this.opponentCoinFlipModel) {
+      this.disposeModelMaterials(this.opponentCoinFlipModel);
+      this.coinFlipScene?.remove(this.opponentCoinFlipModel);
+      this.opponentCoinFlipModel = undefined;
+    }
+
+    this.playerCoinFlipMixer = undefined;
+    this.opponentCoinFlipMixer = undefined;
+    this.playerCoinFlipActions.clear();
+    this.opponentCoinFlipActions.clear();
+    this.coinFlipPlayerRightArm = undefined;
+    this.coinFlipPlayerRightForeArm = undefined;
+    this.coinFlipPlayerRightHand = undefined;
+    this.coinFlipDefaultQuaternions.clear();
+
+    if (this.coinFlipCoinModel) {
+      this.disposeModelMaterials(this.coinFlipCoinModel);
+      this.coinFlipScene?.remove(this.coinFlipCoinModel);
+      this.coinFlipCoinModel = undefined;
+    }
+
+    if (this.coinFlipRenderer) {
+      this.coinFlipRenderer.dispose();
+      this.coinFlipRenderer = undefined;
+    }
+
+    this.coinFlipScene = undefined;
+    this.coinFlipCamera = undefined;
+  }
+
+  private crearTexturaCara(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+    gradient.addColorStop(0, '#ffe066');
+    gradient.addColorStop(0.5, '#f59e0b');
+    gradient.addColorStop(1, '#b45309');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    ctx.strokeStyle = '#d97706';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fef08a';
+    ctx.shadowColor = '#78350f';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CARA', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.shadowBlur = 0;
+    ctx.fillText('★', 128, 55);
+    ctx.fillText('★', 128, 201);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  private crearTexturaCruz(): THREE.CanvasTexture {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    const gradient = ctx.createRadialGradient(128, 128, 10, 128, 128, 128);
+    gradient.addColorStop(0, '#e2e8f0');
+    gradient.addColorStop(0.5, '#64748b');
+    gradient.addColorStop(1, '#1e293b');
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#f1f5f9';
+    ctx.shadowColor = '#0f172a';
+    ctx.shadowBlur = 10;
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CRUZ', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.shadowBlur = 0;
+    ctx.fillText('✦', 128, 55);
+    ctx.fillText('✦', 128, 201);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    return texture;
+  }
+
+  private crearBumpMapCara(): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Fondo gris base
+    ctx.fillStyle = '#666666';
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde exterior elevado
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Borde fino interior
+    ctx.strokeStyle = '#999999';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Textos elevados
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CARA', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.fillText('★', 128, 55);
+    ctx.fillText('★', 128, 201);
+
+    return canvas;
+  }
+
+  private crearBumpMapCruz(): HTMLCanvasElement {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d')!;
+
+    // Fondo gris base
+    ctx.fillStyle = '#666666';
+    ctx.beginPath();
+    ctx.arc(128, 128, 128, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Borde exterior elevado
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Borde fino interior
+    ctx.strokeStyle = '#999999';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(128, 128, 110, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Textos elevados
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 80px "Outfit", "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('CRUZ', 128, 128);
+
+    ctx.font = '28px sans-serif';
+    ctx.fillText('✦', 128, 55);
+    ctx.fillText('✦', 128, 201);
+
+    return canvas;
   }
 
   private initPlayerTrainerScene(canvas: HTMLCanvasElement): void {
@@ -5754,5 +7325,390 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   private delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private initVersusScene(canvas: HTMLCanvasElement): void {
+    this.cleanupVersusScene(false);
+    this.versusCanvasInitialized = true;
+    this.versusStartedAt = performance.now();
+    this.versusSequenceStartedAt = 0;
+    this.versusModelsLoaded = 0;
+    this.versusLastShotIndex = 0;
+    this.versusCameraTilt = 0;
+    this.versusPlayerClips.clear();
+    this.versusOpponentClips.clear();
+    this.versusPlayerCurrentClip = '';
+    this.versusOpponentCurrentClip = '';
+    this.cinematicSceneLoadingPercentage = Math.max(this.cinematicSceneLoadingPercentage, 8);
+
+    const width = Math.max(1, canvas.clientWidth || window.innerWidth);
+    const height = Math.max(1, canvas.clientHeight || window.innerHeight);
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: !this.isPotato,
+      powerPreference: this.isPotato ? 'low-power' : 'high-performance',
+      precision: this.isPotato ? 'mediump' : 'highp',
+      stencil: false
+    });
+    renderer.setSize(width, height, false);
+    renderer.setPixelRatio(this.isPotato ? 1 : Math.min(window.devicePixelRatio, 1.35));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.16;
+    this.versusRenderer = renderer;
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x02040a, 0.085);
+    this.versusScene = scene;
+
+    const camera = new THREE.PerspectiveCamera(31, width / height, 0.1, 40);
+    camera.position.set(0, 1.05, 4.85);
+    camera.lookAt(0, 0.78, 0);
+    this.versusCamera = camera;
+
+    scene.add(new THREE.AmbientLight(0xffffff, this.isPotato ? 0.7 : 0.52));
+    const playerLight = new THREE.DirectionalLight(0xff3b2f, 5.8);
+    playerLight.position.set(-4, 2.5, 3);
+    scene.add(playerLight);
+    const rivalLight = new THREE.DirectionalLight(0x38bdf8, 6.2);
+    rivalLight.position.set(4, 2.7, 3);
+    scene.add(rivalLight);
+    const rimLight = new THREE.PointLight(0xffffff, 8, 9);
+    rimLight.position.set(0, 1.15, 1.2);
+    scene.add(rimLight);
+
+    this.loadVersusParticipant('player', renderer);
+    this.loadVersusParticipant('opponent', renderer);
+
+    const clock = new THREE.Clock();
+    const animate = () => {
+      if (!this.versusRenderer || !this.versusScene || !this.versusCamera) return;
+      this.versusAnimationId = requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const now = performance.now();
+      const elapsed = (now - this.versusStartedAt) / 1000;
+      const sequenceElapsed = this.versusSequenceStartedAt
+        ? (now - this.versusSequenceStartedAt) / 1000
+        : 0;
+
+      if (!this.cinematicAssetsReady) {
+        if (now - this.versusProgressLastRender > 140) {
+          const deltaSecs = (now - this.versusProgressLastRender) / 1000;
+          this.versusProgressLastRender = now;
+          const progressCap = this.versusModelsLoaded === 0 ? 48 : this.versusModelsLoaded === 1 ? 78 : 94;
+          this.cinematicSceneLoadingPercentage = Math.min(
+            progressCap,
+            this.cinematicSceneLoadingPercentage + deltaSecs * (this.versusModelsLoaded === 0 ? 10 : 16)
+          );
+          this.cdr.detectChanges();
+        }
+      }
+
+      if (this.cinematicAssetsReady) {
+        this.versusPlayerMixer?.update(dt);
+        this.versusOpponentMixer?.update(dt);
+        if (sequenceElapsed >= 13.0 && this.serverLoadingComplete && this.finalizarPreloadFn) {
+          this.finalizarPreloadFn(this.lastPreloadState);
+        }
+      }
+
+      const currWidth = Math.max(1, canvas.clientWidth || window.innerWidth);
+      const currHeight = Math.max(1, canvas.clientHeight || window.innerHeight);
+      if (canvas.width !== Math.floor(currWidth * renderer.getPixelRatio()) || canvas.height !== Math.floor(currHeight * renderer.getPixelRatio())) {
+        renderer.setSize(currWidth, currHeight, false);
+        camera.aspect = currWidth / currHeight;
+        camera.updateProjectionMatrix();
+      }
+
+      const reveal = THREE.MathUtils.smoothstep(sequenceElapsed, 0.55, 2.4);
+
+      // ─── CINEMATIC CAMERA SHOTS (Smash Bros inspired) ───
+      // Continuous camera sequence (no hard cuts/teleporting)
+      const keyframes = [
+        { time: 0,   tx: 0.0, ty: 1.15, tz: 3.5,  lx: 0.0, ly: 0.95, tilt: -0.03 },
+        { time: 2.0, tx: 0.0, ty: 1.12, tz: 3.8,  lx: 0.0, ly: 0.92, tilt: -0.01 },
+        { time: 4.0, tx: 0.0, ty: 1.09, tz: 4.2,  lx: 0.0, ly: 0.89, tilt: 0.01 },
+        { time: 7.0, tx: 0.0, ty: 1.07, tz: 4.7,  lx: 0.0, ly: 0.86, tilt: 0.03 },
+        { time: 10.0,tx: 0.0, ty: 1.06, tz: 5.2,  lx: 0.0, ly: 0.84, tilt: 0.01 },
+        { time: 13.0,tx: 0.0, ty: 1.05, tz: 5.6,  lx: 0.0, ly: 0.82, tilt: 0.0 }
+      ];
+
+      let k1 = keyframes[0];
+      let k2 = keyframes[keyframes.length - 1];
+      let easeT = 0;
+
+      if (sequenceElapsed <= k1.time) {
+        k2 = k1;
+        easeT = 0;
+      } else if (sequenceElapsed >= k2.time) {
+        k1 = k2;
+        easeT = 1;
+      } else {
+        for (let i = 0; i < keyframes.length - 1; i++) {
+          if (sequenceElapsed >= keyframes[i].time && sequenceElapsed < keyframes[i + 1].time) {
+            k1 = keyframes[i];
+            k2 = keyframes[i + 1];
+            const t = (sequenceElapsed - k1.time) / (k2.time - k1.time);
+            easeT = THREE.MathUtils.smoothstep(t, 0, 1);
+            break;
+          }
+        }
+      }
+
+      const targetX = THREE.MathUtils.lerp(k1.tx, k2.tx, easeT);
+      const targetY = THREE.MathUtils.lerp(k1.ty, k2.ty, easeT);
+      let targetZ = THREE.MathUtils.lerp(k1.tz, k2.tz, easeT);
+      const lookX = THREE.MathUtils.lerp(k1.lx, k2.lx, easeT);
+      const lookY = THREE.MathUtils.lerp(k1.ly, k2.ly, easeT);
+      const tilt = THREE.MathUtils.lerp(k1.tilt, k2.tilt, easeT);
+
+      // Micro-pulse for liveliness
+      const pulse = Math.sin(sequenceElapsed * 3.2) * 0.018;
+      targetZ += pulse;
+
+      // Apply camera with smooth weight interpolation
+      const lerpSpeed = 0.15;
+      camera.position.x += (targetX - camera.position.x) * lerpSpeed;
+      camera.position.y += (targetY - camera.position.y) * lerpSpeed;
+      camera.position.z += (targetZ - camera.position.z) * lerpSpeed;
+      camera.lookAt(lookX, lookY, 0);
+      this.versusCameraTilt += (tilt - this.versusCameraTilt) * 0.12;
+      camera.rotation.z = this.versusCameraTilt;
+
+      if (this.cinematicAssetsReady) {
+        this.updateVersusAnimation('player', this.localPlayerCharacterId, sequenceElapsed);
+        this.updateVersusAnimation('opponent', this.opponentCharacterId, sequenceElapsed);
+      }
+
+      // Model positions kept stationary (no skating) for clean camera focus
+      if (this.versusPlayerModel) {
+        this.versusPlayerModel.position.x = -1.34;
+        this.versusPlayerModel.position.y = 0;
+        this.versusPlayerModel.position.z = Math.sin(elapsed * 1.3) * 0.03;
+      }
+      if (this.versusOpponentModel) {
+        this.versusOpponentModel.position.x = 1.34;
+        this.versusOpponentModel.position.y = 0;
+        this.versusOpponentModel.position.z = -Math.sin(elapsed * 1.3) * 0.03;
+      }
+
+      renderer.render(scene, camera);
+    };
+    animate();
+  }
+
+  reloadVersusOpponentModel(): void {
+    if (!this.versusScene || !this.versusRenderer) return;
+
+    if (this.versusOpponentModel) {
+      this.versusScene.remove(this.versusOpponentModel);
+      this.disposeModelMaterials(this.versusOpponentModel);
+      this.versusOpponentModel = undefined;
+    }
+    this.versusOpponentMixer = undefined;
+    this.versusOpponentClips.clear();
+    this.versusOpponentCurrentClip = '';
+
+    this.loadVersusParticipant('opponent', this.versusRenderer);
+  }
+
+  private loadVersusParticipant(side: 'player' | 'opponent', renderer: THREE.WebGLRenderer): void {
+    const isPlayer = side === 'player';
+    const characterId = isPlayer ? this.localPlayerCharacterId : this.opponentCharacterId;
+    this.loadHandshakeCharacter(characterId, (model, animations) => {
+      if (!this.versusScene || !this.versusRenderer) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+
+      // Guard against race conditions where the character changed while loading
+      const currentId = isPlayer ? this.localPlayerCharacterId : this.opponentCharacterId;
+      if (characterId !== currentId) {
+        this.disposeModelMaterials(model);
+        return;
+      }
+
+      const mixer = new THREE.AnimationMixer(model);
+      const clipMap = isPlayer ? this.versusPlayerClips : this.versusOpponentClips;
+      
+      // Ensure all clips play in-place by removing any root translation tracks.
+      // This prevents characters from walking/jumping away from their designated coordinates.
+      animations.forEach(clip => {
+        clip.tracks = clip.tracks.filter(track => {
+          const name = track.name.toLowerCase();
+          if (name.endsWith('.position') && (
+            name.startsWith('root') ||
+            name.startsWith('armature') ||
+            name.startsWith('position') ||
+            name.startsWith('__root') ||
+            name === '.position'
+          )) {
+            return false;
+          }
+          return true;
+        });
+        clipMap.set(clip.name.toLowerCase(), mixer.clipAction(clip));
+      });
+
+      if (isPlayer) {
+        this.applyModelCustomization(
+          model,
+          characterId,
+          localStorage.getItem('lobbySkinColor') || '#ffe0bd',
+          localStorage.getItem('lobbyHairColor') || '#5c4033',
+          localStorage.getItem('lobbyEyeColor') || '#2563eb',
+          parseFloat(localStorage.getItem('lobbyHeight') || '1')
+        );
+        model.position.set(-1.34, 0, 0);
+        model.rotation.y = Math.PI * 4 / 5;
+        this.versusPlayerModel = model;
+        this.versusPlayerMixer = mixer;
+      } else {
+        this.applyModelCustomization(
+          model,
+          characterId,
+          this.opponentSkinColor,
+          this.opponentHairColor,
+          this.opponentEyeColor,
+          this.opponentHeight
+        );
+        model.position.set(1.34, 0, 0);
+        model.rotation.y = -Math.PI / 5;
+        this.versusOpponentModel = model;
+        this.versusOpponentMixer = mixer;
+      }
+      this.versusScene.add(model);
+      this.updateVersusAnimation(side, characterId, 0);
+      mixer.update(0.001);
+      this.markVersusParticipantLoaded(renderer);
+    }, renderer);
+  }
+
+  private setCinematicAssetsReady(): void {
+    this.versusPreloadFinished = true;
+    this.tryStartVersusSequence();
+  }
+
+  private tryStartVersusSequence(): void {
+    if (!this.versusPreloadFinished || !this.versusSequenceTriggered) return;
+    if (this.cinematicAssetsReady) return;
+
+    this.cinematicAssetsReady = true;
+    this.versusSequenceStartedAt = performance.now();
+    this.cdr.detectChanges();
+
+    // Show loading bars with a delay of 2.0s after players start revealing
+    setTimeout(() => {
+      this.cinematicLoadingBarsVisible = true;
+      this.cdr.detectChanges();
+    }, 2000);
+  }
+
+  private markVersusParticipantLoaded(renderer: THREE.WebGLRenderer): void {
+    this.versusModelsLoaded++;
+    this.cinematicSceneLoadingPercentage = Math.max(
+      this.cinematicSceneLoadingPercentage,
+      this.versusModelsLoaded === 1 ? 58 : 88
+    );
+    this.cdr.detectChanges();
+    if (this.versusModelsLoaded < 2 || !this.versusScene || !this.versusCamera) return;
+
+    const warmup = typeof renderer.compileAsync === 'function'
+      ? renderer.compileAsync(this.versusScene, this.versusCamera)
+      : Promise.resolve();
+    warmup.catch(() => undefined).finally(() => {
+      if (!this.versusRenderer) return;
+      this.cinematicSceneLoadingPercentage = 100;
+      this.versusPreloadFinished = true;
+      this.tryStartVersusSequence();
+      this.cdr.detectChanges();
+    });
+  }
+
+  private updateVersusAnimation(side: 'player' | 'opponent', characterId: string, elapsed: number): void {
+    const plan = this.getVersusAnimationPlan(characterId);
+    let token = plan[0].token;
+    for (const step of plan) {
+      if (elapsed >= step.at) token = step.token;
+    }
+
+    const clipMap = side === 'player' ? this.versusPlayerClips : this.versusOpponentClips;
+    const current = side === 'player' ? this.versusPlayerCurrentClip : this.versusOpponentCurrentClip;
+    if (current === token) return;
+
+    const entry = [...clipMap.entries()].find(([name]) => name.includes(token))
+      || [...clipMap.entries()].find(([name]) => /idle|stand|house|talk/.test(name));
+    if (!entry) return;
+
+    clipMap.forEach(action => {
+      if (action !== entry[1] && action.isRunning()) action.fadeOut(0.18);
+    });
+    entry[1].reset().setLoop(THREE.LoopOnce, 1).fadeIn(0.18).play();
+    entry[1].clampWhenFinished = true;
+    if (side === 'player') this.versusPlayerCurrentClip = token;
+    else this.versusOpponentCurrentClip = token;
+  }
+
+  private getVersusAnimationPlan(characterId: string): Array<{ at: number; token: string }> {
+    if (characterId === 'hilda-sygna' || characterId === 'adaman' || characterId === 'giovanni-sygna' || characterId === 'hugh' || characterId === 'courtney' || characterId === 'zinnia') {
+      return [
+        { at: 0, token: 'appearance_2' },
+        { at: 2.35, token: 'cutin_trainer' },
+        { at: 4.75, token: 'sync_move_player' },
+        { at: 7.35, token: 'start_battle' }
+      ];
+    }
+    if (characterId === 'lillie' || characterId === 'irida') {
+      return [
+        { at: 0, token: 'appearance_1' },
+        { at: 2.2, token: 'greeting_1' },
+        { at: 4.55, token: 'cutin_trainer' },
+        { at: 7.25, token: 'start_battle' }
+      ];
+    }
+    if (characterId === 'ash') {
+      return [
+        { at: 0, token: 'yoteeligo' },
+        { at: 3.0, token: 'fight' },
+        { at: 6.4, token: 'talking' },
+        { at: 8.2, token: 'fight' }
+      ];
+    }
+    return [
+      { at: 0, token: 'wave' },
+      { at: 2.7, token: 'punch' },
+      { at: 5.25, token: 'dance' },
+      { at: 8.0, token: 'standing' }
+    ];
+  }
+
+  private cleanupVersusScene(resetCanvasFlag = true): void {
+    if (this.versusAnimationId) {
+      cancelAnimationFrame(this.versusAnimationId);
+      this.versusAnimationId = undefined;
+    }
+    if (this.versusPlayerModel) {
+      this.versusScene?.remove(this.versusPlayerModel);
+      this.disposeModelMaterials(this.versusPlayerModel);
+    }
+    if (this.versusOpponentModel) {
+      this.versusScene?.remove(this.versusOpponentModel);
+      this.disposeModelMaterials(this.versusOpponentModel);
+    }
+    this.versusPlayerModel = undefined;
+    this.versusOpponentModel = undefined;
+    this.versusPlayerMixer = undefined;
+    this.versusOpponentMixer = undefined;
+    this.versusPlayerClips.clear();
+    this.versusOpponentClips.clear();
+    this.versusPlayerCurrentClip = '';
+    this.versusOpponentCurrentClip = '';
+    this.versusModelsLoaded = 0;
+    this.versusRenderer?.dispose();
+    this.versusRenderer = undefined;
+    this.versusScene = undefined;
+    this.versusCamera = undefined;
+    if (resetCanvasFlag) this.versusCanvasInitialized = false;
   }
 }

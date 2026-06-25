@@ -95,9 +95,14 @@ public class BattleAttackService {
                 command.execute(partida, atacanteTablero, defensorTablero);
             }
         }
-        int totalDamage = defensor.isInvulnerable() ? 0 : calcularDanioConTipo(rawDamage, atacante, defensor);
+        int totalDamage = defensor.isInvulnerable() ? 0 : calcularDanioConTipo(partida, rawDamage, atacante, defensor);
         if (totalDamage > 0) {
-            defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
+            if (defensor.getPreventDamageThreshold() > 0 && totalDamage <= defensor.getPreventDamageThreshold()) {
+                System.out.println("🛡️ [BATTLE] Harden previno " + totalDamage + " de daño a " + defensor.getCard().getNombre());
+                totalDamage = 0;
+            } else {
+                defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
+            }
         }
 
         System.out.println("⚔️ [BATTLE] " + atacante.getCard().getNombre()
@@ -129,17 +134,38 @@ public class BattleAttackService {
         partida.setLastCoinFlipAttackName(attackName);
     }
 
-    private int calcularDanioConTipo(int damage, CartaEnJuego atacante, CartaEnJuego defensor) {
+    private int calcularDanioConTipo(Partida partida, int damage, CartaEnJuego atacante, CartaEnJuego defensor) {
         if (damage <= 0 || atacante == null || defensor == null) return Math.max(0, damage);
         String attackType = atacante.getCard().getTipo();
         int result = damage;
 
-        if (matchesType(defensor.getCard().getDebilidades(), attackType)) {
+        // Apply Muscle Band (+20 damage before Weakness/Resistance)
+        boolean hasMuscleBand = atacante.getAttachedTools() != null && atacante.getAttachedTools().stream()
+                .anyMatch(t -> "xy1-121".equals(t.getId()) || "Muscle Band".equalsIgnoreCase(t.getNombre()));
+        if (hasMuscleBand) {
+            result += 20;
+        }
+
+        // Apply Shadow Circle (No Weakness if Darkness energy is attached)
+        boolean isShadowCircleActive = partida.getActiveStadium() != null && ("xy1-126".equals(partida.getActiveStadium().getId()) || "Shadow Circle".equalsIgnoreCase(partida.getActiveStadium().getNombre()));
+        boolean hasDarknessEnergy = defensor.getEnergiasUnidas() != null && defensor.getEnergiasUnidas().stream()
+                .anyMatch(e -> "Darkness".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("darkness energy")));
+        boolean applyWeakness = !(isShadowCircleActive && hasDarknessEnergy);
+
+        if (applyWeakness && matchesType(defensor.getCard().getDebilidades(), attackType)) {
             result *= 2;
         }
         if (matchesType(defensor.getCard().getResistencias(), attackType)) {
             result = Math.max(0, result - 20);
         }
+
+        // Apply Hard Charm (-20 damage after Weakness/Resistance)
+        boolean hasHardCharm = defensor.getAttachedTools() != null && defensor.getAttachedTools().stream()
+                .anyMatch(t -> "xy1-119".equals(t.getId()) || "Hard Charm".equalsIgnoreCase(t.getNombre()));
+        if (hasHardCharm) {
+            result = Math.max(0, result - 20);
+        }
+
         return result;
     }
 

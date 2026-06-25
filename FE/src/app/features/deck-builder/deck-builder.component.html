@@ -123,7 +123,7 @@
             {{ getCantidadEnMazo(carta.id) }}/{{ cantidadesPoseidas[carta.id] || 0 }}
           </span>
           <span class="dex-card-image">
-            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" loading="lazy" decoding="async" onerror="this.src='/images/cards/back.png'">
+            <img [src]="getImagenReal(carta.id)" [alt]="carta.nombre" loading="lazy" decoding="async" (error)="onCardImageError($event)">
           </span>
           <strong>{{ carta.nombre }} <span class="badge-ex" *ngIf="esEX(carta)">EX</span></strong>
           <small>{{ carta.tipo || carta.supertype || 'Card' }}</small>
@@ -146,7 +146,7 @@
 
       <div class="dex-card-detail" *ngIf="cartaDetalle as detalle">
         <div class="dex-card-detail-art">
-          <img [src]="getImagenReal(detalle.id)" [alt]="detalle.nombre" loading="lazy" decoding="async" onerror="this.src='/images/cards/back.png'">
+          <img [src]="getImagenReal(detalle.id)" [alt]="detalle.nombre" loading="lazy" decoding="async" (error)="onCardImageError($event)">
         </div>
         <div class="dex-card-detail-copy">
           <p>ESCANEO</p>

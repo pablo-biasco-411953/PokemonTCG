@@ -30,7 +30,19 @@ public class Ataque {
     @Column(length = 2000)
     private String texto;
 
+    @Transient
+    private String interactionType;
+
+    @Transient
+    private String interactionPrompt;
+
     public Ataque() {}
+
+    public String getInteractionType() { return interactionType; }
+    public void setInteractionType(String interactionType) { this.interactionType = interactionType; }
+
+    public String getInteractionPrompt() { return interactionPrompt; }
+    public void setInteractionPrompt(String interactionPrompt) { this.interactionPrompt = interactionPrompt; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

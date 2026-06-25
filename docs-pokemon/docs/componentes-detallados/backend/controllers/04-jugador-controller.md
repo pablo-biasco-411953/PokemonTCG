@@ -33,7 +33,7 @@ public class JugadorController {
 
 **Responsabilidades**:
 - ✅ Obtener datos de jugadores
-- ✅ Administrar monedas (SantoCoins)
+- ✅ Administrar puntos (Santoropoints)
 - ✅ Administrar sobres disponibles
 - ✅ Gestionar compras de packs
 - ✅ Personalización de avatar
@@ -59,7 +59,7 @@ public ResponseEntity<?> obtenerDatos(@PathVariable String username) {
             j.getUsername(), 
             j.getSobresDisponibles(),
             highlightCardCount(j),
-            j.getSantoCoins(),
+            j.getSantoroPoints(),
             j.getCharacterId(),
             j.getSkinColor(),
             j.getHairColor(),
@@ -85,7 +85,7 @@ GET /api/jugadores/Pikachu123/datos
   "username": "Pikachu123",
   "sobresDisponibles": 5,
   "coleccionSize": 42,
-  "santoCoins": 150,
+  "santoroPoints": 150,
   "characterId": "char_001",
   "skinColor": "#FFCC00",
   "hairColor": "#000000",
@@ -194,15 +194,15 @@ GET /api/jugadores/Pikachu123/coleccion
 
 ### 4. POST /api/jugadores/`{username}`/coins/reward
 
-**Acreditar monedas (SantoCoins) a un jugador**
+**Acreditar puntos (Santoropoints) a un jugador**
 
 ```java
 @PostMapping("/{username}/coins/reward")
 public ResponseEntity<?> rewardCoins(@PathVariable String username,
                                      @RequestBody(required = false) Map<String, Object> payload) {
-    // Leer amount, sumar a santoCoins, guardar
+    // Leer amount, sumar a santoroPoints, guardar
     int amount = readPositiveAmount(payload);
-    jugador.setSantoCoins(jugador.getSantoCoins() + amount);
+    jugador.setSantoroPoints(jugador.getSantoroPoints() + amount);
     jugadorRepo.save(jugador);
     return ResponseEntity.ok(toDatosResponse(jugador));
 }
@@ -219,7 +219,7 @@ public ResponseEntity<?> rewardCoins(@PathVariable String username,
 ```json
 {
   "username": "Pikachu123",
-  "santoCoins": 200,
+  "santoroPoints": 200,
   "sobresDisponibles": 5,
   ...
 }
@@ -236,10 +236,10 @@ public ResponseEntity<?> rewardCoins(@PathVariable String username,
 public ResponseEntity<?> spendCoins(@PathVariable String username,
                                     @RequestBody(required = false) Map<String, Object> payload) {
     int amount = readPositiveAmount(payload);
-    if (jugador.getSantoCoins() < amount) {
-        return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+    if (jugador.getSantoroPoints() < amount) {
+        return ResponseEntity.badRequest().body("Santoropoints insuficientes");
     }
-    jugador.setSantoCoins(jugador.getSantoCoins() - amount);
+    jugador.setSantoroPoints(jugador.getSantoroPoints() - amount);
     jugadorRepo.save(jugador);
     return ResponseEntity.ok(toDatosResponse(jugador));
 }
@@ -254,7 +254,7 @@ public ResponseEntity<?> spendCoins(@PathVariable String username,
 
 **Response (400)** - Saldo insuficiente:
 ```json
-"SantoCoins insuficientes"
+"Santoropoints insuficientes"
 ```
 
 ---
@@ -275,11 +275,11 @@ public ResponseEntity<?> buyPacks(@PathVariable String username,
         default -> throw new IllegalArgumentException("Bundle no disponible");
     };
     
-    if (jugador.getSantoCoins() < cost) {
-        return ResponseEntity.badRequest().body("SantoCoins insuficientes");
+    if (jugador.getSantoroPoints() < cost) {
+        return ResponseEntity.badRequest().body("Santoropoints insuficientes");
     }
     
-    jugador.setSantoCoins(jugador.getSantoCoins() - cost);
+    jugador.setSantoroPoints(jugador.getSantoroPoints() - cost);
     jugador.setSobresDisponibles(jugador.getSobresDisponibles() + amount);
     jugadorRepo.save(jugador);
     return ResponseEntity.ok(toDatosResponse(jugador));
@@ -297,7 +297,7 @@ public ResponseEntity<?> buyPacks(@PathVariable String username,
 ```json
 {
   "username": "Pikachu123",
-  "santoCoins": 50,
+  "santoroPoints": 50,
   "sobresDisponibles": 8,
   ...
 }
@@ -503,7 +503,7 @@ class JugadorDatosResponse {
     String username;
     Integer sobresDisponibles;
     Integer coleccionSize;
-    Integer santoCoins;
+    Integer santoroPoints;
     String characterId;
     String skinColor;
     String hairColor;
@@ -583,7 +583,7 @@ JugadorController
     └─ Jugador entity
         ├─ coleccion (List<Card>)
         ├─ sobresDisponibles
-        └─ santoCoins
+        └─ santoroPoints
 ```
 
 ---

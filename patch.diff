@@ -1,0 +1,86 @@
+diff --git a/backend/src/main/java/com/pokemon/tcg/service/BattleEngineService.java b/backend/src/main/java/com/pokemon/tcg/service/BattleEngineService.java
+index 4937d2b0..a44ba7ae 100644
+--- a/backend/src/main/java/com/pokemon/tcg/service/BattleEngineService.java
++++ b/backend/src/main/java/com/pokemon/tcg/service/BattleEngineService.java
+@@ -808,12 +808,12 @@ public class BattleEngineService {
+             if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
+                 partida.setTurnoActual(Partida.Turno.BOT);
+                 partida.getBot().setTurnosJugados(partida.getBot().getTurnosJugados() + 1);
+-                robarCarta(partida.getBot());
++                if (!robarCartaInicioTurno(partida, partida.getBot())) return;
+                 agregarLog(partida, "TURN_STARTED", partida.getBotUsername());
+             } else {
+                 partida.setTurnoActual(Partida.Turno.JUGADOR);
+                 partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
+-                robarCarta(partida.getJugador());
++                if (!robarCartaInicioTurno(partida, partida.getJugador())) return;
+                 agregarLog(partida, "TURN_STARTED", partida.getJugadorUsername());
+             }
+         }
+@@ -908,6 +908,24 @@ public class BattleEngineService {
+             }
+             board.setActivo(suplente);
+             agregarLog(partida, "ACTIVE_SWITCHED", callerUsername, suplente.getCard().getNombre());
++        } else if ("SWITCH_OPPONENT_ACTIVE".equals(pending.getType())) {
++            if (ids.isEmpty()) {
++                throw new IllegalArgumentException("Se requiere seleccionar un Pokémon de la banca del rival.");
++            }
++            TableroJugador oponente = getTableroOponente(partida, callerUsername);
++            String selectedId = ids.get(0);
++            CartaEnJuego suplente = oponente.getBanca().stream()
++                    .filter(c -> c.getCard().getId().equals(selectedId))
++                    .findFirst()
++                    .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca del rival."));
++
++            CartaEnJuego activoViejo = oponente.getActivo();
++            if (activoViejo != null) {
++                activoViejo.limpiarCondiciones();
++                oponente.getBanca().remove(suplente);
++                oponente.getBanca().add(activoViejo);
++            }
++            oponente.setActivo(suplente);
++            agregarLog(partida, "OPPONENT_FORCED_SWITCH", callerUsername, suplente.getCard().getNombre());
+         } else {
+             boolean attached = false;
+             for (String id : ids) {
+@@ -955,7 +973,7 @@ public class BattleEngineService {
+         if (partida == null) return;
+ 
+         partida.getUltimasMonedasLanzadas().clear();
+-        robarCarta(partida.getBot());
++        if (!robarCartaInicioTurno(partida, partida.getBot())) return;
+         botAIService.ejecutarTurno(partida);
+ 
+         if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+@@ -1007,9 +1025,30 @@ public class BattleEngineService {
+         partida.setNumeroTurno(partida.getNumeroTurno() + 1);
+         partida.setTurnoActual(Partida.Turno.JUGADOR);
+         partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
+-        robarCarta(partida.getJugador());
++        if (!robarCartaInicioTurno(partida, partida.getJugador())) return;
+         partida.getUltimasMonedasLanzadas().clear();
+     }
++
++    private boolean robarCartaInicioTurno(Partida partida, TableroJugador tablero) {
++        if (!tablero.getMazo().isEmpty()) {
++            tablero.getMano().add(tablero.getMazo().remove(0));
++            return true;
++        }
++
++        String perdedor = tablero == partida.getJugador()
++                ? partida.getJugadorUsername()
++                : (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT");
++        String ganador = tablero == partida.getJugador()
++                ? (partida.getBotUsername() != null ? partida.getBotUsername() : "BOT")
++                : partida.getJugadorUsername();
++
++        partida.transicionarA(new EstadoFinPartida());
++        partida.setGanador(ganador);
++        partida.setRazonFinPartida("El jugador no pudo robar una carta al inicio del turno");
++        agregarLog(partida, "DECK_OUT", perdedor);
++        return false;
++    }
++
+     private void robarCarta(TableroJugador tablero) {
+         if (!tablero.getMazo().isEmpty())
+             tablero.getMano().add(tablero.getMazo().remove(0));

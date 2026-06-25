@@ -17,6 +17,9 @@ public class Partida {
     private Fase faseActual;
     private boolean yaSeRetiroEsteTurno = false;
     private boolean yaSeUnioEnergiaEsteTurno = false;
+    private com.pokemon.tcg.model.Card activeStadium;
+    private boolean playedSupporterThisTurn = false;
+    private boolean playedStadiumThisTurn = false;
     private int numeroTurno = 1;
     private int mulligansJugador = 0;
     private int mulligansBot = 0;
@@ -259,4 +262,11 @@ public class Partida {
 
     public int getBotLoadingPercentage() { return botLoadingPercentage; }
     public void setBotLoadingPercentage(int botLoadingPercentage) { this.botLoadingPercentage = Math.max(0, Math.min(100, botLoadingPercentage)); }
+
+    public com.pokemon.tcg.model.Card getActiveStadium() { return activeStadium; }
+    public void setActiveStadium(com.pokemon.tcg.model.Card activeStadium) { this.activeStadium = activeStadium; }
+    public boolean isPlayedSupporterThisTurn() { return playedSupporterThisTurn; }
+    public void setPlayedSupporterThisTurn(boolean playedSupporterThisTurn) { this.playedSupporterThisTurn = playedSupporterThisTurn; }
+    public boolean isPlayedStadiumThisTurn() { return playedStadiumThisTurn; }
+    public void setPlayedStadiumThisTurn(boolean playedStadiumThisTurn) { this.playedStadiumThisTurn = playedStadiumThisTurn; }
 }

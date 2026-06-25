@@ -1,0 +1,412 @@
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'prepareCharacterClip' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:2140:60:
+[37m      2140 │ ...eviewMixer!.clipAction(this.[32mprepareCharacterClip[37m(option, clip));
+           ╵                                [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'prepareCharacterClip' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:5364:59:
+[37m      5364 │ ...layerMixer!.clipAction(this.[32mprepareCharacterClip[37m(option, clip));
+           ╵                                [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'prepareCharacterClip' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:6432:50:
+[37m      6432 │ ... = p.mixer!.clipAction(this.[32mprepareCharacterClip[37m(option, clip));
+           ╵                                [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3106:13:
+[37m      3106 │     if (this.[32msantoroMew[37m) return;
+           ╵              [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3111:9:
+[37m      3111 │     this.[32msantoroMew[37m = npc;
+           ╵          [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3251:9:
+[37m      3251 │     this.[32msantoroMew[37m?.mixer?.update(delta);
+           ╵          [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3252:13:
+[37m      3252 │     if (this.[32msantoroMew[37m) {
+           ╵              [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3253:11:
+[37m      3253 │       this.[32msantoroMew[37m.root.position.y = 1.48 + Math.sin(this.clo...
+           ╵            [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3254:11:
+[37m      3254 │       this.[32msantoroMew[37m.root.rotation.y += delta * 0.22;
+           ╵            [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4158:28:
+[37m      4158 │     if (!this.scene || this.[32mbuffPikachu[37m) return;
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4164:9:
+[37m      4164 │     this.[32mbuffPikachu[37m = npc;
+           ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4177:14:
+[37m      4177 │     if (!this.[32mbuffPikachu[37m) return;
+           ╵               [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4178:28:
+[37m      4178 │     const distanceSq = this.[32mbuffPikachu[37m.root.position.distanceTo...
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4179:40:
+[37m      4179 │     if (distanceSq < 4.8 * 4.8 && !this.[32mbuffPikachuTriggered[37m) {
+           ╵                                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4180:11:
+[37m      4180 │       this.[32mbuffPikachuTriggered[37m = true;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4181:32:
+[37m      4181 │       this.setNpcAnimation(this.[32mbuffPikachu[37m, ['mixamo.com'], 0.08);
+           ╵                                 [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4183:11:
+[37m      4183 │       this.[32mbuffPikachuTriggered[37m = false;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4184:11:
+[37m      4184 │       this.[32mbuffPikachu[37m.active?.stop();
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4185:11:
+[37m      4185 │       this.[32mbuffPikachu[37m.active = undefined;
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4188:11:
+[37m      4188 │       this.[32mbuffPikachu[37m.mixer?.update(delta * (distanceSq < 24 * ...
+           ╵            [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3231:9:
+[37m      3231 │     this.[32msantoroMew[37m?.mixer?.update(delta);
+           ╵          [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3232:13:
+[37m      3232 │     if (this.[32msantoroMew[37m) {
+           ╵              [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3233:11:
+[37m      3233 │       this.[32msantoroMew[37m.root.position.y = 1.48 + Math.sin(this.clo...
+           ╵            [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'santoroMew' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:3234:11:
+[37m      3234 │       this.[32msantoroMew[37m.root.rotation.y += delta * 0.22;
+           ╵            [32m~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4138:28:
+[37m      4138 │     if (!this.scene || this.[32mbuffPikachu[37m) return;
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4144:9:
+[37m      4144 │     this.[32mbuffPikachu[37m = npc;
+           ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4157:14:
+[37m      4157 │     if (!this.[32mbuffPikachu[37m) return;
+           ╵               [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4158:28:
+[37m      4158 │     const distanceSq = this.[32mbuffPikachu[37m.root.position.distanceTo...
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4159:40:
+[37m      4159 │     if (distanceSq < 4.8 * 4.8 && !this.[32mbuffPikachuTriggered[37m) {
+           ╵                                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4160:11:
+[37m      4160 │       this.[32mbuffPikachuTriggered[37m = true;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4161:32:
+[37m      4161 │       this.setNpcAnimation(this.[32mbuffPikachu[37m, ['mixamo.com'], 0.08);
+           ╵                                 [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4163:11:
+[37m      4163 │       this.[32mbuffPikachuTriggered[37m = false;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4164:11:
+[37m      4164 │       this.[32mbuffPikachu[37m.active?.stop();
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4165:11:
+[37m      4165 │       this.[32mbuffPikachu[37m.active = undefined;
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4168:11:
+[37m      4168 │       this.[32mbuffPikachu[37m.mixer?.update(delta * (distanceSq < 24 * ...
+           ╵            [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4132:28:
+[37m      4132 │     if (!this.scene || this.[32mbuffPikachu[37m) return;
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4138:9:
+[37m      4138 │     this.[32mbuffPikachu[37m = npc;
+           ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4151:14:
+[37m      4151 │     if (!this.[32mbuffPikachu[37m) return;
+           ╵               [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4152:28:
+[37m      4152 │     const distanceSq = this.[32mbuffPikachu[37m.root.position.distanceTo...
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4153:40:
+[37m      4153 │     if (distanceSq < 4.8 * 4.8 && !this.[32mbuffPikachuTriggered[37m) {
+           ╵                                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4154:11:
+[37m      4154 │       this.[32mbuffPikachuTriggered[37m = true;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4155:32:
+[37m      4155 │       this.setNpcAnimation(this.[32mbuffPikachu[37m, ['mixamo.com'], 0.08);
+           ╵                                 [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4157:11:
+[37m      4157 │       this.[32mbuffPikachuTriggered[37m = false;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4158:11:
+[37m      4158 │       this.[32mbuffPikachu[37m.active?.stop();
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4159:11:
+[37m      4159 │       this.[32mbuffPikachu[37m.active = undefined;
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4162:11:
+[37m      4162 │       this.[32mbuffPikachu[37m.mixer?.update(delta * (distanceSq < 24 * ...
+           ╵            [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4132:28:
+[37m      4132 │     if (!this.scene || this.[32mbuffPikachu[37m) return;
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4138:9:
+[37m      4138 │     this.[32mbuffPikachu[37m = npc;
+           ╵          [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4151:14:
+[37m      4151 │     if (!this.[32mbuffPikachu[37m) return;
+           ╵               [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4152:28:
+[37m      4152 │     const distanceSq = this.[32mbuffPikachu[37m.root.position.distanceTo...
+           ╵                             [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4153:40:
+[37m      4153 │     if (distanceSq < 4.8 * 4.8 && !this.[32mbuffPikachuTriggered[37m) {
+           ╵                                         [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4154:11:
+[37m      4154 │       this.[32mbuffPikachuTriggered[37m = true;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4155:32:
+[37m      4155 │       this.setNpcAnimation(this.[32mbuffPikachu[37m, ['mixamo.com'], 0.08);
+           ╵                                 [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachuTriggered' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4157:11:
+[37m      4157 │       this.[32mbuffPikachuTriggered[37m = false;
+           ╵            [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4158:11:
+[37m      4158 │       this.[32mbuffPikachu[37m.active?.stop();
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4159:11:
+[37m      4159 │       this.[32mbuffPikachu[37m.active = undefined;
+           ╵            [32m~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'buffPikachu' does not exist on type 'LobbyComponent'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:4162:11:
+[37m      4162 │       this.[32mbuffPikachu[37m.mixer?.update(delta * (distanceSq < 24 * ...
+           ╵            [32m~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2551: Property 'updateBuffPikachu' does not exist on type 'LobbyComponent'. Did you mean 'updatePikachu'?[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/features/lobby/lobby.component.ts:5579:9:
+[37m      5579 │     this.[32mupdateBuffPikachu[37m(delta);
+           ╵          [32m~~~~~~~~~~~~~~~~~[0m
+
+  'updatePikachu' is declared here.
+
+    src/app/features/lobby/lobby.component.ts:4927:10:
+[37m      4927 │   private [32mupdatePikachu[37m(delta: number) {
+           ╵           [32m~~~~~~~~~~~~~[0m
+
+[39m[22m
