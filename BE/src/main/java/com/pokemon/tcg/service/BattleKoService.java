@@ -125,7 +125,7 @@ public class BattleKoService {
 
         if (candidato.getCard().getDebilidades() != null) {
             boolean esDebil = candidato.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoRival));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(tipoRival));
             if (esDebil) {
                 puntaje -= 1000;
             }
@@ -133,7 +133,7 @@ public class BattleKoService {
 
         if (candidato.getCard().getResistencias() != null) {
             boolean esResistente = candidato.getCard().getResistencias().stream()
-                    .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoRival));
+                    .anyMatch(r -> r.getType().equalsIgnoreCase(tipoRival));
             if (esResistente) {
                 puntaje += 300;
             }
@@ -141,7 +141,7 @@ public class BattleKoService {
 
         if (rival.getCard().getDebilidades() != null && miTipo != null) {
             boolean rivalEsDebil = rival.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(miTipo));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(miTipo));
             if (rivalEsDebil) {
                 puntaje += 500;
             }

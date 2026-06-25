@@ -153,13 +153,13 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         if (activoRival != null && activoRival.getCard().getDebilidades() != null && pokemon.getTipo() != null) {
             boolean rivalDebilAMi = activoRival.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(pokemon.getTipo()));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(pokemon.getTipo()));
             if (rivalDebilAMi) puntaje += 200;
         }
 
         if (activoRival != null && pokemon.getDebilidades() != null && activoRival.getCard().getTipo() != null) {
             boolean soyDebil = pokemon.getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(activoRival.getCard().getTipo()));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(activoRival.getCard().getTipo()));
             if (soyDebil) puntaje -= 150;
         }
 
@@ -322,7 +322,7 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         if (defensor.getCard().getDebilidades() != null) {
             boolean esDebil = defensor.getCard().getDebilidades().stream()
-                    .anyMatch(w -> w.get("tipo").equalsIgnoreCase(tipoAtacante));
+                    .anyMatch(w -> w.getType().equalsIgnoreCase(tipoAtacante));
             if (esDebil) {
                 System.out.println("💥 ¡Debilidad! Daño x2");
                 resultado *= 2;
@@ -331,7 +331,7 @@ public class EstrategiaBasica implements EstrategiaBot {
 
         if (defensor.getCard().getResistencias() != null) {
             boolean esResistente = defensor.getCard().getResistencias().stream()
-                    .anyMatch(r -> r.get("tipo").equalsIgnoreCase(tipoAtacante));
+                    .anyMatch(r -> r.getType().equalsIgnoreCase(tipoAtacante));
             if (esResistente) {
                 System.out.println("🛡️ ¡Resistencia! Daño -20");
                 resultado = Math.max(0, resultado - 20);
@@ -367,8 +367,8 @@ public class EstrategiaBasica implements EstrategiaBot {
             System.out.println("❌ Es Evolución (Viene de " + c.getEvolvesFrom() + ").");
             return false;
         }
-        if (c.getSubtypesJson() != null && c.getSubtypesJson().contains("Stage")) {
-            System.out.println("❌ Es Fase 1 o 2 (Lo dice su JSON).");
+        if (c.getSubtypes() != null && c.getSubtypes().stream().anyMatch(s -> s.contains("Stage"))) {
+            System.out.println("❌ Es Fase 1 o 2.");
             return false;
         }
         System.out.println("✅ ¡ES BÁSICO Y LEGAL!");
