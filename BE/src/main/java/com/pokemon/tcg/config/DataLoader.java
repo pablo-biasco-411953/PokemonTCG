@@ -10,6 +10,9 @@ import com.pokemon.tcg.service.MazoBackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,19 +24,30 @@ public class DataLoader implements CommandLineRunner {
     private final JugadorRepository jugadorRepo;
     private final MazoRepository mazoRepo;
     private final MazoBackupService mazoBackupService;
+    private final DataSource dataSource;
 
     public DataLoader(CardCatalogService cardCatalogService,
                       JugadorRepository jugadorRepo,
                       MazoRepository mazoRepo,
-                      MazoBackupService mazoBackupService) {
+                      MazoBackupService mazoBackupService,
+                      DataSource dataSource) {
         this.cardCatalogService = cardCatalogService;
         this.jugadorRepo = jugadorRepo;
         this.mazoRepo = mazoRepo;
         this.mazoBackupService = mazoBackupService;
+        this.dataSource = dataSource;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        // Eliminar columna obsoleta 'santo_coins' si existe (para evitar errores en DBs heredadas)
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.executeUpdate("ALTER TABLE jugadores DROP COLUMN santo_coins");
+            System.out.println("[DataLoader] Columna obsoleta 'santo_coins' eliminada con exito.");
+        } catch (Exception e) {
+            System.out.println("[DataLoader] Info: no se pudo eliminar 'santo_coins' (es normal si ya fue eliminada o no existe): " + e.getMessage());
+        }
         List<Card> todasLasCartas;
 
         try {
