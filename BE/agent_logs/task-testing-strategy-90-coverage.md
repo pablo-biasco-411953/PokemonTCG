@@ -110,30 +110,49 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 - [x] **NEW service/battle/EnergyCostCalculatorTest.java** (~10 tests)
 - [x] **NEW service/battle/command/ComandoUnirEnergiaTest.java** (~8 tests)
 
+- [x] **NEW model/battle/command/BattleCommandsMissingTest.java** (16 tests):
+  - MoveDiscardCardToTopDeckCommand: bot auto-selecciona, jugador→pending, descarte vacío, Target.OPPONENT
+  - SelectOwnPokemonToHealCommand: bot cura más dañado, cap en maxHP, sin pokemon, jugador→pending, benchedOnly
+  - AttachEnergyFromDiscardToBenchByCoinsCommand: sin banca, sin energía tipo, con energía, null energyType
+  - RhydonMadMountainCommand: 2 monedas siempre, sin activo, con damage counters
+
+- [x] **NEW service/battle/strategy/EstrategiaDificilTest.java** (5 tests):
+  - ejecutarSetup delega a EstrategiaBasica (con mano, sin mano, con activo y banca)
+  - ejecutarTurno lanza UnsupportedOperationException (2 variantes)
+
+- [x] **NEW dto/DtoTest.java** (8 tests):
+  - LobbyMessage: setters/getters completos, text/emote, challenge fields, default constructor
+  - SantoroTrackingRequest: setters/getters, default false
+  - DebugSetSobresRequest: setters/getters, default cero
+
 ---
 
 ## Cambios Pendientes
 
-### ⚠️ COBERTURA GAPS RESTANTES (estimado ~30% sin cubrir)
+### ⚠️ COBERTURA GAPS RESTANTES
 
 - [ ] **config/** package (WebSocket handlers) — 0% cobertura, ~305 instrucciones missed
   - Muy difícil sin Spring context completo; considerar excluir en JaCoCo si no es posible
 
-- [ ] **BattleEngineService.ejecutarTurnoBot()** — método largo de IA bot (líneas 1560+)
-  - Requiere mockear `botAIService.ejecutarTurno()` correctamente
-
+- [x] **BattleEngineService.ejecutarTurnoBot()** — cubierto en BattleEngineServiceBotTurnTest.java
 - [x] **resolverAccionPendiente** — todos los branches principales cubiertos
 - [x] **aplicarMantenimientoEntreTurnos** — Burned y Asleep cubiertos vía ejecutarTurnoBot
 - [x] **jugarTrainer** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) cubiertos
-
-- [ ] **startBattle / startBattleOnline** — no testeados (requieren repos mockeados con mazo real)
-
+- [x] **MoveDiscardCardToTopDeckCommand** — cubierto en BattleCommandsMissingTest (4 tests)
+- [x] **SelectOwnPokemonToHealCommand** — cubierto en BattleCommandsMissingTest (5 tests)
+- [x] **AttachEnergyFromDiscardToBenchByCoinsCommand** — cubierto en BattleCommandsMissingTest (4 tests)
+- [x] **RhydonMadMountainCommand** — cubierto en BattleCommandsMissingTest (3 tests)
+- [x] **EstrategiaDificil** — cubierto en EstrategiaDificilTest (5 tests)
+- [x] **DTOs** — LobbyMessage, SantoroTrackingRequest, DebugSetSobresRequest cubiertos en DtoTest
 - [x] **Models** — Jugador, Card, Mazo, CartaEnJuego, TableroJugador, Partida cubiertos en ModelTest
 
+- [ ] **startBattle / startBattleOnline** — no testeados (requieren repos mockeados con mazo real)
 - [ ] **CardCatalogServiceTest** — FALLA por necesitar BD; requiere H2 in-memory o excluir
 
 ### ⚠️ CONOCIDO: 1 test que falla persistentemente
 - `CardCatalogServiceTest` — test de integración que intenta conectarse a BD PostgreSQL. No se puede arreglar sin agregar H2 como dependencia de test o mock del repo.
+
+**Total actual: 734 tests, 0 failures, 1 error pre-existente (DB)**
 
 ---
 
@@ -170,4 +189,4 @@ mvn test -Dtest="BattleEngineService*"
 
 ---
 
-**Última actualización**: 2026-06-26 — sesión 3 (post-commit 9ab1c90)
+**Última actualización**: 2026-06-26 — sesión 4 (post-commit d7ed6a7)
