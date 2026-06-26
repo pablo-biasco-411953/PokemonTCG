@@ -475,6 +475,10 @@ public class BattleController {
             swapped.setPendingAction(p.getPendingAction());
         }
 
+        swapped.setLastCoinFlipEventId(p.getLastCoinFlipEventId());
+        swapped.setLastCoinFlipAttackName(p.getLastCoinFlipAttackName());
+        swapped.setLastCoinFlipActor(p.getLastCoinFlipActor());
+
         if (p.getTurnoActual() == Partida.Turno.JUGADOR) {
             swapped.setTurnoActual(Partida.Turno.BOT);
         } else {
@@ -521,6 +525,9 @@ public class BattleController {
         view.setSetupBotListo(p.isSetupBotListo());
         view.setJugadorLoadingPercentage(p.getJugadorLoadingPercentage());
         view.setBotLoadingPercentage(p.getBotLoadingPercentage());
+        view.setLastCoinFlipEventId(p.getLastCoinFlipEventId());
+        view.setLastCoinFlipAttackName(p.getLastCoinFlipAttackName());
+        view.setLastCoinFlipActor(p.getLastCoinFlipActor());
         return view;
     }
 
