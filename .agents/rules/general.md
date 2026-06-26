@@ -30,3 +30,10 @@ Estas reglas aplican a CUALQUIER tarea en este proyecto, sin importar el área.
 - Formato sugerido: `<tipo>: <descripción>` — ej: `feat: add energy card validation`, `fix: null pointer on battle end`.
 - No commitees archivos de configuración local (`.idea/`, `.env`, `target/`).
 - Un PR = un cambio lógico. No mezcles features con bugfixes.
+
+## Registro de Progreso (Agent Logs)
+
+- Es obligatorio documentar el progreso de la tarea en las carpetas `BE/agent_logs/` (para backend) y `FE/agent_logs/` (para frontend).
+- Antes de iniciar, lee los registros previos en la carpeta correspondiente.
+- Al pausar o finalizar una sesión, actualiza o crea el log de la tarea actual (`task-[nombre].md`) indicando el estado del desarrollo, archivos modificados y qué tareas quedaron pendientes o a medias.
+
