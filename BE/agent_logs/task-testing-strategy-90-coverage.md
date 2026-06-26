@@ -80,6 +80,26 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 - [x] **NEW service/BattleEngineServiceEvolveSetupTest.java** (11 tests):
   - evolucionarPokemon (4), ejecutarSetupBot (4), getTableroDeJugador/Oponente (3)
 
+- [x] **NEW service/BattleEngineServiceResolverExtendedTest.java** (10 tests):
+  - DISCARD_TO_TOP_DECK, REORDER_TOP_DECK, MOVE_ENERGY_TO_OPPONENT_BENCH (2)
+  - CHOOSE_OPPONENT_BENCH_TO_DAMAGE, DISCARD_POTION_ENERGY
+  - SEARCH_DECK→ATTACH_ACTIVE, SEARCH_DECK→ATTACH_ACTIVE_AND_SWITCH
+  - SEARCH_DECK sin selección, endsTurn flag
+
+- [x] **NEW service/BattleEngineServiceBotTurnTest.java** (12 tests):
+  - ejecutarTurnoBot: match inexistente, cambio turno, robo carta, Paralyzed cleanup
+  - invulnerable reset, partida terminada en turno bot, noPuedeAtacar ciclos
+  - jugarTrainer Fairy Garden (xy1-117) y Shadow Circle (xy1-126)
+  - aplicarMantenimiento Burned y Asleep
+
+- [x] **NEW service/BattleEngineServiceEvoSodaChainTest.java** (4 tests):
+  - SELECT_POKEMON_EVOSODA → SEARCH_EVOLUTION chain
+  - SEARCH_EVOLUTION evoluciona, SEARCH_EVOLUTION sin selección cancela
+  - ATTACH_TOOL resolución real
+
+- [x] **NEW model/ModelTest.java** (16 tests):
+  - Jugador (4), Mazo (1), Card (2), CartaEnJuego (4), TableroJugador (2), Partida (3)
+
 - [x] **NEW service/battle/strategy/EstrategiaBasicaTest.java** (10 tests):
   - ejecutarSetup (5), ejecutarTurno (4), constructor (1)
 
@@ -102,22 +122,13 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 - [ ] **BattleEngineService.ejecutarTurnoBot()** — método largo de IA bot (líneas 1560+)
   - Requiere mockear `botAIService.ejecutarTurno()` correctamente
 
-- [ ] **resolverAccionPendiente** — branches sin cubrir:
-  - `REORDER_TOP_DECK`, `DISCARD_TO_TOP_DECK`, `MOVE_ENERGY_TO_OPPONENT_BENCH`
-  - `CHOOSE_OPPONENT_BENCH_TO_DAMAGE`, `DISCARD_POTION_ENERGY`
-  - `SEARCH_EVOLUTION` (segunda acción de Evosoda)
-  - `ATTACH_TOOL` resolución real
-  - `ATTACH_ACTIVE` y `ATTACH_ACTIVE_AND_SWITCH`
-
-- [ ] **aplicarMantenimientoEntreTurnos** — Burn (coin flip + 20 dmg), Asleep (coin flip)
-  - Poison ya cubierto en pasarTurno test
-
-- [ ] **jugarTrainer** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) stadiums
-  - Solo hacen log, sin pending action
+- [x] **resolverAccionPendiente** — todos los branches principales cubiertos
+- [x] **aplicarMantenimientoEntreTurnos** — Burned y Asleep cubiertos vía ejecutarTurnoBot
+- [x] **jugarTrainer** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) cubiertos
 
 - [ ] **startBattle / startBattleOnline** — no testeados (requieren repos mockeados con mazo real)
 
-- [ ] **Models y DTOs** — Jugador, Card, Mazo, CartaEnJuego getters/setters
+- [x] **Models** — Jugador, Card, Mazo, CartaEnJuego, TableroJugador, Partida cubiertos en ModelTest
 
 - [ ] **CardCatalogServiceTest** — FALLA por necesitar BD; requiere H2 in-memory o excluir
 
@@ -159,4 +170,4 @@ mvn test -Dtest="BattleEngineService*"
 
 ---
 
-**Última actualización**: 2026-06-26 — sesión 3 (post-commit bbc6709)
+**Última actualización**: 2026-06-26 — sesión 3 (post-commit 9ab1c90)
