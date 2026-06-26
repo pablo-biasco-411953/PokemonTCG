@@ -102,7 +102,7 @@ public class ComandoAtacar implements ComandoTurno {
     }
 
     private String obtenerActorMoneda(Partida partida) {
-        return tableroAtacante == partida.getJugador() ? partida.getJugadorUsername() : "BOT";
+        return tableroAtacante == partida.getJugador() ? partida.getJugadorUsername() : partida.getBotUsername();
     }
 
     private Ataque resolverAtaque(CartaEnJuego activo) {
