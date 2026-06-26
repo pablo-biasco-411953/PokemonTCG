@@ -1,21 +1,30 @@
 package com.pokemon.tcg.config;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.CardTranslation;
+import com.pokemon.tcg.model.battle.AttackTranslation;
+import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.model.Jugador;
 import com.pokemon.tcg.model.Mazo;
 import com.pokemon.tcg.repository.JugadorRepository;
 import com.pokemon.tcg.repository.MazoRepository;
+import com.pokemon.tcg.repository.CardTranslationRepository;
+import com.pokemon.tcg.repository.AttackTranslationRepository;
 import com.pokemon.tcg.service.CardCatalogService;
 import com.pokemon.tcg.service.MazoBackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class DataLoader implements CommandLineRunner {
@@ -25,17 +34,23 @@ public class DataLoader implements CommandLineRunner {
     private final MazoRepository mazoRepo;
     private final MazoBackupService mazoBackupService;
     private final DataSource dataSource;
+    private final CardTranslationRepository cardTranslationRepo;
+    private final AttackTranslationRepository attackTranslationRepo;
 
     public DataLoader(CardCatalogService cardCatalogService,
                       JugadorRepository jugadorRepo,
                       MazoRepository mazoRepo,
                       MazoBackupService mazoBackupService,
-                      DataSource dataSource) {
+                      DataSource dataSource,
+                      CardTranslationRepository cardTranslationRepo,
+                      AttackTranslationRepository attackTranslationRepo) {
         this.cardCatalogService = cardCatalogService;
         this.jugadorRepo = jugadorRepo;
         this.mazoRepo = mazoRepo;
         this.mazoBackupService = mazoBackupService;
         this.dataSource = dataSource;
+        this.cardTranslationRepo = cardTranslationRepo;
+        this.attackTranslationRepo = attackTranslationRepo;
     }
 
     @Override
@@ -58,6 +73,9 @@ public class DataLoader implements CommandLineRunner {
             e.printStackTrace();
             return;
         }
+
+        // Migrar traducciones ahora que las cartas base y ataques estan en la BD
+        migrarTraduccionesSiEsNecesario();
 
         Jugador pablo = jugadorRepo.findByUsername("Pablo");
         if (pablo == null) {
@@ -168,5 +186,73 @@ public class DataLoader implements CommandLineRunner {
             cartasMazo.add(energiasParaMazo.get(i % energiasParaMazo.size()));
         }
         return cartasMazo;
+    }
+
+    private void migrarTraduccionesSiEsNecesario() {
+        ObjectMapper mapper = new ObjectMapper();
+        String[] idiomas = {"es", "ja", "pt"};
+
+        for (String lang : idiomas) {
+            if (cardTranslationRepo.existsByLang(lang)) {
+                System.out.println("[DataLoader] Traducciones para el idioma '" + lang + "' ya estan cargadas en la BD.");
+                continue;
+            }
+
+            System.out.println("[DataLoader] Migrando archivo cards_" + lang + ".json a la base de datos...");
+            try (InputStream inputStream = getClass().getResourceAsStream("/cards_" + lang + ".json")) {
+                if (inputStream == null) {
+                    System.out.println("⚠️ [DataLoader] No se encontro /cards_" + lang + ".json en resources.");
+                    continue;
+                }
+
+                List<CardCatalogService.TranslatedCard> parsed = mapper.readValue(
+                        inputStream, new TypeReference<List<CardCatalogService.TranslatedCard>>() {}
+                );
+
+                List<CardTranslation> cardTranslations = new ArrayList<>();
+                List<AttackTranslation> attackTranslations = new ArrayList<>();
+
+                // Obtener las cartas base desde la DB para mapear los IDs de los ataques correctly
+                List<Card> baseCards = cardCatalogService.getCatalogo();
+                Map<String, Card> baseCardsMap = baseCards.stream().collect(
+                        java.util.stream.Collectors.toMap(Card::getId, c -> c, (a, b) -> a)
+                );
+
+                for (CardCatalogService.TranslatedCard trCard : parsed) {
+                    CardTranslation ct = new CardTranslation(
+                            trCard.getId(),
+                            lang,
+                            trCard.getNombre(),
+                            trCard.getReglas()
+                    );
+                    cardTranslations.add(ct);
+
+                    Card baseCard = baseCardsMap.get(trCard.getId());
+                    if (baseCard != null && trCard.getAtaques() != null && baseCard.getAtaques() != null) {
+                        for (int i = 0; i < trCard.getAtaques().size(); i++) {
+                            if (i < baseCard.getAtaques().size() && i < trCard.getAtaques().size()) {
+                                Ataque baseAtk = baseCard.getAtaques().get(i);
+                                CardCatalogService.TranslatedAttack trAtk = trCard.getAtaques().get(i);
+                                AttackTranslation at = new AttackTranslation(
+                                        baseAtk.getId(),
+                                        lang,
+                                        trAtk.getNombre(),
+                                        trAtk.getTexto()
+                                );
+                                attackTranslations.add(at);
+                            }
+                        }
+                    }
+                }
+
+                cardTranslationRepo.saveAll(cardTranslations);
+                attackTranslationRepo.saveAll(attackTranslations);
+                System.out.println("[DataLoader] Migracion exitosa para el idioma '" + lang + "'.");
+
+            } catch (Exception e) {
+                System.out.println("❌ [DataLoader] Error al migrar traducciones para '" + lang + "': " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 }

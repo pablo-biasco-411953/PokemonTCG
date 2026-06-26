@@ -3,8 +3,12 @@ package com.pokemon.tcg.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.CardTranslation;
+import com.pokemon.tcg.model.battle.AttackTranslation;
 import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.repository.CardRepository;
+import com.pokemon.tcg.repository.CardTranslationRepository;
+import com.pokemon.tcg.repository.AttackTranslationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,17 +18,24 @@ import java.text.Normalizer;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class CardCatalogService {
     private final CardRepository cardRepo;
     private final ObjectMapper objectMapper;
-    private final Map<String, List<TranslatedCard>> translations = new ConcurrentHashMap<>();
+    private final CardTranslationRepository cardTranslationRepo;
+    private final AttackTranslationRepository attackTranslationRepo;
 
-    public CardCatalogService(CardRepository cardRepo, ObjectMapper objectMapper) {
+    public CardCatalogService(CardRepository cardRepo,
+                              ObjectMapper objectMapper,
+                              CardTranslationRepository cardTranslationRepo,
+                              AttackTranslationRepository attackTranslationRepo) {
         this.cardRepo = cardRepo;
         this.objectMapper = objectMapper;
+        this.cardTranslationRepo = cardTranslationRepo;
+        this.attackTranslationRepo = attackTranslationRepo;
     }
 
     @Transactional
@@ -170,18 +181,27 @@ public class CardCatalogService {
         if (lang == null || lang.trim().isEmpty() || "en".equalsIgnoreCase(lang)) {
             return baseList;
         }
+
+        List<CardTranslation> cardTrans = cardTranslationRepo.findByLang(lang.toLowerCase());
+        List<AttackTranslation> attackTrans = attackTranslationRepo.findByLang(lang.toLowerCase());
+
+        Map<String, CardTranslation> cardTransMap = new HashMap<>();
+        for (CardTranslation ct : cardTrans) {
+            cardTransMap.put(ct.getCardId(), ct);
+        }
+
+        Map<Long, AttackTranslation> attackTransMap = new HashMap<>();
+        for (AttackTranslation at : attackTrans) {
+            attackTransMap.put(at.getAtaqueId(), at);
+        }
+
         return baseList.stream()
-                .map(card -> localizarCarta(card, lang))
+                .map(card -> localizarCarta(card, cardTransMap, attackTransMap))
                 .toList();
     }
 
-    private Card localizarCarta(Card card, String lang) {
-        if (lang == null || lang.equalsIgnoreCase("en")) {
-            return card;
-        }
-        List<TranslatedCard> list = getTranslationsFor(lang);
-        if (list == null || list.isEmpty()) return card;
-        TranslatedCard tr = list.stream().filter(t -> t.getId().equals(card.getId())).findFirst().orElse(null);
+    private Card localizarCarta(Card card, Map<String, CardTranslation> cardTransMap, Map<Long, AttackTranslation> attackTransMap) {
+        CardTranslation tr = cardTransMap.get(card.getId());
         if (tr == null) return card;
 
         Card clone = new Card();
@@ -200,8 +220,7 @@ public class CardCatalogService {
 
         List<Ataque> attacks = new ArrayList<>();
         if (card.getAtaques() != null) {
-            for (int i = 0; i < card.getAtaques().size(); i++) {
-                Ataque baseAtk = card.getAtaques().get(i);
+            for (Ataque baseAtk : card.getAtaques()) {
                 Ataque cloneAtk = new Ataque();
                 cloneAtk.setId(baseAtk.getId());
                 cloneAtk.setDanio(baseAtk.getDanio());
@@ -209,8 +228,8 @@ public class CardCatalogService {
                 cloneAtk.setInteractionType(baseAtk.getInteractionType());
                 cloneAtk.setInteractionPrompt(baseAtk.getInteractionPrompt());
 
-                if (tr.getAtaques() != null && i < tr.getAtaques().size()) {
-                    TranslatedAttack trAtk = tr.getAtaques().get(i);
+                AttackTranslation trAtk = attackTransMap.get(baseAtk.getId());
+                if (trAtk != null) {
                     cloneAtk.setNombre(trAtk.getNombre());
                     cloneAtk.setTexto(trAtk.getTexto());
                 } else {
@@ -222,21 +241,6 @@ public class CardCatalogService {
         }
         clone.reemplazarAtaques(attacks);
         return clone;
-    }
-
-    private List<TranslatedCard> getTranslationsFor(String lang) {
-        return translations.computeIfAbsent(lang.toLowerCase(), l -> {
-            try (InputStream inputStream = getClass().getResourceAsStream("/cards_" + l + ".json")) {
-                if (inputStream == null) {
-                    System.out.println("⚠️ Translation file /cards_" + l + ".json not found in resources.");
-                    return new ArrayList<>();
-                }
-                return objectMapper.readValue(inputStream, new TypeReference<List<TranslatedCard>>() {});
-            } catch (IOException e) {
-                System.err.println("❌ Error reading translations for " + l + ": " + e.getMessage());
-                return new ArrayList<>();
-            }
-        });
     }
 
     public static class TranslatedAttack {
