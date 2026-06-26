@@ -28,5 +28,6 @@ frontend/.vscode/*
 .DS_Store
 *.tmp
 *.swp
+.codex-*
 
 .fake
