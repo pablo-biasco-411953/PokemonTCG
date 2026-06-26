@@ -109,6 +109,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this._partida = value ? this.cardService.translatePartida(value) : null;
   }
   jugadorNombre = '';
+  lastProcessedCoinFlipEventId = 0;
   isSpectator = false;
   battleRoom: LobbyRoomSnapshot | null = null;
   battleReactions: Array<{ id: string; icon: string; sender: string; x: number }> = [];
@@ -595,6 +596,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private hidratarEstadoInicial(data: Partida): void {
     if (!data) return;
     this.partida = data;
+    this.lastProcessedCoinFlipEventId = data.lastCoinFlipEventId || 0;
     if (this.esPartidaOnline(data) && !this.battleRoomPolling) {
       this.iniciarPollingSalaBatalla();
     }
@@ -2390,6 +2392,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async procesarEventosPostEstado(estadoAnterior: any, estadoNuevo: any): Promise<void> {
+    const newEventId = estadoNuevo?.lastCoinFlipEventId || 0;
+    if (newEventId > this.lastProcessedCoinFlipEventId) {
+      this.lastProcessedCoinFlipEventId = newEventId;
+      const actor = estadoNuevo.lastCoinFlipActor;
+      const esMiAccion = actor === this.jugadorNombre || actor === 'JUGADOR';
+      if (!esMiAccion || this.isSpectator) {
+        const nombreAtaque = estadoNuevo.lastCoinFlipAttackName;
+        if (nombreAtaque) {
+          await this.reproducirCoinFlipAtaqueRemoto(nombreAtaque, actor, estadoNuevo);
+        }
+      }
+    }
+
     const botActivoAntes = estadoAnterior?.bot?.activo;
     const botActivoAhora = estadoNuevo?.bot?.activo;
     if (botActivoAntes && !botActivoAhora) {
@@ -2448,6 +2463,72 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.mostrarDamageNumber('jugador', curado, true);
       this.mostrarCuracion('jugador');
     }
+  }
+
+  private obtenerActivoPorActor(actor: string, estado: Partida): any {
+    if (!actor || !estado) return null;
+    if (actor === this.jugadorNombre || actor === 'JUGADOR') {
+      return estado.jugador?.activo;
+    }
+    if (actor === 'BOT' || actor === this.nombreRival || actor === estado.botUsername) {
+      return estado.bot?.activo;
+    }
+    if (actor === estado.jugadorUsername) {
+      return estado.jugador?.activo;
+    }
+    if (actor === estado.botUsername) {
+      return estado.bot?.activo;
+    }
+    return null;
+  }
+
+  private buscarAtaqueEnActivo(activo: any, nombreAtaque: string): any {
+    if (!activo || !activo.card?.ataques?.length) return null;
+    const normalized = (nombreAtaque || '').replace(':', '-').toLowerCase();
+    let habilidad = activo.card.ataques.find(
+      (a: any) =>
+        (a.nombre || '').replace(':', '-').toLowerCase() === normalized ||
+        (a.nombreOriginal || '').replace(':', '-').toLowerCase() === normalized
+    );
+    if (!habilidad) {
+      habilidad = activo.card.ataques[0];
+    }
+    return habilidad;
+  }
+
+  private async reproducirCoinFlipAtaqueRemoto(
+    nombreAtaque: string,
+    actor: string,
+    estadoFinal: Partida,
+  ): Promise<void> {
+    const activo = this.obtenerActivoPorActor(actor, estadoFinal);
+    if (!activo) return;
+
+    const habilidad = this.buscarAtaqueEnActivo(activo, nombreAtaque);
+    if (!habilidad) return;
+
+    const coinConfig = this.detectarCoinFlipAtaque(habilidad, activo);
+    if (!coinConfig) return;
+
+    const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
+
+    let carasReales = this.contarCarasServidor(estadoFinal);
+    if (carasReales === null) {
+      carasReales = 0;
+    }
+
+    this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
+      coinConfig.cantidadMonedas,
+      carasReales,
+    );
+
+    await this.animarMonedasSincronizadas(
+      habilidad.nombre,
+      coinConfig,
+      carasReales,
+      coinConfig.esSoloEstado,
+    );
   }
 
   debugFullCatalog: Card[] = [];
@@ -4451,6 +4532,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.partida = this.battleBoardState.clonarPartida(estado);
     this.lastAppliedStateSignature = this.crearFirmaPartida(this.partida);
     this.hpRenderJugador = estado.jugador?.activo?.hpActual || 0;
+    this.lastProcessedCoinFlipEventId = estado.lastCoinFlipEventId || 0;
 
     if (estadoAnterior) {
       void this.procesarEventosPostEstado(estadoAnterior, estado).then(() => {
