@@ -2403,6 +2403,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           await this.reproducirCoinFlipAtaqueRemoto(nombreAtaque, actor, estadoNuevo);
         }
       }
+    } else if (newEventId < this.lastProcessedCoinFlipEventId) {
+      this.lastProcessedCoinFlipEventId = newEventId;
     }
 
     const botActivoAntes = estadoAnterior?.bot?.activo;
