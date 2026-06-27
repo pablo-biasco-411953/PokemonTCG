@@ -425,7 +425,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'DECK',
       kicker: 'DECK LAB',
       label: 'Armar mazo',
-      description: 'EntrÃ¡ al laboratorio para editar tu estrategia.',
+      description: 'Entrá al laboratorio para editar tu estrategia.',
       position: new THREE.Vector3(-15, 0, -5),
       color: 0x3bd6ff
     },
@@ -434,7 +434,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'VS',
       kicker: 'BATTLE GATE',
       label: 'Iniciar batalla',
-      description: 'ElegÃ­ un mazo y cruzÃ¡ el portal de combate.',
+      description: 'Elegí un mazo y cruzá el portal de combate.',
       position: new THREE.Vector3(4, 0, -25),
       color: 0xffd44a
     },
@@ -443,7 +443,7 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
       short: 'PACK',
       kicker: 'KIOSCO UTN',
       label: 'Comprar sobres',
-      description: 'ActivÃ¡ el altar para revelar nuevas cartas.',
+      description: 'Activá el altar para revelar nuevas cartas.',
       position: new THREE.Vector3(-19.0, 0, -13.5),
       color: 0x7cff9d
     },

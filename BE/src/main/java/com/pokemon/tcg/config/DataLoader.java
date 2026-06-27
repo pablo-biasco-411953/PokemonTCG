@@ -99,6 +99,13 @@ public class DataLoader implements CommandLineRunner {
             actualizarColeccionUsuario(pablo, todasLasCartas);
         }
 
+        Jugador fran = jugadorRepo.findByUsername("Fran");
+        if (fran == null) {
+            crearUsuarioFran(todasLasCartas);
+        } else {
+            actualizarColeccionUsuario(fran, todasLasCartas);
+        }
+
         Jugador bot = jugadorRepo.findByUsername("BOT");
         if (bot == null) {
             crearBotUser(todasLasCartas);
@@ -131,6 +138,30 @@ public class DataLoader implements CommandLineRunner {
         mazoRepo.save(mazoTest);
 
         System.out.println("[DataLoader] Usuario Pablo listo para pruebas con 4 copias de cada carta.");
+    }
+
+    private void crearUsuarioFran(List<Card> todasLasCartas) {
+        Jugador fran = new Jugador("Fran");
+        fran.setPasswordHash("2ab74e1d95f6aff7947352ee0d793c366a8ab33452a87a3e39b003b42c843cf9");
+        fran.setEmail("fran@pokemon.com");
+        fran.setSobresDisponibles(10);
+        fran.setAdmin(true);
+
+        List<Card> coleccionCompleta = new ArrayList<>();
+        for (Card card : todasLasCartas) {
+            for (int i = 0; i < 4; i++) {
+                coleccionCompleta.add(card);
+            }
+        }
+        fran.setColeccion(coleccionCompleta);
+        jugadorRepo.save(fran);
+
+        Mazo mazoTest = new Mazo("Mazo Inicial Fran", fran);
+        List<Card> cartasMazo = crearMazoPorDefecto(todasLasCartas);
+        mazoTest.setCartas(cartasMazo);
+        mazoRepo.save(mazoTest);
+
+        System.out.println("[DataLoader] Usuario Fran listo para pruebas con 4 copias de cada carta.");
     }
 
     private void crearBotUser(List<Card> todasLasCartas) {
