@@ -128,4 +128,6 @@ public class CartaEnJuego {
     public void setHabilidadesUsadasEsteTurno(Set<String> habilidadesUsadasEsteTurno) { this.habilidadesUsadasEsteTurno = habilidadesUsadasEsteTurno != null ? habilidadesUsadasEsteTurno : new HashSet<>(); }
     public void registrarUsoHabilidad(String nombreHabilidad) { this.habilidadesUsadasEsteTurno.add(nombreHabilidad); }
     public void limpiarHabilidadesUsadas() { this.habilidadesUsadasEsteTurno.clear(); }
+    public int getUltimoTurnoEvolucionado() { return ultimoTurnoEvolucionado; }
+    public void setUltimoTurnoEvolucionado(int ultimoTurnoEvolucionado) { this.ultimoTurnoEvolucionado = ultimoTurnoEvolucionado; }
 }
