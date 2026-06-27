@@ -29,7 +29,7 @@
         </button>
       </div>
       <div class="bot-config-actions">
-        <button type="button" class="btn-cancel" (click)="botConfigOpen = false">Cancelar</button>
+        <button type="button" class="primary-action cancel-action" (click)="botConfigOpen = false">{{ 'lobby.cancelBtn' | t }}</button>
         <button type="button" class="primary-action" (click)="confirmBotConfiguration()">
           {{ botConfigContext === 'room' ? 'Añadir bot' : 'Jugar' }}
         </button>
@@ -179,7 +179,7 @@
     [style.top.px]="chatPanelY"
   >
     <div class="floating-panel-header chat-panel-header" (pointerdown)="startFloatingPanelDrag('chat', $event)">
-      <span>Chat</span>
+      <span>{{ 'lobby.chatTab' | t }}</span>
       <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleChatPanelMinimized($event)">{{ chatPanelMinimized ? '+' : '-' }}</button>
     </div>
     <div class="chat-messages" *ngIf="!chatPanelMinimized">
@@ -338,7 +338,7 @@
     <div class="hud-center">
       <div class="hub-title">
         <span>POKÉFETCH HUB</span>
-        <strong>Third Person Arena</strong>
+        <strong>{{ 'lobby.thirdPersonArena' | t }}</strong>
       </div>
 
       <div class="resource-chip cycle-chip">
@@ -868,10 +868,11 @@
     [style.left.px]="deckDockX"
     [style.top.px]="deckDockY"
   >
-    <div class="deck-dock-header floating-panel-header" (pointerdown)="startFloatingPanelDrag('decks', $event)">
-      <span>Mazos</span>
-      <strong>{{ mazos.length }}</strong>
+    <div class="floating-panel-header deck-panel-header" (pointerdown)="startFloatingPanelDrag('decks', $event)">
+      <span>{{ 'lobby.mazosTab' | t }}</span>
+      <div style="display:flex; align-items:center; gap:8px;">
       <button type="button" (pointerdown)="$event.stopPropagation()" (click)="toggleDeckDockMinimized($event)">{{ deckDockMinimized ? '+' : '-' }}</button>
+      </div>
     </div>
     <ng-container *ngIf="!deckDockMinimized">
       <div

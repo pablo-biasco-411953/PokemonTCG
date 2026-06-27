@@ -3142,6 +3142,18 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     }
   }
 
+  getTranslatedEndGameReason(): string {
+    const reason = this.endGameReason;
+    if (reason === 'El jugador se ha rendido' || reason.includes('rendido')) return this.i18n.translate('battle.reason.surrender');
+    if (reason === 'El ganador tomó todos sus premios.') return this.i18n.translate('battle.reason.playerTookAllPrizes');
+    if (reason === 'El rival se quedó sin Pokémon en juego.') return this.i18n.translate('battle.reason.rivalNoPokemon');
+    if (reason === 'El rival tomó todos sus premios.') return this.i18n.translate('battle.reason.rivalTookAllPrizes');
+    if (reason === 'Te quedaste sin Pokémon en juego.') return this.i18n.translate('battle.reason.playerNoPokemon');
+    if (reason === 'El rival se ha desconectado') return this.i18n.translate('battle.reason.opponentDisconnected');
+    if (reason.includes('no pudo robar')) return this.i18n.translate('battle.reason.deckOut');
+    return reason;
+  }
+
   private handleGameEnd(partida: Partida): void {
     if (this.showEndGameOverlay) return;
     if (this.pendingEndGameTimeout) {
@@ -4118,6 +4130,12 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.cargandoAccion = true;
     try {
       const nuevoEstado = await this.battleBoardAction.jugarTrainerYRecargar(this.matchId!, carta.id);
+      
+      if (nuevoEstado.ultimasMonedasLanzadas && nuevoEstado.ultimasMonedasLanzadas.length > 0) {
+        const nombre = carta.card ? carta.card.nombre : carta.nombre;
+        await this.reproducirCoinFlipTrainer(nombre || 'Trainer', nuevoEstado.ultimasMonedasLanzadas);
+      }
+
       this.aplicarEstadoRefrescado(nuevoEstado);
       this.cargandoAccion = false;
       this.cdr.detectChanges();
@@ -4126,6 +4144,53 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       console.error(err);
       this.mostrarNotificacion(err.error || 'No se pudo jugar la carta de Entrenador.', 'error');
     }
+  }
+
+  private async reproducirCoinFlipTrainer(cartaNombre: string, monedas: boolean[]): Promise<void> {
+    const cantidadMonedas = monedas.length;
+    this.coinFlipAtaque = {
+      nombreAtaque: cartaNombre,
+      descripcion: `Lanzando moneda por efecto de ${cartaNombre}...`,
+      cantidadMonedas,
+      danioBase: 0,
+      danioExtraPorCara: 0,
+      monedas: Array(cantidadMonedas).fill(null).map(() => ({ estado: 'girando' as const })),
+      danioTotal: 0,
+      terminado: false,
+      progreso: 0,
+      esSoloEstado: true,
+      tipoEfecto: 'other',
+    };
+    this.cdr.detectChanges();
+    await this.delay(120);
+
+    let carasAsignadas = 0;
+    for (let i = 0; i < cantidadMonedas; i++) {
+      this.coinFlipAtaque!.progreso = ((i + 1) / cantidadMonedas) * 100;
+      await this.delay(600 + Math.random() * 200);
+
+      const esCara = monedas[i];
+      if (esCara) carasAsignadas++;
+      
+      this.coinFlipAtaque!.monedas[i].estado = esCara ? 'cara' : 'cruz';
+      
+      if (cantidadMonedas === 1) {
+        this.resultadoMoneda = esCara ? 'CARA' : 'CRUZ';
+      }
+      this.cdr.detectChanges();
+      await this.delay(400);
+    }
+
+    if (cantidadMonedas > 1) {
+      this.resultadoMoneda = carasAsignadas > 0 ? 'CARA' : 'CRUZ';
+    }
+
+    this.coinFlipAtaque!.terminado = true;
+    this.cdr.detectChanges();
+    await this.delay(2000);
+
+    this.coinFlipAtaque = null;
+    this.cdr.detectChanges();
   }
 
   private gestionarUnionEnergia(cartaEnergia: any): void {

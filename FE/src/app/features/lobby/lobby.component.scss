@@ -62,10 +62,10 @@ $font-pixel: 'VT323', monospace;
   right: 24px;
   z-index: 8;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap; /* Prevent dropping to the next line in long languages */
   justify-content: space-between;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px; /* Slightly reduced gap to save space */
   pointer-events: none;
 }
 
@@ -74,13 +74,15 @@ $font-pixel: 'VT323', monospace;
 .hud-right {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 8px;
   pointer-events: auto;
+  min-width: 0; /* Allow the flex containers to shrink if needed */
 }
 
 .hud-left {
   flex-wrap: nowrap;
   white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .hud-center {
@@ -88,12 +90,14 @@ $font-pixel: 'VT323', monospace;
   justify-content: center;
   flex-wrap: nowrap;
   white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .hud-right {
   justify-content: flex-end;
   flex-wrap: nowrap;
   white-space: nowrap;
+  flex-shrink: 1;
 }
 
 .trainer-chip,
@@ -552,6 +556,7 @@ $font-pixel: 'VT323', monospace;
 .language-option strong {
   display: block;
   color: #f8fafc;
+  line-height: 1;
 }
 
 .settings-presets span,
@@ -1177,6 +1182,12 @@ kbd {
   text-transform: uppercase;
   cursor: pointer;
   box-shadow: 0 8px 20px rgba($gold, .22);
+}
+
+.primary-action.cancel-action {
+  background: linear-gradient(135deg, #fca5a5, #ef4444 48%, #7f1d1d);
+  color: white;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.22);
 }
 
 .empty-copy {

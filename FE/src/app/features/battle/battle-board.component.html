@@ -185,7 +185,7 @@
     <p>{{ isVictory ? ('battle.victoryText' | t) : ('battle.defeatText' | t) }}</p>
     <div class="endgame-reason">
       <span>{{ 'battle.endReasonLabel' | t }}</span>
-      <strong>{{ endGameReason }}</strong>
+      <strong>{{ getTranslatedEndGameReason() }}</strong>
     </div>
     <div class="santocoin-reward">
       <b></b>
@@ -595,14 +595,15 @@
           <div
             *ngFor="let moneda of coinFlipAtaque.monedas; let i = index"
             class="acf-coin"
-            [class.flipping]="moneda.estado === 'girando'"
-            [class.cara]="moneda.estado === 'cara'"
-            [class.cruz]="moneda.estado === 'cruz'"
+            [class.acf-flipping]="moneda.estado === 'girando'"
+            [class.acf-cara]="moneda.estado === 'cara'"
+            [class.acf-cruz]="moneda.estado === 'cruz'"
             [style.--coin-index]="i"
           >
-            <span *ngIf="moneda.estado === 'cara'">🌟</span>
-            <span *ngIf="moneda.estado === 'cruz'">🌑</span>
-            <span *ngIf="moneda.estado === 'girando'">🪙</span>
+            <div class="acf-coin-inner">
+              <div class="acf-coin-front"><img src="/coin-heads.png" draggable="false" /></div>
+              <div class="acf-coin-back"><img src="/coin-tails.png" draggable="false" /></div>
+            </div>
 
             <ng-container *ngIf="moneda.estado === 'cara' && coinFlipAttacker && !coinFlipAtaque.esSoloEstado">
               <div class="acf-power-orb orb-1"></div>

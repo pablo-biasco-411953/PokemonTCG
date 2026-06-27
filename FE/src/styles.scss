@@ -29,3 +29,8 @@ html, body {
   background: linear-gradient(90deg, #f2c040, #ff8c00) !important;
   height: 3px !important;
 }
+
+/* Ensure SweetAlert modals are always on top of custom overlays like coin-flip */
+div.swal2-container {
+  z-index: 130000 !important;
+}

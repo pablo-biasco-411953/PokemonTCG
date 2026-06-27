@@ -406,7 +406,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   z-index: 4;
   display: grid;
   grid-template-rows: 1fr auto 1fr;
-  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 
@@ -446,7 +446,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   }
 }
 
-.bot-hand { width: min(100%, 720px); height: 74px; padding-top: 8px; box-sizing: border-box; overflow: hidden; }
+.bot-hand { position: relative; width: min(100%, 720px); height: 74px; padding-top: 8px; box-sizing: border-box; overflow: hidden; }
 .bot-hand-row { position: relative; width: 100%; display: flex; justify-content: center; height: 64px; overflow: hidden; }
 .bot-card {
   position: absolute !important;
@@ -831,7 +831,7 @@ bot-sprite-wrap {
 /* --- CONTENEDOR DE LA MANO --- */
 .hand-zone {
   position: absolute;
-  bottom: -30px;
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
   width: 700px; /* Ancho fijo para que el fan siempre tenga espacio */
@@ -1063,7 +1063,7 @@ bot-sprite-wrap {
     justify-content: center;
     gap: 12px;
     max-width: 360px;
-    max-height: min(560px, calc(100vh - 36px));
+    max-height: min(560px, calc(100dvh - 36px));
     margin: auto;
     padding: 34px 24px 24px;
     border: 1px solid rgba(242, 192, 64, .34);
@@ -1125,7 +1125,7 @@ bot-sprite-wrap {
   }
 
   .side-col {
-    height: 100vh;
+    height: 100dvh;
     min-height: 0;
     overflow: hidden;
     font-size: 10px;
@@ -1337,7 +1337,7 @@ bot-sprite-wrap {
 
   .coinflip-overlay .panel {
     width: min(520px, calc(100vw - 28px));
-    max-height: calc(100vh - 22px);
+    max-height: calc(100dvh - 22px);
     overflow: auto;
   }
 
@@ -1568,7 +1568,7 @@ bot-sprite-wrap {
     min-width: 0;
     max-width: none;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -2193,7 +2193,7 @@ bot-sprite-wrap {
   .coinflip-overlay .panel {
     min-width: 0;
     width: min(520px, calc(100vw - 28px));
-    max-height: calc(100vh - 28px);
+    max-height: calc(100dvh - 28px);
     padding: 22px;
     border-radius: 18px;
     overflow: hidden;
@@ -2618,6 +2618,32 @@ bot-sprite-wrap {
   pointer-events: auto; transform: translateZ(0);
 }
 @keyframes acfOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.acf-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 12px;
+}
+.acf-theme-icon { font-size: 24px; }
+.acf-copy { display: flex; flex-direction: column; }
+.acf-attack-name {
+  color: #fff;
+  font-size: 20px;
+  font-weight: 900;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.acf-description {
+  color: #e2e8f0;
+  font-size: 14px;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
 @keyframes acf-in {
   from { transform: scale(.8) translateY(20px) translateZ(0); opacity: 0; filter: blur(5px); }
   to { transform: scale(1) translateY(0) translateZ(0); opacity: 1; filter: none; }
@@ -2747,6 +2773,103 @@ bot-sprite-wrap {
    NUEVOS EFECTOS DE COIN-FLIP (Alineación, Glow, Vibe y Orbes)
    ───────────────────────────────────────────────────────────── */
 
+.acf-coins-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.acf-coin {
+  width: 50px;
+  height: 50px;
+  perspective: 1000px;
+  position: relative;
+  overflow: visible !important;
+}
+
+.acf-coin-inner {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.acf-coin.acf-flipping .acf-coin-inner {
+  animation: acf-spin 0.4s linear infinite;
+  transition: none; /* No transition while spinning */
+}
+
+.acf-coin.acf-cara .acf-coin-inner {
+  transform: rotateY(0deg);
+}
+
+.acf-coin.acf-cruz .acf-coin-inner {
+  transform: rotateY(180deg);
+}
+
+.acf-coin-front, .acf-coin-back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  backface-visibility: hidden;
+  border-radius: 50%;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.acf-coin-front img, .acf-coin-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.acf-coin-back {
+  transform: rotateY(180deg);
+}
+
+@keyframes acf-spin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+.acf-results-row {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.acf-result-label {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+.acf-result-label.cara { color: var(--gold); }
+.acf-result-label.cruz { color: #94a3b8; }
+.acf-result-label.pending { opacity: 0.5; }
+
+.acf-outcome-container {
+  margin-top: 16px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.acf-final-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+.acf-final-text.text-success { color: var(--gold); text-shadow: 0 0 20px rgba(242,192,64,0.6); }
+.acf-final-text.text-danger { color: var(--red, #e53535); text-shadow: 0 0 20px rgba(229,53,53,0.6); }
+
 .acf-layout-body {
   display: flex;
   gap: 24px;
@@ -2859,10 +2982,7 @@ bot-sprite-wrap {
   align-items: center;
 }
 
-/* Modificamos acf-coin para permitir desborde visual */
-.acf-coin {
-  overflow: visible !important;
-}
+/* Se eliminó la regla duplicada de acf-coin */
 
 /* Orbes de Poder (Power Orbs) */
 .acf-power-orb {
@@ -5184,7 +5304,7 @@ img.fallback-sprite {
   width: 100vw;
   min-width: 0;
   max-width: none;
-  height: 100vh;
+  height: 100dvh;
   max-height: none;
   padding: 0;
   border: 0;
@@ -5824,7 +5944,7 @@ img.fallback-sprite {
   z-index: 27;
   width: min(276px, 21vw);
   height: min(52vh, 520px);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 9px;
@@ -5859,7 +5979,7 @@ img.fallback-sprite {
 
 .guided-effect-panel {
   width: min(760px, calc(100vw - 40px));
-  max-height: min(760px, calc(100vh - 40px));
+  max-height: min(760px, calc(100dvh - 40px));
   display: grid;
   gap: 12px;
   padding: 22px;
@@ -7107,7 +7227,7 @@ img.fallback-sprite {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 10000;
   display: flex;
   align-items: center;
@@ -7198,7 +7318,7 @@ img.fallback-sprite {
   .cab-stripes {
     position: absolute;
     width: 200vw;
-    height: 100vh;
+    height: 100dvh;
     background: repeating-linear-gradient(
       45deg,
       rgba(255, 255, 255, 0.1),
