@@ -388,6 +388,12 @@ public class AttackEffectParserService {
         if (lowerText.contains("if your opponent's active pok") && lowerText.contains("is a grass pok") && lowerText.contains("20 more damage")) {
             commands.add(new ConditionalDamageMultiplierCommand(0, 20, "OPPONENT_TYPE", "Grass"));
         }
+        if (lowerText.contains("already has any damage counters on it") && lowerText.contains("more damage")) {
+            Matcher m = Pattern.compile("does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
+            if (m.find()) {
+                commands.add(new ConditionalDamageMultiplierCommand(0, Integer.parseInt(m.group(1)), "OPPONENT_HAS_DAMAGE_COUNTERS", null));
+            }
+        }
         Matcher typedEnergyDamageMatcher = Pattern
                 .compile("does (\\d+) more damage for each ([a-zA-Z]+) energy attached to this pok", Pattern.CASE_INSENSITIVE)
                 .matcher(text);

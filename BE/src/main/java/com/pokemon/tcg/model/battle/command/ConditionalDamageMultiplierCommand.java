@@ -52,6 +52,18 @@ public class ConditionalDamageMultiplierCommand implements BattleCommand {
                         .count();
                 finalDamage += (count * multiplier);
             }
+        } else if ("OPPONENT_HAS_DAMAGE_COUNTERS".equals(conditionType)) {
+            if (defensor.getActivo() != null) {
+                int maxHp = 0;
+                try {
+                    maxHp = Integer.parseInt(defensor.getActivo().getCard().getHp());
+                } catch (NumberFormatException ignored) {
+                    maxHp = defensor.getActivo().getHpActual();
+                }
+                if (defensor.getActivo().getHpActual() < maxHp) {
+                    finalDamage += multiplier;
+                }
+            }
         }
 
         if (finalDamage > 0) {

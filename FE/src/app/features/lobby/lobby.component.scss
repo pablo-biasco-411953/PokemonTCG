@@ -1978,7 +1978,7 @@ kbd {
 .room-password-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1210;
+  z-index: 1000005;
   display: grid;
   place-items: center;
   padding: 20px;
@@ -2030,6 +2030,45 @@ kbd {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+
+  button {
+    min-height: 38px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  button:not(.btn-cancel):not(.primary-action) {
+    background: rgba(14, 165, 233, 0.15); /* Azul translúcido */
+    color: #38bdf8;
+    border: 1px solid rgba(14, 165, 233, 0.4);
+  }
+
+  button:not(.btn-cancel):not(.primary-action):hover:not(:disabled) {
+    background: rgba(14, 165, 233, 0.28);
+    border-color: rgba(14, 165, 233, 0.65);
+  }
+
+  button:not(.btn-cancel):not(.primary-action):disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-cancel {
+    background: rgba(239, 68, 68, 0.15); /* Rojo translúcido */
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+  }
+
+  .btn-cancel:hover {
+    background: rgba(239, 68, 68, 0.28);
+    border-color: rgba(239, 68, 68, 0.65);
+  }
 }
 
 .room-chat-log p.system {

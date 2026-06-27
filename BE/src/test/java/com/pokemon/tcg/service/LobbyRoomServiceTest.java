@@ -40,6 +40,7 @@ class LobbyRoomServiceTest {
     private Mazo mazoBase(String owner) {
         Jugador j = new Jugador(owner);
         Mazo m = new Mazo("Bosque", j);
+        m.setId(1L);
         List<Card> cartas = new ArrayList<>();
         for (int i = 0; i < 60; i++) {
             cartas.add(card("xy1-" + (i + 1)));
@@ -343,5 +344,159 @@ class LobbyRoomServiceTest {
 
         assertThrows(RuntimeException.class,
                 () -> service.updateSettings(roomId, "misty", 60, null));
+    }
+
+    // =================== Cobertura Adicional de LobbyRoomService ===================
+
+    @Test
+    void requireDeck_cartasInsuficientes_lanzaExcepcion() {
+        Mazo mazoCorto = new Mazo("Bosque", new Jugador("ash"));
+        mazoCorto.setCartas(new ArrayList<>());
+        when(mazoRepository.findById(5L)).thenReturn(Optional.of(mazoCorto));
+
+        LobbyRoomRequest req = request("ash", 5L);
+        assertThrows(IllegalStateException.class, () -> service.createRoom("ash", req));
+    }
+
+    @Test
+    void joinRoom_passwordIncorrecta_lanzaExcepcion() {
+        Mazo mazoOwner = mazoBase("ash");
+        Mazo mazoGuest = mazoBase("misty");
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        when(mazoRepository.findById(2L)).thenReturn(Optional.of(mazoGuest));
+
+        LobbyRoomRequest createReq = request("ash", 1L);
+        createReq.setPassword("1234");
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", createReq);
+
+        LobbyRoomRequest joinReq = request("misty", 2L);
+        joinReq.setPassword("wrong");
+
+        assertThrows(IllegalArgumentException.class, () -> service.joinRoom(roomSnap.getId(), "misty", joinReq));
+    }
+
+    @Test
+    void joinRoom_partidaEnProgreso_entraComoEspectador() {
+        Mazo mazoOwner = mazoBase("ash");
+        Mazo mazoGuest = mazoBase("misty");
+        mazoGuest.setId(2L);
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        when(mazoRepository.findById(2L)).thenReturn(Optional.of(mazoGuest));
+
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", request("ash", 1L));
+        String roomId = roomSnap.getId();
+        service.joinRoom(roomId, "misty", request("misty", 2L));
+        service.setReady(roomId, "ash", true, 1L);
+        service.setReady(roomId, "misty", true, 2L);
+
+        com.pokemon.tcg.model.battle.Partida partidaMock = mock(com.pokemon.tcg.model.battle.Partida.class);
+        when(partidaMock.getId()).thenReturn("match-123");
+        when(battleEngineService.startBattleOnline(any(), any(), any(), any())).thenReturn(partidaMock);
+        service.startRoom(roomId, "ash");
+
+        LobbyRoomRequest spectateReq = request("spectator", null);
+        LobbyRoomSnapshot res = service.joinRoom(roomId, "spectator", spectateReq);
+
+        assertEquals(1, res.getSpectatorCount());
+        assertTrue(res.isCurrentUserSpectator());
+    }
+
+    @Test
+    void leaveRoom_durantePartida_rendicionYAbandono() {
+        Mazo mazoOwner = mazoBase("ash");
+        Mazo mazoGuest = mazoBase("misty");
+        mazoGuest.setId(2L);
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        when(mazoRepository.findById(2L)).thenReturn(Optional.of(mazoGuest));
+
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", request("ash", 1L));
+        String roomId = roomSnap.getId();
+        service.joinRoom(roomId, "misty", request("misty", 2L));
+        service.setReady(roomId, "ash", true, 1L);
+        service.setReady(roomId, "misty", true, 2L);
+
+        com.pokemon.tcg.model.battle.Partida partidaMock = mock(com.pokemon.tcg.model.battle.Partida.class);
+        when(partidaMock.getId()).thenReturn("match-123");
+        when(battleEngineService.startBattleOnline(any(), any(), any(), any())).thenReturn(partidaMock);
+        service.startRoom(roomId, "ash");
+
+        LobbyRoomSnapshot res = service.leaveRoom(roomId, "ash");
+        verify(battleEngineService).rendirse("match-123", "ash");
+        assertEquals(com.pokemon.tcg.model.lobby.LobbyRoomStatus.FINISHED, res.getStatus());
+    }
+
+    @Test
+    void addBot_difficulties_ySettings() {
+        Mazo mazo = mazoBase("ash");
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazo));
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", request("ash", 1L));
+        String roomId = roomSnap.getId();
+
+        service.addBot(roomId, "ash", "HARD");
+        LobbyRoomSnapshot res = service.getRoom(roomId);
+        assertEquals("HARD", res.getBotDifficulty());
+        assertTrue(res.isGuestBot());
+
+        LobbyRoomSnapshot updated = service.updateSettings(roomId, "ash", 120, "EASY");
+        assertEquals("EASY", updated.getBotDifficulty());
+        assertEquals(120, updated.getTurnTimeSeconds());
+    }
+
+    @Test
+    void spectateRoom_passwordYEspectador() {
+        Mazo mazoOwner = mazoBase("ash");
+        Mazo mazoGuest = mazoBase("misty");
+        mazoGuest.setId(2L);
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        when(mazoRepository.findById(2L)).thenReturn(Optional.of(mazoGuest));
+
+        LobbyRoomRequest createReq = request("ash", 1L);
+        createReq.setPassword("pass");
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", createReq);
+        String roomId = roomSnap.getId();
+
+        LobbyRoomRequest joinReq = request("misty", 2L);
+        joinReq.setPassword("pass");
+        service.joinRoom(roomId, "misty", joinReq);
+        service.setReady(roomId, "ash", true, 1L);
+        service.setReady(roomId, "misty", true, 2L);
+
+        com.pokemon.tcg.model.battle.Partida partidaMock = mock(com.pokemon.tcg.model.battle.Partida.class);
+        when(partidaMock.getId()).thenReturn("match-123");
+        when(battleEngineService.startBattleOnline(any(), any(), any(), any())).thenReturn(partidaMock);
+        service.startRoom(roomId, "ash");
+
+        assertThrows(IllegalArgumentException.class, () -> service.spectateRoom(roomId, "spectator", "wrong"));
+
+        LobbyRoomStartResponse res = service.spectateRoom(roomId, "spectator", "pass");
+        assertEquals(1, res.getRoom().getSpectatorCount());
+        assertTrue(service.isSpectator(res.getMatchId(), "spectator"));
+    }
+
+    @Test
+    void addReaction_guardaReaccionCorrectamente() {
+        Mazo mazoOwner = mazoBase("ash");
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", request("ash", 1L));
+        String roomId = roomSnap.getId();
+
+        LobbyRoomSnapshot res = service.addReaction(roomId, "ash", "thumbs_up");
+        assertEquals(1, res.getReactions().size());
+        assertEquals("thumbs_up", res.getReactions().get(0).getReaction());
+    }
+
+    @Test
+    void startRoom_sinJugadoresListos_lanzaExcepcion() {
+        Mazo mazoOwner = mazoBase("ash");
+        Mazo mazoGuest = mazoBase("misty");
+        mazoGuest.setId(2L);
+        when(mazoRepository.findById(1L)).thenReturn(Optional.of(mazoOwner));
+        when(mazoRepository.findById(2L)).thenReturn(Optional.of(mazoGuest));
+
+        LobbyRoomSnapshot roomSnap = service.createRoom("ash", request("ash", 1L));
+        String roomId = roomSnap.getId();
+        service.joinRoom(roomId, "misty", request("misty", 2L));
+
+        assertThrows(IllegalStateException.class, () -> service.startRoom(roomId, "ash"));
     }
 }

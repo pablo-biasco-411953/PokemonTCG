@@ -1,7 +1,7 @@
 # Tarea: Testing Strategy - 90% Code Coverage
 
-- **Fecha/Hora última actualización**: 2026-06-26 (sesión 4)
-- **Estado**: En progreso — 68.85% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% crítico (RNF-03)
+- **Fecha/Hora última actualización**: 2026-06-27 14:50 (sesión 5)
+- **Estado**: En progreso — 73.89% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% crítico (RNF-03)
 
 ---
 
@@ -125,6 +125,12 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
   - SantoroTrackingRequest: setters/getters, default false
   - DebugSetSobresRequest: setters/getters, default cero
 
+- [x] **Sesión 5 (2026-06-27)**:
+  - **MODIFY [ComandosTurnoTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/battle/command/ComandosTurnoTest.java)**: Agregadas 12 pruebas completas para `ComandoRetirarse`, `ComandoUnirEnergia` y `ComandoEvolucionar`, subiendo su cobertura a >97%.
+  - **MODIFY [BattleAttackServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/BattleAttackServiceTest.java)**: Agregadas 5 pruebas de cálculo de daño (Weakness, Resistance, Muscle Band, Hard Charm, Shadow Circle), subiendo la cobertura de `BattleAttackService` a **83.95%** y `EnergyCostCalculator` a **92.53%**.
+  - **MODIFY [BattleKoServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/BattleKoServiceTest.java)**: Agregadas 6 pruebas de condiciones de victoria y casos límite de K.O., subiendo `BattleKoService` a **82.50%**.
+  - **MODIFY [LobbyRoomServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/LobbyRoomServiceTest.java)**: Agregados 8 tests exhaustivos de cobertura para `LobbyRoomService`, subiendo su cobertura del **56.54%** al **79.16%**.
+
 ---
 
 ## Cambios Pendientes
@@ -153,18 +159,18 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 ### ⚠️ CONOCIDO: Todos los tests pasan exitosamente
 - Se solucionó la carga del contexto de aplicación en `CardCatalogServiceTest` configurando H2 directamente en la anotación `@SpringBootTest(properties = {...})`.
 
-**Total actual: 765 tests, 0 failures, 0 errores**
+**Total actual: 809 tests, 0 failures, 0 errores**
 
 ---
 
 ## Próximos Pasos Recomendados
 
-1. **Agregar tests para `resolverAccionPendiente` branches restantes** (alta prioridad, mucho código sin cubrir)
-2. **Agregar tests para `ejecutarTurnoBot`** — mockear `BotAIService.ejecutarTurno()` y verificar que cambia el turno
-3. **Agregar tests para stadiums** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) en jugarTrainer
-4. **Agregar tests de Burn/Asleep** en `aplicarMantenimientoEntreTurnos`
-5. **Evaluar excluir `config/` de JaCoCo** si no se puede alcanzar 90% con eso incluido
-6. **Correr `mvn verify`** para ver cobertura real y ajustar
+1. **Aumentar la cobertura sobre `BattleEngineService`:**
+   - Incrementar las pruebas sobre los flujos de setup, mulligans y resolución de efectos interactivos.
+2. **Implementar caso de uso de Partida Completa**:
+   - Crear un test de integración en el backend que inicialice una partida real entre dos jugadores y simule las transiciones de turnos y jugadas básicas.
+3. **Configurar e implementar tests E2E en Frontend**:
+   - Configurar Cypress/Playwright en `FE/` para simular la experiencia completa de juego del usuario.
 
 ### Comandos útiles
 ```bash
@@ -190,4 +196,4 @@ mvn test -Dtest="BattleEngineService*"
 
 ---
 
-**Última actualización**: 2026-06-26 — sesión 4 (post-commit d7ed6a7)
+**Última actualización**: 2026-06-27 — sesión 5 (post-commit)

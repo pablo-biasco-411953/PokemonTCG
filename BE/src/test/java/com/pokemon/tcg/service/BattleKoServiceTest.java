@@ -214,4 +214,137 @@ class BattleKoServiceTest {
         card.setHp(hp);
         return card;
     }
+
+    // =================== Casos de Borde y Condiciones de Victoria ===================
+
+    @Test
+    void resolverKoCasoLimiteIdentificarTablerosMismosTablerosNoHaceNada() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego activo = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(activo);
+        jugador.getPremios().add(card("p-j", "Premio J", "0"));
+        Partida partida = new Partida(jugador, jugador);
+
+        service.resolverKO(partida, activo, activo);
+
+        assertSame(activo, jugador.getActivo());
+    }
+
+    @Test
+    void resolverKoCartaFueraDeJuegoNoHaceNada() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego activo = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(activo);
+        jugador.getPremios().add(card("p-j", "Premio J", "0"));
+        
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego botActivo = new CartaEnJuego(card("bot-atk", "Charmander", "50"));
+        bot.setActivo(botActivo);
+        bot.getPremios().add(card("p-b", "Premio B", "0"));
+        
+        Partida partida = new Partida(jugador, bot);
+
+        CartaEnJuego cartaFantasma = new CartaEnJuego(card("ghost", "Ghost", "10"));
+
+        service.resolverKO(partida, activo, cartaFantasma);
+
+        assertSame(activo, jugador.getActivo());
+        assertSame(botActivo, bot.getActivo());
+    }
+
+    @Test
+    void resolverKoDePokemonEnBanca() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego atacante = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(atacante);
+        jugador.getPremios().add(card("p-j", "Premio J", "0"));
+
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego botActivo = new CartaEnJuego(card("bot-atk", "Charmander", "50"));
+        bot.setActivo(botActivo);
+        bot.getPremios().add(card("p-b", "Premio B", "0"));
+        CartaEnJuego benched = new CartaEnJuego(card("bench-1", "Squirtle", "50"));
+        bot.getBanca().add(benched);
+
+        Partida partida = new Partida(jugador, bot);
+
+        service.resolverKO(partida, atacante, benched);
+
+        assertSame(botActivo, bot.getActivo());
+        assertTrue(bot.getBanca().isEmpty());
+        assertTrue(bot.getPilaDescarte().contains(benched.getCard()));
+        assertEquals(1, jugador.getMano().size());
+    }
+
+    @Test
+    void resolverKoVictoriaJugadorPorOponenteSinPokemon() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego atacante = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(atacante);
+        jugador.getPremios().add(card("p1", "Premio J", "0"));
+        jugador.getPremios().add(card("p2", "Premio J", "0"));
+
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego botActivo = new CartaEnJuego(card("bot-atk", "Charmander", "50"));
+        bot.setActivo(botActivo);
+        bot.getPremios().add(card("p-b", "Premio B", "0"));
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("ash");
+        partida.setBotUsername("misty");
+
+        service.resolverKO(partida, atacante, botActivo);
+
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("ash", partida.getGanador());
+        assertTrue(partida.getRazonFinPartida().contains("se quedó sin Pokémon en juego"));
+    }
+
+    @Test
+    void resolverKoVictoriaJugadorPorTomarTodosLosPremios() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego atacante = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(atacante);
+        jugador.getPremios().add(card("p1", "Premio J", "0"));
+
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego botActivo = new CartaEnJuego(card("bot-atk", "Charmander", "50"));
+        bot.setActivo(botActivo);
+        bot.getPremios().add(card("p-b", "Premio B", "0"));
+        bot.getBanca().add(new CartaEnJuego(card("bench-1", "Squirtle", "50")));
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("ash");
+        partida.setBotUsername("misty");
+
+        service.resolverKO(partida, atacante, botActivo);
+
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("ash", partida.getGanador());
+        assertTrue(partida.getRazonFinPartida().contains("tomó todos sus premios"));
+    }
+
+    @Test
+    void resolverKoVictoriaBotPorOponenteSinPokemon() {
+        TableroJugador jugador = new TableroJugador();
+        CartaEnJuego activoJugador = new CartaEnJuego(card("atk", "Pikachu", "60"));
+        jugador.setActivo(activoJugador);
+        jugador.getPremios().add(card("p-j", "Premio J", "0"));
+        
+        TableroJugador bot = new TableroJugador();
+        CartaEnJuego activoBot = new CartaEnJuego(card("bot-atk", "Charmander", "50"));
+        bot.setActivo(activoBot);
+        bot.getPremios().add(card("p1", "Premio B", "0"));
+        bot.getPremios().add(card("p2", "Premio B", "0"));
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("ash");
+        partida.setBotUsername("misty");
+
+        service.resolverKO(partida, activoBot, activoJugador);
+
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("misty", partida.getGanador());
+        assertTrue(partida.getRazonFinPartida().contains("se quedó sin Pokémon en juego"));
+    }
 }

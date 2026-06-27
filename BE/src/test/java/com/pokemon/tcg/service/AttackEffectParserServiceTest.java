@@ -289,4 +289,14 @@ class AttackEffectParserServiceTest {
         var commands = parser.parseEffects("Heal 30 damage and remove all Special Conditions from this Pokemon.", null);
         assertTrue(commands.stream().anyMatch(command -> command instanceof com.pokemon.tcg.model.battle.command.CorsolaRefreshCommand));
     }
+
+    @Test
+    void parseaTailspinPiledriverComoOpponentHasDamageCounters() {
+        var commands = parser.parseEffects("If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.ConditionalDamageMultiplierCommand cmd
+                && "OPPONENT_HAS_DAMAGE_COUNTERS".equals(cmd.getConditionType())
+                && cmd.getMultiplier() == 40
+        ));
+    }
 }

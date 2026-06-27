@@ -2000,6 +2000,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentRoom = room;
         this.selectedRoom = room;
         this.roomTab = 'mine';
+        this.roomPasswordModalOpen = false;
+        this.roomJoinPassword = '';
         this.roomError = '';
         this.roomActionLoading = false;
         this.loadLobbyRooms();
@@ -2108,6 +2110,8 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.lobbyRoomService.spectateRoom(this.selectedRoom.id, this.roomJoinPassword).subscribe({
       next: (response) => {
         this.roomActionLoading = false;
+        this.roomPasswordModalOpen = false;
+        this.roomJoinPassword = '';
         if (response.matchId) {
           this.router.navigate(['/battle', response.matchId], { queryParams: { spectate: '1' } });
           return;
@@ -2115,8 +2119,6 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.currentRoom = response.room;
         this.selectedRoom = response.room;
         this.roomTab = 'mine';
-        this.roomPasswordModalOpen = false;
-        this.roomJoinPassword = '';
         this.roomError = '';
         this.loadLobbyRooms();
       },
