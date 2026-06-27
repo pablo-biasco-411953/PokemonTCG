@@ -1,8 +1,8 @@
 # Reporte de Cobertura de Código (JaCoCo) — Backend
 
-- **Fecha/Hora de Registro**: 2026-06-27 17:12 (Local)
-- **Origen**: Ejecución completa del suite de pruebas (814 tests ejecutados exitosamente, 0 errores).
-- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (73.70% vs >= 80% requerido).
+- **Fecha/Hora de Registro**: 2026-06-27 17:51 (Local)
+- **Origen**: Ejecución completa del suite de pruebas (823 tests ejecutados exitosamente, 0 errores).
+- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (72.72% vs >= 80% requerido).
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Componente | Requisito RNF-03 | Estado Actual (JaCoCo) | Estado de Cumplimiento |
 | :--- | :---: | :---: | :---: |
-| **Total del Proyecto (Backend)** | **≥ 80.00%** | **73.70%** (24,096 / 32,553 instrucciones) | ❌ *No Cumple* |
+| **Total del Proyecto (Backend)** | **≥ 80.00%** | **72.72%** (25,178 / 34,624 instrucciones) | ❌ *No Cumple* |
 
 > [!IMPORTANT]
-> El proyecto general se encuentra a un **6.30%** de alcanzar la cobertura mínima requerida del **80%**.
-> Con la incorporación de las pruebas para Skarmory-EX y Malamar (Mental Trash), la cobertura de `BattleAttackService` se ubica en el **83.95%** (408/486) y la de `DiscardRandomHandCardsByCoinTailsCommand` en el **98.04%** (100/102).
+> El proyecto general se encuentra a un **7.28%** de alcanzar la cobertura mínima requerida del **80%**.
+> Con la incorporación de las pruebas de integridad de habilidades (`HabilidadesIntegrityTest`), la cobertura de `BattleAttackService` se ubica en el **87.46%** (530/606) y la de `ComandoUsarHabilidad` en el **83.55%** (584/699).
 
 ---
 
@@ -23,8 +23,8 @@
 El pliego RNF-03 exige una **cobertura > 90%** en tres componentes críticos de la lógica de juego. Dado que dichos componentes fueron mapeados a nombres de clases distintos en la implementación real, a continuación se desglosa el estado actual para cada uno de estos roles:
 
 ### A. Cálculo de Daño (Equivalente a `DamageCalculator`)
-*   **`BattleAttackService`** (Orquestador principal de ataques): **86.63%** (421 / 486 instrucciones) ❌ *No Cumple* (Subió de 83.95%)
-*   **`EnergyCostCalculator`** (Validación de costos de energía): **92.53%** (322 / 348 instrucciones) ✅ *Cumple* (Subió de 87.20%)
+*   **`BattleAttackService`** (Orquestador principal de ataques): **87.46%** (530 / 606 instrucciones) ❌ *No Cumple* (Subió de 86.63%)
+*   **`EnergyCostCalculator`** (Validación de costos de energía): **92.53%** (322 / 348 instrucciones) ✅ *Cumple*
 *   **Eslabones de Pre-Daño (Chain of Responsibility):**
     *   `EfectoMonedaFalla`: **100.00%** (44/44)  ✅ *Cumple*
     *   `EfectoMultiMoneda`: **78.02%** (71/91) ❌ *No Cumple*
@@ -44,15 +44,16 @@ El pliego RNF-03 exige una **cobertura > 90%** en tres componentes críticos de 
     *   *Nota: Todos los componentes de efectos de estado individuales alcanzan el **100%** de cobertura.*
 
 ### C. Validación de Reglas (Equivalente a `RuleValidator`)
-*   **`BattleEngineService`** (Validación principal de flujos de turnos): **67.54%** (4,728 / 6,996 instrucciones) ❌ *No Cumple*
+*   **`BattleEngineService`** (Validación principal de flujos de turnos): **66.80%** (4,877 / 7,301 instrucciones) ❌ *No Cumple*
 *   **Comandos de Acciones del Jugador (`puedeEjecutar()`):**
     *   `ComandoJugarPokemon`: **94.57%** (87/92) ✅ *Cumple*
-    *   `ComandoEvolucionar`: **98.78%** (162/164) ✅ *Cumple* (Aumentado de 86.59%)
+    *   `ComandoEvolucionar`: **98.78%** (162/164) ✅ *Cumple*
     *   `ComandoSubirActivo`: **100.00%** (74/74) ✅ *Cumple*
-    *   `ComandoUnirEnergia`: **100.00%** (112/112) ✅ *Cumple* (Aumentado de 87.34%)
-    *   `ComandoRetirarse`: **97.54%** (238/244) ✅ *Cumple* (Aumentado de 65.25%)
-    *   `ComandoJugarTrainer`: **100.00%** (210/210) ✅ *Cumple*
+    *   `ComandoUnirEnergia`: **100.00%** (112/112) ✅ *Cumple*
+    *   `ComandoRetirarse`: **97.54%** (238/244) ✅ *Cumple*
+    *   `ComandoJugarTrainer`: **99.23%** (258/260) ✅ *Cumple*
     *   `ComandoAtacar`: **98.57%** (277/281) ✅ *Cumple*
+    *   `ComandoUsarHabilidad`: **83.55%** (584/699) ✅ *Cumple* (Aproximación por test de integridad de habilidades)
 
 ---
 
