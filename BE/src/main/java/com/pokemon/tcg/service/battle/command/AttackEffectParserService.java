@@ -317,6 +317,13 @@ public class AttackEffectParserService {
                     null, null, null, "HAND", 1,
                     "Elegí una carta de tu mazo para poner en tu mano."
             ));
+        } else if (lowerText.contains("search your deck for a basic energy card") && lowerText.contains("attach it to 1 of your")) {
+            commands.add(new SearchDeckCommand(
+                    "Energy", "Basic", null, "SELECT_POKEMON_FOR_GATHER_ENERGY", 1,
+                    "Gather Energy: Seleccioná 1 Energía Básica de tu mazo"
+            ));
+        } else if (lowerText.contains("choose 2 of your benched") && lowerText.contains("search your deck for a fairy energy card")) {
+            commands.add(new GeomancyCommand());
         }
 
         if (lowerText.contains("choose a random card from your opponent's hand") && lowerText.contains("shuffle")) {

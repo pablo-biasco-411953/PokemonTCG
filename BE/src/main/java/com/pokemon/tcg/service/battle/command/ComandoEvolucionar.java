@@ -22,6 +22,7 @@ public class ComandoEvolucionar implements ComandoTurno {
         if (cartaEvolucion == null || objetivo == null) return false;
         if (tablero.getTurnosJugados() <= 1) return false;
         if (objetivo.getTurnoEntrada() == partida.getNumeroTurno()) return false;
+        if (objetivo.getUltimoTurnoEvolucionado() == partida.getNumeroTurno()) return false;
         return tablero.getMano().contains(cartaEvolucion);
     }
 
@@ -35,6 +36,9 @@ public class ComandoEvolucionar implements ComandoTurno {
         }
         if (objetivo.getTurnoEntrada() == partida.getNumeroTurno()) {
             throw new IllegalStateException("No podés evolucionar un Pokémon en el mismo turno en el que entra en juego.");
+        }
+        if (objetivo.getUltimoTurnoEvolucionado() == partida.getNumeroTurno()) {
+            throw new IllegalStateException("No podés evolucionar el mismo Pokémon más de una vez en el mismo turno.");
         }
 
         String evolvesFrom = cartaEvolucion.getEvolvesFrom();
@@ -54,6 +58,7 @@ public class ComandoEvolucionar implements ComandoTurno {
         int nuevoHpMaximo = Integer.parseInt(cartaEvolucion.getHp());
         objetivo.setHpActual(Math.max(0, nuevoHpMaximo - danioAcumulado));
         objetivo.limpiarCondiciones();
+        objetivo.setUltimoTurnoEvolucionado(partida.getNumeroTurno());
 
         tablero.getMano().remove(cartaEvolucion);
 

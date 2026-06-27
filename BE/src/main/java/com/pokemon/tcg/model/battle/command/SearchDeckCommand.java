@@ -55,7 +55,27 @@ public class SearchDeckCommand implements BattleCommand {
         }
 
         if (atacante == partida.getBot()) {
-            applyCards(atacante, legal.subList(0, Math.min(maxSelections, legal.size())));
+            if ("SELECT_POKEMON_FOR_GATHER_ENERGY".equals(destination)) {
+                List<Card> cards = legal.subList(0, Math.min(maxSelections, legal.size()));
+                for (Card card : cards) {
+                    if (atacante.getMazo().remove(card)) {
+                        com.pokemon.tcg.model.battle.CartaEnJuego target = null;
+                        if (atacante.getActivo() != null) {
+                            target = atacante.getActivo();
+                        } else if (!atacante.getBanca().isEmpty()) {
+                            target = atacante.getBanca().get(0);
+                        }
+                        if (target != null) {
+                            target.getEnergiasUnidas().add(card);
+                            partida.getTurnLogs().add("ENERGY_ATTACHED:BOT:" + target.getCard().getNombre().replace(':', '-'));
+                        } else {
+                            atacante.getMano().add(card);
+                        }
+                    }
+                }
+            } else {
+                applyCards(atacante, legal.subList(0, Math.min(maxSelections, legal.size())));
+            }
             Collections.shuffle(atacante.getMazo());
             partida.getTurnLogs().add("DECK_SEARCHED:BOT");
             if ("ATTACH_ACTIVE_AND_SWITCH".equals(destination) && !atacante.getBanca().isEmpty()) {
