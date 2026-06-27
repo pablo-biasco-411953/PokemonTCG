@@ -388,4 +388,66 @@ class EstrategiaBasicaMoreTest {
         assertEquals(1, bot.getBanca().size());
         assertTrue(partida.isSetupBotListo());
     }
+
+    // =================== lambda$ejecutarSetup$0: comparator with 2+ pokemons ===================
+
+    @Test
+    void ejecutarSetup_dosPokemons_ordenaPorPotencial_activaComparator() {
+        partida.transicionarA(new com.pokemon.tcg.model.battle.state.EstadoSetupPlaceActive());
+
+        Card sinAtaque = cardBasico("a1", "Rattata");
+
+        Card conAtaque = cardBasico("b1", "Pikachu");
+        conAtaque.reemplazarAtaques(List.of(crearAtaque("Quick Attack", 10, "Colorless")));
+
+        Card energy = cardEnergia("Colorless Energy", "Colorless");
+
+        bot.getMano().add(sinAtaque);
+        bot.getMano().add(conAtaque);
+        bot.getMano().add(energy);
+
+        estrategia.ejecutarSetup(partida);
+
+        // Con 2+ pokémons el sort invoca el comparator (lambda$ejecutarSetup$0)
+        assertNotNull(bot.getActivo());
+        assertEquals("Pikachu", bot.getActivo().getCard().getNombre());
+    }
+
+    // =================== evaluarPotencialDeMano: else-branch + rival weakness + my weakness ===================
+
+    @Test
+    void evaluarPotencial_ramaElse_energiaNoColorless_yDebilidadRival() {
+        // Squirtle: ataque Water (no Colorless → else-branch) + debilidad a Lightning
+        Card squirtle = cardBasico("s1", "Squirtle");
+        squirtle.setTipo("Water");
+        Ataque waterAtk = crearAtaque("Water Gun", 20, "Water");
+        squirtle.reemplazarAtaques(List.of(waterAtk));
+        squirtle.setDebilidades(List.of(new CardAttribute("Lightning", "×2")));
+
+        Card bulbasaur = cardBasico("b1", "Bulbasaur");
+        bulbasaur.setTipo("Grass");
+
+        bot.getMano().add(squirtle);
+        bot.getMano().add(bulbasaur);
+        // Sin energía en mano: el sort se activa pero Squirtle no puede atacar este turno
+
+        // Rival activo: debil a Water, tipo Lightning (cubre L224-227 y L230-233)
+        Card charizard = cardBasico("r1", "Charizard");
+        charizard.setTipo("Lightning");
+        charizard.setDebilidades(List.of(new CardAttribute("Water", "×2")));
+        CartaEnJuego rivalActivo = new CartaEnJuego(charizard);
+        rivalActivo.setHpActual(80);
+        jugador.setActivo(rivalActivo);
+
+        // Mock para si llegara a intentar atacar
+        BattleAttackService.AttackResolution mockRes = new BattleAttackService.AttackResolution(
+                new com.pokemon.tcg.model.battle.ResultadoAtaque(0, 0), List.of());
+        when(mockAttack.resolveAttack(any(), any(), any(), any(), any(), any())).thenReturn(mockRes);
+
+        estrategia.ejecutarTurno(partida);
+
+        // Squirtle debe ser elegido como activo (rival debil a Water +200 > debilidad propia -150)
+        assertNotNull(bot.getActivo());
+        assertEquals("Squirtle", bot.getActivo().getCard().getNombre());
+    }
 }
