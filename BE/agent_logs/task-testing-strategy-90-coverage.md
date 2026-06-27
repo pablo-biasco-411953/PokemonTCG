@@ -1,7 +1,7 @@
 # Tarea: Testing Strategy - 90% Code Coverage
 
-- **Fecha/Hora última actualización**: 2026-06-26 (sesión 3)
-- **Estado**: En progreso — ~65-70% cobertura estimada, objetivo 90%
+- **Fecha/Hora última actualización**: 2026-06-26 (sesión 4)
+- **Estado**: En progreso — 68.85% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% crítico (RNF-03)
 
 ---
 
@@ -146,13 +146,14 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 - [x] **DTOs** — LobbyMessage, SantoroTrackingRequest, DebugSetSobresRequest cubiertos en DtoTest
 - [x] **Models** — Jugador, Card, Mazo, CartaEnJuego, TableroJugador, Partida cubiertos en ModelTest
 
+- [x] **CardCatalogServiceTest** — Resuelto y configurado usando H2 in-memory
+ 
 - [ ] **startBattle / startBattleOnline** — no testeados (requieren repos mockeados con mazo real)
-- [ ] **CardCatalogServiceTest** — FALLA por necesitar BD; requiere H2 in-memory o excluir
 
-### ⚠️ CONOCIDO: 1 test que falla persistentemente
-- `CardCatalogServiceTest` — test de integración que intenta conectarse a BD PostgreSQL. No se puede arreglar sin agregar H2 como dependencia de test o mock del repo.
+### ⚠️ CONOCIDO: Todos los tests pasan exitosamente
+- Se solucionó la carga del contexto de aplicación en `CardCatalogServiceTest` configurando H2 directamente en la anotación `@SpringBootTest(properties = {...})`.
 
-**Total actual: 734 tests, 0 failures, 1 error pre-existente (DB)**
+**Total actual: 765 tests, 0 failures, 0 errores**
 
 ---
 
