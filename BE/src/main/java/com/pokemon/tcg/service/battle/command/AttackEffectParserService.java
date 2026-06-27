@@ -275,6 +275,8 @@ public class AttackEffectParserService {
                     "Energy", "Basic", null, "SELECT_POKEMON_FOR_GATHER_ENERGY", 1,
                     "Gather Energy: Seleccioná 1 Energía Básica de tu mazo"
             ));
+        } else if (lowerText.contains("choose 2 of your benched") && lowerText.contains("search your deck for a fairy energy card")) {
+            commands.add(new GeomancyCommand());
         }
 
         if (lowerText.contains("choose a random card from your opponent's hand") && lowerText.contains("shuffle")) {

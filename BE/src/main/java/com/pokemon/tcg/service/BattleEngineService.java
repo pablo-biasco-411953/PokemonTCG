@@ -1137,7 +1137,38 @@ public class BattleEngineService {
         }
 
         TableroJugador board = getTableroDeJugador(partida, callerUsername);
-        if ("SELECT_POKEMON_CASSIUS".equals(pending.getType())) {
+        if ("SELECT_BENCHED_POKEMON_FOR_GEOMANCY".equals(pending.getType())) {
+            if (ids.isEmpty()) {
+                agregarLog(partida, "GEOMANCY_CANCELLED", callerUsername);
+            } else {
+                long countFairyEnergiesInDeck = board.getMazo().stream()
+                        .filter(c -> "Energy".equalsIgnoreCase(c.getSupertype()) && "Fairy".equalsIgnoreCase(c.getTipo()))
+                        .count();
+
+                if (countFairyEnergiesInDeck == 0) {
+                    agregarLog(partida, "GEOMANCY_NO_FAIRY_ENERGY", callerUsername);
+                } else {
+                    PendingBattleAction geomancySearch = new PendingBattleAction();
+                    geomancySearch.setActor(callerUsername);
+                    geomancySearch.setType("SEARCH_DECK");
+                    geomancySearch.setPrompt("Geomancy: Seleccioná hasta " + ids.size() + " Energías Hada de tu mazo");
+                    geomancySearch.setMinSelections(0);
+                    geomancySearch.setMaxSelections(Math.min(ids.size(), (int) countFairyEnergiesInDeck));
+                    geomancySearch.setDestination("GEOMANCY_ENERGY_ATTACH:" + String.join(",", ids));
+                    geomancySearch.setEndsTurn(pending.isEndsTurn());
+
+                    List<PendingBattleAction.Option> options = new ArrayList<>();
+                    for (Card c : board.getMazo()) {
+                        if ("Energy".equalsIgnoreCase(c.getSupertype()) && "Fairy".equalsIgnoreCase(c.getTipo())) {
+                            options.add(new PendingBattleAction.Option(c.getId(), c.getNombre(), c.getImagen()));
+                        }
+                    }
+                    geomancySearch.setOptions(options);
+                    partida.setPendingAction(geomancySearch);
+                    return partida;
+                }
+            }
+        } else if ("SELECT_POKEMON_CASSIUS".equals(pending.getType())) {
             if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
             String targetId = ids.get(0);
             CartaEnJuego target = null;
@@ -1543,7 +1574,43 @@ public class BattleEngineService {
             Collections.shuffle(board.getMazo());
             agregarLog(partida, "ENERGY_ATTACHED", callerUsername, target.getCard().getNombre());
         } else {
-            if ("SELECT_POKEMON_FOR_GATHER_ENERGY".equals(pending.getDestination())) {
+            if (pending.getDestination() != null && pending.getDestination().startsWith("GEOMANCY_ENERGY_ATTACH:")) {
+                if (ids.isEmpty()) {
+                    Collections.shuffle(board.getMazo());
+                    agregarLog(partida, "DECK_SEARCH_CANCELLED", callerUsername);
+                } else {
+                    String[] targetPokeIds = pending.getDestination().split(":")[1].split(",");
+                    for (int i = 0; i < ids.size(); i++) {
+                        if (i < targetPokeIds.length) {
+                            String energyId = ids.get(i);
+                            String pokeId = targetPokeIds[i];
+
+                            Card energyCard = board.getMazo().stream()
+                                    .filter(c -> c.getId().equals(energyId))
+                                    .findFirst()
+                                    .orElse(null);
+
+                            CartaEnJuego target = null;
+                            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(pokeId)) {
+                                target = board.getActivo();
+                            } else {
+                                for (CartaEnJuego b : board.getBanca()) {
+                                    if (b.getCard().getId().equals(pokeId)) {
+                                        target = b;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (target != null && energyCard != null) {
+                                board.getMazo().remove(energyCard);
+                                target.getEnergiasUnidas().add(energyCard);
+                                agregarLog(partida, "ENERGY_ATTACHED", callerUsername, target.getCard().getNombre());
+                            }
+                        }
+                    }
+                    Collections.shuffle(board.getMazo());
+                }
+            } else if ("SELECT_POKEMON_FOR_GATHER_ENERGY".equals(pending.getDestination())) {
                 if (ids.isEmpty()) {
                     Collections.shuffle(board.getMazo());
                     agregarLog(partida, "DECK_SEARCH_CANCELLED", callerUsername);
