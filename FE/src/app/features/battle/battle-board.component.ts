@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BattleNotificationComponent } from './components/battle-notification/battle-notification';
 import { BattleBoardAbilitiesPanelComponent } from './battle-board-abilities-panel.component';
@@ -16,13 +16,14 @@ import {
 import { Router, ActivatedRoute } from '@angular/router';
 import { DragDropModule, CdkDragDrop } from '@angular/cdk/drag-drop';
 import { firstValueFrom, Observable } from 'rxjs';
-import { SafeHtml } from '@angular/platform-browser';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { Card } from '../../shared/models/card';
 import { BattleActionCard, CartaEnJuego, Partida } from '../../shared/models/battle';
 import { BattleBoardActionService } from './services/battle-board-action.service';
 import { BattleBoardCombatService } from './services/battle-board-combat.service';
 import { BattleBoardStateService } from './services/battle-board-state.service';
 import { BattleBoardTurnService } from './services/battle-board-turn.service';
+import { ENERGY_ICONS } from './utils/energy-icons';
 import { BattleNotificationService } from './services/battle-notification';
 import { ImagePreloaderService } from '../../core/services/image-preloader.service';
 import { MusicPlayerService } from '../../core/services/music-player.service';
@@ -200,6 +201,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private versusPreloadFinished = false;
   private versusSequenceTriggered = false;
   showEndGameOverlay = false;
+  showSurrenderModal = false;
   isVictory = false;
   coinsEarned = 0;
   endGameWinner = '';
@@ -2218,16 +2220,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.showDebugPanel = !this.showDebugPanel;
 
       if (this.showDebugPanel) {
-        this.turnTimerEnabled = true;
-        if (this.partida?.turnoActual === 'JUGADOR') {
-          this.iniciarRelojTurno();
-        }
         this.iniciarMedidorRendimiento();
       } else {
-        this.turnTimerEnabled = false;
-        this.detenerRelojTurno();
-        this.tiempoRestante = this.tiempoTurnoMaximo;
-        this.porcentajeTimer = 100;
         this.detenerMedidorRendimiento();
       }
       this.cdr.detectChanges();
@@ -2839,11 +2833,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   async completarUnionEnergia(targetPokemon: any) {
     if (!targetPokemon || !this.energiaAUnir) return;
-    this.cargandoAccion = true;
     this.modoSeleccionUnionEnergia = false;
     const energia = this.energiaAUnir;
     this.energiaAUnir = null;
+
+    const name = (energia.nombre || energia.name || '').toLowerCase();
+    if (name.includes('rainbow energy') || energia.id === 'xy1-131') {
+      this.pendingRainbowEnergy = energia;
+      this.pendingRainbowTarget = targetPokemon;
+      this.showRainbowModal = true;
+      return;
+    }
     
+    this.cargandoAccion = true;
     try {
       const nuevoEstado = await this.battleBoardAction.unirEnergiaYRecargar(
         this.matchId!,
@@ -3174,10 +3176,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   surrenderBattle(): void {
     if (!this.matchId || this.showEndGameOverlay || this.cargandoAccion) return;
+    this.showSurrenderModal = true;
+  }
 
-    const confirmar = window.confirm(this.i18n.translate('confirm.surrender'));
-    if (!confirmar) return;
+  cancelSurrender(): void {
+    this.showSurrenderModal = false;
+  }
 
+  confirmSurrender(): void {
+    if (!this.matchId) return;
+    this.showSurrenderModal = false;
     this.cargandoAccion = true;
     this.battleService.surrender(this.matchId).subscribe({
       next: (partida) => {
@@ -4126,6 +4134,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       this.mostrarNotificacion(this.i18n.translate('alert.needActivePokemon'), 'warning');
       return;
     }
+
+    const name = (cartaEnergia.nombre || cartaEnergia.name || '').toLowerCase();
+    if (name.includes('rainbow energy') || cartaEnergia.id === 'xy1-131') {
+      this.pendingRainbowEnergy = cartaEnergia;
+      this.pendingRainbowTarget = activoJugador;
+      this.showRainbowModal = true;
+      return;
+    }
+
     this.cargandoAccion = true;
     this.battleBoardAction
       .unirEnergiaYRecargar(this.matchId!, activoJugador.card.id, cartaEnergia.id)
@@ -4138,6 +4155,47 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         this.cargandoAccion = false;
         console.error(err);
         this.mostrarNotificacion(this.i18n.translate('alert.cannotAttachEnergy'), 'error');
+      });
+  }
+
+  showRainbowModal: boolean = false;
+  pendingRainbowEnergy: any = null;
+  pendingRainbowTarget: any = null;
+  energyTypes: string[] = ['Grass', 'Fire', 'Water', 'Lightning', 'Psychic', 'Fighting', 'Darkness', 'Metal', 'Fairy', 'Dragon', 'Colorless'];
+
+  private _sanitizer = inject(DomSanitizer);
+
+  getEnergyIconSvg(type: string): SafeHtml {
+    const svg = ENERGY_ICONS[type] || '';
+    return this._sanitizer.bypassSecurityTrustHtml(svg);
+  }
+
+  confirmRainbowEnergy(selectedType: string): void {
+    if (!this.pendingRainbowEnergy || !this.pendingRainbowTarget || this.cargandoAccion) {
+      this.showRainbowModal = false;
+      return;
+    }
+
+    this.cargandoAccion = true;
+    this.showRainbowModal = false;
+
+    const targetId = this.pendingRainbowTarget.card.id;
+    const energyId = this.pendingRainbowEnergy.id;
+    
+    this.pendingRainbowEnergy = null;
+    this.pendingRainbowTarget = null;
+
+    this.battleBoardAction
+      .unirEnergiaYRecargar(this.matchId!, targetId, energyId, selectedType)
+      .then((nuevoEstado) => {
+        this.aplicarEstadoRefrescado(nuevoEstado);
+        this.cargandoAccion = false;
+        this.cdr.detectChanges();
+      })
+      .catch((err: any) => {
+        this.cargandoAccion = false;
+        console.error(err);
+        this.mostrarNotificacion(err.error || this.i18n.translate('alert.cannotAttachEnergy'), 'error');
       });
   }
 
