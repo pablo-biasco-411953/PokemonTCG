@@ -110,19 +110,17 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   }
 
   cargarColeccion() {
-    // TEMPORAL: Para pruebas, cargamos todo el catálogo (4 copias de cada una) en lugar de la colección real del jugador.
-    this.cardService.getAll().subscribe({
-      next: (allCards: Card[]) => {
-        const fullCollection = [];
-        for (let i = 0; i < 4; i++) { fullCollection.push(...allCards); }
-        this.coleccion = fullCollection;
+    this.isLoadingImages = true;
+    this.jugadorService.getColeccion(this.username).subscribe({
+      next: (cards: Card[]) => {
+        this.coleccion = cards || [];
         this.actualizarCantidadesPoseidas();
         this.coleccion = this.obtenerCartasUnicas(this.coleccion);
         this.precargarImagenes(this.coleccion);
       },
       error: (err) => {
         console.error('Error cargando coleccion:', err);
-        this.notificar('No se pudo cargar la colección de prueba.', 'error');
+        this.notificar('No se pudo cargar la colección.', 'error');
         this.isLoadingImages = false;
         this.cdr.detectChanges();
       }

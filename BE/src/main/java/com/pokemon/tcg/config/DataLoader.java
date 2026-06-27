@@ -16,6 +16,7 @@ import com.pokemon.tcg.service.CardCatalogService;
 import com.pokemon.tcg.service.MazoBackupService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.io.InputStream;
@@ -54,6 +55,7 @@ public class DataLoader implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
         // Eliminar columna obsoleta 'santo_coins' si existe (para evitar errores en DBs heredadas)
         try (Connection conn = dataSource.getConnection()) {
