@@ -938,4 +938,117 @@ class BattleAttackServiceTest {
         long headsCount = coins.stream().filter(c -> c).count();
         assertEquals(headsCount * 30, res.resultado().danioFinal());
     }
+
+    // =================== Daño por Tipo y Modificadores ===================
+
+    @Test
+    void resolveAttackAplicaMuscleBandDanioMasVeinte() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        
+        Card muscleBand = new Card();
+        muscleBand.setId("xy1-121");
+        muscleBand.setNombre("Muscle Band");
+        muscleBand.setSupertype("Trainer");
+        muscleBand.setSubtypes(List.of("Item", "Tool"));
+        atacante.setAttachedTools(new java.util.ArrayList<>(List.of(muscleBand)));
+
+        Ataque ataque = attack("Golpe", 30, "");
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(50, resolution.resultado().danioFinal());
+    }
+
+    @Test
+    void resolveAttackAplicaDebilidadDanioDuplicado() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.getCard().setTipo("Fire");
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        
+        com.pokemon.tcg.model.CardAttribute debilidad = new com.pokemon.tcg.model.CardAttribute();
+        debilidad.setType("Fire");
+        defensor.getCard().setDebilidades(new java.util.ArrayList<>(List.of(debilidad)));
+
+        Ataque ataque = attack("Ember", 30, "");
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(60, resolution.resultado().danioFinal());
+    }
+
+    @Test
+    void resolveAttackAplicaResistenciaDanioReducido() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.getCard().setTipo("Water");
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        
+        com.pokemon.tcg.model.CardAttribute resistencia = new com.pokemon.tcg.model.CardAttribute();
+        resistencia.setType("Water");
+        defensor.getCard().setResistencias(new java.util.ArrayList<>(List.of(resistencia)));
+
+        Ataque ataque = attack("Water Splash", 30, "");
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(10, resolution.resultado().danioFinal());
+    }
+
+    @Test
+    void resolveAttackAplicaHardCharmDanioReducido() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        
+        Card hardCharm = new Card();
+        hardCharm.setId("xy1-119");
+        hardCharm.setNombre("Hard Charm");
+        hardCharm.setSupertype("Trainer");
+        hardCharm.setSubtypes(List.of("Item", "Tool"));
+        defensor.setAttachedTools(new java.util.ArrayList<>(List.of(hardCharm)));
+
+        Ataque ataque = attack("Golpe", 30, "");
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(10, resolution.resultado().danioFinal());
+    }
+
+    @Test
+    void resolveAttackShadowCircleConEnergiaDarknessIgnoraDebilidad() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.getCard().setTipo("Fire");
+        
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        com.pokemon.tcg.model.CardAttribute debilidad = new com.pokemon.tcg.model.CardAttribute();
+        debilidad.setType("Fire");
+        defensor.getCard().setDebilidades(new java.util.ArrayList<>(List.of(debilidad)));
+
+        Card darkEnergy = new Card();
+        darkEnergy.setId("d-1");
+        darkEnergy.setNombre("Darkness Energy");
+        darkEnergy.setSupertype("Energy");
+        darkEnergy.setTipo("Darkness");
+        defensor.getEnergiasUnidas().add(darkEnergy);
+
+        Card shadowCircle = new Card();
+        shadowCircle.setId("xy1-126");
+        shadowCircle.setNombre("Shadow Circle");
+        partida.setActiveStadium(shadowCircle);
+
+        Ataque ataque = attack("Ember", 30, "");
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(30, resolution.resultado().danioFinal());
+    }
 }
