@@ -129,7 +129,11 @@ class AttackEffectParserServiceTest {
 
     @Test
     void parseaHydroBombardComoDamageOpponentBenched() {
+        // El efecto debe producir un solo comando, aunque coincida con patrones generales.
         var commands = parser.parseEffects("This attack does 30 damage to 2 of your opponent's Benched Pokémon.", null);
+        assertEquals(1, commands.stream().filter(
+                command -> command instanceof com.pokemon.tcg.model.battle.command.DamageOpponentBenchedCommand
+        ).count());
         assertTrue(commands.stream().anyMatch(command ->
                 command instanceof com.pokemon.tcg.model.battle.command.DamageOpponentBenchedCommand cmd && cmd.getAmount() == 30 && cmd.getCount() == 2
         ));
@@ -138,6 +142,9 @@ class AttackEffectParserServiceTest {
     @Test
     void parseaBreakThroughComoDamageOpponentBenchedConUno() {
         var commands = parser.parseEffects("This attack does 30 damage to 1 of your opponent's Benched Pokémon.", null);
+        assertEquals(1, commands.stream().filter(
+                command -> command instanceof com.pokemon.tcg.model.battle.command.DamageOpponentBenchedCommand
+        ).count());
         assertTrue(commands.stream().anyMatch(command ->
                 command instanceof com.pokemon.tcg.model.battle.command.DamageOpponentBenchedCommand cmd && cmd.getAmount() == 30 && cmd.getCount() == 1
         ));

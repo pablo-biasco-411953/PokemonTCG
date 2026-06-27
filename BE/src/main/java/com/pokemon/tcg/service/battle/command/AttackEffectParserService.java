@@ -196,12 +196,6 @@ public class AttackEffectParserService {
             }
         }
 
-        Matcher opponentBenchDamageMatcher = Pattern.compile("does (\\d+) damage to (\\d+) of your opponent's benched", Pattern.CASE_INSENSITIVE).matcher(text);
-        if (opponentBenchDamageMatcher.find()) {
-            int amount = Integer.parseInt(opponentBenchDamageMatcher.group(1));
-            int count = Integer.parseInt(opponentBenchDamageMatcher.group(2));
-            commands.add(new DamageOpponentBenchedCommand(amount, count));
-        }
         Matcher optionalDiscardDamageMatcher = Pattern.compile("you may discard an energy attached to this pok.{1,2}mon\\.\\s*if you do, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
         if (optionalDiscardDamageMatcher.find()) {
             int extraDamage = Integer.parseInt(optionalDiscardDamageMatcher.group(1));
