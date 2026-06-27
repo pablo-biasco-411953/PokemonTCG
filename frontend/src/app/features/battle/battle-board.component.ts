@@ -118,6 +118,11 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   private battleRoomPolling: ReturnType<typeof setInterval> | null = null;
   landscapeHintDismissed = localStorage.getItem('battleLandscapeHintDismissed') === 'true';
 
+  modoSeleccionHabilidad = false;
+  habilidadSeleccionada: { sourceId: string; name: string } | null = null;
+  fairyTransferOriginId: string | null = null;
+  fairyTransferEnergyId: string | null = null;
+
   private yStart = 0;
   private yEnd = 0;
   private coinPointerId: number | null = null;
@@ -2861,6 +2866,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   clickEnActivo(): void {
+    if (this.modoSeleccionHabilidad && this.habilidadSeleccionada) {
+      this.procesarClickSeleccionHabilidad(this.partida?.jugador?.activo);
+      return;
+    }
     if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
       this.completarUnionEnergia(this.partida?.jugador?.activo);
     } else {
@@ -4008,6 +4017,10 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
   }
 
   async seleccionarBanca(p: any) {
+    if (this.modoSeleccionHabilidad && this.habilidadSeleccionada) {
+      this.procesarClickSeleccionHabilidad(p);
+      return;
+    }
     if (this.modoSeleccionUnionEnergia && this.energiaAUnir) {
       this.completarUnionEnergia(p);
       return;
@@ -4340,6 +4353,132 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     this.selectedDetailPokemon = null;
     this.mostrarDetalleModal = false;
     this.cdr.detectChanges();
+  }
+
+  esPokemonPropio(pokemon: any): boolean {
+    if (!this.partida || !pokemon) return false;
+    if (this.partida.jugador.activo === pokemon) return true;
+    return this.partida.jugador.banca.includes(pokemon);
+  }
+
+  esHabilidadActiva(nombre: string): boolean {
+    if (!nombre) return false;
+    const activeAbilities = ["water shuriken", "mystical fire", "fairy transfer", "drive off", "stance change", "upside-down evolution"];
+    return activeAbilities.includes(nombre.toLowerCase().trim());
+  }
+
+  habilidadYaUsada(pokemon: any, nombre: string): boolean {
+    if (!pokemon || !pokemon.habilidadesUsadasEsteTurno) return false;
+    return pokemon.habilidadesUsadasEsteTurno.includes(nombre);
+  }
+
+  iniciarUsoHabilidad(pokemon: any, habilidad: any): void {
+    if (!habilidad) return;
+    const name = habilidad.nombre.toLowerCase().trim();
+    
+    // Habilidades que requieren seleccion de objetivo en el tablero
+    const requiereTarget = name === 'water shuriken' || name === 'drive off' || name === 'fairy transfer';
+    
+    if (requiereTarget) {
+      this.cerrarDetallePokemon();
+      this.modoSeleccionHabilidad = true;
+      this.habilidadSeleccionada = { sourceId: pokemon.card.id, name: habilidad.nombre };
+      this.fairyTransferOriginId = null;
+      this.fairyTransferEnergyId = null;
+
+      let prompt = 'Elegí el Pokémon objetivo.';
+      if (name === 'water shuriken') {
+        prompt = 'Seleccioná un Pokémon del oponente para hacerle 30 de daño.';
+      } else if (name === 'drive off') {
+        prompt = 'Seleccioná qué Pokémon de la banca del oponente querés promover a Activo.';
+      } else if (name === 'fairy transfer') {
+        prompt = 'Seleccioná el Pokémon que tiene la energía Hada que querés mover.';
+      }
+      this.mostrarNotificacion(prompt, 'info');
+    } else {
+      // Habilidades instantaneas sin objetivo (Mystical Fire, Stance Change, Upside-Down Evolution)
+      this.cerrarDetallePokemon();
+      this.ejecutarUsoHabilidad(pokemon.card.id, habilidad.nombre);
+    }
+  }
+
+  async ejecutarUsoHabilidad(sourceId: string, name: string, targetId?: string, extraParams?: string) {
+    this.cargandoAccion = true;
+    this.modoSeleccionHabilidad = false;
+    this.habilidadSeleccionada = null;
+
+    try {
+      const nuevoEstado = await this.battleBoardAction.usarHabilidadYRecargar(
+        this.matchId!,
+        sourceId,
+        name,
+        targetId,
+        extraParams
+      );
+      this.aplicarEstadoRefrescado(nuevoEstado);
+      this.cargandoAccion = false;
+      this.mostrarNotificacion(`¡Habilidad ${name} usada con éxito!`, 'success');
+      this.cdr.detectChanges();
+    } catch (err: any) {
+      this.cargandoAccion = false;
+      console.error(err);
+      this.mostrarNotificacion(err.error || `Error al usar habilidad: ${err.message}`, 'error');
+    }
+  }
+
+  procesarClickSeleccionHabilidad(p: any) {
+    if (!this.habilidadSeleccionada) return;
+    const name = this.habilidadSeleccionada.name.toLowerCase().trim();
+    const sourceId = this.habilidadSeleccionada.sourceId;
+
+    if (name === 'water shuriken') {
+      const isOpponent = this.partida?.bot?.activo === p || this.partida?.bot?.banca?.includes(p);
+      if (!isOpponent) {
+        this.mostrarNotificacion("Debés elegir un Pokémon del oponente como objetivo.", "error");
+        return;
+      }
+      this.ejecutarUsoHabilidad(sourceId, this.habilidadSeleccionada.name, p.card.id);
+    } 
+    else if (name === 'drive off') {
+      const isOpponentBench = this.partida?.bot?.banca?.includes(p);
+      if (!isOpponentBench) {
+        this.mostrarNotificacion("Debés elegir un Pokémon de la banca del oponente.", "error");
+        return;
+      }
+      this.ejecutarUsoHabilidad(sourceId, this.habilidadSeleccionada.name, p.card.id);
+    }
+    else if (name === 'fairy transfer') {
+      const isOwn = this.partida?.jugador?.activo === p || this.partida?.jugador?.banca?.includes(p);
+      if (!isOwn) {
+        this.mostrarNotificacion("Debés elegir uno de tus propios Pokémon.", "error");
+        return;
+      }
+
+      if (!this.fairyTransferOriginId) {
+        const fairyEnergy = p.energiasUnidas?.find((e: any) => e.tipo === 'Fairy' || (e.nombre && e.nombre.toLowerCase().includes('fairy energy')));
+        if (!fairyEnergy) {
+          this.mostrarNotificacion("Este Pokémon no tiene energías Hada acopladas.", "error");
+          return;
+        }
+        this.fairyTransferOriginId = p.card.id;
+        this.fairyTransferEnergyId = fairyEnergy.id;
+        this.mostrarNotificacion("Ahora seleccioná el Pokémon de destino.", "info");
+      } else {
+        const originId = this.fairyTransferOriginId;
+        const energyId = this.fairyTransferEnergyId;
+        
+        this.fairyTransferOriginId = null;
+        this.fairyTransferEnergyId = null;
+
+        this.ejecutarUsoHabilidad(sourceId, this.habilidadSeleccionada.name, p.card.id, `${energyId},${originId}`);
+      }
+    }
+  }
+
+  clickEnEnemigo(p: any): void {
+    if (this.modoSeleccionHabilidad && this.habilidadSeleccionada) {
+      this.procesarClickSeleccionHabilidad(p);
+    }
   }
 
   esCartaEX(carta: Card | undefined | null): boolean {

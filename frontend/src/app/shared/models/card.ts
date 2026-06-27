@@ -20,6 +20,12 @@ export interface Ataque {
   textoOriginal?: string;
 }
 
+export interface Habilidad {
+  nombre: string;
+  texto: string;
+  type: string;
+}
+
 // Modelo base de una carta recibido desde backend.
 export interface Card {
   id: string;
@@ -34,6 +40,7 @@ export interface Card {
   attacks?: string;
   reglas?: string[];
   ataques?: Ataque[];
+  habilidades?: Habilidad[];
   subtypes?: string[];
   debilidades?: CardWeakness[];
   resistencias?: CardWeakness[];
