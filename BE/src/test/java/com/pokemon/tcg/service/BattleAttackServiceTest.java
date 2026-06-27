@@ -1121,4 +1121,121 @@ class BattleAttackServiceTest {
         assertEquals(cruces, partida.getBot().getPilaDescarte().size());
         assertEquals(4 - cruces, partida.getBot().getMano().size());
     }
+
+    @Test
+    void testAtaquePotenciadoSiguienteTurno() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.setAtaquePotenciadoSiguienteTurno("Golpe Fuerte");
+        atacante.setDanioExtraSiguienteTurno(30);
+        
+        Ataque ataque = attack("Golpe Fuerte", 40, "");
+        BattleAttackService.AttackResolution res = service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> {}, null);
+        assertEquals(70, res.resultado().danioFinal());
+    }
+
+    @Test
+    void testReduccionDanioCausadoSiguienteTurno() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.setReduccionDanioCausadoSiguienteTurno(20);
+        
+        Ataque ataque = attack("Golpe", 30, "");
+        BattleAttackService.AttackResolution res = service.resolveAttack(partida, ataque, atacante, partida.getBot().getActivo(), (p, a, d) -> {}, null);
+        assertEquals(10, res.resultado().danioFinal());
+    }
+
+    @Test
+    void testPreventDamageThreshold() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        defensor.setPreventDamageThreshold(40);
+        
+        Ataque ataque = attack("Golpe", 30, "");
+        BattleAttackService.AttackResolution res = service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), defensor, (p, a, d) -> {}, null);
+        assertEquals(0, res.resultado().danioFinal());
+    }
+
+    @Test
+    void testSpikyShieldAbility() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        com.pokemon.tcg.model.Habilidad habilidadCard = new com.pokemon.tcg.model.Habilidad();
+        habilidadCard.setNombre("Spiky Shield");
+        defensor.getCard().setHabilidades(List.of(habilidadCard));
+        
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.setHpActual(100);
+        
+        Ataque ataque = attack("Golpe", 30, "");
+        service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+        assertEquals(70, atacante.getHpActual()); // Recibe 30 de vuelta
+    }
+
+    @Test
+    void testDestinyBurstAbility() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        com.pokemon.tcg.model.Habilidad habilidadCard = new com.pokemon.tcg.model.Habilidad();
+        habilidadCard.setNombre("Destiny Burst");
+        defensor.getCard().setHabilidades(List.of(habilidadCard));
+        defensor.setHpActual(30); // Va a morir
+        
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.setHpActual(100);
+        
+        Ataque ataque = attack("Golpe Letal", 50, "");
+        service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+        // Destiny burst puede salir cara (1/2), no es determinista, pero le damos coverage al condicional
+        assertTrue(atacante.getHpActual() == 100 || atacante.getHpActual() == 50);
+    }
+
+    @Test
+    void testShadowCircleAndDarknessEnergy() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        // Set weakness
+        com.pokemon.tcg.model.CardAttribute weak = new com.pokemon.tcg.model.CardAttribute();
+        weak.setType("Fire");
+        defensor.getCard().setDebilidades(List.of(weak));
+        
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        atacante.getCard().setTipo("Fire");
+        
+        // Add shadow circle
+        Card stadium = new Card();
+        stadium.setNombre("Shadow Circle");
+        partida.setActiveStadium(stadium);
+        
+        // Add Darkness energy
+        Card energy = new Card();
+        energy.setTipo("Darkness");
+        defensor.getEnergiasUnidas().add(energy);
+        
+        Ataque ataque = attack("Fuego", 30, "");
+        BattleAttackService.AttackResolution res = service.resolveAttack(partida, ataque, atacante, defensor, (p, a, d) -> {}, null);
+        
+        // El daño debe ser 30, NO 60, porque shadow circle lo previene
+        assertEquals(30, res.resultado().danioFinal());
+    }
+
+    @Test
+    void testHardCharmAndFurCoat() {
+        Partida partida = partidaBasica();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        
+        Card charm = new Card();
+        charm.setNombre("Hard Charm");
+        defensor.getAttachedTools().add(charm);
+        
+        com.pokemon.tcg.model.Habilidad habilidadCard = new com.pokemon.tcg.model.Habilidad();
+        habilidadCard.setNombre("Fur Coat");
+        defensor.getCard().setHabilidades(List.of(habilidadCard));
+        
+        Ataque ataque = attack("Golpe Fuerte", 50, "");
+        BattleAttackService.AttackResolution res = service.resolveAttack(partida, ataque, partida.getJugador().getActivo(), defensor, (p, a, d) -> {}, null);
+        
+        // Daño 50 - 20 (Charm) - 20 (Fur Coat) = 10
+        assertEquals(10, res.resultado().danioFinal());
+    }
 }

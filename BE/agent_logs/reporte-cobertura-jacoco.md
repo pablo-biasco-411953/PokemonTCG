@@ -1,8 +1,8 @@
 # Reporte de Cobertura de Código (JaCoCo) — Backend
 
-- **Fecha/Hora de Registro**: 2026-06-27 17:51 (Local)
-- **Origen**: Ejecución completa del suite de pruebas (823 tests ejecutados exitosamente, 0 errores).
-- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (72.72% vs >= 80% requerido).
+- **Fecha/Hora de Registro**: 2026-06-27 21:40 (Local)
+- **Origen**: Ejecución completa del suite de pruebas (921 tests ejecutados exitosamente, 0 errores).
+- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (79.63% vs >= 80% requerido).
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Componente | Requisito RNF-03 | Estado Actual (JaCoCo) | Estado de Cumplimiento |
 | :--- | :---: | :---: | :---: |
-| **Total del Proyecto (Backend)** | **≥ 80.00%** | **72.72%** (25,178 / 34,624 instrucciones) | ❌ *No Cumple* |
+| **Total del Proyecto (Backend)** | **≥ 80.00%** | **79.63%** | ❌ *No Cumple* |
 
 > [!IMPORTANT]
-> El proyecto general se encuentra a un **7.28%** de alcanzar la cobertura mínima requerida del **80%**.
-> Con la incorporación de las pruebas de integridad de habilidades (`HabilidadesIntegrityTest`), la cobertura de `BattleAttackService` se ubica en el **87.46%** (530/606) y la de `ComandoUsarHabilidad` en el **83.55%** (584/699).
+> El proyecto general se encuentra a un **0.37%** de alcanzar la cobertura mínima requerida del **80%**.
+> Con la incorporación de las pruebas adicionales para `BattleEngineService.resolverAccionPendiente`, la cobertura lógica global subió a **82.58%**.
 
 ---
 

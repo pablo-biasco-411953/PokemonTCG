@@ -16,7 +16,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import com.pokemon.tcg.model.Jugador;
+import com.pokemon.tcg.model.Mazo;
 
 class BattleEngineServiceTest {
 
@@ -258,5 +261,283 @@ class BattleEngineServiceTest {
         assertEquals(0, resultado.getBot().getActivo().getEnergiasUnidas().size());
         assertEquals(1, resultado.getBot().getBanca().get(0).getEnergiasUnidas().size());
         assertEquals("Fire Energy", resultado.getBot().getBanca().get(0).getEnergiasUnidas().get(0).getNombre());
+    }
+    @Test
+    void testUnirEnergia() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card pika = card("p1", "Pikachu", "60");
+        pika.setSupertype("Pokemon");
+        pika.setTipo("Lightning");
+        jugador.setActivo(new com.pokemon.tcg.model.battle.CartaEnJuego(pika));
+
+        Card energy = card("e1", "Lightning Energy", "Energy");
+        energy.setSupertype("Energy");
+        energy.setTipo("Lightning");
+        jugador.getMano().add(energy);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        org.mockito.Mockito.when(cardRepo.findById("e1")).thenReturn(java.util.Optional.of(energy));
+
+        service.unirEnergia(partida.getId(), "p1", "e1", "pablo", null);
+
+        assertEquals(1, jugador.getActivo().getEnergiasUnidas().size());
+        org.junit.jupiter.api.Assertions.assertTrue(partida.isYaSeUnioEnergiaEsteTurno());
+        org.junit.jupiter.api.Assertions.assertTrue(jugador.getMano().isEmpty());
+    }
+
+    @Test
+    void testRealizarRetirada() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card pika = card("p1", "Pikachu", "60");
+        pika.setSupertype("Pokemon");
+        pika.setTipo("Lightning");
+        pika.setCostoRetirada(1);
+        
+        com.pokemon.tcg.model.battle.CartaEnJuego activo = new com.pokemon.tcg.model.battle.CartaEnJuego(pika);
+        Card energy = card("e1", "Lightning Energy", "Energy");
+        energy.setSupertype("Energy");
+        energy.setTipo("Lightning");
+        activo.getEnergiasUnidas().add(energy);
+        jugador.setActivo(activo);
+
+        Card squirtle = card("p2", "Squirtle", "60");
+        squirtle.setSupertype("Pokemon");
+        squirtle.setTipo("Water");
+        jugador.getBanca().add(new com.pokemon.tcg.model.battle.CartaEnJuego(squirtle));
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        service.realizarRetirada(partida.getId(), "p2", "pablo");
+
+        assertEquals("p2", jugador.getActivo().getCard().getId());
+        org.junit.jupiter.api.Assertions.assertTrue(partida.isYaSeRetiroEsteTurno());
+        assertEquals(1, jugador.getPilaDescarte().size()); // Energy discarded
+    }
+
+    @Test
+    void testEvolucionarPokemon() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card bulba = card("p1", "Bulbasaur", "60");
+        bulba.setSupertype("Pokemon");
+        bulba.setSubtypes(List.of("Basic"));
+        com.pokemon.tcg.model.battle.CartaEnJuego activo = new com.pokemon.tcg.model.battle.CartaEnJuego(bulba);
+        activo.setTurnoEntrada(2);
+        jugador.setActivo(activo);
+
+        Card ivy = card("p2", "Ivysaur", "90");
+        ivy.setSupertype("Pokemon");
+        ivy.setSubtypes(List.of("Stage 1"));
+        ivy.setEvolvesFrom("Bulbasaur");
+        jugador.getMano().add(ivy);
+        jugador.setTurnosJugados(2);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.setNumeroTurno(3);
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        org.mockito.Mockito.when(cardRepo.findById("p2")).thenReturn(java.util.Optional.of(ivy));
+
+        service.evolucionarPokemon(partida.getId(), "p2", "p1", "pablo");
+
+        assertEquals("p2", jugador.getActivo().getCard().getId());
+        assertEquals("90", jugador.getActivo().getCard().getHp());
+    }
+
+    @Test
+    void testJugarTrainer() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+
+        Card trainer = card("t1", "Potion", "0");
+        trainer.setSupertype("Trainer");
+        trainer.setSubtypes(List.of("Item"));
+        jugador.getMano().add(trainer);
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        org.mockito.Mockito.when(cardRepo.findById("t1")).thenReturn(java.util.Optional.of(trainer));
+
+        // Potion heal target isn't tested deeply here, just the playing mechanism
+        // Potion requires pending action usually, but we test the initial call
+        service.jugarTrainer(partida.getId(), "t1", "pablo");
+        
+        org.junit.jupiter.api.Assertions.assertTrue(jugador.getMano().isEmpty());
+    }
+
+    @Test
+    void testRealizarAtaque() {
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        CardRepository cardRepo = mock(CardRepository.class);
+        BotAIService botAIService = mock(BotAIService.class);
+        BattleAttackService battleAttackService = mock(BattleAttackService.class);
+        BattleKoService battleKoService = mock(BattleKoService.class);
+
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, cardRepo, botAIService, battleAttackService, battleKoService
+        );
+
+        TableroJugador jugador = new TableroJugador();
+        TableroJugador bot = new TableroJugador();
+        
+        Card pika = card("p1", "Pikachu", "60");
+        com.pokemon.tcg.model.battle.Ataque attack = new com.pokemon.tcg.model.battle.Ataque();
+        attack.setNombre("Thunder Jolt");
+        pika.reemplazarAtaques(List.of(attack));
+        jugador.setActivo(new com.pokemon.tcg.model.battle.CartaEnJuego(pika));
+        bot.setActivo(new com.pokemon.tcg.model.battle.CartaEnJuego(card("p2", "Squirtle", "60")));
+
+        Partida partida = new Partida(jugador, bot);
+        partida.setJugadorUsername("pablo");
+        partida.setNumeroTurno(2);
+        partida.transicionarA(new EstadoTurnoNormal());
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        org.mockito.Mockito.when(battleAttackService.resolveAttack(
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), 
+            org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull()
+        )).thenReturn(new com.pokemon.tcg.service.BattleAttackService.AttackResolution(
+            new com.pokemon.tcg.model.battle.ResultadoAtaque(10, 0), java.util.List.of()
+        ));
+
+        service.realizarAtaque(partida.getId(), "Thunder Jolt", "pablo", null);
+
+        org.mockito.Mockito.verify(battleAttackService, org.mockito.Mockito.times(1))
+            .resolveAttack(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.isNull());
+    }
+    @Test
+    void testStartBattleJugadorNoEncontrado() {
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mock(MazoRepository.class), mock(CardRepository.class),
+                mock(BotAIService.class), mock(BattleAttackService.class), mock(BattleKoService.class)
+        );
+        org.mockito.Mockito.when(jugadorRepo.findByUsername("no_existe")).thenReturn(null);
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.startBattle("no_existe", 1L);
+        });
+    }
+
+    @Test
+    void testStartBattleMazoNoEncontrado() {
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, mock(CardRepository.class),
+                mock(BotAIService.class), mock(BattleAttackService.class), mock(BattleKoService.class)
+        );
+        org.mockito.Mockito.when(jugadorRepo.findByUsername("pablo")).thenReturn(new Jugador());
+        org.mockito.Mockito.when(mazoRepo.findById(99L)).thenReturn(java.util.Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> {
+            service.startBattle("pablo", 99L);
+        });
+    }
+
+    @Test
+    void testStartBattleMazoIncompleto() {
+        JugadorRepository jugadorRepo = mock(JugadorRepository.class);
+        MazoRepository mazoRepo = mock(MazoRepository.class);
+        BattleEngineService service = new BattleEngineService(
+                jugadorRepo, mazoRepo, mock(CardRepository.class),
+                mock(BotAIService.class), mock(BattleAttackService.class), mock(BattleKoService.class)
+        );
+        org.mockito.Mockito.when(jugadorRepo.findByUsername("pablo")).thenReturn(new Jugador());
+        Mazo mazo = new Mazo();
+        mazo.setCartas(new ArrayList<>());
+        org.mockito.Mockito.when(mazoRepo.findById(1L)).thenReturn(java.util.Optional.of(mazo));
+        assertThrows(IllegalStateException.class, () -> {
+            service.startBattle("pablo", 1L);
+        });
+    }
+    @Test
+    void testLanzarMoneda_CallerInvalido() {
+        BattleEngineService service = new BattleEngineService(
+                mock(JugadorRepository.class), mock(MazoRepository.class), mock(CardRepository.class),
+                mock(BotAIService.class), mock(BattleAttackService.class), mock(BattleKoService.class)
+        );
+        Partida partida = new Partida(new TableroJugador(), new TableroJugador());
+        partida.setJugadorUsername("pablo");
+        partida.setBotUsername("bot");
+        partida.setCoinFlipCallerUsername("pablo");
+        service.partidasEnCurso.put(partida.getId(), partida);
+        assertThrows(IllegalStateException.class, () -> {
+            service.lanzarMoneda(partida.getId(), "bot_o_alguien", "CARA");
+        });
+    }
+
+    @Test
+    void testLanzarMoneda_YaLanzada() {
+        BattleEngineService service = new BattleEngineService(
+                mock(JugadorRepository.class), mock(MazoRepository.class), mock(CardRepository.class),
+                mock(BotAIService.class), mock(BattleAttackService.class), mock(BattleKoService.class)
+        );
+        Partida partida = new Partida(new TableroJugador(), new TableroJugador());
+        partida.setCoinFlipped(true);
+        service.partidasEnCurso.put(partida.getId(), partida);
+        
+        Partida res = service.lanzarMoneda(partida.getId(), "pablo", "CARA");
+        assertEquals(partida, res);
     }
 }

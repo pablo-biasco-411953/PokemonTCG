@@ -1,7 +1,7 @@
 # Tarea: Testing Strategy - 90% Code Coverage
 
-- **Fecha/Hora última actualización**: 2026-06-27 14:50 (sesión 5)
-- **Estado**: En progreso — 73.89% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% crítico (RNF-03)
+- **Fecha/Hora última actualización**: 2026-06-27 18:18 (sesión 5)
+- **Estado**: En progreso — 76.82% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% lógico (RNF-03)
 
 ---
 
@@ -130,6 +130,8 @@ Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
   - **MODIFY [BattleAttackServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/BattleAttackServiceTest.java)**: Agregadas 5 pruebas de cálculo de daño (Weakness, Resistance, Muscle Band, Hard Charm, Shadow Circle), subiendo la cobertura de `BattleAttackService` a **83.95%** y `EnergyCostCalculator` a **92.53%**.
   - **MODIFY [BattleKoServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/BattleKoServiceTest.java)**: Agregadas 6 pruebas de condiciones de victoria y casos límite de K.O., subiendo `BattleKoService` a **82.50%**.
   - **MODIFY [LobbyRoomServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/LobbyRoomServiceTest.java)**: Agregados 8 tests exhaustivos de cobertura para `LobbyRoomService`, subiendo su cobertura del **56.54%** al **79.16%**.
+  - **MODIFY [AttackEffectParserServiceTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/service/battle/command/AttackEffectParserServiceTest.java)**: Agregadas múltiples pruebas de parsing de efectos con expresiones regulares, incrementando significativamente la cobertura de este componente.
+  - **NEW [SearchDeckCommandTest.java](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/src/test/java/com/pokemon/tcg/model/battle/command/SearchDeckCommandTest.java)**: Cobertura añadida para las funciones aisladas de `SearchDeckCommand`.
 
 ---
 
