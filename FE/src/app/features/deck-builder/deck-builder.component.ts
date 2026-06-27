@@ -320,8 +320,8 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   agregarAlMazo(carta: Card) {
     const copiasEnMazo = this.getCantidadEnMazo(carta.id);
     const totalPoseidas = this.cantidadesPoseidas[carta.id] || 0;
-    const isEnergy = carta.supertype === 'Energy';
-    const limit = isEnergy ? 60 : 4;
+    const isBasicEnergy = carta.supertype === 'Energy' && (carta.subtypes || []).includes('Basic');
+    const limit = isBasicEnergy ? 60 : 4;
 
     if (copiasEnMazo < totalPoseidas && copiasEnMazo < limit && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);

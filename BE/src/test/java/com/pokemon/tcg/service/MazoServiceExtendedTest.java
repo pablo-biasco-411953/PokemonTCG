@@ -48,6 +48,15 @@ class MazoServiceExtendedTest {
         return Collections.nCopies(60, cardId);
     }
 
+    /** Genera 60 IDs con max 4 copias de cada carta (15 cartas distintas x4). */
+    private List<String> ids60Validos(List<Card> cartas) {
+        List<String> ids = new ArrayList<>();
+        for (Card c : cartas) {
+            for (int i = 0; i < 4; i++) ids.add(c.getId());
+        }
+        return ids;
+    }
+
     @Test
     void guardarMazo_jugadorNoEncontrado_lanzaExcepcion() {
         when(jugadorRepo.findByUsername("noexiste")).thenReturn(null);
@@ -115,12 +124,17 @@ class MazoServiceExtendedTest {
     @Test
     void guardarMazo_llamaBackup() {
         Jugador j = new Jugador("ash");
-        Card c = basicPokemon("xy1-1");
+        // Crear 15 Pokémon básicos distintos (4 copias cada uno = 60 cartas, cumple la regla)
+        List<Card> pokemons = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            Card c = basicPokemon("xy1-" + i);
+            pokemons.add(c);
+            when(cardRepo.findById("xy1-" + i)).thenReturn(Optional.of(c));
+        }
         when(jugadorRepo.findByUsername("ash")).thenReturn(j);
-        when(cardRepo.findById("xy1-1")).thenReturn(Optional.of(c));
         when(mazoRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.guardarMazo("Mazo", "ash", ids60("xy1-1"));
+        service.guardarMazo("Mazo", "ash", ids60Validos(pokemons));
 
         verify(backupService).backupAll();
     }
