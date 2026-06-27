@@ -37,7 +37,12 @@
           <span class="attachment-pill status" *ngFor="let estado of getAttachedStatuses()">{{ estado }}</span>
         </div>
       </div>
-      <hr class="cd-divider" />
+      <!-- Reglas / Descripción de Entrenadores -->
+      <div class="cd-rules-list" *ngIf="hoveredCard.reglas && hoveredCard.reglas.length" style="margin-bottom: 15px;">
+        <div class="cd-rule" *ngFor="let regla of hoveredCard.reglas" style="background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; border-left: 3px solid #ffcc00; margin-bottom: 8px;">
+          <p class="cdr-text" [innerHTML]="resolveAttackText(regla)" style="font-size: 13px; color: #e5e7eb; margin: 0; line-height: 1.5; font-style: italic;"></p>
+        </div>
+      </div>
 
       <div class="cd-attacks-list">
         <div class="cd-attack" *ngFor="let atk of asAttackList(hoveredCard.ataques)">

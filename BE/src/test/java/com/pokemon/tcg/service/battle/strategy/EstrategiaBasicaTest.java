@@ -33,6 +33,7 @@ class EstrategiaBasicaTest {
         Card c = new Card();
         c.setId(id);
         c.setNombre(nombre);
+        c.setSupertype("Pokémon");
         c.setHp("60");
         return c;
     }

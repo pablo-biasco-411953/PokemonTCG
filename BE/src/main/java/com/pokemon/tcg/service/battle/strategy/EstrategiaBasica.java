@@ -506,6 +506,13 @@ public class EstrategiaBasica implements EstrategiaBot {
     private boolean esPokemonBasico(Card c) {
         if (c == null) return false;
         System.out.print("🔍 [BOT SCAN] Analizando: " + c.getNombre() + " -> ");
+        
+        String supertype = c.getSupertype() != null ? c.getSupertype().trim().toLowerCase() : "";
+        if (!supertype.equals("pokemon") && !supertype.equals("pokémon")) {
+            System.out.println("❌ No es un Pokémon (Supertype: " + c.getSupertype() + ").");
+            return false;
+        }
+
         if (c.getNombre().toLowerCase().contains("energ") || "Energy".equalsIgnoreCase(c.getSupertype()) || "0".equals(c.getHp())) {
             System.out.println("❌ Es una Energía.");
             return false;
