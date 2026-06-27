@@ -12,8 +12,13 @@ export class BattleNotificationService {
     showConfirmButton: false,
     timer: 3000,
     timerProgressBar: true,
-    background: 'rgba(20, 20, 20, 0.85)',
+    background: 'rgba(10, 18, 32, 0.95)',
     color: '#fff',
+    customClass: {
+      popup: 'pokemon-tcg-toast',
+      title: 'pokemon-tcg-toast-title',
+      timerProgressBar: 'pokemon-tcg-toast-progress'
+    },
     didOpen: (toast) => {
       toast.onmouseenter = Swal.stopTimer;
       toast.onmouseleave = Swal.resumeTimer;

@@ -120,8 +120,9 @@ export class BattleBoardActionService {
     matchId: string,
     activoId: string,
     energiaId: string,
+    selectedType?: string
   ): Promise<Partida> {
-    await firstValueFrom(this.battleService.unirEnergia(matchId, activoId, energiaId));
+    await firstValueFrom(this.battleService.unirEnergia(matchId, activoId, energiaId, selectedType));
     return await firstValueFrom(this.battleService.getState(matchId));
   }
 

@@ -131,11 +131,11 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/play-trainer`, { cartaId }, this.getHeaders());
   }
 
-  // Une una energia al Pokemon indicado.
-  unirEnergia(matchId: string, cartaId: string, energiaId: string): Observable<void> {
+  unirEnergia(matchId: string, cartaId: string, energiaId: string, selectedType?: string): Observable<void> {
     return this.http.post<void>(`${this.base}/${matchId}/attach-energy`, {
       cartaId,
-      energiaId
+      energiaId,
+      selectedType
     }, this.getHeaders());
   }
 
