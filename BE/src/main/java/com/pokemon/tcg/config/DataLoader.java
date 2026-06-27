@@ -56,10 +56,25 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Eliminar columna obsoleta 'santo_coins' si existe (para evitar errores en DBs heredadas)
-        try (Connection conn = dataSource.getConnection();
-             Statement stmt = conn.createStatement()) {
-            stmt.executeUpdate("ALTER TABLE jugadores DROP COLUMN santo_coins");
-            System.out.println("[DataLoader] Columna obsoleta 'santo_coins' eliminada con exito.");
+        try (Connection conn = dataSource.getConnection()) {
+            boolean columnExists = false;
+            try (Statement stmt = conn.createStatement();
+                 java.sql.ResultSet rs = stmt.executeQuery("SELECT * FROM jugadores LIMIT 1")) {
+                java.sql.ResultSetMetaData rsmd = rs.getMetaData();
+                int columns = rsmd.getColumnCount();
+                for (int i = 1; i <= columns; i++) {
+                    if ("santo_coins".equalsIgnoreCase(rsmd.getColumnName(i))) {
+                        columnExists = true;
+                        break;
+                    }
+                }
+            }
+            if (columnExists) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.executeUpdate("ALTER TABLE jugadores DROP COLUMN santo_coins");
+                    System.out.println("[DataLoader] Columna obsoleta 'santo_coins' eliminada con exito.");
+                }
+            }
         } catch (Exception e) {
             System.out.println("[DataLoader] Info: no se pudo eliminar 'santo_coins' (es normal si ya fue eliminada o no existe): " + e.getMessage());
         }
