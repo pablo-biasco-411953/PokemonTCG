@@ -1514,38 +1514,94 @@ public class BattleEngineService {
             target.getEnergiasUnidas().add(energy);
             String actor = callerUsername.equals(partida.getJugadorUsername()) ? "JUGADOR" : "BOT";
             partida.getTurnLogs().add("ENERGY_MOVED:" + actor + ":" + energy.getNombre() + ":" + target.getCard().getNombre());
-        } else {
-            boolean attached = false;
-            for (String id : ids) {
-                Card card = board.getMazo().stream()
-                        .filter(candidate -> id.equals(candidate.getId()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("La carta ya no esta en el mazo."));
-                board.getMazo().remove(card);
-                if (("ATTACH_ACTIVE".equals(pending.getDestination()) || "ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination())) && board.getActivo() != null) {
-                    board.getActivo().getEnergiasUnidas().add(card);
-                    agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
-                    attached = true;
-                } else {
-                    board.getMano().add(card);
+        } else if ("ATTACH_ENERGY_GATHER_ENERGY".equals(pending.getType())) {
+            if (ids.isEmpty()) throw new IllegalArgumentException("Se requiere seleccionar un Pokémon.");
+            String targetPokemonId = ids.get(0);
+            String energyCardId = pending.getDestination().split(":")[1];
+
+            Card energyCard = board.getMazo().stream()
+                    .filter(c -> c.getId().equals(energyCardId))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("La energía elegida ya no está en el mazo."));
+
+            CartaEnJuego target = null;
+            if (board.getActivo() != null && board.getActivo().getCard().getId().equals(targetPokemonId)) {
+                target = board.getActivo();
+            } else {
+                for (CartaEnJuego b : board.getBanca()) {
+                    if (b.getCard().getId().equals(targetPokemonId)) {
+                        target = b;
+                        break;
+                    }
                 }
             }
-            Collections.shuffle(board.getMazo());
-            agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
+            if (target == null) throw new IllegalArgumentException("Pokémon objetivo no encontrado.");
 
-            if ("ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination()) && attached && !board.getBanca().isEmpty()) {
-                com.pokemon.tcg.model.battle.PendingBattleAction switchAction = new com.pokemon.tcg.model.battle.PendingBattleAction();
-                switchAction.setActor(callerUsername);
-                switchAction.setType("SWITCH_ACTIVE");
-                switchAction.setPrompt("Seleccioná un Pokémon de tu banca para cambiarlo por tu activo.");
-                switchAction.setMinSelections(1);
-                switchAction.setMaxSelections(1);
-                switchAction.setEndsTurn(pending.isEndsTurn());
-                switchAction.setOptions(board.getBanca().stream()
-                        .map(b -> new com.pokemon.tcg.model.battle.PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()))
-                        .toList());
-                partida.setPendingAction(switchAction);
-                return partida;
+            board.getMazo().remove(energyCard);
+            target.getEnergiasUnidas().add(energyCard);
+
+            Collections.shuffle(board.getMazo());
+            agregarLog(partida, "ENERGY_ATTACHED", callerUsername, target.getCard().getNombre());
+        } else {
+            if ("SELECT_POKEMON_FOR_GATHER_ENERGY".equals(pending.getDestination())) {
+                if (ids.isEmpty()) {
+                    Collections.shuffle(board.getMazo());
+                    agregarLog(partida, "DECK_SEARCH_CANCELLED", callerUsername);
+                } else {
+                    String selectedEnergyId = ids.get(0);
+                    PendingBattleAction selectPoke = new PendingBattleAction();
+                    selectPoke.setActor(callerUsername);
+                    selectPoke.setType("ATTACH_ENERGY_GATHER_ENERGY");
+                    selectPoke.setPrompt("Gather Energy: Seleccioná 1 de tus Pokémon para unirle la energía");
+                    selectPoke.setMinSelections(1);
+                    selectPoke.setMaxSelections(1);
+                    selectPoke.setDestination("GATHER_ENERGY_SOURCE:" + selectedEnergyId);
+                    selectPoke.setEndsTurn(pending.isEndsTurn());
+
+                    List<PendingBattleAction.Option> options = new ArrayList<>();
+                    if (board.getActivo() != null) {
+                        options.add(new PendingBattleAction.Option(board.getActivo().getCard().getId(), board.getActivo().getCard().getNombre(), board.getActivo().getCard().getImagen()));
+                    }
+                    for (CartaEnJuego b : board.getBanca()) {
+                        options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                    }
+                    selectPoke.setOptions(options);
+                    partida.setPendingAction(selectPoke);
+                    return partida;
+                }
+            } else {
+                boolean attached = false;
+                for (String id : ids) {
+                    Card card = board.getMazo().stream()
+                            .filter(candidate -> id.equals(candidate.getId()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalArgumentException("La carta ya no esta en el mazo."));
+                    board.getMazo().remove(card);
+                    if (("ATTACH_ACTIVE".equals(pending.getDestination()) || "ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination())) && board.getActivo() != null) {
+                        board.getActivo().getEnergiasUnidas().add(card);
+                        agregarLog(partida, "ENERGY_ATTACHED", callerUsername, board.getActivo().getCard().getNombre());
+                        attached = true;
+                    } else {
+                        board.getMano().add(card);
+                    }
+                }
+                Collections.shuffle(board.getMazo());
+                agregarLog(partida, "DECK_SEARCHED", callerUsername, String.valueOf(ids.size()));
+
+                if ("ATTACH_ACTIVE_AND_SWITCH".equals(pending.getDestination()) && attached && !board.getBanca().isEmpty()) {
+                    com.pokemon.tcg.model.battle.PendingBattleAction switchAction = new com.pokemon.tcg.model.battle.PendingBattleAction();
+                    switchAction.setActor(callerUsername);
+                    switchAction.setType("SWITCH_ACTIVE");
+                    switchAction.setPrompt("Seleccioná un Pokémon de tu banca para cambiarlo por tu activo.");
+                    switchAction.setMinSelections(1);
+                    switchAction.setMaxSelections(1);
+                    switchAction.setEndsTurn(pending.isEndsTurn());
+                    switchAction.setOptions(board.getBanca().stream()
+                            .map(b -> new com.pokemon.tcg.model.battle.PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()))
+                            .toList());
+                    partida.setPendingAction(switchAction);
+                    return partida;
+                }
             }
         }
         boolean shouldPassTurn = pending.isEndsTurn();
