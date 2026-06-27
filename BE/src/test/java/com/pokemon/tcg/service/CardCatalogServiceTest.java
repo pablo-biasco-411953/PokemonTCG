@@ -1,70 +1,78 @@
 package com.pokemon.tcg.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
 import com.pokemon.tcg.model.CardTranslation;
 import com.pokemon.tcg.model.battle.AttackTranslation;
 import com.pokemon.tcg.model.battle.Ataque;
-import com.pokemon.tcg.repository.CardTranslationRepository;
 import com.pokemon.tcg.repository.AttackTranslationRepository;
+import com.pokemon.tcg.repository.CardRepository;
+import com.pokemon.tcg.repository.CardTranslationRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-@SpringBootTest(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=MySQL;NON_KEYWORDS=VALUE",
-    "spring.datasource.driver-class-name=org.h2.Driver",
-    "spring.datasource.username=sa",
-    "spring.datasource.password=",
-    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
-    "spring.jpa.hibernate.ddl-auto=create-drop",
-    "app.mail.enabled=false"
-})
-@Transactional
-public class CardCatalogServiceTest {
+class CardCatalogServiceTest {
 
-    @Autowired
-    private CardCatalogService cardCatalogService;
-
-    @Autowired
+    private CardRepository cardRepo;
     private CardTranslationRepository cardTranslationRepo;
-
-    @Autowired
     private AttackTranslationRepository attackTranslationRepo;
+    private CardCatalogService service;
+
+    @BeforeEach
+    void setUp() {
+        cardRepo = mock(CardRepository.class);
+        cardTranslationRepo = mock(CardTranslationRepository.class);
+        attackTranslationRepo = mock(AttackTranslationRepository.class);
+        service = new CardCatalogService(cardRepo, new ObjectMapper(), cardTranslationRepo, attackTranslationRepo);
+    }
 
     @Test
-    public void testGetCatalogoWithTranslation() {
-        // 1. Get base catalog (which makes sure base cards are loaded)
-        List<Card> baseCatalog = cardCatalogService.getCatalogo();
-        assertFalse(baseCatalog.isEmpty(), "El catálogo base no debería estar vacío");
+    void testGetCatalogoWithTranslation() {
+        Ataque ataque = new Ataque();
+        ataque.setId(1L);
+        ataque.setNombre("Tackle");
+        ataque.setTexto("Original text");
+        ataque.setTiposEnergia(new ArrayList<>());
 
-        // Find a card with an attack to test full translation
-        Card targetCard = baseCatalog.stream()
-                .filter(c -> c.getAtaques() != null && !c.getAtaques().isEmpty())
-                .findFirst()
-                .orElse(null);
+        Card targetCard = new Card();
+        targetCard.setId("xy1-1");
+        targetCard.setNombre("Venusaur-EX");
+        targetCard.setHp("180");
+        targetCard.setSupertype("Pokemon");
+        targetCard.setSubtypes(new ArrayList<>());
+        targetCard.reemplazarAtaques(List.of(ataque));
 
-        assertNotNull(targetCard, "Debería haber al menos una carta con ataques en el catálogo");
-        String cardId = targetCard.getId();
-        Ataque targetAttack = targetCard.getAtaques().get(0);
+        List<Card> baseCards = new ArrayList<>();
+        baseCards.add(targetCard);
+        for (int i = 2; i <= 146; i++) {
+            Card c = new Card();
+            c.setId("xy1-" + i);
+            c.setNombre("Card " + i);
+            c.setHp("60");
+            c.setSupertype("Pokemon");
+            c.setSubtypes(new ArrayList<>());
+            c.reemplazarAtaques(new ArrayList<>());
+            baseCards.add(c);
+        }
 
-        // 2. Create translations in DB
-        String testLang = "xyz"; // Idioma de prueba personalizado
-        CardTranslation cardTr = new CardTranslation(cardId, testLang, "NombreTraducido", Collections.singletonList("ReglaTraducida"));
-        cardTranslationRepo.save(cardTr);
+        when(cardRepo.findAll()).thenReturn(baseCards);
 
-        AttackTranslation attackTr = new AttackTranslation(targetAttack.getId(), testLang, "AtaqueTraducido", "TextoTraducido");
-        attackTranslationRepo.save(attackTr);
+        CardTranslation cardTr = new CardTranslation("xy1-1", "xyz", "NombreTraducido", List.of("ReglaTraducida"));
+        when(cardTranslationRepo.findByLang("xyz")).thenReturn(List.of(cardTr));
 
-        // 3. Retrieve catalog for custom lang
-        List<Card> translatedCatalog = cardCatalogService.getCatalogo(testLang);
+        AttackTranslation attackTr = new AttackTranslation(1L, "xyz", "AtaqueTraducido", "TextoTraducido");
+        when(attackTranslationRepo.findByLang("xyz")).thenReturn(List.of(attackTr));
+
+        List<Card> translatedCatalog = service.getCatalogo("xyz");
+
         Card translatedCard = translatedCatalog.stream()
-                .filter(c -> c.getId().equals(cardId))
+                .filter(c -> c.getId().equals("xy1-1"))
                 .findFirst()
                 .orElse(null);
 

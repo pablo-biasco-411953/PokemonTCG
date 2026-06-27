@@ -116,7 +116,7 @@ class ComandosTurnoTest {
         CartaEnJuego objetivo = new CartaEnJuego(cardPokemon("xy1-1", "Bulbasaur", "60"));
         tableroJugador.getMano().add(energia);
 
-        ComandoUnirEnergia cmd = new ComandoUnirEnergia(objetivo, energia, tableroJugador);
+        ComandoUnirEnergia cmd = new ComandoUnirEnergia(objetivo, energia, tableroJugador, null);
         assertTrue(cmd.puedeEjecutar(partida));
         cmd.ejecutar(partida);
 
@@ -132,20 +132,20 @@ class ComandosTurnoTest {
         CartaEnJuego objetivo = new CartaEnJuego(cardPokemon("xy1-1", "Squirtle", "50"));
         tableroJugador.getMano().add(energia);
 
-        assertFalse(new ComandoUnirEnergia(objetivo, energia, tableroJugador).puedeEjecutar(partida));
+        assertFalse(new ComandoUnirEnergia(objetivo, energia, tableroJugador, null).puedeEjecutar(partida));
     }
 
     @Test
     void unirEnergia_energiaNula_noPuedeEjecutar() {
         CartaEnJuego objetivo = new CartaEnJuego(cardPokemon("xy1-1", "Squirtle", "50"));
-        assertFalse(new ComandoUnirEnergia(objetivo, null, tableroJugador).puedeEjecutar(partida));
+        assertFalse(new ComandoUnirEnergia(objetivo, null, tableroJugador, null).puedeEjecutar(partida));
     }
 
     @Test
     void unirEnergia_objetivoNulo_noPuedeEjecutar() {
         Card energia = cardEnergia("Water Energy");
         tableroJugador.getMano().add(energia);
-        assertFalse(new ComandoUnirEnergia(null, energia, tableroJugador).puedeEjecutar(partida));
+        assertFalse(new ComandoUnirEnergia(null, energia, tableroJugador, null).puedeEjecutar(partida));
     }
 
     @Test
@@ -155,7 +155,7 @@ class ComandosTurnoTest {
         CartaEnJuego objetivo = new CartaEnJuego(cardPokemon("xy1-1", "Bulbasaur", "60"));
 
         assertThrows(IllegalStateException.class,
-                () -> new ComandoUnirEnergia(objetivo, energia, tableroJugador).ejecutar(partida));
+                () -> new ComandoUnirEnergia(objetivo, energia, tableroJugador, null).ejecutar(partida));
     }
 
     @Test
@@ -163,7 +163,7 @@ class ComandosTurnoTest {
         Card energia = cardEnergia("Fire Energy");
         CartaEnJuego objetivo = new CartaEnJuego(cardPokemon("xy1-1", "Bulbasaur", "60"));
         tableroJugador.getMano().add(energia);
-        String nombre = new ComandoUnirEnergia(objetivo, energia, tableroJugador).getNombre();
+        String nombre = new ComandoUnirEnergia(objetivo, energia, tableroJugador, null).getNombre();
         assertTrue(nombre.contains("Fire Energy"));
     }
 

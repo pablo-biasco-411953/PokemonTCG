@@ -369,7 +369,7 @@ class BattleControllerTest {
 
     @Test
     void unirEnergia_exitoso_retorna200() throws Exception {
-        doNothing().when(battleEngine).unirEnergia(any(), any(), any(), any());
+        doNothing().when(battleEngine).unirEnergia(any(), any(), any(), any(), any());
 
         UnirEnergiaRequest req = new UnirEnergiaRequest();
         req.setCartaId("xy1-5");

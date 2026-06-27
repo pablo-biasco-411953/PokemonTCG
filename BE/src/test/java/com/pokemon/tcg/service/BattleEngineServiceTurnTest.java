@@ -131,7 +131,7 @@ class BattleEngineServiceTurnTest {
         partida.getJugador().getMano().add(energia);
         service.partidasEnCurso.put(partida.getId(), partida);
 
-        service.unirEnergia(partida.getId(), "xy1-1", "e1", "ash");
+        service.unirEnergia(partida.getId(), "xy1-1", "e1", "ash", null);
 
         assertEquals(1, activo.getEnergiasUnidas().size());
         assertTrue(partida.isYaSeUnioEnergiaEsteTurno());
@@ -145,7 +145,7 @@ class BattleEngineServiceTurnTest {
         service.partidasEnCurso.put(partida.getId(), partida);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.unirEnergia(partida.getId(), "xy1-99", "e1", "ash"));
+                () -> service.unirEnergia(partida.getId(), "xy1-99", "e1", "ash", null));
     }
 
     @Test
@@ -155,7 +155,7 @@ class BattleEngineServiceTurnTest {
         service.partidasEnCurso.put(partida.getId(), partida);
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.unirEnergia(partida.getId(), "xy1-1", "e99", "ash"));
+                () -> service.unirEnergia(partida.getId(), "xy1-1", "e99", "ash", null));
     }
 
     // =================== realizarRetirada ===================

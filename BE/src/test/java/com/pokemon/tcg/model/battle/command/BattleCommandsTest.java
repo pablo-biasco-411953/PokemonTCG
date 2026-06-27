@@ -446,7 +446,7 @@ class BattleCommandsTest {
         CartaEnJuego benched = cartaEnJuego("Benched", "50");
         defensor.getBanca().add(benched);
         new PutDamageCountersOnAllOpponentCommand(2).execute(partida, atacante, defensor);
-        assertEquals(80, activoDefensor.getHpActual()); // 100 - 20
+        assertEquals(30, activoDefensor.getHpActual()); // 50 - 20
         assertEquals(30, benched.getHpActual()); // 50 - 20
     }
 
@@ -477,7 +477,9 @@ class BattleCommandsTest {
 
     @Test
     void discardOpponentDeckPerDamageCounter() {
-        activoAtacante.setHpActual(80); // 100 max, 20 missing = 2 counters
+        CartaEnJuego atacante100 = cartaEnJuego("Bulbasaur100", "100");
+        atacante100.setHpActual(80); // 100 max, 20 missing = 2 counters
+        atacante.setActivo(atacante100);
         partida.getUltimasMonedasLanzadas().add(true);
         partida.getUltimasMonedasLanzadas().add(true);
         defensor.getMazo().add(card("1", "A", "0"));
@@ -535,11 +537,11 @@ class BattleCommandsTest {
     @Test
     void forceOpponentSwitch_player() {
         CartaEnJuego benched = cartaEnJuego("Benched", "50");
-        defensor.getBanca().add(benched);
-        
+        atacante.getBanca().add(benched);
+
         Partida p2 = new Partida(atacante, defensor);
         p2.setJugadorUsername("Jugador2"); // The opponent is the player
-        
+
         new ForceOpponentSwitchCommand().execute(p2, defensor, atacante);
         // Should wait for interaction
         assertNotNull(p2.getPendingAction());

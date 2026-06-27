@@ -21,11 +21,11 @@ class ComandoUnirEnergiaTest {
         jugador.getMano().add(primera);
         jugador.getMano().add(segunda);
 
-        ComandoUnirEnergia comando = new ComandoUnirEnergia(objetivo, primera, jugador);
+        ComandoUnirEnergia comando = new ComandoUnirEnergia(objetivo, primera, jugador, null);
         assertTrue(comando.puedeEjecutar(partida));
         comando.ejecutar(partida);
 
-        assertFalse(new ComandoUnirEnergia(objetivo, segunda, jugador).puedeEjecutar(partida));
+        assertFalse(new ComandoUnirEnergia(objetivo, segunda, jugador, null).puedeEjecutar(partida));
     }
 
     private Card pokemon() {
