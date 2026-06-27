@@ -29,7 +29,7 @@
         </button>
       </div>
       <div class="bot-config-actions">
-        <button type="button" (click)="botConfigOpen = false">Cancelar</button>
+        <button type="button" class="btn-cancel" (click)="botConfigOpen = false">Cancelar</button>
         <button type="button" class="primary-action" (click)="confirmBotConfiguration()">
           {{ botConfigContext === 'room' ? 'Añadir bot' : 'Jugar' }}
         </button>
@@ -52,7 +52,7 @@
         (keydown.enter)="room.canJoin ? joinSelectedRoom() : spectateSelectedRoom()"
       >
       <div class="room-password-actions">
-        <button type="button" (click)="closeRoomPasswordModal()">Cancelar</button>
+        <button type="button" class="btn-cancel" (click)="closeRoomPasswordModal()">Cancelar</button>
         <button type="button" *ngIf="room.canJoin" (click)="joinSelectedRoom()" [disabled]="roomActionLoading">Entrar</button>
         <button type="button" *ngIf="room.canSpectate" (click)="spectateSelectedRoom()" [disabled]="roomActionLoading">Espectear</button>
       </div>
@@ -92,7 +92,7 @@
       </div>
 
       <div class="room-password-actions">
-        <button type="button" (click)="closeRoomSettings()">Cancelar</button>
+        <button type="button" class="btn-cancel" (click)="closeRoomSettings()">Cancelar</button>
         <button type="button" class="primary-action" (click)="saveRoomSettings()" [disabled]="roomActionLoading">Guardar</button>
       </div>
     </section>
@@ -115,7 +115,7 @@
         <div class="pokeball-center"></div>
       </div>
 
-      <h2 class="dot-matrix loading-text">Abriendo sobre...</h2>
+      <h2 class="dot-matrix loading-text">{{ 'lobby.openingPack' | t }}</h2>
     </div>
   </div>
 
@@ -359,7 +359,15 @@
         <strong>{{ 'lobby.emotes' | t | uppercase }}</strong>
       </button>
 
-      <button class="settings-gear" type="button" [class.open]="settingsOpen" (click)="toggleSettings()" title="Opciones">
+      <button class="settings-gear logout-btn" type="button" (click)="promptLogout()" [title]="'lobby.logout' | t">
+        <span class="gear-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false" fill="currentColor">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+          </svg>
+        </span>
+      </button>
+
+      <button class="settings-gear" type="button" [class.open]="settingsOpen" (click)="toggleSettings()" [title]="'lobby.settingsTitle' | t">
         <span class="gear-mark" aria-hidden="true">
           <svg viewBox="0 0 24 24" focusable="false">
             <path d="M19.4 13.5c.1-.5.1-1 .1-1.5s0-1-.1-1.5l2-1.5-2-3.4-2.4 1a8 8 0 0 0-2.6-1.5L14 2.5h-4l-.4 2.6A8 8 0 0 0 7 6.6l-2.4-1-2 3.4 2 1.5c-.1.5-.1 1-.1 1.5s0 1 .1 1.5l-2 1.5 2 3.4 2.4-1a8 8 0 0 0 2.6 1.5l.4 2.6h4l.4-2.6a8 8 0 0 0 2.6-1.5l2.4 1 2-3.4-2-1.5ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"></path>
@@ -373,67 +381,67 @@
   <section class="settings-panel" *ngIf="settingsOpen" (click)="$event.stopPropagation()">
     <div class="settings-header">
       <div>
-        <small>Opciones</small>
-        <h2>Centro de ajustes</h2>
+        <small>{{ 'lobby.settingsTitle' | t }}</small>
+        <h2>{{ 'lobby.settingsTitle' | t }}</h2>
       </div>
       <button type="button" class="settings-close" (click)="closeSettings()">X</button>
     </div>
 
     <nav class="settings-tabs">
-      <button type="button" [class.active]="settingsSection === 'graphics'" (click)="setSettingsSection('graphics')">Graficos</button>
-      <button type="button" [class.active]="settingsSection === 'audio'" (click)="setSettingsSection('audio')">Audio</button>
-      <button type="button" [class.active]="settingsSection === 'language'" (click)="setSettingsSection('language')">Idioma</button>
+      <button type="button" [class.active]="settingsSection === 'graphics'" (click)="setSettingsSection('graphics')">{{ 'lobby.graphics' | t }}</button>
+      <button type="button" [class.active]="settingsSection === 'audio'" (click)="setSettingsSection('audio')">{{ 'lobby.audio' | t }}</button>
+      <button type="button" [class.active]="settingsSection === 'language'" (click)="setSettingsSection('language')">{{ 'lobby.language' | t }}</button>
     </nav>
 
     <div class="settings-body" *ngIf="settingsSection === 'graphics'">
       <div class="settings-presets">
         <button type="button" (click)="applyGraphicsPreset('performance')" [class.active]="graphicsQuality === 'low' && shadowQuality === 'off' && remote3dQuality === 'low'">
-          <strong>Rendimiento</strong>
-          <span>Mas FPS, menos sombras y 3D remoto.</span>
+          <strong>{{ 'lobby.performance' | t }}</strong>
+          <span>{{ 'lobby.performanceDesc' | t }}</span>
         </button>
         <button type="button" (click)="applyGraphicsPreset('balanced')" [class.active]="graphicsQuality === 'medium' && shadowQuality === 'balanced' && remote3dQuality === 'medium'">
-          <strong>Balanceado</strong>
-          <span>Recomendado para jugar fluido.</span>
+          <strong>{{ 'lobby.balanced' | t }}</strong>
+          <span>{{ 'lobby.balancedDesc' | t }}</span>
         </button>
         <button type="button" (click)="applyGraphicsPreset('ultra')" [class.active]="graphicsQuality === 'high' && shadowQuality === 'high' && remote3dQuality === 'high'">
-          <strong>Ultra</strong>
-          <span>Mas detalle, sombras y avatares 3D.</span>
+          <strong>{{ 'lobby.ultra' | t }}</strong>
+          <span>{{ 'lobby.ultraDesc' | t }}</span>
         </button>
       </div>
 
       <div class="settings-row">
         <div>
-          <strong>Calidad base</strong>
-          <span>Resolucion interna, texturas y antialias.</span>
+          <strong>{{ 'lobby.baseQuality' | t }}</strong>
+          <span>{{ 'lobby.baseQualityDesc' | t }}</span>
         </div>
         <div class="segmented">
-          <button type="button" [class.active]="graphicsQuality === 'low'" (click)="setGraphicsQuality('low')">Baja</button>
-          <button type="button" [class.active]="graphicsQuality === 'medium'" (click)="setGraphicsQuality('medium')">Media</button>
-          <button type="button" [class.active]="graphicsQuality === 'high'" (click)="setGraphicsQuality('high')">Alta</button>
+          <button type="button" [class.active]="graphicsQuality === 'low'" (click)="setGraphicsQuality('low')">{{ 'lobby.low' | t }}</button>
+          <button type="button" [class.active]="graphicsQuality === 'medium'" (click)="setGraphicsQuality('medium')">{{ 'lobby.medium' | t }}</button>
+          <button type="button" [class.active]="graphicsQuality === 'high'" (click)="setGraphicsQuality('high')">{{ 'lobby.high' | t }}</button>
         </div>
       </div>
 
       <div class="settings-row">
         <div>
-          <strong>Sombras</strong>
-          <span>Apaga o sube el detalle de sombras dinamicas.</span>
+          <strong>{{ 'lobby.shadows' | t }}</strong>
+          <span>{{ 'lobby.shadowsDesc' | t }}</span>
         </div>
         <div class="segmented">
-          <button type="button" [class.active]="shadowQuality === 'off'" (click)="setShadowQuality('off')">Off</button>
-          <button type="button" [class.active]="shadowQuality === 'balanced'" (click)="setShadowQuality('balanced')">Medias</button>
-          <button type="button" [class.active]="shadowQuality === 'high'" (click)="setShadowQuality('high')">Altas</button>
+          <button type="button" [class.active]="shadowQuality === 'off'" (click)="setShadowQuality('off')">{{ 'lobby.off' | t }}</button>
+          <button type="button" [class.active]="shadowQuality === 'balanced'" (click)="setShadowQuality('balanced')">{{ 'lobby.medium' | t }}</button>
+          <button type="button" [class.active]="shadowQuality === 'high'" (click)="setShadowQuality('high')">{{ 'lobby.high' | t }}</button>
         </div>
       </div>
 
       <div class="settings-row">
         <div>
-          <strong>Jugadores 3D</strong>
-          <span>Cuantos modelos remotos cargan en alta calidad.</span>
+          <strong>{{ 'lobby.players3D' | t }}</strong>
+          <span>{{ 'lobby.players3DDesc' | t }}</span>
         </div>
         <div class="segmented">
-          <button type="button" [class.active]="remote3dQuality === 'low'" (click)="setRemote3dQuality('low')">Ligero</button>
-          <button type="button" [class.active]="remote3dQuality === 'medium'" (click)="setRemote3dQuality('medium')">Normal</button>
-          <button type="button" [class.active]="remote3dQuality === 'high'" (click)="setRemote3dQuality('high')">Full</button>
+          <button type="button" [class.active]="remote3dQuality === 'low'" (click)="setRemote3dQuality('low')">{{ 'lobby.light' | t }}</button>
+          <button type="button" [class.active]="remote3dQuality === 'medium'" (click)="setRemote3dQuality('medium')">{{ 'lobby.normal' | t }}</button>
+          <button type="button" [class.active]="remote3dQuality === 'high'" (click)="setRemote3dQuality('high')">{{ 'lobby.full' | t }}</button>
         </div>
       </div>
     </div>
@@ -441,29 +449,29 @@
     <div class="settings-body" *ngIf="settingsSection === 'audio'">
       <div class="settings-row">
         <div>
-          <strong>Audio general</strong>
-          <span>Activa o silencia todo el lobby.</span>
+          <strong>{{ 'lobby.audio' | t }}</strong>
+          <span>{{ 'lobby.audio' | t }}</span>
         </div>
         <button type="button" class="toggle-pill" [class.active]="audioEnabled" (click)="toggleLobbyAudio()">{{ audioEnabled ? 'ON' : 'OFF' }}</button>
       </div>
       <div class="settings-row">
         <div>
-          <strong>Musica</strong>
-          <span>Ambiente y musica de fondo.</span>
+          <strong>{{ 'lobby.music' | t }}</strong>
+          <span>{{ 'lobby.music' | t }}</span>
         </div>
         <button type="button" class="toggle-pill" [class.active]="musicEnabled" (click)="toggleLobbyMusic()">{{ musicEnabled ? 'ON' : 'OFF' }}</button>
       </div>
       <div class="settings-row">
         <div>
-          <strong>Efectos SFX</strong>
-          <span>Pasos, interacciones y sonidos cortos.</span>
+          <strong>{{ 'lobby.sfx' | t }}</strong>
+          <span>{{ 'lobby.sfx' | t }}</span>
         </div>
         <button type="button" class="toggle-pill" [class.active]="sfxEnabled" (click)="toggleLobbySfx()">{{ sfxEnabled ? 'ON' : 'OFF' }}</button>
       </div>
       <div class="settings-row">
         <div>
-          <strong>Volumen</strong>
-          <span>Nivel actual: {{ audioVolumeLabel }}</span>
+          <strong>{{ 'lobby.volume' | t }}</strong>
+          <span>{{ 'lobby.volume' | t }}: {{ audioVolumeLabel }}</span>
         </div>
         <button type="button" class="settings-action" (click)="cycleLobbyVolume()">{{ audioVolumeLabel }}</button>
       </div>
@@ -482,6 +490,17 @@
       </button>
     </div>
   </section>
+
+  <div class="settings-backdrop" *ngIf="logoutDialogOpen" (click)="cancelLogout()"></div>
+  <div class="logout-panel" *ngIf="logoutDialogOpen" (click)="$event.stopPropagation()">
+    <h2>{{ 'lobby.logoutConfirmTitle' | t }}</h2>
+    <p>{{ 'lobby.logoutConfirmDesc' | t }}</p>
+    <div class="logout-actions">
+      <button class="btn-cancel" (click)="cancelLogout()">{{ 'lobby.cancel' | t }}</button>
+      <button class="btn-confirm" (click)="logout()">{{ 'lobby.logout' | t }}</button>
+    </div>
+  </div>
+
 
   <div
     class="mobile-analog-pad"
@@ -524,9 +543,9 @@
   <div class="interaction-prompt" *ngIf="currentInteraction && !kioskShopOpen && !santoroDialogOpen && !kiosqueraDialogOpen">
     <span class="prompt-key">E</span>
     <div>
-      <small>{{ currentInteraction.kicker }}</small>
-      <strong>{{ currentInteraction.label }}</strong>
-      <p>{{ currentInteraction.description }}</p>
+      <small>{{ currentInteraction.kicker | t }}</small>
+      <strong>{{ currentInteraction.label | t }}</strong>
+      <p>{{ currentInteraction.description | t }}</p>
     </div>
   </div>
 

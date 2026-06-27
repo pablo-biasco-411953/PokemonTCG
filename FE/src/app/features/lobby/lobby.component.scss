@@ -62,15 +62,11 @@ $font-pixel: 'VT323', monospace;
   right: 24px;
   z-index: 8;
   display: flex;
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 16px;
+  gap: 10px;
   pointer-events: none;
-
-  @media (max-width: 1100px) {
-    flex-wrap: wrap;
-    gap: 10px;
-  }
 }
 
 .hud-left,
@@ -83,18 +79,21 @@ $font-pixel: 'VT323', monospace;
 }
 
 .hud-left {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .hud-center {
   flex-grow: 1;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .hud-right {
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .trainer-chip,
@@ -118,11 +117,23 @@ $font-pixel: 'VT323', monospace;
 .resource-chip {
   display: flex;
   align-items: center;
-  gap: 12px;
-  width: max-content;
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
   max-width: 100%;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 12px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.trainer-chip small, .resource-chip small,
+.trainer-chip strong, .resource-chip strong,
+.trainer-chip em, .resource-chip em,
+.trainer-chip span, .resource-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .trainer-chip-button,
@@ -235,6 +246,7 @@ $font-pixel: 'VT323', monospace;
 .settings-gear {
   width: 52px;
   height: 52px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
   border: 1px solid rgba($gold, .42);
@@ -357,6 +369,84 @@ $font-pixel: 'VT323', monospace;
   box-shadow: 0 32px 90px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .08);
   backdrop-filter: blur(18px);
   pointer-events: auto;
+}
+
+.logout-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 18;
+  width: min(400px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(34, 211, 238, .34);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(5, 12, 28, .96), rgba(15, 23, 42, .92));
+  box-shadow: 0 32px 90px rgba(0, 0, 0, .62), inset 0 1px 0 rgba(255, 255, 255, .08);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+  text-align: center;
+}
+
+.logout-panel h2 {
+  color: #f8fafc;
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.logout-panel p {
+  color: rgba(226, 232, 240, .8);
+  margin: 0;
+}
+
+.logout-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.logout-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.logout-actions .btn-confirm {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.logout-actions .btn-confirm:hover {
+  background: rgba(239, 68, 68, 0.25);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
 }
 
 .settings-header {
@@ -1633,12 +1723,12 @@ kbd {
 
 .bot-config-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
 }
 
 .bot-config-actions button {
-  min-height: 38px;
+  flex: 1;
+  min-height: 42px;
   padding: 0 18px;
 }
 

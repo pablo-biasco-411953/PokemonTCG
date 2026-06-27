@@ -2,7 +2,7 @@
 <div class="fade-overlay"></div>
 <div class="renderer-container" #rendererContainer (click)="onOverlayClick($event)">
     <div class="instrucciones">
-        {{ mensajeGuia }}
+        {{ mensajeGuia | t }}
     </div>
 
     <button
@@ -10,17 +10,17 @@
       type="button"
       class="skip-button"
       (click)="pasarRevelado(); $event.stopPropagation()">
-      Pasar
+      {{ 'pack.skip' | t }}
     </button>
 
     <div *ngIf="autoRevealEnCurso" class="auto-reveal-banner">
-      Revelando todas las cartas...
+      {{ 'pack.revealing' | t }}
     </div>
 
     <div *ngIf="resumenVisible" class="summary-panel" (click)="$event.stopPropagation()">
       <div class="summary-header">
-        <h2>Cartas descubiertas</h2>
-        <p>{{ resumenCartas.length }} cartas obtenidas</p>
+        <h2>{{ 'pack.cardsDiscovered' | t }}</h2>
+        <p>{{ resumenCartas.length }} {{ 'pack.cardsObtained' | t }}</p>
       </div>
 
       <div class="summary-grid">
@@ -31,8 +31,8 @@
       </div>
       
       <div class="summary-footer">
-        <button class="close-button secondary" (click)="finalizado.emit()">Cerrar y Volver</button>
-        <button class="close-button primary" [disabled]="sobresRestantes <= 0" (click)="abrirOtro.emit()">Abrir Otro (Restantes: {{ sobresRestantes }})</button>
+        <button class="close-button secondary" (click)="finalizado.emit()">{{ 'pack.closeAndReturn' | t }}</button>
+        <button class="close-button primary" [disabled]="sobresRestantes <= 0" (click)="abrirOtro.emit()">{{ 'pack.openAnother' | t }} ({{ 'pack.remaining' | t }}: {{ sobresRestantes }})</button>
       </div>
     </div>
 </div>
