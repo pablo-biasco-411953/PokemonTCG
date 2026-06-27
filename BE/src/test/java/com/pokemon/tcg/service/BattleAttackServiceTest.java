@@ -182,21 +182,24 @@ class BattleAttackServiceTest {
         partida.getBot().getBanca().add(b2);
         partida.getBot().getBanca().add(b3);
 
-        BattleCommand cmd = new DamageOpponentBenchedCommand(20, 2);
+        // count=1 con 3 en banca: debe crear PendingAction para que el jugador elija
+        BattleCommand cmd = new DamageOpponentBenchedCommand(20, 1);
         cmd.execute(partida, partida.getJugador(), partida.getBot());
 
-        // Para el jugador, se crea una acción pendiente
+        // Para el jugador (atacante != bot), se crea una acción pendiente
+        assertNotNull(partida.getPendingAction());
         assertEquals("CHOOSE_OPPONENT_BENCH_TO_DAMAGE", partida.getPendingAction().getType());
-        assertEquals(2, partida.getPendingAction().getMinSelections());
-        
-        // Ahora probamos el bot atacando al jugador
+        assertEquals(1, partida.getPendingAction().getMinSelections());
+
+        // Ahora probamos el bot atacando al jugador — el bot aplica daño directo aleatorio
         partida.setPendingAction(null);
         partida.getJugador().getBanca().add(b1);
         partida.getJugador().getBanca().add(b2);
-        
-        cmd.execute(partida, partida.getBot(), partida.getJugador());
-        
-        // El bot hace daño directamente a ambos porque count = 2
+
+        BattleCommand cmdBot = new DamageOpponentBenchedCommand(20, 2);
+        cmdBot.execute(partida, partida.getBot(), partida.getJugador());
+
+        // El bot hace daño directamente a ambos porque count=2 con banca.size()=2 (bot path)
         assertEquals(30, b1.getHpActual());
         assertEquals(40, b2.getHpActual());
     }
