@@ -16,5 +16,7 @@
 3. **Contenido del Log**:
    - Detalla claramente qué archivos modificaste, agregaste o eliminaste.
    - **Obligatorio**: Si te detienes, el turno termina o la tarea queda pausada, documenta detalladamente qué quedó a la mitad, qué falta por implementar y los próximos pasos en la sección de "Cambios Pendientes".
+4. **Registro de Cobertura (JaCoCo) al Modificar Tests**:
+   - **Obligatorio**: Siempre que modifiques, corrijas o agregues pruebas (tests) en el proyecto, debes ejecutar las pruebas y registrar/actualizar el reporte de cobertura de JaCoCo en `BE/agent_logs/reporte-cobertura-jacoco.md`. De esta manera, se mantiene un registro actualizado del cumplimiento de los requisitos de cobertura (RNF-03: global >= 80% y lógica crítica >= 90%).
 
 Consulta las plantillas y el formato detallado en el README.md de cada carpeta de logs.

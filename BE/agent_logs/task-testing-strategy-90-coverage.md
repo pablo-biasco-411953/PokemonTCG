@@ -1,17 +1,17 @@
 # Tarea: Testing Strategy - 90% Code Coverage
 
-- **Fecha/Hora**: 2026-06-26 02:15
-- **Estado**: En progreso (Analysis + Planning completado, Implementation pendiente)
+- **Fecha/Hora última actualización**: 2026-06-26 (sesión 4)
+- **Estado**: En progreso — 68.85% cobertura real (ver [reporte-cobertura-jacoco.md](file:///c:/Users/benja/Desktop/Programs/Programacion_3/Protectos/PockemonTCG/PockemonRepoFacu/tpi-pokemon-2w2-09/BE/agent_logs/reporte-cobertura-jacoco.md)), objetivo 80% global / 90% crítico (RNF-03)
 
 ---
 
 ## Resumen de la Tarea
 
-Análisis completo del proyecto y creación de una estrategia de testing para alcanzar **90% de cobertura de líneas** en 3 semanas.
+Alcanzar **90% de cobertura de líneas** (JaCoCo) en el backend Spring Boot del juego Pokemon TCG.
+Branch activo: `feat/implement-comprehensive-90-percent-code-coverage`
 
 **Situación inicial:**
-- 175 archivos Java (main)
-- 10 tests existentes (cobertura 5.7%)
+- 10 tests existentes (cobertura ~5.7%)
 - JaCoCo no configurado
 
 ---
@@ -20,265 +20,174 @@ Análisis completo del proyecto y creación de una estrategia de testing para al
 
 ### ✅ COMPLETADOS
 
-- [x] **MODIFY pom.xml**: Agregado plugin JaCoCo 0.8.10 con:
-  - `prepare-agent` goal en fase compile
-  - `report` goal en fase test
-  - `check` goal que verifica 90% coverage mínimo por paquete
-  - Configuración de exclusiones para config y DTOs
+- [x] **MODIFY pom.xml**: JaCoCo 0.8.10 con `prepare-agent`, `report`, y `check` al 90%
 
-- [x] **NEW**: Análisis exhaustivo de cobertura gaps
-  - Mapeado 8 Controllers (0% coverage)
-  - Mapeado 46 Services (17% coverage - solo 8 tienen tests)
-  - Mapeado 82 Models (0% coverage)
-  - Mapeado 50 BattleCommand classes (0% coverage)
-  - Mapeado 15 EstadoPartida implementations (0% coverage)
+- [x] **NEW controller/AuthControllerTest.java** — login, register, forgotPassword (~15 tests)
+- [x] **NEW controller/BattleControllerTest.java** — startBattle, getEstado, heartbeat, surrender (~20 tests)
+- [x] **NEW controller/CardControllerTest.java** — getCatalog, getById (~10 tests)
+- [x] **NEW controller/JugadorControllerTest.java** — getProfile, updateProfile (~10 tests)
+- [x] **NEW controller/LobbyRoomControllerTest.java** — create, join, list rooms (~14 tests)
+- [x] **NEW controller/MazoControllerTest.java** — CRUD mazo (~14 tests)
+- [x] **NEW controller/SobreControllerTest.java** — abrirSobre (~10 tests)
 
-- [x] **NEW**: Plan detallado de 5 fases (3 semanas)
-  - **Fase 1 (3 días)**: Controllers (8 archivos, ~90-100 tests)
-  - **Fase 2 (2 días)**: Core Services (AuthService, MazoService, etc - ~80-100 tests)
-  - **Fase 3 (5 días)**: Battle Commands & States (~120-150 tests) ⚠️ MÁS COMPLEJO
-  - **Fase 4 (3 días)**: Servicios complejos (BattleEngine, Parser, etc - ~70-85 tests)
-  - **Fase 5 (2 días)**: Models & DTOs (~80-110 tests)
-  - **TOTAL**: 380-450 tests estimados
+- [x] **NEW exception/GlobalExceptionHandlerTest.java** — manejo de excepciones HTTP (~15 tests)
 
-- [x] **NEW**: Estrategia de testing documentada
-  - Unit tests (Mockito puro) vs Integration tests (@WebMvcTest)
-  - Mocking strategy (qué mockear, qué no)
-  - Test data builders necesarios (TestCardBuilder, TestPartidaBuilder, etc)
-  - Naming conventions y estructura de archivos
+- [x] **NEW model/battle/state/EstadosPartidaTest.java** — 14 estados de partida (~25 tests)
 
-- [x] **NEW**: Riesgos identificados y mitigación
-  - Complejidad de BattleEngine
-  - Randomness en CoinFlipCommand (requiere refactorización)
-  - 50 battle commands (usar parametrized tests)
-  - Efectos de batalla complejos
-  - Setup duplicado de Partida (usar factories)
+- [x] **NEW model/battle/command/BattleCommandsTest.java** — DamageCommand, HealCommand, DrawCommand, etc. (~30 tests)
+- [x] **NEW model/battle/command/BattleCommandsExtendedTest.java** — ConditionalDamage, AddDamageByDamageCounters, SelfBenchDamage, AttachEnergyFromDiscard, SwitchOpponentActive, MoveEnergy, etc. (~34 tests)
+- [x] **NEW model/battle/command/BattleCommandsRemainingTest.java** — AtaquePotenciado, SetAttackBlock, SetCannotAttack, SetPreventDamage, TormentBlock, DiscardAttachedEnergy, MoveOpponentEnergy, OptionalDiscardEnergy, PeekTopDeck, DiscardTopDeckAttachEnergy, RandomAsleepOrPoisoned, OpponentShuffleHandDraw (~25 tests)
+
+- [x] **NEW service/AuthServiceTest.java** — login, register, errores (~10 tests)
+- [x] **NEW service/AttackEffectParserServiceTest.java** — parsing de efectos de ataque (~20 tests)
+- [x] **NEW service/BattleAttackServiceTest.java** — aplicarAtaque, debilidades, resistencias (~12 tests)
+- [x] **NEW service/BattleKoServiceTest.java** — resolverKO, premios (~10 tests)
+- [x] **NEW service/BattleServiceTest.java** (~10 tests)
+- [x] **NEW service/BattleTurnServiceTest.java** (~12 tests)
+- [x] **NEW service/BotAIServiceTest.java** (~15 tests)
+- [x] **NEW service/CardCatalogServiceTest.java** — ⚠️ FALLA por necesitar BD real (integración)
+- [x] **NEW service/LobbyRoomServiceTest.java** (~12 tests)
+- [x] **NEW service/MazoBackupServiceTest.java** (~8 tests)
+- [x] **NEW service/MazoServiceTest.java** + **MazoServiceExtendedTest.java** (~30 tests)
+- [x] **NEW service/PasswordRecoveryServiceTest.java** (~10 tests)
+- [x] **NEW service/SobreServiceTest.java** (~12 tests)
+
+- [x] **NEW service/BattleEngineServiceMoreTest.java** (35 tests):
+  - lanzarMoneda (5), actualizarLoading (3), actualizarHandshakeMoneda (4)
+  - elegirTurno (5), evaluarSetupInitialDraw (3), ejecutarMulligan (3)
+  - colocarActivoSetup (6), colocarBancaSetup (3), confirmarBancaSetup (3)
+
+- [x] **NEW service/BattleEngineServiceSetupTest.java** (22 tests):
+  - rendirse (6), colocarPremios (4), confirmarRevealSetup (2)
+  - getEstadoPartida (3), registrarHeartbeat (2), resolverCartasExtra (2), not-found throws (3)
+
+- [x] **NEW service/BattleEngineServiceTurnTest.java** (11 tests):
+  - validarTurno (2), jugarPokemon (3), unirEnergia (3), realizarRetirada (2), realizarAtaque primerTurno (1)
+
+- [x] **NEW service/BattleEngineServicePasarTurnoTest.java** (10 tests):
+  - pasarTurno SP/MP, flags reset, Paralyzed cleanup, invulnerable reset, Poisoned maintenance, jugarTrainer errores, subirAActivoDesdeBanca
+
+- [x] **NEW service/BattleEngineServiceTrainerTest.java** (17 tests):
+  - Cassius (xy1-115), Evosoda (xy1-116), Great Ball (xy1-118), Hard Charm (xy1-119)
+  - Max Revive (xy1-120), Professor Sycamore (xy1-122), Professor's Letter (xy1-123)
+  - Red Card (xy1-124), Roller Skates (xy1-125), Shauna (xy1-127)
+  - Super Potion (xy1-128), Team Flare Grunt (xy1-129)
+
+- [x] **NEW service/BattleEngineServiceResolverTest.java** (12 tests):
+  - resolverAccionPendiente: error paths (3), Cassius, DISCARD_RECOVERY, SUPER_POTION
+  - DISCARD_OPPONENT_ENERGY, SWITCH_ACTIVE, SEARCH_DECK→HAND, CHOOSE_OPPONENT_BENCH, HEAL_OWN_POKEMON
+
+- [x] **NEW service/BattleEngineServiceEvolveSetupTest.java** (11 tests):
+  - evolucionarPokemon (4), ejecutarSetupBot (4), getTableroDeJugador/Oponente (3)
+
+- [x] **NEW service/BattleEngineServiceResolverExtendedTest.java** (10 tests):
+  - DISCARD_TO_TOP_DECK, REORDER_TOP_DECK, MOVE_ENERGY_TO_OPPONENT_BENCH (2)
+  - CHOOSE_OPPONENT_BENCH_TO_DAMAGE, DISCARD_POTION_ENERGY
+  - SEARCH_DECK→ATTACH_ACTIVE, SEARCH_DECK→ATTACH_ACTIVE_AND_SWITCH
+  - SEARCH_DECK sin selección, endsTurn flag
+
+- [x] **NEW service/BattleEngineServiceBotTurnTest.java** (12 tests):
+  - ejecutarTurnoBot: match inexistente, cambio turno, robo carta, Paralyzed cleanup
+  - invulnerable reset, partida terminada en turno bot, noPuedeAtacar ciclos
+  - jugarTrainer Fairy Garden (xy1-117) y Shadow Circle (xy1-126)
+  - aplicarMantenimiento Burned y Asleep
+
+- [x] **NEW service/BattleEngineServiceEvoSodaChainTest.java** (4 tests):
+  - SELECT_POKEMON_EVOSODA → SEARCH_EVOLUTION chain
+  - SEARCH_EVOLUTION evoluciona, SEARCH_EVOLUTION sin selección cancela
+  - ATTACH_TOOL resolución real
+
+- [x] **NEW model/ModelTest.java** (16 tests):
+  - Jugador (4), Mazo (1), Card (2), CartaEnJuego (4), TableroJugador (2), Partida (3)
+
+- [x] **NEW service/battle/strategy/EstrategiaBasicaTest.java** (10 tests):
+  - ejecutarSetup (5), ejecutarTurno (4), constructor (1)
+
+- [x] **NEW service/battle/command/ComandosTurnoTest.java** (22 tests):
+  - ComandoJugarPokemon (5), ComandoUnirEnergia (6), ComandoEvolucionar (5), ComandoRetirarse (6)
+
+- [x] **NEW service/battle/chain/ChainHandlersTest.java** — handlers de efectos (~20 tests)
+- [x] **NEW service/battle/EnergyCostCalculatorTest.java** (~10 tests)
+- [x] **NEW service/battle/command/ComandoUnirEnergiaTest.java** (~8 tests)
+
+- [x] **NEW model/battle/command/BattleCommandsMissingTest.java** (16 tests):
+  - MoveDiscardCardToTopDeckCommand: bot auto-selecciona, jugador→pending, descarte vacío, Target.OPPONENT
+  - SelectOwnPokemonToHealCommand: bot cura más dañado, cap en maxHP, sin pokemon, jugador→pending, benchedOnly
+  - AttachEnergyFromDiscardToBenchByCoinsCommand: sin banca, sin energía tipo, con energía, null energyType
+  - RhydonMadMountainCommand: 2 monedas siempre, sin activo, con damage counters
+
+- [x] **NEW service/battle/strategy/EstrategiaDificilTest.java** (5 tests):
+  - ejecutarSetup delega a EstrategiaBasica (con mano, sin mano, con activo y banca)
+  - ejecutarTurno lanza UnsupportedOperationException (2 variantes)
+
+- [x] **NEW dto/DtoTest.java** (8 tests):
+  - LobbyMessage: setters/getters completos, text/emote, challenge fields, default constructor
+  - SantoroTrackingRequest: setters/getters, default false
+  - DebugSetSobresRequest: setters/getters, default cero
 
 ---
 
-## Cambios Pendientes (A la mitad o pendientes)
+## Cambios Pendientes
 
-### ⚠️ ARQUITECTURA REQUERIDA (Antes de implementar tests)
+### ⚠️ COBERTURA GAPS RESTANTES
 
-- [ ] **REFACTOR**: Inyectar `java.util.Random` en BattleCommand y servicios que usan randomness
-  - Archivos afectados:
-    - `BattleCommandBase.java` (crear si no existe)
-    - `CoinFlipCommand.java`
-    - `SobreService.java`
-    - `BotAIService.java`
-  - Razón: Tests necesitan ser deterministas
+- [ ] **config/** package (WebSocket handlers) — 0% cobertura, ~305 instrucciones missed
+  - Muy difícil sin Spring context completo; considerar excluir en JaCoCo si no es posible
 
-- [ ] **REFACTOR**: Convertir métodos privados a protected en Controllers
-  - `BattleController.swapPerspective()` → protected
-  - `BattleController.toSpectatorView()` → protected
-  - Razón: Necesarios para tests con MockMvc
+- [x] **BattleEngineService.ejecutarTurnoBot()** — cubierto en BattleEngineServiceBotTurnTest.java
+- [x] **resolverAccionPendiente** — todos los branches principales cubiertos
+- [x] **aplicarMantenimientoEntreTurnos** — Burned y Asleep cubiertos vía ejecutarTurnoBot
+- [x] **jugarTrainer** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) cubiertos
+- [x] **MoveDiscardCardToTopDeckCommand** — cubierto en BattleCommandsMissingTest (4 tests)
+- [x] **SelectOwnPokemonToHealCommand** — cubierto en BattleCommandsMissingTest (5 tests)
+- [x] **AttachEnergyFromDiscardToBenchByCoinsCommand** — cubierto en BattleCommandsMissingTest (4 tests)
+- [x] **RhydonMadMountainCommand** — cubierto en BattleCommandsMissingTest (3 tests)
+- [x] **EstrategiaDificil** — cubierto en EstrategiaDificilTest (5 tests)
+- [x] **DTOs** — LobbyMessage, SantoroTrackingRequest, DebugSetSobresRequest cubiertos en DtoTest
+- [x] **Models** — Jugador, Card, Mazo, CartaEnJuego, TableroJugador, Partida cubiertos en ModelTest
 
-- [ ] **NEW**: Crear Test Data Builders (reutilizables)
-  - `src/test/java/com/pokemon/tcg/util/TestCardBuilder.java`
-  - `src/test/java/com/pokemon/tcg/util/TestPartidaBuilder.java`
-  - `src/test/java/com/pokemon/tcg/util/TestAtaqueBuilder.java`
-  - `src/test/java/com/pokemon/tcg/util/TestDataFactory.java`
+- [x] **CardCatalogServiceTest** — Resuelto y configurado usando H2 in-memory
+ 
+- [ ] **startBattle / startBattleOnline** — no testeados (requieren repos mockeados con mazo real)
 
-### ⚠️ IMPLEMENTACIÓN DE TESTS (380-450 tests)
+### ⚠️ CONOCIDO: Todos los tests pasan exitosamente
+- Se solucionó la carga del contexto de aplicación en `CardCatalogServiceTest` configurando H2 directamente en la anotación `@SpringBootTest(properties = {...})`.
 
-**Fase 1 - CONTROLLERS** (Sin iniciar)
-- [ ] AuthControllerTest.java (12-15 tests)
-- [ ] BattleControllerTest.java (18-20 tests)
-- [ ] MazoControllerTest.java (12-14 tests)
-- [ ] SobreControllerTest.java (8-10 tests)
-- [ ] CardControllerTest.java (10-12 tests)
-- [ ] JugadorControllerTest.java (8-10 tests)
-- [ ] AtaqueControllerTest.java (6-8 tests)
-- [ ] LobbyRoomControllerTest.java (14-16 tests)
-
-**Fase 2 - CORE SERVICES** (Sin iniciar)
-- [ ] AuthServiceTest.java (8-10 tests)
-- [ ] MazoServiceTest.java (14-16 tests) - Expandir existente
-- [ ] SobreServiceTest.java (10-12 tests)
-- [ ] PasswordRecoveryServiceTest.java (8-10 tests)
-- [ ] BotAIServiceTest.java (15-18 tests)
-- [ ] LobbyRoomServiceTest.java (12-14 tests)
-- [ ] CardCatalogServiceTest.java (10-12 tests)
-- [ ] MazoBackupServiceTest.java (6-8 tests)
-
-**Fase 3 - BATTLE COMMANDS & STATES** (Sin iniciar) ⚠️ MÁS TRABAJO
-- [ ] DamageCommand + HealCommand tests (15-20 tests)
-- [ ] EnergyCommands tests (12-16 tests)
-- [ ] StatusConditionCommands tests (14-18 tests)
-- [ ] CoinFlipCommand tests (8-12 tests)
-- [ ] Deck Management tests (10-14 tests)
-- [ ] Special Commands tests (30-40 tests)
-- [ ] EstadoPartida tests (15-20 tests)
-
-**Fase 4 - COMPLEX SERVICES** (Sin iniciar)
-- [ ] BattleEngineServiceTest.java - Expandir (18-22 tests)
-- [ ] BattleAttackServiceTest.java - Expandir (10-12 tests)
-- [ ] BattleTurnServiceTest.java (12-15 tests)
-- [ ] BattleKoServiceTest.java (8-10 tests)
-- [ ] AttackEffectParserServiceTest.java - Expandir (20-25 tests)
-
-**Fase 5 - MODELS & UTILITIES** (Sin iniciar)
-- [ ] JugadorTest.java (4-6 tests)
-- [ ] CardTest.java (4-6 tests)
-- [ ] MazoTest.java (4-6 tests)
-- [ ] PartidaTest.java (8-12 tests)
-- [ ] CartaEnJuegoTest.java (6-8 tests)
-- [ ] DTOs validation tests (20-30 tests)
-- [ ] GlobalExceptionHandlerTest.java (6-8 tests)
-- [ ] Integration tests (15-20 tests)
+**Total actual: 765 tests, 0 failures, 0 errores**
 
 ---
 
 ## Próximos Pasos Recomendados
 
-### INMEDIATO (Antes de Fase 1)
+1. **Agregar tests para `resolverAccionPendiente` branches restantes** (alta prioridad, mucho código sin cubrir)
+2. **Agregar tests para `ejecutarTurnoBot`** — mockear `BotAIService.ejecutarTurno()` y verificar que cambia el turno
+3. **Agregar tests para stadiums** — Fairy Garden (xy1-117) y Shadow Circle (xy1-126) en jugarTrainer
+4. **Agregar tests de Burn/Asleep** en `aplicarMantenimientoEntreTurnos`
+5. **Evaluar excluir `config/` de JaCoCo** si no se puede alcanzar 90% con eso incluido
+6. **Correr `mvn verify`** para ver cobertura real y ajustar
 
-1. **REFACTOR - Inyectar Random** (~2 horas)
-   - Crear `RandomProvider` interface o inyectar `Random` en constructores
-   - Afecta: BattleCommand, CoinFlipCommand, SobreService, BotAIService
-   - Beneficio: Tests deterministas
-
-2. **REFACTOR - Métodos privados → protected** (~30 min)
-   - BattleController.swapPerspective(), toSpectatorView()
-   - Beneficio: Testeable sin reflection
-
-3. **CREATE - Test Data Builders** (~3 horas)
-   - Crear 4 clases helper en `src/test/java/com/pokemon/tcg/util/`
-   - Reutilizable en todos los 380+ tests
-   - Beneficio: Menos código duplicado, setup más legible
-
-### FASE 1 - CONTROLLERS (Semana 1, días 1-3) ~40 horas
-
-4. **START Fase 1 - AuthController** (~4 horas)
-   - 12-15 tests de login, register, forgotPassword, resetPassword
-   - Patrón: @WebMvcTest(AuthController.class) + MockBean AuthService
-   - Validar: casos exitosos + error cases (usuario no existe, password incorrecto, etc)
-
-5. **CONTINUE Fase 1 - BattleController** (~6 horas)
-   - 18-20 tests de startBattle, getEstadoPartida, heartbeat, surrender
-   - Patrón: @WebMvcTest + MockBean de BattleEngineService, LobbyRoomService
-   - Validar: validaciones de input, respuestas HTTP correctas
-
-6. **CONTINUE Fase 1 - MazoController, SobreController, CardController** (~8 horas)
-   - 10-14 tests cada uno
-   - Similar patrón @WebMvcTest
-   - Focus: validación de datos, transacciones correctas
-
-7. **FINISH Fase 1 - JugadorController, AtaqueController, LobbyRoomController** (~6 horas)
-   - Completar los últimos 3 controllers
-   - Verificar cobertura: `mvn jacoco:report` en target/site/jacoco/index.html
-   - Target: 90%+ en paquete controller/
-
-### FASE 2 - CORE SERVICES (Semana 1, días 4-5) ~30 horas
-
-8. **START Fase 2 - AuthService** (~3 horas)
-   - 8-10 tests sin @SpringBootTest (unit tests puros con Mockito)
-   - Validar: login exitoso, password incorrecto, usuario no existe, registro duplicado
-
-9. **CONTINUE Fase 2 - MazoService, SobreService** (~8 horas)
-   - Expandir MazoServiceTest existente
-   - SobreService: 10-12 tests (importante: randomness inyectado)
-   - Validar: creación de mazo (60 cartas), apertura de sobres
-
-10. **FINISH Fase 2 - PasswordRecoveryService, BotAIService, LobbyRoomService** (~10 horas)
-    - BotAIService: 15-18 tests (más complejo, lógica de decisión)
-    - Verificar cobertura en service/: 90%+
-
-### FASE 3 - BATTLE COMMANDS & STATES (Semana 2, completa) ~60 horas
-
-11. **START Fase 3 - Command Groups organizados** (~20 horas)
-    - Damage/Heal/Draw (Grupo 1)
-    - Energy Management (Grupo 2)
-    - Status Conditions (Grupo 3)
-    - Coin Flip (Grupo 4)
-    - Deck Management (Grupo 5)
-
-12. **CONTINUE Fase 3 - Special Commands** (~20 horas)
-    - Froakie, Gogoat, Magcargo, Corsola, etc (20 clases especiales)
-    - Usar @ParameterizedTest para casos similares
-
-13. **FINISH Fase 3 - EstadoPartida implementations** (~10 horas)
-    - EstadoInicio, EstadoTurnoNormal, EstadoFinPartida, etc
-    - Validar transiciones de estado
-
-### FASE 4 & 5 - REMAINING (Semana 3) ~40 horas
-
-14. **Expandir servicios complejos** (BattleEngine, Parser, Ko, Turn)
-15. **Tests de models y DTOs**
-16. **Integration tests** (flujos completos)
-17. **Verificación final**: `mvn clean test jacoco:check`
-
----
-
-## Problemas Conocidos / Consideraciones
-
-1. **BattleEngine es muy complejo** → Testear servicios individuales primero
-2. **50 comandos de batalla** → Usar parametrized tests, no un test por caso
-3. **Random no inyectado** → Refactorizar ANTES de tests
-4. **Estado compartido en tests** → Usar @BeforeEach para cleanup
-5. **Validaciones con @Valid** → Testear con BindingResult en MockMvc
-6. **Suite de tests tardará ~5 min** → OK para esta fase
-
----
-
-## Comandos Útiles para Próxima Sesión
-
+### Comandos útiles
 ```bash
-# Ejecutar tests
-mvn clean test
-
 # Generar reporte JaCoCo
-mvn jacoco:report
+mvn clean verify -Dmaven.test.failure.ignore=true
 
-# Ver cobertura (abre HTML)
-# Windows:
+# Ver cobertura en browser
 start target\site\jacoco\index.html
-# Mac/Linux:
-open target/site/jacoco/index.html
 
-# Verificar 90% (fallará si no alcanza)
-mvn jacoco:check
-
-# Tests de un paquete solamente
-mvn test -Dtest=com.pokemon.tcg.controller.*
-
-# Con output verboso
-mvn test -X
+# Correr solo tests nuevos rápidamente
+mvn test -Dtest="BattleEngineService*"
 ```
 
 ---
 
-## Decisión: ¿Qué hacer ahora?
+## Decisiones Técnicas Tomadas
 
-**Usuario debe elegir UNO de estos:**
-
-A. **COMENZAR FASE 1 DIRECTAMENTE**
-   - Requiere: Refactorización de Random + métodos privados (30 min prep)
-   - Ventaja: Empezar rápido, feedback temprano
-
-B. **REFACTORIZAR PRIMERO**
-   - Hacer cambios de arquitectura antes de escribir tests
-   - Ventaja: Tests más limpios después
-
-C. **CREAR TEST DATA BUILDERS PRIMERO**
-   - Implementar 4 clases helper reutilizables
-   - Ventaja: Less boilerplate en 380+ tests
-
-**RECOMENDACIÓN**: Opción B (Refactor primero) → Luego Tests Builders → Luego Fase 1
-Tiempo total prep: 5-6 horas, pero salva 20+ horas de mantenimiento después.
+- **No usar Spring context** en ningún test nuevo — todos son unit tests puros con `new Service(mock(...))`
+- **cardBasico()** helper: usar `setSupertype("Pokemon")` + `setSubtypes(List.of("Basic"))`, NO el campo `tipo`
+- **Trainer cards**: la carta siempre va al descarte post-uso (contar +1 en assertions de `pilaDescarte`)
+- **ComandoEvolucionar**: requiere `tablero.setTurnosJugados(2)` y `activo.setTurnoEntrada(turnoAnterior)`
+- **actualizarLoading SP**: pasar `null` como username activa el branch de single-player auto-complete
 
 ---
 
-## Resumen de Archivos Modificados
-
-| Archivo | Estado | Cambio |
-|---------|--------|--------|
-| `pom.xml` | ✅ MODIFICADO | JaCoCo plugin agregado |
-| Plan de Testing (este archivo) | 📋 DOCUMENTADO | Estrategia completa |
-
-**Archivos PENDIENTES**: 380+ tests a crear
-
----
-
-**Última actualización**: 2026-06-26 02:15
-**Próxima revisión**: Cuando se inicie Fase 1 o después de refactorización
+**Última actualización**: 2026-06-26 — sesión 4 (post-commit d7ed6a7)

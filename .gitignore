@@ -5,24 +5,26 @@ $RECYCLE.BIN/
 *.lnk
 
 ### Backend
-backend/target/
+BE/target/
+target/
 *.log
 
 ### Frontend
-frontend/node_modules/
-frontend/.angular/cache/
-frontend/dist/
-frontend/coverage/
+FE/node_modules/
+FE/.angular/cache/
+FE/dist/
+FE/coverage/
+node_modules/
 
 ### IDEs
 .idea/
-backend/.idea/
-frontend/.vscode/*
-!frontend/.vscode/settings.json
-!frontend/.vscode/tasks.json
-!frontend/.vscode/launch.json
-!frontend/.vscode/extensions.json
-!frontend/.vscode/mcp.json
+BE/.idea/
+FE/.vscode/*
+!FE/.vscode/settings.json
+!FE/.vscode/tasks.json
+!FE/.vscode/launch.json
+!FE/.vscode/extensions.json
+!FE/.vscode/mcp.json
 
 ### OS / Temp
 .DS_Store
