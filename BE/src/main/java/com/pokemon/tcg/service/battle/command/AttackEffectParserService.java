@@ -529,6 +529,11 @@ public class AttackEffectParserService {
             commands.add(new FroakieBounceCommand());
         }
 
+        // Diggersby's Pickup
+        if (lowerText.contains("put 2 item cards from your discard pile into your hand")) {
+            commands.add(new PickupCommand(2));
+        }
+
         return commands;
     }
 

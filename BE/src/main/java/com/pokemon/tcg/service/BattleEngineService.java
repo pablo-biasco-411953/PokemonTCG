@@ -1418,6 +1418,22 @@ public class BattleEngineService {
                 board.getMazo().add(0, card);
                 agregarLog(partida, "DISCARD_TO_TOP_DECK", callerUsername, card.getNombre());
             }
+        } else if ("SELECT_DISCARD_ITEMS_FOR_PICKUP".equals(pending.getType())) {
+            List<String> names = new ArrayList<>();
+            for (String id : ids) {
+                Card card = board.getPilaDescarte().stream()
+                        .filter(candidate -> id.equals(candidate.getId()))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("La carta ya no está en el descarte."));
+                board.getPilaDescarte().remove(card);
+                board.getMano().add(card);
+                names.add(card.getNombre());
+            }
+            if (!names.isEmpty()) {
+                agregarLog(partida, "PICKUP_RESOLVED", callerUsername, String.join(",", names));
+            } else {
+                agregarLog(partida, "PICKUP_CANCELLED", callerUsername);
+            }
         } else if ("REORDER_TOP_DECK".equals(pending.getType())) {
             // The player sends index-based option IDs in desired top-to-bottom order (ids[0] = new top card).
             int peekCount = pending.getOptions().size();
