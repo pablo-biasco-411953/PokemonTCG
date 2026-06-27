@@ -3,6 +3,7 @@ package com.pokemon.tcg.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pokemon.tcg.model.Card;
+import com.pokemon.tcg.model.Habilidad;
 import com.pokemon.tcg.model.battle.Ataque;
 import com.pokemon.tcg.repository.CardRepository;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,8 @@ public class CardCatalogService {
     @Transactional
     public List<Card> getCatalogo() {
         List<Card> cartas = filtrarCartasJugables(cardRepo.findAll());
-        if (cartas.size() == 146) {
+        boolean tieneHabilidadesCargadas = cartas.stream().anyMatch(c -> c.getHabilidades() != null && !c.getHabilidades().isEmpty());
+        if (cartas.size() == 146 && tieneHabilidadesCargadas) {
             normalizarEnergiasXy(cartas);
             eagerlyLoadCards(cartas);
             return cartas;
@@ -71,6 +73,7 @@ public class CardCatalogService {
                 if (card.getAtaques() != null) card.getAtaques().size();
                 if (card.getDebilidades() != null) card.getDebilidades().size();
                 if (card.getResistencias() != null) card.getResistencias().size();
+                if (card.getHabilidades() != null) card.getHabilidades().size();
             }
         }
     }
@@ -197,6 +200,7 @@ public class CardCatalogService {
         clone.setReglas(tr.getReglas() != null ? new ArrayList<>(tr.getReglas()) : (card.getReglas() != null ? new ArrayList<>(card.getReglas()) : new ArrayList<>()));
         clone.setDebilidades(card.getDebilidades() != null ? new ArrayList<>(card.getDebilidades()) : new ArrayList<>());
         clone.setResistencias(card.getResistencias() != null ? new ArrayList<>(card.getResistencias()) : new ArrayList<>());
+        clone.setHabilidades(card.getHabilidades() != null ? new ArrayList<>(card.getHabilidades()) : new ArrayList<>());
 
         List<Ataque> attacks = new ArrayList<>();
         if (card.getAtaques() != null) {

@@ -29,6 +29,7 @@ public class CartaEnJuego {
     private int danioExtraSiguienteTurno = 0;
     private String ataquePotenciadoSiguienteTurno = null;
     private boolean ataqueBloqueadoYaConsumido = false;
+    private Set<String> habilidadesUsadasEsteTurno = new HashSet<>();
 
     public CartaEnJuego(Card card) {
         this.card = card;
@@ -113,4 +114,9 @@ public class CartaEnJuego {
 
     public List<Card> getAttachedTools() { return attachedTools; }
     public void setAttachedTools(List<Card> attachedTools) { this.attachedTools = attachedTools; }
+
+    public Set<String> getHabilidadesUsadasEsteTurno() { return habilidadesUsadasEsteTurno; }
+    public void setHabilidadesUsadasEsteTurno(Set<String> habilidadesUsadasEsteTurno) { this.habilidadesUsadasEsteTurno = habilidadesUsadasEsteTurno != null ? habilidadesUsadasEsteTurno : new HashSet<>(); }
+    public void registrarUsoHabilidad(String nombreHabilidad) { this.habilidadesUsadasEsteTurno.add(nombreHabilidad); }
+    public void limpiarHabilidadesUsadas() { this.habilidadesUsadasEsteTurno.clear(); }
 }

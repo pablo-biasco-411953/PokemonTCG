@@ -103,6 +103,28 @@ public class BattleAttackService {
             } else {
                 defensor.setHpActual(Math.max(0, defensor.getHpActual() - totalDamage));
             }
+
+            // Apply Chesnaught's Spiky Shield Ability
+            boolean hasSpikyShield = defensor.getCard().getHabilidades() != null && defensor.getCard().getHabilidades().stream()
+                    .anyMatch(h -> "Spiky Shield".equalsIgnoreCase(h.getNombre()));
+            if (hasSpikyShield) {
+                atacante.setHpActual(Math.max(0, atacante.getHpActual() - 30));
+                System.out.println("[ABILITY] Spiky Shield coloca 3 contadores de daño en " + atacante.getCard().getNombre());
+            }
+
+            // Apply Voltorb's Destiny Burst Ability
+            boolean hasDestinyBurst = defensor.getCard().getHabilidades() != null && defensor.getCard().getHabilidades().stream()
+                    .anyMatch(h -> "Destiny Burst".equalsIgnoreCase(h.getNombre()));
+            if (hasDestinyBurst && defensor.getHpActual() <= 0) {
+                boolean coinHeads = new java.util.Random().nextBoolean();
+                partida.getUltimasMonedasLanzadas().add(coinHeads);
+                if (coinHeads) {
+                    atacante.setHpActual(Math.max(0, atacante.getHpActual() - 50));
+                    System.out.println("[ABILITY] Destiny Burst salió CARA: coloca 5 contadores de daño en " + atacante.getCard().getNombre());
+                } else {
+                    System.out.println("[ABILITY] Destiny Burst salió SECA: no hace nada.");
+                }
+            }
         }
 
         System.out.println("⚔️ [BATTLE] " + atacante.getCard().getNombre()
@@ -163,6 +185,13 @@ public class BattleAttackService {
         boolean hasHardCharm = defensor.getAttachedTools() != null && defensor.getAttachedTools().stream()
                 .anyMatch(t -> "xy1-119".equals(t.getId()) || "Hard Charm".equalsIgnoreCase(t.getNombre()));
         if (hasHardCharm) {
+            result = Math.max(0, result - 20);
+        }
+
+        // Apply Furfrou's Fur Coat Ability (-20 damage after Weakness/Resistance)
+        boolean hasFurCoat = defensor.getCard().getHabilidades() != null && defensor.getCard().getHabilidades().stream()
+                .anyMatch(h -> "Fur Coat".equalsIgnoreCase(h.getNombre()));
+        if (hasFurCoat) {
             result = Math.max(0, result - 20);
         }
 

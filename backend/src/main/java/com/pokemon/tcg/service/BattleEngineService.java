@@ -55,6 +55,7 @@ public class BattleEngineService {
             throw new IllegalStateException("Acción no permitida en el estado actual: " + comando.getNombre());
         }
         comando.ejecutar(partida);
+        aplicarHabilidadesPasivas(partida);
     }
 
     @Transactional
@@ -134,7 +135,7 @@ public class BattleEngineService {
         }
     }
 
-    private void robarCartas(TableroJugador tablero, int cantidad) {
+    public void robarCartas(TableroJugador tablero, int cantidad) {
         for (int i = 0; i < cantidad && !tablero.getMazo().isEmpty(); i++) {
             tablero.getMano().add(tablero.getMazo().remove(0));
         }
@@ -893,6 +894,22 @@ public class BattleEngineService {
         ejecutarComando(partida, new ComandoSubirActivo(cartaIdEnBanca, tablero));
     }
 
+    public void usarHabilidad(String matchId, String sourcePokemonId, String abilityName, String targetPokemonId, String extraParams, String callerUsername) {
+        Partida partida = getPartidaOThrow(matchId);
+        validarTurno(partida, callerUsername);
+        TableroJugador jugador = getTableroDeJugador(partida, callerUsername);
+        TableroJugador oponente = getTableroOponente(partida, callerUsername);
+
+        ejecutarComando(partida, new ComandoUsarHabilidad(
+                sourcePokemonId, abilityName, targetPokemonId, extraParams,
+                jugador, oponente, this
+        ));
+    }
+
+    public void resolverKO(Partida partida, CartaEnJuego atacante, CartaEnJuego victima) {
+        battleKoService.resolverKO(partida, atacante, victima);
+    }
+
     public void realizarAtaque(String matchId, String nombreAtaqueElegido, String callerUsername, String extraParams) {
         Partida partida = partidasEnCurso.get(matchId);
         if (partida == null) return;
@@ -953,6 +970,7 @@ public class BattleEngineService {
 
     private void aplicarMantenimientoEntreTurnos(Partida partida) {
         System.out.println("🔄 --- INICIANDO MANTENIMIENTO ENTRE TURNOS ---");
+        aplicarHabilidadesPasivas(partida);
 
         procesarEstado(partida.getJugador(), partida.getBot(), partida);
         procesarEstado(partida.getBot(), partida.getJugador(), partida);
@@ -1059,6 +1077,15 @@ public class BattleEngineService {
         partida.setYaSeUnioEnergiaEsteTurno(false);
         partida.setPlayedSupporterThisTurn(false);
         partida.setPlayedStadiumThisTurn(false);
+
+        // Limpiar habilidades usadas este turno
+        if (jugador.getActivo() != null) {
+            jugador.getActivo().limpiarHabilidadesUsadas();
+        }
+        for (CartaEnJuego benchCard : jugador.getBanca()) {
+            benchCard.limpiarHabilidadesUsadas();
+        }
+
         agregarLog(partida, "TURN_PASSED", callerUsername);
 
         aplicarMantenimientoEntreTurnos(partida);
@@ -2075,6 +2102,48 @@ public class BattleEngineService {
             card.getDebilidades().size();
             card.getResistencias().size();
             card.getSubtypes().size();
+        }
+    }
+
+    public void aplicarHabilidadesPasivas(Partida partida) {
+        if (partida == null) return;
+        aplicarSweetVeil(partida.getJugador());
+        aplicarSweetVeil(partida.getBot());
+    }
+
+    private void aplicarSweetVeil(TableroJugador tablero) {
+        if (tablero == null) return;
+        
+        // Verificar si tiene a Slurpuff en juego
+        boolean tieneSlurpuff = false;
+        if (tablero.getActivo() != null && tablero.getActivo().getCard() != null && "Slurpuff".equalsIgnoreCase(tablero.getActivo().getCard().getNombre())) {
+            tieneSlurpuff = true;
+        }
+        if (!tieneSlurpuff) {
+            tieneSlurpuff = tablero.getBanca().stream()
+                    .anyMatch(c -> c != null && c.getCard() != null && "Slurpuff".equalsIgnoreCase(c.getCard().getNombre()));
+        }
+
+        if (tieneSlurpuff) {
+            // Limpiar condiciones de los pokemon con energia Hada
+            if (tablero.getActivo() != null) {
+                boolean tieneFairyEnergy = tablero.getActivo().getEnergiasUnidas().stream()
+                        .anyMatch(e -> "Fairy".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("fairy energy")));
+                if (tieneFairyEnergy && !tablero.getActivo().getCondicionesEspeciales().isEmpty()) {
+                    tablero.getActivo().limpiarCondiciones();
+                    System.out.println("[ABILITY] Sweet Veil limpia condiciones de " + tablero.getActivo().getCard().getNombre());
+                }
+            }
+            for (CartaEnJuego benchCard : tablero.getBanca()) {
+                if (benchCard != null && benchCard.getCard() != null) {
+                    boolean tieneFairyEnergy = benchCard.getEnergiasUnidas().stream()
+                            .anyMatch(e -> "Fairy".equalsIgnoreCase(e.getTipo()) || (e.getNombre() != null && e.getNombre().toLowerCase().contains("fairy energy")));
+                    if (tieneFairyEnergy && !benchCard.getCondicionesEspeciales().isEmpty()) {
+                        benchCard.limpiarCondiciones();
+                        System.out.println("[ABILITY] Sweet Veil limpia condiciones de " + benchCard.getCard().getNombre());
+                    }
+                }
+            }
         }
     }
 }

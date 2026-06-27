@@ -47,6 +47,11 @@ public class Card {
     private List<Ataque> ataques = new ArrayList<>();
 
     @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "card_habilidades", joinColumns = @JoinColumn(name = "card_id"))
+    @JsonProperty("habilidades")
+    private List<Habilidad> habilidades = new ArrayList<>();
+
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "card_debilidades", joinColumns = @JoinColumn(name = "card_id"))
     private List<CardAttribute> debilidades = new ArrayList<>();
 
@@ -136,6 +141,8 @@ public class Card {
     public List<String> getSubtypes() { return subtypes; }
     public List<String> getReglas() { return reglas; }
     public List<Ataque> getAtaques() { return ataques; }
+    public List<Habilidad> getHabilidades() { return habilidades; }
+    public void setHabilidades(List<Habilidad> habilidades) { this.habilidades = habilidades != null ? habilidades : new ArrayList<>(); }
     public void reemplazarAtaques(List<Ataque> ataques) {
         this.ataques = ataques != null ? ataques : new ArrayList<>();
         for (Ataque atk : this.ataques) {
