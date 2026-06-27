@@ -5,7 +5,7 @@
       <div class="pokeball-center"></div>
     </div>
     <p class="dex-loader-kicker">POKEDEX SCANNER</p>
-    <h2>Sincronizando coleccion</h2>
+    <h2>{{ 'deck.syncingCollection' | t }}</h2>
     <div class="dex-loader-bar">
       <div [style.width.%]="loadingProgress"></div>
     </div>
@@ -18,10 +18,10 @@
 <div class="builder-container pokedex-chassis dex-lab" *ngIf="!isLoadingImages || vistaDeckBuilder === 'library'">
   <section class="deck-library" *ngIf="vistaDeckBuilder === 'library'">
     <header class="deck-library-head">
-      <button class="dex-icon-button" type="button" title="Volver" (click)="volver()">Volver</button>
+      <button class="dex-icon-button" type="button" [title]="'deck.back' | t" (click)="volver()">{{ 'deck.back' | t }}</button>
       <div>
-        <p>DECK CASE</p>
-        <h1>Mis mazos</h1>
+        <p>{{ 'deck.pokedexDeckLab' | t }}</p>
+        <h1>{{ 'deck.myDecks' | t }}</h1>
       </div>
       <span>{{ mazosDisponibles.length }}/25</span>
     </header>
@@ -29,28 +29,28 @@
     <div class="deck-case-grid">
       <button type="button" class="deck-case-card new" (click)="abrirNuevoMazo()">
         <span>+</span>
-        <strong>Nuevo mazo</strong>
+        <strong>{{ 'deck.newDeck' | t }}</strong>
       </button>
       <button type="button" class="deck-case-card" *ngFor="let mazo of mazosDisponibles" (click)="abrirMenuMazo(mazo)">
         <span class="deck-box-3d"></span>
         <small>STANDARD</small>
         <strong>{{ mazo.nombre }}</strong>
-        <em>{{ mazo.cartas.length }}/60 cartas</em>
+        <em>{{ mazo.cartas.length }}/60 {{ 'deck.cards' | t }}</em>
       </button>
     </div>
 
     <div class="deck-menu-overlay" *ngIf="mazoMenuSeleccionado" (click)="cerrarMenuMazo()">
       <div class="deck-menu-card" (click)="$event.stopPropagation()">
-        <p>Deck Menu</p>
+        <p>{{ 'deck.deckMenu' | t }}</p>
         <h2>{{ mazoMenuSeleccionado.nombre }}</h2>
         <div class="deck-menu-preview">
           <span class="deck-box-3d"></span>
           <strong>STANDARD</strong>
-          <small>{{ mazoMenuSeleccionado.cartas.length }}/60 cartas</small>
+          <small>{{ mazoMenuSeleccionado.cartas.length }}/60 {{ 'deck.cards' | t }}</small>
         </div>
-        <button type="button" (click)="editarMazoDesdeGaleria(mazoMenuSeleccionado)">Editar mazo</button>
-        <button type="button" class="danger" (click)="borrarMazoDesdeGaleria(mazoMenuSeleccionado)">Borrar mazo</button>
-        <button type="button" class="cancel" (click)="cerrarMenuMazo()">Cancelar</button>
+        <button type="button" (click)="editarMazoDesdeGaleria(mazoMenuSeleccionado)">{{ 'deck.editDeck' | t }}</button>
+        <button type="button" class="danger" (click)="borrarMazoDesdeGaleria(mazoMenuSeleccionado)">{{ 'deck.deleteDeck' | t }}</button>
+        <button type="button" class="cancel" (click)="cerrarMenuMazo()">{{ 'deck.cancel' | t }}</button>
       </div>
     </div>
   </section>
@@ -61,39 +61,39 @@
         <span></span>
       </div>
       <div>
-        <p>{{ modoEdicion ? 'EDITANDO MAZO' : 'POKEDEX DECK LAB' }}</p>
-        <h1>{{ nombreMazo || 'Nuevo mazo' }}</h1>
+        <p>{{ modoEdicion ? ('deck.editingDeck' | t) : ('deck.pokedexDeckLab' | t) }}</p>
+        <h1>{{ nombreMazo || ('deck.newDeck' | t) }}</h1>
       </div>
     </div>
 
     <div class="dex-stats">
-      <span>{{ coleccionFiltrada.length }} cartas</span>
+      <span>{{ coleccionFiltrada.length }} {{ 'deck.cards' | t }}</span>
       <span [class.ready]="mazoEnProceso.length === 60">{{ mazoEnProceso.length }}/60 deck</span>
     </div>
   </header>
 
   <section class="dex-command" *ngIf="vistaDeckBuilder === 'editor'">
-    <button class="dex-icon-button" type="button" title="Volver" (click)="volver()">Volver</button>
+    <button class="dex-icon-button" type="button" [title]="'deck.back' | t" (click)="volver()">{{ 'deck.back' | t }}</button>
 
     <label class="dex-search">
-      <span>Buscar</span>
-      <input [(ngModel)]="filtroNombre" placeholder="Nombre o energia">
+      <span>{{ 'deck.search' | t }}</span>
+      <input [(ngModel)]="filtroNombre" [placeholder]="'deck.nameOrEnergy' | t">
     </label>
 
     <label class="dex-select">
-      <span>Tipo</span>
+      <span>{{ 'deck.type' | t }}</span>
       <select [(ngModel)]="filtroTipo">
         <option *ngFor="let t of tipos" [value]="t">{{ t | uppercase }}</option>
       </select>
     </label>
 
     <label class="dex-name">
-      <span>Mazo</span>
-      <input [(ngModel)]="nombreMazo" placeholder="Nombre del mazo">
+      <span>{{ 'deck.deck' | t }}</span>
+      <input [(ngModel)]="nombreMazo" [placeholder]="'deck.deckName' | t">
     </label>
 
     <button class="dex-save" type="button" (click)="guardar()" [disabled]="mazoEnProceso.length !== 60">
-      {{ modoEdicion ? 'Guardar cambios' : 'Guardar mazo' }}
+      {{ modoEdicion ? ('deck.saveChanges' | t) : ('deck.saveDeck' | t) }}
     </button>
   </section>
 
@@ -101,8 +101,8 @@
     <section class="dex-collection">
       <div class="dex-panel-header">
         <div>
-          <p>COLECCION</p>
-          <h2>Cartas disponibles</h2>
+          <p>{{ 'deck.collection' | t }}</p>
+          <h2>{{ 'deck.availableCards' | t }}</h2>
         </div>
         <span>{{ coleccionFiltrada.length }}</span>
       </div>
@@ -134,7 +134,7 @@
     <aside class="dex-deck">
       <div class="dex-panel-header">
         <div>
-          <p>MAZO ACTUAL</p>
+          <p>{{ 'deck.currentDeck' | t }}</p>
           <h2>{{ mazoEnProceso.length }}/60</h2>
         </div>
         <span [class.ready]="mazoEnProceso.length === 60">{{ mazoEnProceso.length === 60 ? 'OK' : 'SYNC' }}</span>
@@ -149,7 +149,7 @@
           <img [src]="getImagenReal(detalle.id)" [alt]="detalle.nombre" loading="lazy" decoding="async" (error)="onCardImageError($event)">
         </div>
         <div class="dex-card-detail-copy">
-          <p>ESCANEO</p>
+          <p>{{ 'deck.scan' | t }}</p>
           <h3>{{ detalle.nombre }} <span class="badge-ex" *ngIf="esEX(detalle)">EX</span></h3>
           <div class="dex-detail-chips">
             <span>{{ detalle.tipo || detalle.supertype || 'Card' }}</span>
@@ -159,23 +159,23 @@
           </div>
           <div class="dex-evolution-info" *ngIf="mostrarInfoEvolucion(detalle)">
             <div>
-              <span>EVOLUCIONA DE</span>
+              <span>{{ 'deck.evolvesFrom' | t }}</span>
               <strong>{{ getEvolucionaDe(detalle) }}</strong>
             </div>
             <div>
-              <span>EVOLUCIONA A</span>
+              <span>{{ 'deck.evolvesTo' | t }}</span>
               <strong>{{ getEvolucionaA(detalle) }}</strong>
             </div>
           </div>
           <div class="dex-detail-grid">
-            <span>Debilidad</span><strong>{{ getDebilidadDetalle(detalle) }}</strong>
-            <span>Resistencia</span><strong>{{ getResistenciaDetalle(detalle) }}</strong>
-            <span>Retirada</span><strong>{{ detalle.costoRetirada ?? 0 }}</strong>
+            <span>{{ 'deck.weakness' | t }}</span><strong>{{ getDebilidadDetalle(detalle) }}</strong>
+            <span>{{ 'deck.resistance' | t }}</span><strong>{{ getResistenciaDetalle(detalle) }}</strong>
+            <span>{{ 'deck.retreat' | t }}</span><strong>{{ detalle.costoRetirada ?? 0 }}</strong>
           </div>
           <div class="dex-detail-attacks" *ngIf="getAtaquesDetalle(detalle).length">
             <div class="dex-detail-attack" *ngFor="let atk of getAtaquesDetalle(detalle)">
               <strong>{{ atk.nombre }} <em>{{ atk.danio || '' }}</em></strong>
-              <small>{{ atk.texto || 'Sin descripcion.' }}</small>
+              <small>{{ atk.texto || ('deck.noDescription' | t) }}</small>
             </div>
           </div>
         </div>
@@ -188,7 +188,7 @@
           <button type="button" title="Quitar carta" (click)="quitarDelMazo(i)">X</button>
         </div>
         <div *ngIf="mazoEnProceso.length === 0" class="dex-empty">
-          Elegi cartas de la coleccion para armar tu estrategia.
+          {{ 'deck.chooseCards' | t }}
         </div>
       </div>
     </aside>
