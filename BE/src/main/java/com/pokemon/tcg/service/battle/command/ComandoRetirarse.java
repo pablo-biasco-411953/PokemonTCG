@@ -61,6 +61,9 @@ public class ComandoRetirarse implements ComandoTurno {
         int energiaPagada = 0;
         while (energiaPagada < costo) {
             Card energia = activoViejo.getEnergiasUnidas().remove(0);
+            if ("Rainbow Energy".equals(energia.getNombre())) {
+                energia.setTipo("");
+            }
             energiaPagada += com.pokemon.tcg.service.battle.EnergyCostCalculator.colorlessValue(energia);
             tablero.getPilaDescarte().add(energia);
         }

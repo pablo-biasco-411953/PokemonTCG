@@ -864,7 +864,7 @@ public class BattleEngineService {
         }
     }
 
-    public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername) {
+    public void unirEnergia(String matchId, String cartaId, String energiaId, String callerUsername, String selectedType) {
         Partida partida = getPartidaOThrow(matchId);
         validarTurno(partida, callerUsername);
 
@@ -875,7 +875,7 @@ public class BattleEngineService {
         if (objetivo == null) throw new IllegalArgumentException("Pokemon objetivo no encontrado.");
         if (energia == null || !esEnergia(energia)) throw new IllegalArgumentException("Energía no encontrada.");
 
-        ejecutarComando(partida, new ComandoUnirEnergia(objetivo, energia, tablero));
+        ejecutarComando(partida, new ComandoUnirEnergia(objetivo, energia, tablero, selectedType));
         agregarLog(partida, "ENERGY_ATTACHED", callerUsername, nombreCarta(objetivo));
     }
 
@@ -1309,6 +1309,9 @@ public class BattleEngineService {
             if (target.getEnergiasUnidas().size() <= 1) {
                 if (!target.getEnergiasUnidas().isEmpty()) {
                     Card energy = target.getEnergiasUnidas().remove(0);
+                    if ("Rainbow Energy".equals(energy.getNombre())) {
+                        energy.setTipo("");
+                    }
                     board.getPilaDescarte().add(energy);
                     agregarLog(partida, "ENERGY_DISCARDED", callerUsername, energy.getNombre());
                 }
@@ -1351,8 +1354,10 @@ public class BattleEngineService {
                     .filter(e -> e.getId().equals(selectedId))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Energía no encontrada unida al Pokémon."));
-            
             target.getEnergiasUnidas().remove(energy);
+            if ("Rainbow Energy".equals(energy.getNombre())) {
+                energy.setTipo("");
+            }
             board.getPilaDescarte().add(energy);
             agregarLog(partida, "ENERGY_DISCARDED", callerUsername, energy.getNombre());
 
@@ -1367,8 +1372,10 @@ public class BattleEngineService {
                     .filter(e -> e.getId().equals(selectedId))
                     .findFirst()
                     .orElseThrow(() -> new IllegalArgumentException("Energía no encontrada unida al Pokémon del rival."));
-            
             opponentActive.getEnergiasUnidas().remove(energy);
+            if ("Rainbow Energy".equals(energy.getNombre())) {
+                energy.setTipo("");
+            }
             opponent.getPilaDescarte().add(energy);
             agregarLog(partida, "ENERGY_DISCARDED", opponentActive.getCard().getNombre(), energy.getNombre());
 
@@ -1493,6 +1500,9 @@ public class BattleEngineService {
             }
 
             Card energy = target.getEnergiasUnidas().remove(0);
+            if ("Rainbow Energy".equals(energy.getNombre())) {
+                energy.setTipo("");
+            }
             opponentBoard.getPilaDescarte().add(energy);
             String actor = callerUsername.equals(partida.getJugadorUsername()) ? "JUGADOR" : "BOT";
             partida.getTurnLogs().add("ENERGY_DISCARDED:" + actor + ":" + energy.getNombre());

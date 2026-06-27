@@ -10,11 +10,13 @@ public class ComandoUnirEnergia implements ComandoTurno {
     private final CartaEnJuego objetivo;
     private final Card energia;
     private final TableroJugador tablero;
+    private final String selectedType;
 
-    public ComandoUnirEnergia(CartaEnJuego objetivo, Card energia, TableroJugador tablero) {
+    public ComandoUnirEnergia(CartaEnJuego objetivo, Card energia, TableroJugador tablero, String selectedType) {
         this.objetivo = objetivo;
         this.energia = energia;
         this.tablero = tablero;
+        this.selectedType = selectedType;
     }
 
     @Override
@@ -32,6 +34,16 @@ public class ComandoUnirEnergia implements ComandoTurno {
 
         if (partida.isYaSeUnioEnergiaEsteTurno()) {
             throw new IllegalStateException("Solo podes unir 1 Energia por turno.");
+        }
+
+        if ("Rainbow Energy".equals(energia.getNombre()) && selectedType != null && !selectedType.isBlank()) {
+            energia.setTipo(selectedType);
+            // Apply 10 damage to the Pokémon that Rainbow Energy is attached to (1 damage counter)
+            objetivo.setHpActual(objetivo.getHpActual() - 10);
+            if (objetivo.getHpActual() <= 0) {
+                // Let the KO loop handle it later, or it stays at 0 until turn checks.
+                // In Pokemon TCG, placing a damage counter from Rainbow Energy can KO the Pokemon immediately.
+            }
         }
 
         objetivo.getEnergiasUnidas().add(energia);

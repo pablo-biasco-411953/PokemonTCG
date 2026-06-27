@@ -324,7 +324,7 @@ public class BattleController {
                                          @RequestHeader(value = "X-Username", required = false) String username,
                                          @RequestBody UnirEnergiaRequest request) {
         try {
-            battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId(), username);
+            battleEngine.unirEnergia(matchId, request.getCartaId(), request.getEnergiaId(), username, request.getSelectedType());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
