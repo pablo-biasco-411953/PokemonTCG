@@ -103,6 +103,18 @@ export class BattleBoardActionService {
     return await firstValueFrom(this.battleService.getState(matchId));
   }
 
+  // Ejecuta el uso de una habilidad y devuelve un estado fresco.
+  async usarHabilidadYRecargar(
+    matchId: string,
+    sourcePokemonId: string,
+    abilityName: string,
+    targetPokemonId?: string,
+    extraParams?: string
+  ): Promise<Partida> {
+    await firstValueFrom(this.battleService.usarHabilidad(matchId, sourcePokemonId, abilityName, targetPokemonId, extraParams));
+    return await firstValueFrom(this.battleService.getState(matchId));
+  }
+
   // Juega un Pokémon desde la mano y devuelve el nuevo estado.
   async jugarPokemonYRecargar(matchId: string, cartaId: string): Promise<Partida> {
     await firstValueFrom(this.battleService.jugarPokemon(matchId, cartaId));

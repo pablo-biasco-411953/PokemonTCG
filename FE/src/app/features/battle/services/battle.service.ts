@@ -185,6 +185,11 @@ export class BattleService {
     return this.http.post<void>(`${this.base}/${matchId}/evolve`, { cartaManoId, cartaTableroId }, this.getHeaders());
   }
 
+  // Usa una habilidad activa de un Pokemon.
+  usarHabilidad(matchId: string, sourcePokemonId: string, abilityName: string, targetPokemonId?: string, extraParams?: string): Observable<void> {
+    return this.http.post<void>(`${this.base}/${matchId}/use-ability`, { sourcePokemonId, abilityName, targetPokemonId, extraParams }, this.getHeaders());
+  }
+
   // Fuerza una carta en mano para depuracion.
   debugDrawCard(matchId: string, cardId: string): Observable<Partida> {
     return this.http.post<Partida>(`${this.base}/${matchId}/debug/draw`, { cardId }, this.getHeaders());

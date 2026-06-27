@@ -344,6 +344,18 @@ public class BattleController {
         }
     }
 
+    @PostMapping("/{matchId}/use-ability")
+    public ResponseEntity<?> usarHabilidad(@PathVariable String matchId,
+                                           @RequestHeader(value = "X-Username", required = false) String username,
+                                           @RequestBody UseAbilityRequest request) {
+        try {
+            battleEngine.usarHabilidad(matchId, request.getSourcePokemonId(), request.getAbilityName(), request.getTargetPokemonId(), request.getExtraParams(), username);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/{matchId}/promote")
     public ResponseEntity<?> promoteToActive(@PathVariable String matchId,
                                              @RequestHeader(value = "X-Username", required = false) String username,

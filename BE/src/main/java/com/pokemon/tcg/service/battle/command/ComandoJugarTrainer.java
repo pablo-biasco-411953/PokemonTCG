@@ -29,6 +29,20 @@ public class ComandoJugarTrainer implements ComandoTurno {
         if (isStadium && partida.isPlayedStadiumThisTurn()) {
             return false;
         }
+
+        // Apply Trevenant's Forest's Curse Ability
+        boolean isItem = !isSupporter && !isStadium;
+        if (isItem) {
+            TableroJugador oponente = (partida.getJugador() == tablero) ? partida.getBot() : partida.getJugador();
+            boolean hasForestsCurse = oponente.getActivo() != null 
+                    && oponente.getActivo().getCard().getHabilidades() != null
+                    && oponente.getActivo().getCard().getHabilidades().stream()
+                            .anyMatch(h -> "Forest's Curse".equalsIgnoreCase(h.getNombre()));
+            if (hasForestsCurse) {
+                return false;
+            }
+        }
+
         return true;
     }
 

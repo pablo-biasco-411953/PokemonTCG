@@ -831,6 +831,7 @@
           class="bench-slot occupied"
           [class.low-hp-warning]="getHpPercent(b) < 30"
           [class.status-heal]="cartasCurandose.has(b.card.id)"
+          (click)="clickEnEnemigo(b)"
           (mouseenter)="setHoveredCard(b.bocaAbajo ? null : b)"
           (mouseleave)="clearHoveredCard()"
           (contextmenu)="abrirDetallePokemon($event, b)"
@@ -919,6 +920,7 @@
         <div class="combatant bot-combatant">
           <div
             class="active-card bot-active"
+            (click)="clickEnEnemigo(partida.bot.activo)"
             (mouseenter)="setHoveredCard(partida.bot.activo?.bocaAbajo ? null : partida.bot.activo)"
             (mouseleave)="clearHoveredCard()"
             (contextmenu)="abrirDetallePokemon($event, partida.bot.activo)"
@@ -1689,6 +1691,32 @@
             <strong>Condiciones Especiales:</strong>
             <span class="status-pill" *ngFor="let status of selectedDetailPokemon.condicionesEspeciales">{{ status }}</span>
           </p>
+        </div>
+
+        <!-- Habilidades Section -->
+        <div *ngIf="selectedDetailPokemon.card.habilidades && selectedDetailPokemon.card.habilidades.length">
+          <div class="modal-section-title">Habilidades</div>
+          <div class="modal-attacks-list" style="margin-bottom: 12px;">
+            <div class="modal-attack-item" *ngFor="let hab of selectedDetailPokemon.card.habilidades">
+              <div class="modal-attack-header" style="justify-content: space-between; display: flex; align-items: center; width: 100%;">
+                <div style="display: flex; align-items: center;">
+                  <span class="type-pill" style="background-color: #ef4444; margin-right: 8px; font-size: 10px; color: #fff; padding: 2px 6px; border-radius: 4px;">HABILIDAD</span>
+                  <span class="modal-attack-name" style="color: #ef4444; font-weight: bold; font-size: 14px;">{{ hab.nombre }}</span>
+                </div>
+                <!-- Usar Habilidad Button -->
+                <button 
+                  *ngIf="esPokemonPropio(selectedDetailPokemon) && esHabilidadActiva(hab.nombre) && partida?.turnoActual === 'JUGADOR'"
+                  [disabled]="habilidadYaUsada(selectedDetailPokemon, hab.nombre) || cargandoAccion"
+                  class="btn-primary" 
+                  style="font-size: 11px; padding: 4px 10px; border-radius: 6px; cursor: pointer;"
+                  (click)="iniciarUsoHabilidad(selectedDetailPokemon, hab); $event.stopPropagation();"
+                >
+                  {{ habilidadYaUsada(selectedDetailPokemon, hab.nombre) ? 'Ya Usada' : 'USAR' }}
+                </button>
+              </div>
+              <p class="modal-attack-description" style="color: #ef4444; font-style: italic; margin-top: 4px; font-size: 12px;">{{ formatTextoAtaque(hab.texto) }}</p>
+            </div>
+          </div>
         </div>
 
         <!-- Attacks Section -->
