@@ -114,8 +114,6 @@ public class CartaEnJuego {
     public int getTurnoEntrada() { return turnoEntrada; }
     public void setTurnoEntrada(int turnoEntrada) { this.turnoEntrada = turnoEntrada; }
 
-    public int getUltimoTurnoEvolucionado() { return ultimoTurnoEvolucionado; }
-    public void setUltimoTurnoEvolucionado(int ultimoTurnoEvolucionado) { this.ultimoTurnoEvolucionado = ultimoTurnoEvolucionado; }
 
     public void setCard(Card card) {
         this.card = card;
