@@ -51,7 +51,12 @@ public final class EnergyCostCalculator {
             return List.of(new EnergyUnit("Colorless", false), new EnergyUnit("Colorless", false));
         }
         if (normalizedName.contains("rainbow")) {
-            return List.of(new EnergyUnit("Colorless", true));
+            String source = energy.getTipo();
+            if (source != null && !source.isBlank() && !source.equalsIgnoreCase("Energy")) {
+                return List.of(new EnergyUnit(normalizeType(source), false));
+            } else {
+                return List.of(new EnergyUnit("Colorless", true));
+            }
         }
 
         String source = energy.getTipo();

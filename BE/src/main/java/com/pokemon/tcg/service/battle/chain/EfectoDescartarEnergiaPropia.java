@@ -30,6 +30,9 @@ public class EfectoDescartarEnergiaPropia extends ManejadorEfecto {
         for (int i = 0; i < aDescartar; i++) {
             if (!ctx.atacante.getEnergiasUnidas().isEmpty()) {
                 Card energiaDescartada = ctx.atacante.getEnergiasUnidas().remove(0);
+                if ("Rainbow Energy".equals(energiaDescartada.getNombre())) {
+                    energiaDescartada.setTipo("");
+                }
                 tableroAtacante.getPilaDescarte().add(energiaDescartada);
                 System.out.println("📉 " + ctx.atacante.getCard().getNombre() + " descartó su energía [" + energiaDescartada.getNombre() + "].");
             }
