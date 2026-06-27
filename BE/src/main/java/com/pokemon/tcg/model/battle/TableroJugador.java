@@ -43,4 +43,8 @@ public class TableroJugador {
 
     public List<Card> getPilaDescarte() { return pilaDescarte; }
     public void setPilaDescarte(List<Card> pilaDescarte) { this.pilaDescarte = pilaDescarte; }
+
+    private boolean supporterBlockedNextTurn = false;
+    public boolean isSupporterBlockedNextTurn() { return supporterBlockedNextTurn; }
+    public void setSupporterBlockedNextTurn(boolean value) { this.supporterBlockedNextTurn = value; }
 }

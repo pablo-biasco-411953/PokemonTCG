@@ -116,6 +116,30 @@ public class AttackEffectParserService {
             commands.add(new CoinFlipCommand(new DamageCommand(extraDamage)));
         }
 
+        Matcher putCountersAllOpponent = Pattern.compile("Put (\\d+) damage counters each of your opponent's Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (putCountersAllOpponent.find()) {
+            commands.add(new PutDamageCountersOnAllOpponentCommand(Integer.parseInt(putCountersAllOpponent.group(1))));
+        }
+
+        Matcher setRemainingHpBothActive = Pattern.compile("Put damage counters on both Active Pok.{1,2}mon until the remaining HP of each Pok.{1,2}mon is (\\d+)", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (setRemainingHpBothActive.find()) {
+            commands.add(new SetRemainingHpBothActiveCommand(Integer.parseInt(setRemainingHpBothActive.group(1))));
+        }
+
+        if (lowerText.contains("look at the top card of your opponent's deck. then, you may have your opponent shuffle")) {
+            commands.add(new AutomatedLookAtTopCardAndShuffleCommand());
+        }
+
+        Matcher damageOwnBenched = Pattern.compile("This attack does (\\d+) damage to each of your Benched Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (damageOwnBenched.find()) {
+            commands.add(new DamageOwnBenchedCommand(Integer.parseInt(damageOwnBenched.group(1))));
+        }
+
+        Matcher rhydonMadMountain = Pattern.compile("Flip (\\d+) coins. If both of them are heads, discard the top card of your opponent's deck for each damage counter on this Pok.{1,2}mon", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (rhydonMadMountain.find()) {
+            commands.add(new CoinFlipConditionCommand(Integer.parseInt(rhydonMadMountain.group(1)), Integer.parseInt(rhydonMadMountain.group(1)), new DiscardOpponentDeckPerDamageCounterCommand(Integer.parseInt(rhydonMadMountain.group(1)))));
+        }
+
         Matcher drawMatcher = DRAW_CARD_PATTERN.matcher(text);
         if (drawMatcher.find()) {
             int cards = drawMatcher.group(1) == null ? 1 : Integer.parseInt(drawMatcher.group(1));
@@ -195,6 +219,29 @@ public class AttackEffectParserService {
         if (differentBasicEnergyMatcher.find()) {
             int extraDamage = Integer.parseInt(differentBasicEnergyMatcher.group(1));
             commands.add(new AddDamageByDifferentBasicEnergyTypesCommand(extraDamage));
+        }
+
+        Matcher reduceDamageDealt = Pattern.compile("During your opponent's next turn, any damage done by attacks from the Defending Pok.{1,2}mon is reduced by (\\d+)", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (reduceDamageDealt.find()) {
+            commands.add(new ReduceNextTurnDamageDealtCommand(Integer.parseInt(reduceDamageDealt.group(1))));
+        }
+
+        Matcher damageIfBench = Pattern.compile("If ([A-Za-z]+) is on your Bench, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (damageIfBench.find()) {
+            commands.add(new AddDamageIfPokemonOnBenchCommand(damageIfBench.group(1), Integer.parseInt(damageIfBench.group(2))));
+        }
+
+        Matcher damageIfStatusAndRemove = Pattern.compile("If your opponent's Active Pok.{1,2}mon is affected by a Special Condition, this attack does (\\d+) more damage\\. Then, remove all Special Conditions", Pattern.CASE_INSENSITIVE).matcher(text);
+        if (damageIfStatusAndRemove.find()) {
+            commands.add(new AddDamageIfStatusConditionAndRemoveCommand(Integer.parseInt(damageIfStatusAndRemove.group(1))));
+        }
+
+        if (lowerText.contains("flip a coin. if heads, your opponent can't play any supporter cards")) {
+            commands.add(new CoinFlipCommand(new BlockSupporterCardsNextTurnCommand()));
+        }
+
+        if (lowerText.contains("your opponent switches his or her active pok") && lowerText.contains("with 1 of his or her benched pok")) {
+            commands.add(new ForceOpponentSwitchCommand());
         }
         
         if (lowerText.contains("choose either asleep or poisoned. your opponent's active pok")) {

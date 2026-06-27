@@ -439,4 +439,116 @@ class BattleCommandsTest {
         assertDoesNotThrow(() -> new MultiCoinDamageCommand(MultiCoinDamageCommand.CountMode.FIXED, 2, 10, null, false)
                 .execute(partida, atacante, defensor));
     }
+    // =================== Nuevos Comandos (11 Cartas) ===================
+
+    @Test
+    void putDamageCountersOnAllOpponent() {
+        CartaEnJuego benched = cartaEnJuego("Benched", "50");
+        defensor.getBanca().add(benched);
+        new PutDamageCountersOnAllOpponentCommand(2).execute(partida, atacante, defensor);
+        assertEquals(80, activoDefensor.getHpActual()); // 100 - 20
+        assertEquals(30, benched.getHpActual()); // 50 - 20
+    }
+
+    @Test
+    void setRemainingHpBothActive() {
+        new SetRemainingHpBothActiveCommand(10).execute(partida, atacante, defensor);
+        assertEquals(10, activoAtacante.getHpActual());
+        assertEquals(10, activoDefensor.getHpActual());
+    }
+
+    @Test
+    void automatedLookAtTopCardAndShuffle() {
+        Card topCard = card("e1", "Fire Energy", "0");
+        topCard.setSupertype("Energy");
+        defensor.getMazo().add(topCard);
+        new AutomatedLookAtTopCardAndShuffleCommand().execute(partida, atacante, defensor);
+        // It should shuffle, but checking the log output is tricky. At least it shouldn't crash.
+        assertFalse(defensor.getMazo().isEmpty());
+    }
+
+    @Test
+    void damageOwnBenched() {
+        CartaEnJuego benched = cartaEnJuego("Benched", "50");
+        atacante.getBanca().add(benched);
+        new DamageOwnBenchedCommand(10).execute(partida, atacante, defensor);
+        assertEquals(40, benched.getHpActual());
+    }
+
+    @Test
+    void discardOpponentDeckPerDamageCounter() {
+        activoAtacante.setHpActual(80); // 100 max, 20 missing = 2 counters
+        partida.getUltimasMonedasLanzadas().add(true);
+        partida.getUltimasMonedasLanzadas().add(true);
+        defensor.getMazo().add(card("1", "A", "0"));
+        defensor.getMazo().add(card("2", "A", "0"));
+        defensor.getMazo().add(card("3", "A", "0"));
+
+        new DiscardOpponentDeckPerDamageCounterCommand(2).execute(partida, atacante, defensor);
+        assertEquals(1, defensor.getMazo().size());
+        assertEquals(2, defensor.getPilaDescarte().size());
+    }
+
+    @Test
+    void reduceNextTurnDamageDealt() {
+        new ReduceNextTurnDamageDealtCommand(20).execute(partida, atacante, defensor);
+        assertEquals(20, activoDefensor.getReduccionDanioCausadoSiguienteTurno());
+    }
+
+    @Test
+    void addDamageIfPokemonOnBench() {
+        CartaEnJuego lunatone = cartaEnJuego("Lunatone", "70");
+        atacante.getBanca().add(lunatone);
+        new AddDamageIfPokemonOnBenchCommand("Lunatone", 30).execute(partida, atacante, defensor);
+        assertFalse(partida.getExecutionQueue().isEmpty());
+        DamageCommand dmg = (DamageCommand) partida.getExecutionQueue().poll();
+        assertEquals(30, dmg.getAmount());
+    }
+
+    @Test
+    void addDamageIfStatusConditionAndRemove() {
+        activoDefensor.agregarCondicion("Poisoned");
+        new AddDamageIfStatusConditionAndRemoveCommand(60).execute(partida, atacante, defensor);
+        assertTrue(activoDefensor.getCondicionesEspeciales().isEmpty());
+        assertFalse(partida.getExecutionQueue().isEmpty());
+    }
+
+    @Test
+    void blockSupporterCardsNextTurn() {
+        new BlockSupporterCardsNextTurnCommand().execute(partida, atacante, defensor);
+        assertTrue(defensor.isSupporterBlockedNextTurn());
+    }
+
+    @Test
+    void forceOpponentSwitch_bot() {
+        CartaEnJuego benched = cartaEnJuego("Benched", "50");
+        defensor.getBanca().add(benched);
+        
+        Partida p2 = new Partida(atacante, defensor);
+        p2.setBotUsername("Jugador2");
+        
+        new ForceOpponentSwitchCommand().execute(p2, atacante, defensor);
+        // Bot switches active automatically
+        assertEquals("Benched", defensor.getActivo().getCard().getNombre());
+    }
+
+    @Test
+    void forceOpponentSwitch_player() {
+        CartaEnJuego benched = cartaEnJuego("Benched", "50");
+        defensor.getBanca().add(benched);
+        
+        Partida p2 = new Partida(atacante, defensor);
+        p2.setJugadorUsername("Jugador2"); // The opponent is the player
+        
+        new ForceOpponentSwitchCommand().execute(p2, defensor, atacante);
+        // Should wait for interaction
+        assertNotNull(p2.getPendingAction());
+        assertEquals("SWITCH_ACTIVE", p2.getPendingAction().getType());
+    }
+
+    @Test
+    void coinFlipConditionCommand() {
+        new CoinFlipConditionCommand(2, 2, new DamageCommand(50)).execute(partida, atacante, defensor);
+        assertEquals(2, partida.getUltimasMonedasLanzadas().size());
+    }
 }

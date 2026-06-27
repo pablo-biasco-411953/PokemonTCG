@@ -29,6 +29,7 @@ public class CartaEnJuego {
     private int danioExtraSiguienteTurno = 0;
     private String ataquePotenciadoSiguienteTurno = null;
     private boolean ataqueBloqueadoYaConsumido = false;
+    private int reduccionDanioCausadoSiguienteTurno = 0;
 
     public CartaEnJuego(Card card) {
         this.card = card;
@@ -64,6 +65,9 @@ public class CartaEnJuego {
     public boolean isAtaqueBloqueadoYaConsumido() { return ataqueBloqueadoYaConsumido; }
     public void setAtaqueBloqueadoYaConsumido(boolean value) { this.ataqueBloqueadoYaConsumido = value; }
 
+    public int getReduccionDanioCausadoSiguienteTurno() { return reduccionDanioCausadoSiguienteTurno; }
+    public void setReduccionDanioCausadoSiguienteTurno(int value) { this.reduccionDanioCausadoSiguienteTurno = value; }
+
     public int getPreventDamageThreshold() { return preventDamageThreshold; }
     public void setPreventDamageThreshold(int value) { this.preventDamageThreshold = value; }
     public boolean isPreventDamageThresholdYaConsumido() { return preventDamageThresholdYaConsumido; }
@@ -98,6 +102,7 @@ public class CartaEnJuego {
         this.debeLanzarMonedaSiAtaca = false;
         this.noPuedeAtacarSiguienteTurno = false;
         this.noPuedeAtacarYaConsumido = false;
+        this.reduccionDanioCausadoSiguienteTurno = 0;
         this.ataqueBloqueadoSiguienteTurno = null;
         this.ataqueBloqueadoYaConsumido = false;
     }

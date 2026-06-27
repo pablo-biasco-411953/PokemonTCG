@@ -63,6 +63,9 @@ public class BattleAttackService {
                 && atacante.getDanioExtraSiguienteTurno() > 0) {
                 finalDamageToDeal += atacante.getDanioExtraSiguienteTurno();
             }
+            if (atacante.getReduccionDanioCausadoSiguienteTurno() > 0) {
+                finalDamageToDeal = Math.max(0, finalDamageToDeal - atacante.getReduccionDanioCausadoSiguienteTurno());
+            }
             partida.getExecutionQueue().add(new com.pokemon.tcg.model.battle.command.DamageCommand(finalDamageToDeal));
         }
 
