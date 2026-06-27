@@ -84,6 +84,12 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
+                            <excludes>
+                                <!-- Main Spring Boot entry point: cannot be tested without full context -->
+                                <exclude>com/pokemon/tcg/BackendApplication.class</exclude>
+                                <!-- Debug utility class: not production business logic -->
+                                <exclude>com/pokemon/tcg/TestRetreat.class</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>PACKAGE</element>
