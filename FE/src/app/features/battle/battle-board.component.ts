@@ -1417,7 +1417,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           await this.delay(500);
 
           this.mostrarTextoFlotante(objetivo, '¡Despierta! (CARA)', 'status-healed-text');
-          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 1, true);
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 1, true,
+            objetivo === 'jugador' ? this.partida?.jugador?.activo : this.partida?.bot?.activo);
           break;
         }
         case 'AWAKE_FLIP_TAILS': {
@@ -1431,7 +1432,8 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           await this.delay(500);
 
           this.mostrarTextoFlotante(objetivo, 'Sigue Dormido (CRUZ)', 'status-asleep');
-          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 0, true);
+          await this.animarMonedasSincronizadas('Chequeo de Sueño', { cantidadMonedas: 1, esSoloEstado: true, danioBase: 0, danioExtraPorCara: 0, descripcion: '' }, 0, true,
+            objetivo === 'jugador' ? this.partida?.jugador?.activo : this.partida?.bot?.activo);
           break;
         }
         case 'ASTONISH_REVEALED': {
@@ -1942,6 +1944,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
   interTurnOverlay: InterTurnOverlayState | null = null;
   coinFlipAtaque: AttackCoinFlipState | null = null;
+  currentCoinFlipAttacker: CartaEnJuego | null = null;
 
   async mostrarInterTurn(
     tipo: 'jugador' | 'bot' | 'neutral',
@@ -2508,10 +2511,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const habilidad = this.buscarAtaqueEnActivo(activo, nombreAtaque);
     if (!habilidad) return;
 
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad, activo);
-    if (!coinConfig) return;
-
+    let coinConfig = this.detectarCoinFlipAtaque(habilidad, activo);
     const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (!coinConfig && monedasServidor > 0) {
+      coinConfig = {
+        cantidadMonedas: monedasServidor,
+        danioBase: 0,
+        danioExtraPorCara: 0,
+        esSoloEstado: true,
+        descripcion: 'Efecto de carta en juego requiere lanzar moneda.',
+        tipoEfecto: 'restriction'
+      };
+    }
+    if (!coinConfig) return;
     if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     let carasReales = this.contarCarasServidor(estadoFinal);
@@ -2529,6 +2541,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       coinConfig,
       carasReales,
       coinConfig.esSoloEstado,
+      activo,
     );
   }
 
@@ -3434,21 +3447,36 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
         habilidadBot = activoBotDespues.card.ataques[0];
       }
 
-      const coinConfig = this.detectarCoinFlipAtaque(habilidadBot, activoBotDespues);
+      let activeCoinConfig = this.detectarCoinFlipAtaque(habilidadBot, activoBotDespues);
+      let coinFlipOwner: CartaEnJuego | null | undefined = activoBotDespues;
+      const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
 
-      if (coinConfig) {
-        const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
-        if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
+      if (!activeCoinConfig && monedasServidor > 0) {
+        // Restriction effect (e.g. Mental Panic) - the player's Pokémon caused this
+        activeCoinConfig = {
+          cantidadMonedas: monedasServidor,
+          danioBase: 0,
+          danioExtraPorCara: 0,
+          esSoloEstado: true,
+          descripcion: 'Efecto de carta en juego requiere lanzar moneda.',
+          tipoEfecto: 'restriction'
+        };
+        // Show the player's active Pokémon (who applied the restriction)
+        coinFlipOwner = this.partida?.jugador?.activo;
+      }
+
+      if (activeCoinConfig) {
+        if (monedasServidor > 0) activeCoinConfig.cantidadMonedas = monedasServidor;
         let carasReales = this.contarCarasServidor(estadoFinal);
         if (carasReales === null) {
-          if (coinConfig.tipoEfecto === 'self-damage') {
+          if (activeCoinConfig.tipoEfecto === 'self-damage') {
             const hpPropioAntes = this.partida?.bot?.activo?.hpActual || 0;
             const hpPropioDespues = estadoFinal.bot?.activo?.hpActual || 0;
             const autodanioHecho = hpPropioAntes - hpPropioDespues;
             carasReales = autodanioHecho > 0 ? 0 : 1;
           } else {
             carasReales = this.battleBoardTurn.resolverCarasBot(
-              coinConfig,
+              activeCoinConfig,
               habilidadBot,
               estadoFinal,
               danioHecho,
@@ -3456,14 +3484,15 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
           }
         }
         this.resultadoMoneda = this.battleBoardTurn.obtenerResultadoMoneda(
-          coinConfig.cantidadMonedas,
+          activeCoinConfig.cantidadMonedas,
           carasReales,
         );
         await this.animarMonedasSincronizadas(
           habilidadBot.nombre,
-          coinConfig,
+          activeCoinConfig,
           carasReales,
-          coinConfig.esSoloEstado,
+          activeCoinConfig.esSoloEstado,
+          coinFlipOwner,
         );
       }
     }
@@ -3851,7 +3880,9 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     config: CoinFlipConfig,
     carasForzadas: number,
     esSoloEstado: boolean,
+    attacker?: CartaEnJuego | null,
   ): Promise<void> {
+    this.currentCoinFlipAttacker = attacker || null;
     this.resultadoMoneda = '';
     this.carasAcumuladas = 0;
     this.danioAcumulado = config.danioBase;
@@ -3932,12 +3963,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     await this.delay(3000);
 
     this.coinFlipAtaque = null;
+    this.currentCoinFlipAttacker = null;
     this.carasAcumuladas = 0;
     this.danioAcumulado = 0;
     this.cdr.detectChanges();
   }
 
   get coinFlipAttacker(): CartaEnJuego | null {
+    if (this.currentCoinFlipAttacker) {
+      return this.currentCoinFlipAttacker;
+    }
     if (!this.partida) return null;
     return this.partida.turnoActual === 'BOT' ? this.partida.bot?.activo : this.partida.jugador?.activo;
   }
@@ -4881,6 +4916,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       configConfusion,
       exitoConfusion,
       true,
+      activoJugador,
     );
 
     if (this.resultadoMoneda !== 'CRUZ') {
@@ -4905,9 +4941,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     habilidad: any,
     estadoFinal: Partida,
   ): Promise<void> {
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
-    if (!coinConfig) return;
+    let coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
     const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (!coinConfig && monedasServidor > 0) {
+      coinConfig = {
+        cantidadMonedas: monedasServidor,
+        danioBase: 0,
+        danioExtraPorCara: 0,
+        esSoloEstado: true,
+        descripcion: 'Efecto de carta en juego requiere lanzar moneda.',
+        tipoEfecto: 'restriction'
+      };
+    }
+    if (!coinConfig) return;
     if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     const hpBotAntes = this.partida?.bot?.activo?.hpActual || 0;
@@ -4940,6 +4986,7 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
       coinConfig,
       carasReales,
       coinConfig.esSoloEstado,
+      this.partida?.jugador?.activo,
     );
   }
 

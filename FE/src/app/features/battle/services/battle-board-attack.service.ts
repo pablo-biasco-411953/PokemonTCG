@@ -29,7 +29,7 @@ export class BattleBoardAttackService {
     if (!ataque?.texto && !ataque?.descripcion && !ataque?.efecto) return null;
 
     const texto: string = (ataque.textoOriginal || ataque.texto || ataque.descripcion || ataque.efecto || '').toLowerCase();
-    const flipMatch = texto.match(/flip\s+(\d+|a|an|one|two|three|four|five)\s+coin|lanz[aá]\s+(\d+|una?)\s+moneda/i);
+    const flipMatch = texto.match(/flips?\s+(\d+|a|an|one|two|three|four|five)\s+coins?|lanz[aá]s?\s+(\d+|una?)\s+monedas?/i);
     if (!flipMatch) return null;
 
     const numStr = (flipMatch[1] || flipMatch[2] || 'a').toLowerCase();

@@ -1089,4 +1089,36 @@ class BattleAttackServiceTest {
 
         assertEquals(120, resolution.resultado().danioFinal()); // 80 + 40 = 120
     }
+
+    @Test
+    void resolveAttackConMentalTrashEjecutaYDescartaCartasPorCadaCruz() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+
+        // Agregamos 4 cartas a la mano del bot
+        partida.getBot().getMano().add(card("c1", "Carta 1", "0"));
+        partida.getBot().getMano().add(card("c2", "Carta 2", "0"));
+        partida.getBot().getMano().add(card("c3", "Carta 3", "0"));
+        partida.getBot().getMano().add(card("c4", "Carta 4", "0"));
+
+        Ataque mentalTrash = attack(
+                "Mental Trash",
+                0,
+                "Your opponent flips 4 coins. For each tails, he or she discards a card from his or her hand."
+        );
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, mentalTrash, atacante, defensor, (p, a, d) -> {}, null);
+
+        // Verificamos que se lanzaron 4 monedas
+        assertEquals(4, resolution.historialMonedas().size());
+
+        // Contamos cuántas salieron cruz (false)
+        long cruces = resolution.historialMonedas().stream().filter(b -> !b).count();
+
+        // El número de cartas descartadas debe ser igual a la cantidad de cruces
+        assertEquals(cruces, partida.getBot().getPilaDescarte().size());
+        assertEquals(4 - cruces, partida.getBot().getMano().size());
+    }
 }

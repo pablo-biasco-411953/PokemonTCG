@@ -1,8 +1,8 @@
 # Reporte de Cobertura de Código (JaCoCo) — Backend
 
-- **Fecha/Hora de Registro**: 2026-06-27 16:21 (Local)
-- **Origen**: Ejecución completa del suite de pruebas (812 tests ejecutados exitosamente, 0 errores).
-- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (73.64% vs >= 80% requerido).
+- **Fecha/Hora de Registro**: 2026-06-27 17:12 (Local)
+- **Origen**: Ejecución completa del suite de pruebas (814 tests ejecutados exitosamente, 0 errores).
+- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (73.70% vs >= 80% requerido).
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Componente | Requisito RNF-03 | Estado Actual (JaCoCo) | Estado de Cumplimiento |
 | :--- | :---: | :---: | :---: |
-| **Total del Proyecto (Backend)** | **≥ 80.00%** | **73.64%** (23,896 / 32,451 instrucciones) | ❌ *No Cumple* |
+| **Total del Proyecto (Backend)** | **≥ 80.00%** | **73.70%** (24,096 / 32,553 instrucciones) | ❌ *No Cumple* |
 
 > [!IMPORTANT]
-> El proyecto general se encuentra a un **6.36%** de alcanzar la cobertura mínima requerida del **80%**.
-> Con la incorporación de las pruebas para Skarmory-EX, la cobertura de `BattleAttackService` aumentó al **86.63%** (+2.68% de incremento).
+> El proyecto general se encuentra a un **6.30%** de alcanzar la cobertura mínima requerida del **80%**.
+> Con la incorporación de las pruebas para Skarmory-EX y Malamar (Mental Trash), la cobertura de `BattleAttackService` se ubica en el **83.95%** (408/486) y la de `DiscardRandomHandCardsByCoinTailsCommand` en el **98.04%** (100/102).
 
 ---
 

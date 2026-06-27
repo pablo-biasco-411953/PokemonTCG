@@ -330,6 +330,14 @@ public class AttackEffectParserService {
             commands.add(new ShuffleRandomHandToDeckCommand());
         }
 
+        if (lowerText.contains("opponent flips") && lowerText.contains("coins. for each tails") && lowerText.contains("discard")) {
+            Matcher m = Pattern.compile("flips (\\d+) coins", Pattern.CASE_INSENSITIVE).matcher(text);
+            if (m.find()) {
+                int flips = Integer.parseInt(m.group(1));
+                commands.add(new DiscardRandomHandCardsByCoinTailsCommand(flips, Target.OPPONENT));
+            }
+        }
+
         if (lowerText.contains("move a basic energy from this pok") || lowerText.contains("move an energy from this pok") || lowerText.contains("move as many")) {
             commands.add(new MoveEnergyCommand(null, 1));
         }
