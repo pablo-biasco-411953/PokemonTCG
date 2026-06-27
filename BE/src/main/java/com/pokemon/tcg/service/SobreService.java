@@ -66,8 +66,11 @@ public class SobreService {
             }
         }
 
-        int cantEnergias = random.nextInt(3) + 2; // 2, 3, o 4
-        int cantTrainers = trainers.isEmpty() ? 0 : (random.nextInt(2) + 2); // 2 o 3 si hay
+        int cantEnergias = random.nextInt(2) + 2; // 2 o 3
+        int cantTrainers = trainers.isEmpty() ? 0 : (random.nextInt(2) + 2); // 2 o 3
+        if (!trainers.isEmpty() && cantTrainers < 1) {
+            cantTrainers = 1;
+        }
         int cantPokemones = 10 - cantEnergias - cantTrainers;
 
         List<Card> sobreGenerado = new ArrayList<>();
