@@ -2503,10 +2503,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     const habilidad = this.buscarAtaqueEnActivo(activo, nombreAtaque);
     if (!habilidad) return;
 
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad, activo);
-    if (!coinConfig) return;
-
+    let coinConfig = this.detectarCoinFlipAtaque(habilidad, activo);
     const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (!coinConfig && monedasServidor > 0) {
+      coinConfig = {
+        cantidadMonedas: monedasServidor,
+        danioBase: 0,
+        danioExtraPorCara: 0,
+        esSoloEstado: true,
+        descripcion: 'Efecto de carta en juego requiere lanzar moneda.',
+        tipoEfecto: 'restriction'
+      };
+    }
+    if (!coinConfig) return;
     if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     let carasReales = this.contarCarasServidor(estadoFinal);
@@ -4701,9 +4710,19 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
     habilidad: any,
     estadoFinal: Partida,
   ): Promise<void> {
-    const coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
-    if (!coinConfig) return;
+    let coinConfig = this.detectarCoinFlipAtaque(habilidad, this.partida?.jugador?.activo);
     const monedasServidor = estadoFinal.ultimasMonedasLanzadas?.length || 0;
+    if (!coinConfig && monedasServidor > 0) {
+      coinConfig = {
+        cantidadMonedas: monedasServidor,
+        danioBase: 0,
+        danioExtraPorCara: 0,
+        esSoloEstado: true,
+        descripcion: 'Efecto de carta en juego requiere lanzar moneda.',
+        tipoEfecto: 'restriction'
+      };
+    }
+    if (!coinConfig) return;
     if (monedasServidor > 0) coinConfig.cantidadMonedas = monedasServidor;
 
     const hpBotAntes = this.partida?.bot?.activo?.hpActual || 0;

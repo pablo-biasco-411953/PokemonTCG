@@ -299,4 +299,12 @@ class AttackEffectParserServiceTest {
                 && cmd.getMultiplier() == 40
         ));
     }
+
+    @Test
+    void parseaMentalTrashComoDiscardRandomHandCardsByCoinTailsCommand() {
+        var commands = parser.parseEffects("Your opponent flips 4 coins. For each tails, he or she discards a card from his or her hand.", null);
+        assertTrue(commands.stream().anyMatch(command ->
+                command instanceof com.pokemon.tcg.model.battle.command.DiscardRandomHandCardsByCoinTailsCommand
+        ));
+    }
 }
