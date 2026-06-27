@@ -89,12 +89,16 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     }
   }
 
+  estadoOriginal: string = '';
+  showUnsavedPrompt = false;
+
   private cargarMazoParaEditar(mazo: Mazo | null) {
     if (!mazo) {
       this.idMazoAEditar = null;
       this.nombreMazo = '';
       this.mazoEnProceso = [];
       this.cantidadesEnMazo = {};
+      this.estadoOriginal = JSON.stringify([]);
       return;
     }
 
@@ -102,6 +106,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     this.nombreMazo = mazo.nombre;
     this.mazoEnProceso = [...(mazo.cartas || [])];
     this.recalcularCantidadesEnMazo();
+    this.estadoOriginal = JSON.stringify(this.mazoEnProceso.map(c => c.id).sort());
   }
 
   cargarColeccion() {
@@ -326,6 +331,19 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
     }
   }
 
+  onRightClickCard(event: MouseEvent, carta: Card) {
+    event.preventDefault();
+    if (this.getCantidadEnMazo(carta.id) > 0) {
+      // Find the last instance of this card in the deck and remove it
+      for (let i = this.mazoEnProceso.length - 1; i >= 0; i--) {
+        if (this.mazoEnProceso[i].id === carta.id) {
+          this.quitarDelMazo(i);
+          break;
+        }
+      }
+    }
+  }
+
   getCantidadEnMazo(id: string): number {
     return this.cantidadesEnMazo[id] || 0;
   }
@@ -366,6 +384,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
       this.mazoService.actualizarMazo(this.idMazoAEditar, this.nombreMazo, ids).subscribe({
         next: () => {
           this.notificar(this.i18n.translate('alert.deckUpdated'), 'success');
+          this.estadoOriginal = JSON.stringify(this.mazoEnProceso.map(c => c.id).sort());
           this.cerrar(true);
         },
         error: (err) => {
@@ -376,6 +395,7 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
       this.mazoService.guardarMazo(this.nombreMazo, this.username, ids).subscribe({
         next: () => {
           this.notificar(this.i18n.translate('alert.deckCreated'), 'success');
+          this.estadoOriginal = JSON.stringify(this.mazoEnProceso.map(c => c.id).sort());
           this.cerrar(true);
         },
         error: (err) => {
@@ -386,6 +406,26 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   }
 
   volver() {
+    if (this.vistaDeckBuilder === 'editor') {
+      const estadoActual = JSON.stringify(this.mazoEnProceso.map(c => c.id).sort());
+      if (this.estadoOriginal !== estadoActual) {
+        this.showUnsavedPrompt = true;
+        return;
+      }
+    }
+    this.ejecutarCierre();
+  }
+
+  confirmarSalidaSinGuardar() {
+    this.showUnsavedPrompt = false;
+    this.ejecutarCierre();
+  }
+
+  cancelarSalidaSinGuardar() {
+    this.showUnsavedPrompt = false;
+  }
+
+  private ejecutarCierre() {
     if (this.embedded && this.vistaDeckBuilder === 'editor' && !this.mazoInicial) {
       this.vistaDeckBuilder = 'library';
       this.mazoMenuSeleccionado = null;

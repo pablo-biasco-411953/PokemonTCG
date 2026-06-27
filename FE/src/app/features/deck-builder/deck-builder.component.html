@@ -15,6 +15,17 @@
 
 <app-battle-notification></app-battle-notification>
 
+<div class="deck-menu-overlay" *ngIf="showUnsavedPrompt" (click)="cancelarSalidaSinGuardar()" style="z-index: 9999;">
+  <div class="deck-menu-card" (click)="$event.stopPropagation()">
+    <p>{{ 'deck.editingDeck' | t }}</p>
+    <h2 style="font-size: 1.2rem; color: #f8fafc; text-align: center; margin-bottom: 12px; margin-top: 8px;">{{ 'deck.unsavedPrompt' | t }}</h2>
+    <div style="display: flex; gap: 8px; width: 100%;">
+      <button type="button" class="danger" style="flex: 1;" (click)="confirmarSalidaSinGuardar()">{{ 'deck.leave' | t }}</button>
+      <button type="button" class="cancel" style="flex: 1;" (click)="cancelarSalidaSinGuardar()">{{ 'deck.cancel' | t }}</button>
+    </div>
+  </div>
+</div>
+
 <div class="builder-container pokedex-chassis dex-lab" *ngIf="!isLoadingImages || vistaDeckBuilder === 'library'">
   <section class="deck-library" *ngIf="vistaDeckBuilder === 'library'">
     <header class="deck-library-head">
@@ -117,6 +128,7 @@
           (mouseenter)="mostrarDetalleCarta(carta)"
           (focus)="mostrarDetalleCarta(carta)"
           (click)="agregarAlMazo(carta)"
+          (contextmenu)="onRightClickCard($event, carta)"
         >
           <span class="dex-card-count">x{{ cantidadesPoseidas[carta.id] || 0 }}</span>
           <span class="dex-card-used" *ngIf="getCantidadEnMazo(carta.id) > 0">

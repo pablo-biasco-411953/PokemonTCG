@@ -1742,7 +1742,8 @@ $pokedex-neon-verde: #00ff7f;
   height: 52px;
   margin: 12px auto 0;
   border: 1px solid rgba(226, 232, 240, 0.36);
-  border-radius: 999px;
+  border-radius: 0;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
   background: #020617;
   color: #f8fafc;
   font-size: 0.98rem;
@@ -1762,9 +1763,7 @@ $pokedex-neon-verde: #00ff7f;
 }
 
 .deck-menu-card button.cancel {
-  margin-top: 22px;
-  border-radius: 0;
-  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  margin-top: 12px;
 }
 
 /* Duel-style dense editor pass */

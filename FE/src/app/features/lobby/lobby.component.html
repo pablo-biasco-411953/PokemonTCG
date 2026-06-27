@@ -1565,8 +1565,9 @@
   </div>
 
   <div class="deck-builder-overlay" *ngIf="deckBuilderOpen">
-    <button type="button" class="deck-builder-close" (click)="cerrarDeckBuilder()">×</button>
+    <button type="button" class="deck-builder-close" (click)="deckBuilder.volver()">×</button>
     <app-deck-builder
+      #deckBuilder
       [embedded]="true"
       [mazosDisponibles]="mazos"
       [mazoInicial]="mazoBuilderInicial"
