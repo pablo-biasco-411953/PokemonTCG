@@ -1967,7 +1967,7 @@ kbd {
 .room-password-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1210;
+  z-index: 1000005;
   display: grid;
   place-items: center;
   padding: 20px;
