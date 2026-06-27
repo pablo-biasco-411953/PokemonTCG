@@ -654,15 +654,19 @@ public class BattleEngineService {
             
             if (tablero.getActivo() != null) {
                 CartaEnJuego act = tablero.getActivo();
-                boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> act.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
-                if (canEvolve) {
-                    options.add(new PendingBattleAction.Option(act.getCard().getId(), act.getCard().getNombre(), act.getCard().getImagen()));
+                if (act.getTurnoEntrada() != partida.getNumeroTurno() && act.getUltimoTurnoEvolucionado() != partida.getNumeroTurno()) {
+                    boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> act.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
+                    if (canEvolve) {
+                        options.add(new PendingBattleAction.Option(act.getCard().getId(), act.getCard().getNombre(), act.getCard().getImagen()));
+                    }
                 }
             }
             for (CartaEnJuego b : tablero.getBanca()) {
-                boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> b.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
-                if (canEvolve) {
-                    options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                if (b.getTurnoEntrada() != partida.getNumeroTurno() && b.getUltimoTurnoEvolucionado() != partida.getNumeroTurno()) {
+                    boolean canEvolve = tablero.getMazo().stream().anyMatch(c -> b.getCard().getNombre().equalsIgnoreCase(c.getEvolvesFrom()));
+                    if (canEvolve) {
+                        options.add(new PendingBattleAction.Option(b.getCard().getId(), b.getCard().getNombre(), b.getCard().getImagen()));
+                    }
                 }
             }
             pending.setOptions(options);
@@ -1272,6 +1276,7 @@ public class BattleEngineService {
                 int nuevoHpMaximo = Integer.parseInt(evoCard.getHp());
                 target.setHpActual(Math.max(0, nuevoHpMaximo - danioAcumulado));
                 target.limpiarCondiciones();
+                target.setUltimoTurnoEvolucionado(partida.getNumeroTurno());
                 
                 Collections.shuffle(board.getMazo());
                 agregarLog(partida, "EVOLVED_EVOSODA", callerUsername, evoCard.getNombre());

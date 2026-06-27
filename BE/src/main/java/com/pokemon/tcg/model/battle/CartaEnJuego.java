@@ -29,6 +29,7 @@ public class CartaEnJuego {
     private int danioExtraSiguienteTurno = 0;
     private String ataquePotenciadoSiguienteTurno = null;
     private boolean ataqueBloqueadoYaConsumido = false;
+    private int ultimoTurnoEvolucionado = -1;
 
     public CartaEnJuego(Card card) {
         this.card = card;
@@ -113,4 +114,7 @@ public class CartaEnJuego {
 
     public List<Card> getAttachedTools() { return attachedTools; }
     public void setAttachedTools(List<Card> attachedTools) { this.attachedTools = attachedTools; }
+
+    public int getUltimoTurnoEvolucionado() { return ultimoTurnoEvolucionado; }
+    public void setUltimoTurnoEvolucionado(int ultimoTurnoEvolucionado) { this.ultimoTurnoEvolucionado = ultimoTurnoEvolucionado; }
 }
