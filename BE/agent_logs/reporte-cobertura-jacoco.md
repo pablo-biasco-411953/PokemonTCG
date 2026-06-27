@@ -1,8 +1,8 @@
 # Reporte de Cobertura de Código (JaCoCo) — Backend
 
-- **Fecha/Hora de Registro**: 2026-06-27 14:50 (Local)
-- **Origen**: Ejecución completa del suite de pruebas (809 tests ejecutados exitosamente, 0 errores).
-- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (73.89% vs >= 80% requerido).
+- **Fecha/Hora de Registro**: 2026-06-27 16:21 (Local)
+- **Origen**: Ejecución completa del suite de pruebas (812 tests ejecutados exitosamente, 0 errores).
+- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (73.64% vs >= 80% requerido).
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Componente | Requisito RNF-03 | Estado Actual (JaCoCo) | Estado de Cumplimiento |
 | :--- | :---: | :---: | :---: |
-| **Total del Proyecto (Backend)** | **≥ 80.00%** | **73.89%** (23,934 / 32,388 instrucciones) | ❌ *No Cumple* |
+| **Total del Proyecto (Backend)** | **≥ 80.00%** | **73.64%** (23,896 / 32,451 instrucciones) | ❌ *No Cumple* |
 
 > [!IMPORTANT]
-> El proyecto general se encuentra a un **6.11%** de alcanzar la cobertura mínima requerida del **80%** (aumento del **+4.06%** respecto al reporte anterior gracias a la adición de 32 nuevos tests unitarios).
-> La mayor parte del código sin cubrir se concentra en orquestadores masivos de flujo como `BattleEngineService.java`.
+> El proyecto general se encuentra a un **6.36%** de alcanzar la cobertura mínima requerida del **80%**.
+> Con la incorporación de las pruebas para Skarmory-EX, la cobertura de `BattleAttackService` aumentó al **86.63%** (+2.68% de incremento).
 
 ---
 
@@ -23,7 +23,7 @@
 El pliego RNF-03 exige una **cobertura > 90%** en tres componentes críticos de la lógica de juego. Dado que dichos componentes fueron mapeados a nombres de clases distintos en la implementación real, a continuación se desglosa el estado actual para cada uno de estos roles:
 
 ### A. Cálculo de Daño (Equivalente a `DamageCalculator`)
-*   **`BattleAttackService`** (Orquestador principal de ataques): **83.95%** (408 / 486 instrucciones) ❌ *No Cumple* (Subió de 73.32%)
+*   **`BattleAttackService`** (Orquestador principal de ataques): **86.63%** (421 / 486 instrucciones) ❌ *No Cumple* (Subió de 83.95%)
 *   **`EnergyCostCalculator`** (Validación de costos de energía): **92.53%** (322 / 348 instrucciones) ✅ *Cumple* (Subió de 87.20%)
 *   **Eslabones de Pre-Daño (Chain of Responsibility):**
     *   `EfectoMonedaFalla`: **100.00%** (44/44)  ✅ *Cumple*

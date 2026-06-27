@@ -1051,4 +1051,42 @@ class BattleAttackServiceTest {
 
         assertEquals(30, resolution.resultado().danioFinal());
     }
+
+    @Test
+    void resolveAttackConTailspinPiledriverNoAplicaExtraDanioSiDefensorNoTieneDanio() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        defensor.setHpActual(50); // HP is full (Charmander has 50 HP)
+
+        Ataque tailspin = attack(
+                "Tailspin Piledriver",
+                80,
+                "If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage."
+        );
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, tailspin, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(80, resolution.resultado().danioFinal());
+    }
+
+    @Test
+    void resolveAttackConTailspinPiledriverAplicaExtraDanioSiDefensorTieneDanio() {
+        Partida partida = partidaBasica();
+        CartaEnJuego atacante = partida.getJugador().getActivo();
+        CartaEnJuego defensor = partida.getBot().getActivo();
+        defensor.setHpActual(30); // Damaged (Charmander has 50 HP max, so it has 2 damage counters)
+
+        Ataque tailspin = attack(
+                "Tailspin Piledriver",
+                80,
+                "If your opponent's Active Pokémon already has any damage counters on it, this attack does 40 more damage."
+        );
+
+        BattleAttackService.AttackResolution resolution =
+                service.resolveAttack(partida, tailspin, atacante, defensor, (p, a, d) -> {}, null);
+
+        assertEquals(120, resolution.resultado().danioFinal()); // 80 + 40 = 120
+    }
 }
