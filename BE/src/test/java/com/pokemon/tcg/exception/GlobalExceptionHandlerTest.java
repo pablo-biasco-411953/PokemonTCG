@@ -3,6 +3,9 @@ package com.pokemon.tcg.exception;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Map;
 
@@ -79,5 +82,23 @@ class GlobalExceptionHandlerTest {
                 new Exception("test error"));
         Map<?, ?> body = (Map<?, ?>) response.getBody();
         assertEquals(500, body.get("status"));
+    }
+
+    @Test
+    void handleValidationExceptions_retorna400ConMensajes() {
+        BeanPropertyBindingResult bindingResult =
+                new BeanPropertyBindingResult(new Object(), "target");
+        bindingResult.addError(new FieldError("target", "username", "no puede estar vacío"));
+
+        MethodArgumentNotValidException ex =
+                new MethodArgumentNotValidException(null, bindingResult);
+
+        ResponseEntity<?> response = handler.handleValidationExceptions(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Map<?, ?> body = (Map<?, ?>) response.getBody();
+        assertNotNull(body);
+        assertTrue(body.get("message").toString().contains("no puede estar vacío"));
+        assertEquals(400, body.get("status"));
     }
 }
