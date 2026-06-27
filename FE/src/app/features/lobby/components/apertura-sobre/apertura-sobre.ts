@@ -406,7 +406,7 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
     this.crearExplosion();
     this.explosiónDisparada = true;
 
-    this.mensajeGuia = "--- EXPLOTANDO SOBRE ---";
+    this.mensajeGuia = 'pack.exploding';
     this.cdr.detectChanges();
 
     setTimeout(() => {
