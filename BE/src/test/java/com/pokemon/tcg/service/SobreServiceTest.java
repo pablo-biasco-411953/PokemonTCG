@@ -44,6 +44,14 @@ class SobreServiceTest {
         return c;
     }
 
+    private Card trainer(String id, String nombre) {
+        Card c = new Card();
+        c.setId(id);
+        c.setNombre(nombre);
+        c.setSupertype("Trainer");
+        return c;
+    }
+
     private List<Card> catalogoBase() {
         List<Card> cartas = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
@@ -52,7 +60,26 @@ class SobreServiceTest {
         for (int i = 11; i <= 15; i++) {
             cartas.add(energia("xy1-" + i, "Fire"));
         }
+        for (int i = 16; i <= 20; i++) {
+            cartas.add(trainer("xy1-" + i, "Potion" + (i - 15)));
+        }
         return cartas;
+    }
+
+    @Test
+    void abrirSobre_contieneTrainers() {
+        Jugador jugador = new Jugador("ash");
+        when(jugadorRepo.findByUsername("ash")).thenReturn(jugador);
+        when(cardCatalogService.getCatalogo()).thenReturn(catalogoBase());
+        when(jugadorRepo.save(any())).thenReturn(jugador);
+
+        List<Card> resultado = sobreService.abrirSobre("ash");
+
+        long trainersCount = resultado.stream()
+                .filter(c -> "Trainer".equalsIgnoreCase(c.getSupertype()))
+                .count();
+
+        assertTrue(trainersCount > 0, "El sobre debería contener al menos una carta Trainer");
     }
 
     @Test

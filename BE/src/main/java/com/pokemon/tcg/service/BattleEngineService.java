@@ -1463,25 +1463,6 @@ public class BattleEngineService {
             }
             board.setActivo(suplente);
             agregarLog(partida, "ACTIVE_SWITCHED", callerUsername, suplente.getCard().getNombre());
-        } else if ("SWITCH_ACTIVE_SELF".equals(pending.getType())) {
-            // Blastoise-EX Rapid Spin: el propio atacante elige de su banca
-            if (ids.isEmpty()) {
-                throw new IllegalArgumentException("Se requiere seleccionar un suplente.");
-            }
-            String selectedId = ids.get(0);
-            CartaEnJuego suplente = board.getBanca().stream()
-                    .filter(c -> c.getCard().getId().equals(selectedId))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("El Pokémon elegido no está en la banca."));
-
-            CartaEnJuego activoViejo = board.getActivo();
-            if (activoViejo != null) {
-                activoViejo.limpiarCondiciones();
-                board.getBanca().remove(suplente);
-                board.getBanca().add(activoViejo);
-            }
-            board.setActivo(suplente);
-            agregarLog(partida, "SELF_SWITCH", callerUsername, suplente.getCard().getNombre());
         } else if ("HEAL_OWN_POKEMON".equals(pending.getType())) {
             if (ids.isEmpty()) {
                 throw new IllegalArgumentException("Se requiere seleccionar un Pokémon para curar.");
@@ -2084,7 +2065,13 @@ public class BattleEngineService {
         copy.reemplazarAtaques(source.getAtaques().stream().map(this::copiarAtaqueParaPartida).toList());
         copy.setDebilidades(source.getDebilidades().stream().map(this::copiarAtributoCarta).toList());
         copy.setResistencias(source.getResistencias().stream().map(this::copiarAtributoCarta).toList());
+        copy.setHabilidades(source.getHabilidades() == null ? new ArrayList<>() : source.getHabilidades().stream().map(this::copiarHabilidadParaPartida).collect(java.util.stream.Collectors.toList()));
         return copy;
+    }
+
+    private com.pokemon.tcg.model.Habilidad copiarHabilidadParaPartida(com.pokemon.tcg.model.Habilidad source) {
+        if (source == null) return null;
+        return new com.pokemon.tcg.model.Habilidad(source.getNombre(), source.getTexto(), source.getType());
     }
 
     private Ataque copiarAtaqueParaPartida(Ataque source) {
@@ -2147,6 +2134,7 @@ public class BattleEngineService {
             card.getDebilidades().size();
             card.getResistencias().size();
             card.getSubtypes().size();
+            if (card.getHabilidades() != null) card.getHabilidades().size();
         }
     }
 
