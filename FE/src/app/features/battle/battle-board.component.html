@@ -137,6 +137,32 @@
   </div>
 </div>
 
+<div class="surrender-backdrop" *ngIf="showSurrenderModal" (click)="cancelSurrender()"></div>
+<div class="surrender-panel" *ngIf="showSurrenderModal" (click)="$event.stopPropagation()">
+  <h2>{{ 'battle.surrender' | t }}</h2>
+  <p>{{ 'confirm.surrender' | t }}</p>
+  <div class="surrender-actions">
+    <button type="button" class="btn-cancel" (click)="cancelSurrender()">{{ 'lobby.cancel' | t }}</button>
+    <button type="button" class="btn-confirm" (click)="confirmSurrender()">{{ 'lobby.accept' | t }}</button>
+  </div>
+</div>
+
+<!-- Rainbow Energy Type Selection Modal -->
+<div class="surrender-backdrop" *ngIf="showRainbowModal" (click)="confirmRainbowEnergy('Colorless')"></div>
+<div class="rainbow-panel" *ngIf="showRainbowModal" (click)="$event.stopPropagation()">
+  <h2>{{ 'Elige el tipo de Energía' }}</h2>
+  <p>{{ 'Rainbow Energy provee Energía de cualquier tipo. Por favor selecciona qué tipo deseas:' }}</p>
+  
+  <div class="rainbow-options">
+    <button class="energy-btn" *ngFor="let type of energyTypes" (click)="confirmRainbowEnergy(type)" [ngClass]="type.toLowerCase()">
+      <div class="energy-icon-wrapper" [style.background]="'radial-gradient(circle at 30% 30%, ' + getEnergyColor(type) + ', #111)'" [style.boxShadow]="'0 0 15px ' + getEnergyColor(type) + '80'">
+        <div class="svg-icon-container" [innerHTML]="getEnergyIconSvg(type)" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></div>
+      </div>
+      <span class="energy-name">{{ type }}</span>
+    </button>
+  </div>
+</div>
+
 <div
   class="endgame-overlay"
   [class.victory]="isVictory"
@@ -546,7 +572,25 @@
     </div>
 
     <div class="acf-layout-body" [class.has-attacker]="coinFlipAttacker">
-      <div class="acf-left-col">
+      
+      <!-- Attacker Sprite Centered -->
+      <div class="acf-pokemon-display-box" *ngIf="coinFlipAttacker as attacker">
+        <div class="acf-attacker-wrapper"
+             [class.glow-level-1]="carasAcumuladas === 1"
+             [class.glow-level-2]="carasAcumuladas === 2"
+             [class.glow-level-3]="carasAcumuladas === 3"
+             [class.glow-level-4]="carasAcumuladas >= 4"
+             [class.shake-level-1]="carasAcumuladas >= 1 && carasAcumuladas <= 2"
+             [class.shake-level-2]="carasAcumuladas >= 3 && carasAcumuladas <= 4"
+             [class.shake-level-3]="carasAcumuladas >= 5">
+          <img [src]="getSpriteFront(attacker.card)"
+               (error)="onSpriteError($event, attacker.card)"
+               class="acf-sprite-img" />
+        </div>
+      </div>
+
+      <!-- Coins and Progress -->
+      <div class="acf-coins-container">
         <div class="acf-coins-row">
           <div
             *ngFor="let moneda of coinFlipAtaque.monedas; let i = index"
@@ -584,27 +628,26 @@
             {{ moneda.estado === 'cara' ? ('battle.heads' | t) : moneda.estado === 'cruz' ? ('battle.tails' | t) : '...' }}
           </div>
         </div>
+      </div>
 
+      <!-- Final Outcomes -->
+      <div class="acf-outcome-container">
         <div
           class="acf-damage-summary"
-          *ngIf="
-            coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0
-          "
+          *ngIf="coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal > 0"
         >
-          <span>+{{ coinFlipAtaque.danioTotal }}</span> {{ 'battle.extraDamage' | t }}
+          <span class="acf-huge-damage">+{{ coinFlipAtaque.danioTotal }} {{ 'battle.extraDamage' | t }}</span>
         </div>
 
         <div
           class="acf-damage-summary"
-          *ngIf="
-            coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0
-          "
+          *ngIf="coinFlipAtaque.terminado && !coinFlipAtaque.esSoloEstado && coinFlipAtaque.danioTotal === 0"
         >
-          {{ 'battle.noExtraDamage' | t }}
+          <span class="acf-neutral-outcome">{{ 'battle.noExtraDamage' | t }}</span>
         </div>
 
-        <div class="acf-damage-summary" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
-          <span [style.color]="resultadoMoneda === 'CARA' ? '#00ff00' : '#ff4444'">
+        <div class="acf-damage-summary status-effect-outcome" *ngIf="coinFlipAtaque.terminado && coinFlipAtaque.esSoloEstado">
+          <span class="acf-final-text" [ngClass]="resultadoMoneda === 'CARA' ? 'text-success' : 'text-danger'">
             {{
               coinFlipAtaque.tipoEfecto === 'protection'
                 ? (resultadoMoneda === 'CARA' ? '¡PROTECCIÓN ACTIVADA!' : 'NO SE ACTIVÓ LA PROTECCIÓN')
@@ -613,33 +656,6 @@
                   : (resultadoMoneda === 'CARA' ? ('battle.effectSuccess' | t) : ('battle.effectFail' | t))
             }}
           </span>
-        </div>
-      </div>
-
-      <div class="acf-right-col" *ngIf="coinFlipAttacker as attacker">
-        <div class="acf-pokemon-display-box">
-          <div class="acf-attacker-wrapper"
-               [class.glow-level-1]="carasAcumuladas === 1"
-               [class.glow-level-2]="carasAcumuladas === 2"
-               [class.glow-level-3]="carasAcumuladas === 3"
-               [class.glow-level-4]="carasAcumuladas >= 4"
-               [class.shake-level-1]="carasAcumuladas >= 1 && carasAcumuladas <= 2"
-               [class.shake-level-2]="carasAcumuladas >= 3 && carasAcumuladas <= 4"
-               [class.shake-level-3]="carasAcumuladas >= 5">
-            <img [src]="getSpriteFront(attacker.card)"
-                 (error)="onSpriteError($event, attacker.card)"
-                 class="acf-sprite-img" />
-          </div>
-
-          <div class="acf-pokemon-stats" *ngIf="!coinFlipAtaque.esSoloEstado">
-            <p class="acf-stat-label">DAÑO ACUMULADO</p>
-            <p class="acf-stat-value" [class.high-damage]="danioAcumulado >= 80">{{ danioAcumulado }}</p>
-            <p class="acf-stat-sub">{{ carasAcumuladas }} Caras</p>
-          </div>
-          <div class="acf-pokemon-stats" *ngIf="coinFlipAtaque.esSoloEstado">
-            <p class="acf-stat-label">POKÉMON ACTIVO</p>
-            <p class="acf-stat-pokemon-name">{{ attacker.card.nombre }}</p>
-          </div>
         </div>
       </div>
     </div>
@@ -1693,7 +1709,7 @@
               <span class="modal-attack-name">{{ ataque.nombre }}</span>
               <span class="modal-attack-damage" *ngIf="ataque.danio > 0">{{ ataque.danio }}</span>
             </div>
-            <p class="modal-attack-description" *ngIf="ataque.texto">{{ formatTextoAtaque(ataque.texto) }}</p>
+            <p class="modal-attack-description" *ngIf="ataque.texto" [innerHTML]="formatTextoAtaque(ataque.texto)"></p>
           </div>
         </div>
       </div>

@@ -2524,91 +2524,47 @@ bot-sprite-wrap {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   BATTLE FX — Pegá este bloque al FINAL de battle-board.component.scss
-   Incluye: efectos de estado, aura de curación, coin-flip de ataque,
-   overlay entre turnos, flujo natural entre animaciones.
+   BATTLE FX
    ══════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────
-   1. EFECTOS DE ESTADO (Confused, Paralyzed, Burned, Poisoned, Asleep)
+   1. EFECTOS DE ESTADO
    ───────────────────────────────────────────────────────────── */
+.status-fx-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
 
-/* Wrapper que rodea el sprite o la carta con el efecto */
-.status-fx-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ── CONFUNDIDO: espirales giratorias ── */
 .status-confused .status-fx-wrap::before {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
+  content: ''; position: absolute; inset: -6px; border-radius: 50%;
   border: 2px dashed rgba(160, 80, 220, 0.7);
   animation: confused-spin 1.2s linear infinite;
-  pointer-events: none;
-  z-index: 10;
+  pointer-events: none; z-index: 10;
 }
 .status-confused .status-fx-wrap::after {
-  content: '😵';
-  position: absolute;
-  top: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 14px;
+  content: '😵'; position: absolute; top: -16px; left: 50%;
+  transform: translateX(-50%); font-size: 14px;
   animation: confused-float 1s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 11;
+  pointer-events: none; z-index: 11;
 }
-@keyframes confused-spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes confused-float {
-  0%,100% { transform: translateX(-50%) translateY(0) rotate(-8deg); }
-  50%      { transform: translateX(-50%) translateY(-4px) rotate(8deg); }
-}
+@keyframes confused-spin { to { transform: rotate(360deg); } }
+@keyframes confused-float { 0%,100% { transform: translateX(-50%) translateY(0) rotate(-8deg); } 50% { transform: translateX(-50%) translateY(-4px) rotate(8deg); } }
 
-/* ── CURADO: aura verde pulsante ── */
 .status-heal .status-fx-wrap::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
+  content: ''; position: absolute; inset: -8px; border-radius: 50%;
   background: radial-gradient(circle, rgba(50,212,110,.25) 0%, rgba(50,212,110,0) 70%);
   animation: heal-pulse 1.4s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 10;
+  pointer-events: none; z-index: 10;
 }
 .status-heal .status-fx-wrap::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
+  content: ''; position: absolute; inset: -4px; border-radius: 50%;
   border: 2px solid rgba(50,212,110,.55);
   animation: heal-ring 1.4s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 11;
+  pointer-events: none; z-index: 11;
 }
-/* Partículas de curación que flotan hacia arriba */
 .heal-particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 12;
-  overflow: visible;
-
+  position: absolute; inset: 0; pointer-events: none; z-index: 12; overflow: visible;
   span {
-    position: absolute;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #32d46e;
-    box-shadow: 0 0 6px #32d46e;
-    animation: heal-particle 1.6s ease-out infinite;
-    opacity: 0;
-
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: #32d46e; box-shadow: 0 0 6px #32d46e;
+    animation: heal-particle 1.6s ease-out infinite; opacity: 0;
     &:nth-child(1) { left: 20%; animation-delay: 0s; }
     &:nth-child(2) { left: 45%; animation-delay: .3s; }
     &:nth-child(3) { left: 70%; animation-delay: .6s; }
@@ -2616,183 +2572,149 @@ bot-sprite-wrap {
     &:nth-child(5) { left: 60%; animation-delay: 1.2s; }
   }
 }
-@keyframes heal-pulse {
-  0%,100% { transform: scale(.9); opacity: .6; }
-  50%     { transform: scale(1.15); opacity: 1; }
-}
-@keyframes heal-ring {
-  0%,100% { transform: scale(1); opacity: .8; }
-  50%     { transform: scale(1.12); opacity: .4; }
-}
-@keyframes heal-particle {
-  0%   { transform: translateY(0) scale(1); opacity: .9; }
-  100% { transform: translateY(-40px) scale(.3); opacity: 0; }
-}
+@keyframes heal-pulse { 0%,100% { transform: scale(.9); opacity: .6; } 50% { transform: scale(1.15); opacity: 1; } }
+@keyframes heal-ring { 0%,100% { transform: scale(1); opacity: .8; } 50% { transform: scale(1.12); opacity: .4; } }
+@keyframes heal-particle { 0% { transform: translateY(0) scale(1); opacity: .9; } 100% { transform: translateY(-40px) scale(.3); opacity: 0; } }
 
-/* ── PARALIZADO: parpadeo amarillo eléctrico ── */
-.status-paralyzed .status-fx-wrap {
-  animation: paralyzed-flash .4s ease-in-out infinite;
-}
-@keyframes paralyzed-flash {
-  0%,100% { filter: none; }
-  50%     { filter: brightness(1.6) sepia(.6) hue-rotate(20deg); }
-}
+.status-paralyzed .status-fx-wrap { animation: paralyzed-flash .4s ease-in-out infinite; }
+@keyframes paralyzed-flash { 0%,100% { filter: none; } 50% { filter: brightness(1.6) sepia(.6) hue-rotate(20deg); } }
 
-/* ── QUEMADO: brillo anaranjado ── */
-.status-burned .status-fx-wrap {
-  animation: burned-glow .8s ease-in-out infinite;
-}
-@keyframes burned-glow {
-  0%,100% { filter: drop-shadow(0 0 4px rgba(240,80,20,.5)); }
-  50%     { filter: drop-shadow(0 0 12px rgba(240,80,20,.9)); }
-}
+.status-burned .status-fx-wrap { animation: burned-glow .8s ease-in-out infinite; }
+@keyframes burned-glow { 0%,100% { filter: drop-shadow(0 0 4px rgba(240,80,20,.5)); } 50% { filter: drop-shadow(0 0 12px rgba(240,80,20,.9)); } }
 
-/* ── ENVENENADO: pulso morado ── */
-.status-poisoned .status-fx-wrap {
-  animation: poisoned-pulse 1s ease-in-out infinite;
-}
-@keyframes poisoned-pulse {
-  0%,100% { filter: drop-shadow(0 0 3px rgba(130,30,180,.5)); }
-  50%     { filter: drop-shadow(0 0 10px rgba(130,30,180,.85)); }
-}
+.status-poisoned .status-fx-wrap { animation: poisoned-pulse 1s ease-in-out infinite; }
+@keyframes poisoned-pulse { 0%,100% { filter: drop-shadow(0 0 3px rgba(130,30,180,.5)); } 50% { filter: drop-shadow(0 0 10px rgba(130,30,180,.85)); } }
 
-/* ── DORMIDO: ZZZ flotante ── */
 .status-asleep .status-fx-wrap::after {
-  content: 'ZZZ';
-  position: absolute;
-  top: -20px; right: -8px;
+  content: 'ZZZ'; position: absolute; top: -20px; right: -8px;
   font-size: 11px; font-weight: 700; letter-spacing: .05em;
   color: rgba(150,200,255,.8);
   animation: sleep-float 2s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 11;
+  pointer-events: none; z-index: 11;
 }
-@keyframes sleep-float {
-  0%,100% { transform: translateY(0); opacity: .9; }
-  50%     { transform: translateY(-6px); opacity: .5; }
-}
+@keyframes sleep-float { 0%,100% { transform: translateY(0); opacity: .9; } 50% { transform: translateY(-6px); opacity: .5; } }
 
 
 /* ─────────────────────────────────────────────────────────────
    2. COIN FLIP DE ATAQUE
-   Se muestra sobre el tablero cuando un ataque requiere lanzar monedas.
    ───────────────────────────────────────────────────────────── */
-
 .attack-coinflip-overlay {
   position: fixed; inset: 0; z-index: 120000;
   display: flex; align-items: center; justify-content: center;
-  pointer-events: none;
-  isolation: isolate;
+  pointer-events: none; isolation: isolate;
   animation: acfOverlayIn .18s ease both;
 }
 .attack-coinflip-overlay .acf-backdrop {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,.68);
-  backdrop-filter: blur(7px);
+  position: absolute; inset: 0; background: rgba(0,0,0,.68); backdrop-filter: blur(7px);
 }
-
 .acf-panel {
   position: relative; z-index: 2;
   background: linear-gradient(135deg, rgba(10,18,32,.97), rgba(18,30,52,.97));
-  border: 1.5px solid rgba(242,192,64,.4);
-  border-radius: 20px;
-  padding: 24px 28px 20px;
-  min-width: 320px;
+  border: 1.5px solid rgba(242,192,64,.4); border-radius: 20px;
+  padding: 24px 28px 20px; min-width: 320px;
   display: flex; flex-direction: column; align-items: center; gap: 16px;
   box-shadow: 0 0 50px rgba(242,192,64,.15), 0 16px 40px rgba(0,0,0,.8);
   animation: acf-in .35s cubic-bezier(.22,.61,.36,1) both;
-  pointer-events: auto;
-  transform: translateZ(0);
+  pointer-events: auto; transform: translateZ(0);
 }
-@keyframes acfOverlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes acfOverlayIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes acf-in {
   from { transform: scale(.8) translateY(20px) translateZ(0); opacity: 0; filter: blur(5px); }
-  to   { transform: scale(1) translateY(0) translateZ(0);     opacity: 1; filter: none; }
+  to { transform: scale(1) translateY(0) translateZ(0); opacity: 1; filter: none; }
 }
 
-.acf-attack-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px; letter-spacing: .18em;
-  color: var(--gold, #f2c040);
-  text-align: center;
+.acf-coins-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+.rainbow-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-.acf-description {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 13px; color: rgba(196,212,228,.75);
-  text-align: center; line-height: 1.4;
-  border: 1px solid rgba(255,255,255,.07);
-  background: rgba(255,255,255,.04);
-  padding: 8px 12px; border-radius: 8px;
+.energy-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1px;
 }
 
-/* Fila de monedas */
-.acf-coins-row {
-  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+.energy-btn:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.15);
 }
 
-.acf-coin {
-  width: 52px; height: 52px;
+.energy-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  border: 3px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.05);
-  position: relative;
-  overflow: hidden;
-  transition: all .3s;
-
-  /* Estado pendiente (girando) */
-  &.flipping {
-    animation: coin-spin .25s linear infinite;
-    border-color: rgba(242,192,64,.5);
-    background: rgba(242,192,64,.08);
-  }
-
-  /* Cara */
-  &.cara {
-    background: linear-gradient(145deg, #fceabb, #fccd4d, #f8b500);
-    border-color: #b58900;
-    box-shadow: 0 0 16px rgba(248,181,0,.45);
-    animation: coin-land .4s cubic-bezier(.22,.61,.36,1) both;
-  }
-
-  /* Cruz */
-  &.cruz {
-    background: linear-gradient(145deg, #e0e0e0, #bdbdbd, #9e9e9e);
-    border-color: #757575;
-    box-shadow: 0 0 16px rgba(200,200,200,.3);
-    animation: coin-land .4s cubic-bezier(.22,.61,.36,1) both;
-  }
-}
-@keyframes coin-spin {
-  to { transform: rotateY(360deg); }
-}
-@keyframes coin-land {
-  from { transform: scale(.5) rotateY(180deg); opacity: 0; }
-  60%  { transform: scale(1.15) rotateY(5deg); }
-  to   { transform: scale(1) rotateY(0); opacity: 1; }
+  background: rgba(0, 0, 0, 0.3);
+  padding: 4px;
+  transition: all 0.3s ease;
 }
 
-/* Resultados de cada moneda debajo */
-.acf-results-row {
-  display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-}
-.acf-result-label {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 12px; font-weight: 700; letter-spacing: .08em;
-  padding: 3px 10px; border-radius: 20px;
-  min-width: 52px; text-align: center;
-
-  &.cara { background: rgba(248,181,0,.2); color: #ffd700; border: 1px solid rgba(248,181,0,.4); }
-  &.cruz { background: rgba(180,180,180,.15); color: #ccc; border: 1px solid rgba(180,180,180,.3); }
-  &.pending { background: rgba(255,255,255,.05); color: rgba(255,255,255,.3); border: 1px dashed rgba(255,255,255,.1); }
+.energy-btn:hover .energy-icon-wrapper {
+  transform: scale(1.1);
 }
 
-/* Resumen de daño */
+.energy-icon-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+}
+
+.energy-btn.grass { background: rgba(120, 200, 80, 0.15); border-color: rgba(120, 200, 80, 0.4); }
+.energy-btn.grass:hover { background: rgba(120, 200, 80, 0.4); box-shadow: 0 0 15px rgba(120, 200, 80, 0.6); }
+
+.energy-btn.fire { background: rgba(240, 128, 48, 0.15); border-color: rgba(240, 128, 48, 0.4); }
+.energy-btn.fire:hover { background: rgba(240, 128, 48, 0.4); box-shadow: 0 0 15px rgba(240, 128, 48, 0.6); }
+
+.energy-btn.water { background: rgba(104, 144, 240, 0.15); border-color: rgba(104, 144, 240, 0.4); }
+.energy-btn.water:hover { background: rgba(104, 144, 240, 0.4); box-shadow: 0 0 15px rgba(104, 144, 240, 0.6); }
+
+.energy-btn.lightning { background: rgba(248, 208, 48, 0.15); border-color: rgba(248, 208, 48, 0.4); }
+.energy-btn.lightning:hover { background: rgba(248, 208, 48, 0.4); box-shadow: 0 0 15px rgba(248, 208, 48, 0.6); }
+
+.energy-btn.psychic { background: rgba(248, 88, 136, 0.15); border-color: rgba(248, 88, 136, 0.4); }
+.energy-btn.psychic:hover { background: rgba(248, 88, 136, 0.4); box-shadow: 0 0 15px rgba(248, 88, 136, 0.6); }
+
+.energy-btn.fighting { background: rgba(192, 48, 40, 0.15); border-color: rgba(192, 48, 40, 0.4); }
+.energy-btn.fighting:hover { background: rgba(192, 48, 40, 0.4); box-shadow: 0 0 15px rgba(192, 48, 40, 0.6); }
+
+.energy-btn.darkness { background: rgba(112, 88, 72, 0.15); border-color: rgba(112, 88, 72, 0.4); }
+.energy-btn.darkness:hover { background: rgba(112, 88, 72, 0.4); box-shadow: 0 0 15px rgba(112, 88, 72, 0.6); }
+
+.energy-btn.metal { background: rgba(184, 184, 208, 0.15); border-color: rgba(184, 184, 208, 0.4); }
+.energy-btn.metal:hover { background: rgba(184, 184, 208, 0.4); box-shadow: 0 0 15px rgba(184, 184, 208, 0.6); }
+
+.energy-btn.fairy { background: rgba(238, 153, 172, 0.15); border-color: rgba(238, 153, 172, 0.4); }
+.energy-btn.fairy:hover { background: rgba(238, 153, 172, 0.4); box-shadow: 0 0 15px rgba(238, 153, 172, 0.6); }
+
+.energy-btn.dragon { background: rgba(112, 56, 248, 0.15); border-color: rgba(112, 56, 248, 0.4); }
+.energy-btn.dragon:hover { background: rgba(112, 56, 248, 0.4); box-shadow: 0 0 15px rgba(112, 56, 248, 0.6); }
+
+.energy-btn.colorless { background: rgba(168, 168, 120, 0.15); border-color: rgba(168, 168, 120, 0.4); }
+.energy-btn.colorless:hover { background: rgba(168, 168, 120, 0.4); box-shadow: 0 0 15px rgba(168, 168, 120, 0.6); }
+
 .acf-damage-summary {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 28px; letter-spacing: .1em;
@@ -2838,11 +2760,97 @@ bot-sprite-wrap {
 }
 
 .acf-left-col {
-  flex: 1;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 15px;
 }
+
+.rainbow-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 30px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 240, 255, 0.2), inset 0 0 20px rgba(0, 240, 255, 0.1);
+  color: #fff;
+  z-index: 1001;
+  text-align: center;
+  min-width: 400px;
+  animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.rainbow-panel h2 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  color: #00f0ff;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.rainbow-panel p {
+  margin: 0 0 20px 0;
+  color: #a0aec0;
+  font-size: 16px;
+}
+
+.rainbow-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.energy-btn {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+
+.energy-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.energy-btn.grass { background: rgba(120, 200, 80, 0.3); border-color: #78c850; }
+.energy-btn.grass:hover { background: rgba(120, 200, 80, 0.6); box-shadow: 0 0 10px #78c850; }
+
+.energy-btn.fire { background: rgba(240, 128, 48, 0.3); border-color: #f08030; }
+.energy-btn.fire:hover { background: rgba(240, 128, 48, 0.6); box-shadow: 0 0 10px #f08030; }
+
+.energy-btn.water { background: rgba(104, 144, 240, 0.3); border-color: #6890f0; }
+.energy-btn.water:hover { background: rgba(104, 144, 240, 0.6); box-shadow: 0 0 10px #6890f0; }
+
+.energy-btn.lightning { background: rgba(248, 208, 48, 0.3); border-color: #f8d030; }
+.energy-btn.lightning:hover { background: rgba(248, 208, 48, 0.6); box-shadow: 0 0 10px #f8d030; }
+
+.energy-btn.psychic { background: rgba(248, 88, 136, 0.3); border-color: #f85888; }
+.energy-btn.psychic:hover { background: rgba(248, 88, 136, 0.6); box-shadow: 0 0 10px #f85888; }
+
+.energy-btn.fighting { background: rgba(192, 48, 40, 0.3); border-color: #c03028; }
+.energy-btn.fighting:hover { background: rgba(192, 48, 40, 0.6); box-shadow: 0 0 10px #c03028; }
+
+.energy-btn.darkness { background: rgba(112, 88, 72, 0.3); border-color: #705848; }
+.energy-btn.darkness:hover { background: rgba(112, 88, 72, 0.6); box-shadow: 0 0 10px #705848; }
+
+.energy-btn.metal { background: rgba(184, 184, 208, 0.3); border-color: #b8b8d0; }
+.energy-btn.metal:hover { background: rgba(184, 184, 208, 0.6); box-shadow: 0 0 10px #b8b8d0; }
+
+.energy-btn.fairy { background: rgba(238, 153, 172, 0.3); border-color: #ee99ac; }
+.energy-btn.fairy:hover { background: rgba(238, 153, 172, 0.6); box-shadow: 0 0 10px #ee99ac; }
 
 .acf-right-col {
   flex: 0 0 200px;
@@ -7824,3 +7832,82 @@ img.fallback-sprite {
   }
 }
 
+/* ── Surrender Modal ── */
+.surrender-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+}
+
+.surrender-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  width: min(400px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(5, 12, 28, 0.96), rgba(15, 23, 42, 0.92));
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  pointer-events: auto;
+  text-align: center;
+
+  h2 {
+    color: #f8fafc;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  p {
+    color: rgba(226, 232, 240, 0.8);
+    margin: 0;
+  }
+}
+
+.surrender-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+
+  button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-cancel {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .btn-confirm {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.4);
+    
+    &:hover {
+      background: rgba(239, 68, 68, 0.25);
+      box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
+    }
+  }
+}

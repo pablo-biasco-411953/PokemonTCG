@@ -7,3 +7,25 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+/* Pokemon TCG Toast Styles */
+.pokemon-tcg-toast.swal2-popup {
+  border: 1px solid rgba(242,192,64,.4) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 0 20px rgba(0,0,0,.8), 0 0 10px rgba(242,192,64,.1) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.pokemon-tcg-toast-title {
+  font-family: 'Bebas Neue', 'Rajdhani', sans-serif !important;
+  font-size: 18px !important;
+  letter-spacing: 1px !important;
+  color: #fff !important;
+  text-shadow: 0 0 5px rgba(255,255,255,.3) !important;
+  margin-top: 2px !important;
+}
+
+.pokemon-tcg-toast-progress {
+  background: linear-gradient(90deg, #f2c040, #ff8c00) !important;
+  height: 3px !important;
+}
