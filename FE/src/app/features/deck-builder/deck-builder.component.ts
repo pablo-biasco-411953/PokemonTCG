@@ -11,11 +11,12 @@ import { ImagePreloaderService } from '../../core/services/image-preloader.servi
 import { CardService } from '../../core/services/card.service';
 import { BattleNotificationComponent } from '../battle/components/battle-notification/battle-notification';
 import { BattleNotificationService } from '../battle/services/battle-notification';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-deck-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule, BattleNotificationComponent],
+  imports: [CommonModule, FormsModule, BattleNotificationComponent, TranslatePipe],
   templateUrl: './deck-builder.component.html',
   styleUrls: ['./deck-builder.component.scss'],
   host: { '[class.embedded]': 'embedded' }
@@ -312,12 +313,16 @@ export class DeckBuilderComponent implements OnInit, OnChanges {
   agregarAlMazo(carta: Card) {
     const copiasEnMazo = this.getCantidadEnMazo(carta.id);
     const totalPoseidas = this.cantidadesPoseidas[carta.id] || 0;
+    const isEnergy = carta.supertype === 'Energy';
+    const limit = isEnergy ? 60 : 4;
 
-    if (copiasEnMazo < totalPoseidas && copiasEnMazo < 4 && this.mazoEnProceso.length < 60) {
+    if (copiasEnMazo < totalPoseidas && copiasEnMazo < limit && this.mazoEnProceso.length < 60) {
       this.mazoEnProceso.push(carta);
       this.cantidadesEnMazo[carta.id] = copiasEnMazo + 1;
     } else if (copiasEnMazo >= totalPoseidas) {
       this.notificar(this.i18n.translate('alert.noMoreCopies', { card: carta.nombre }), 'warning');
+    } else if (copiasEnMazo >= limit) {
+      this.notificar(this.i18n.translate('alert.maxCopiesLimit', { limit: limit, card: carta.nombre }) || `Límite de ${limit} alcanzado para esta carta.`, 'warning');
     }
   }
 
