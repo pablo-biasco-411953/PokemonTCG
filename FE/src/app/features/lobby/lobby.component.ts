@@ -423,36 +423,36 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       id: 'deck',
       short: 'DECK',
-      kicker: 'DECK LAB',
-      label: 'Armar mazo',
-      description: 'Entrá al laboratorio para editar tu estrategia.',
+      kicker: 'lobby.hub.deckKicker',
+      label: 'lobby.hub.deckLabel',
+      description: 'lobby.hub.deckDesc',
       position: new THREE.Vector3(-15, 0, -5),
       color: 0x3bd6ff
     },
     {
       id: 'battle',
       short: 'VS',
-      kicker: 'BATTLE GATE',
-      label: 'Iniciar batalla',
-      description: 'Elegí un mazo y cruzá el portal de combate.',
+      kicker: 'lobby.hub.battleKicker',
+      label: 'lobby.hub.battleLabel',
+      description: 'lobby.hub.battleDesc',
       position: new THREE.Vector3(4, 0, -25),
       color: 0xffd44a
     },
     {
       id: 'packs',
       short: 'PACK',
-      kicker: 'KIOSCO UTN',
-      label: 'Comprar sobres',
-      description: 'Activá el altar para revelar nuevas cartas.',
+      kicker: 'lobby.hub.kioskKicker',
+      label: 'lobby.hub.kioskLabel',
+      description: 'lobby.hub.kioskDesc',
       position: new THREE.Vector3(-19.0, 0, -13.5),
       color: 0x7cff9d
     },
     {
       id: 'santoro',
       short: 'PROFE',
-      kicker: 'MISIÓN UTN',
-      label: 'Hablar con Santoro',
-      description: 'El profe tiene tu primera misión y una ayuda inicial.',
+      kicker: 'lobby.hub.missionKicker',
+      label: 'lobby.hub.missionLabel',
+      description: 'lobby.hub.missionDesc',
       position: new THREE.Vector3(0.8, 0, -27.5),
       color: 0xfacc15
     }
@@ -1106,6 +1106,24 @@ export class LobbyComponent implements OnInit, AfterViewInit, OnDestroy {
         this.initPreviewScene();
       }
     });
+  }
+
+  logoutDialogOpen = false;
+
+  promptLogout(): void {
+    this.logoutDialogOpen = true;
+  }
+
+  cancelLogout(): void {
+    this.logoutDialogOpen = false;
+  }
+
+  logout(): void {
+    this.logoutDialogOpen = false;
+    localStorage.removeItem('pokefetch-username');
+    localStorage.removeItem('pokefetch-token');
+    // Clear any other session data if needed
+    this.router.navigate(['/login']);
   }
 
   ngOnDestroy(): void {

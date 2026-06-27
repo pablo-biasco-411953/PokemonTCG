@@ -2,11 +2,12 @@ import { Component, ElementRef, OnInit, ViewChild, OnDestroy, HostListener, Inpu
 import { CommonModule } from '@angular/common';
 import * as THREE from 'three';
 import { CardService } from '../../../../core/services/card.service';
+import { TranslatePipe } from '../../../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-apertura-sobre',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './apertura-sobre.html',
   styleUrl: './apertura-sobre.scss'
 })
@@ -36,7 +37,7 @@ private estaCerrandoSobre: boolean = false; // Flag de seguridad
   private raycaster = new THREE.Raycaster();
   private mouse = new THREE.Vector2();
   
-  public mensajeGuia: string = "--- MANTÉN Y DESLIZA PARA ABRIR ---";
+  public mensajeGuia: string = 'pack.swipeToOpen';
   public estaCortado: boolean = false;
   private estaHaciendoClic: boolean = false;
   private tiempoCorte: number = 0;
@@ -416,7 +417,7 @@ private deformar(geo: THREE.BufferGeometry, amt: number, cuerpo: boolean) {
       this.cdr.detectChanges();
       
       setTimeout(() => {
-        this.mensajeGuia = "--- TOCA O DESLIZA ---";
+        this.mensajeGuia = 'pack.tapToReveal';
         this.puedePasar = true;
         this.cdr.detectChanges();
       }, 1400); // Esperar a que terminen de saltar
