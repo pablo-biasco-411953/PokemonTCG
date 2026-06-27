@@ -95,15 +95,15 @@ public class DataLoader implements CommandLineRunner {
         Jugador pablo = jugadorRepo.findByUsername("Pablo");
         if (pablo == null) {
             crearUsuarioTest(todasLasCartas);
-        } else {
-            actualizarColeccionUsuario(pablo, todasLasCartas);
+        } else if (pablo.getColeccion() != null && pablo.getColeccion().size() >= 584) {
+            resetearColeccionAMazoInicial(pablo, todasLasCartas);
         }
 
         Jugador fran = jugadorRepo.findByUsername("Fran");
         if (fran == null) {
             crearUsuarioFran(todasLasCartas);
-        } else {
-            actualizarColeccionUsuario(fran, todasLasCartas);
+        } else if (fran.getColeccion() != null && fran.getColeccion().size() >= 584) {
+            resetearColeccionAMazoInicial(fran, todasLasCartas);
         }
 
         Jugador bot = jugadorRepo.findByUsername("BOT");
@@ -123,21 +123,15 @@ public class DataLoader implements CommandLineRunner {
         pablo.setSobresDisponibles(10);
         pablo.setAdmin(true);
 
-        List<Card> coleccionCompleta = new ArrayList<>();
-        for (Card card : todasLasCartas) {
-            for (int i = 0; i < 4; i++) {
-                coleccionCompleta.add(card);
-            }
-        }
-        pablo.setColeccion(coleccionCompleta);
+        List<Card> cartasMazo = crearMazoPorDefecto(todasLasCartas);
+        pablo.setColeccion(new ArrayList<>(cartasMazo));
         jugadorRepo.save(pablo);
 
         Mazo mazoTest = new Mazo("Mazo Inicial Pablo", pablo);
-        List<Card> cartasMazo = crearMazoPorDefecto(todasLasCartas);
         mazoTest.setCartas(cartasMazo);
         mazoRepo.save(mazoTest);
 
-        System.out.println("[DataLoader] Usuario Pablo listo para pruebas con 4 copias de cada carta.");
+        System.out.println("[DataLoader] Usuario Pablo listo para pruebas con mazo inicial.");
     }
 
     private void crearUsuarioFran(List<Card> todasLasCartas) {
@@ -147,21 +141,28 @@ public class DataLoader implements CommandLineRunner {
         fran.setSobresDisponibles(10);
         fran.setAdmin(true);
 
-        List<Card> coleccionCompleta = new ArrayList<>();
-        for (Card card : todasLasCartas) {
-            for (int i = 0; i < 4; i++) {
-                coleccionCompleta.add(card);
-            }
-        }
-        fran.setColeccion(coleccionCompleta);
+        List<Card> cartasMazo = crearMazoPorDefecto(todasLasCartas);
+        fran.setColeccion(new ArrayList<>(cartasMazo));
         jugadorRepo.save(fran);
 
         Mazo mazoTest = new Mazo("Mazo Inicial Fran", fran);
-        List<Card> cartasMazo = crearMazoPorDefecto(todasLasCartas);
         mazoTest.setCartas(cartasMazo);
         mazoRepo.save(mazoTest);
 
-        System.out.println("[DataLoader] Usuario Fran listo para pruebas con 4 copias de cada carta.");
+        System.out.println("[DataLoader] Usuario Fran listo para pruebas con mazo inicial.");
+    }
+
+    private void resetearColeccionAMazoInicial(Jugador jugador, List<Card> todasLasCartas) {
+        List<Mazo> mazos = mazoRepo.findByJugador(jugador);
+        List<Card> cartasMazo;
+        if (!mazos.isEmpty()) {
+            cartasMazo = mazos.get(0).getCartas();
+        } else {
+            cartasMazo = crearMazoPorDefecto(todasLasCartas);
+        }
+        jugador.setColeccion(new ArrayList<>(cartasMazo));
+        jugadorRepo.save(jugador);
+        System.out.println("[DataLoader] Coleccion de " + jugador.getUsername() + " reseteada al mazo inicial.");
     }
 
     private void crearBotUser(List<Card> todasLasCartas) {
