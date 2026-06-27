@@ -196,12 +196,6 @@ public class AttackEffectParserService {
             }
         }
 
-        Matcher opponentBenchDamageMatcher = Pattern.compile("does (\\d+) damage to (\\d+) of your opponent's benched", Pattern.CASE_INSENSITIVE).matcher(text);
-        if (opponentBenchDamageMatcher.find()) {
-            int amount = Integer.parseInt(opponentBenchDamageMatcher.group(1));
-            int count = Integer.parseInt(opponentBenchDamageMatcher.group(2));
-            commands.add(new DamageOpponentBenchedCommand(amount, count));
-        }
         Matcher optionalDiscardDamageMatcher = Pattern.compile("you may discard an energy attached to this pok.{1,2}mon\\.\\s*if you do, this attack does (\\d+) more damage", Pattern.CASE_INSENSITIVE).matcher(text);
         if (optionalDiscardDamageMatcher.find()) {
             int extraDamage = Integer.parseInt(optionalDiscardDamageMatcher.group(1));
@@ -291,7 +285,7 @@ public class AttackEffectParserService {
                     "Trainer", "Supporter", null, "HAND", 2,
                     "Elegí hasta 2 cartas de Partidario para poner en tu mano."
             ));
-        } else if (lowerText.contains("search your deck for a supporter")) {
+        } else if (lowerText.contains("search your deck for a supporter") && !lowerText.contains("if heads")) {
             commands.add(new SearchDeckCommand(
                     "Trainer", "Supporter", null, "HAND", 1,
                     "Elegí una carta de Partidario para poner en tu mano."
@@ -595,7 +589,36 @@ public class AttackEffectParserService {
             commands.add(new PickupCommand(2));
         }
 
+        // Blastoise-EX Rapid Spin: "Switch this Pokémon with 1 of your Benched Pokémon. Then, your opponent switches..."
+        if (lowerText.contains("switch this pok") && lowerText.contains("1 of your benched pok")
+                && lowerText.contains("your opponent switches")) {
+            commands.add(new SwitchSelfWithBenchCommand());
+            commands.add(new ForceOpponentSwitchCommand());
+        }
+
+        // Skiddo's Lead (coin): "Flip a coin. If heads, search your deck for a Supporter card"
+        // Distinguido del caso sin moneda de Gogoat (ya excluido arriba con !if heads)
+        if (lowerText.contains("flip a coin") && lowerText.contains("if heads") &&
+                lowerText.contains("search your deck for a supporter")) {
+            commands.add(new CoinFlipCommand(new SearchDeckCommand(
+                    "Trainer", "Supporter", null, "HAND", 1,
+                    "Elegí una carta de Partidario para poner en tu mano."
+            )));
+        }
+
+        // Cloyster's Clamp Crush: "Flip a coin. If heads, Paralyzed and discard an Energy attached to that Pokemon."
+        if (lowerText.contains("flip a coin") && lowerText.contains("if heads")
+                && lowerText.contains("paralyzed") && lowerText.contains("discard an energy attached to")) {
+            // Quitar ApplyStatusConditionCommand de Paralyzed suelto (ya agregado arriba)
+            commands.removeIf(c -> c instanceof CoinFlipCommand);
+            commands.add(new CoinFlipCommand(new SequenceCommand(
+                    new ApplyStatusConditionCommand("Paralyzed", Target.OPPONENT),
+                    new DiscardEnergyCommand(1, Target.OPPONENT)
+            )));
+        }
+
         return commands;
+
     }
 
     private String normalizeQuotes(String text) {

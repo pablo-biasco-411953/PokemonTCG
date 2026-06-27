@@ -142,6 +142,8 @@ public class BattleAttackService {
             koResolver.resolve(partida, defensor, atacante);
         }
 
+        revalidarSeleccionDeBancaDespuesDeKo(partida, defensorTablero);
+
         int caras = 0;
         for (Boolean b : partida.getUltimasMonedasLanzadas()) {
             if (b) caras++;
@@ -151,6 +153,36 @@ public class BattleAttackService {
                 new ResultadoAtaque(totalDamage, caras),
                 new java.util.ArrayList<>(partida.getUltimasMonedasLanzadas())
         );
+    }
+
+    private void revalidarSeleccionDeBancaDespuesDeKo(
+            Partida partida,
+            com.pokemon.tcg.model.battle.TableroJugador tableroDefensor
+    ) {
+        com.pokemon.tcg.model.battle.PendingBattleAction pending = partida.getPendingAction();
+        if (pending == null || !"CHOOSE_OPPONENT_BENCH_TO_DAMAGE".equals(pending.getType())) {
+            return;
+        }
+
+        java.util.Set<String> idsEnBanca = tableroDefensor.getBanca().stream()
+                .map(carta -> carta.getCard().getId())
+                .collect(java.util.stream.Collectors.toSet());
+        List<com.pokemon.tcg.model.battle.PendingBattleAction.Option> opcionesValidas = pending.getOptions().stream()
+                .filter(option -> idsEnBanca.contains(option.getId()))
+                .toList();
+
+        if (opcionesValidas.isEmpty()) {
+            partida.setPendingAction(null);
+            if (partida.getFaseActual() == Partida.Fase.ESPERANDO_INTERACCION) {
+                partida.transicionarA(new com.pokemon.tcg.model.battle.state.EstadoTurnoNormal());
+            }
+            return;
+        }
+
+        int seleccionesDisponibles = Math.min(pending.getMaxSelections(), opcionesValidas.size());
+        pending.setOptions(opcionesValidas);
+        pending.setMinSelections(Math.min(pending.getMinSelections(), seleccionesDisponibles));
+        pending.setMaxSelections(seleccionesDisponibles);
     }
 
     public void registrarEventoMoneda(Partida partida, String actor, String attackName) {

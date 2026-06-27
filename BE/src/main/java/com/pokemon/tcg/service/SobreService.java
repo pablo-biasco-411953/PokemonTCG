@@ -45,6 +45,10 @@ public class SobreService {
                 .filter(this::esPokemon)
                 .toList();
 
+        List<Card> trainers = todasLasCartas.stream()
+                .filter(this::esTrainer)
+                .toList();
+
         if (energias.isEmpty() || pokemones.isEmpty()) {
             todasLasCartas = cardCatalogService.sincronizarDesdeJson();
             energias = todasLasCartas.stream()
@@ -53,20 +57,33 @@ public class SobreService {
             pokemones = todasLasCartas.stream()
                     .filter(this::esPokemon)
                     .toList();
+            trainers = todasLasCartas.stream()
+                    .filter(this::esTrainer)
+                    .toList();
 
             if (energias.isEmpty() || pokemones.isEmpty()) {
                 throw new IllegalStateException("La base de datos no tiene suficientes cartas cargadas.");
             }
         }
 
-        int cantEnergias = random.nextInt(4) + 2;
-        int cantPokemones = 10 - cantEnergias;
+        int cantEnergias = random.nextInt(2) + 2; // 2 o 3
+        int cantTrainers = trainers.isEmpty() ? 0 : (random.nextInt(2) + 2); // 2 o 3
+        if (!trainers.isEmpty() && cantTrainers < 1) {
+            cantTrainers = 1;
+        }
+        int cantPokemones = 10 - cantEnergias - cantTrainers;
 
         List<Card> sobreGenerado = new ArrayList<>();
 
         List<Card> energiasMezcladas = new ArrayList<>(energias);
         Collections.shuffle(energiasMezcladas);
         sobreGenerado.addAll(energiasMezcladas.subList(0, Math.min(cantEnergias, energiasMezcladas.size())));
+
+        if (cantTrainers > 0) {
+            List<Card> trainersMezclados = new ArrayList<>(trainers);
+            Collections.shuffle(trainersMezclados);
+            sobreGenerado.addAll(trainersMezclados.subList(0, Math.min(cantTrainers, trainersMezclados.size())));
+        }
 
         List<Card> pokemonesMezclados = new ArrayList<>(pokemones);
         Collections.shuffle(pokemonesMezclados);
@@ -79,6 +96,11 @@ public class SobreService {
         jugadorRepo.save(jugador);
 
         return sobreGenerado;
+    }
+
+    private boolean esTrainer(Card card) {
+        String supertype = normalizar(card.getSupertype());
+        return "trainer".equals(supertype);
     }
 
     private boolean esEnergia(Card card) {

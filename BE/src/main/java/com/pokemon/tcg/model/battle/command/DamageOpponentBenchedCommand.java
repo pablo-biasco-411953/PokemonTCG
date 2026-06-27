@@ -41,6 +41,16 @@ public class DamageOpponentBenchedCommand implements BattleCommand {
                 partida.getTurnLogs().add("BENCH_DAMAGE:JUGADOR:" + targetPokemon.getCard().getId() + ":" + targetPokemon.getCard().getNombre().replace(':', '-') + ":" + amount);
             }
         } else {
+            List<CartaEnJuego> banca = new ArrayList<>(defensor.getBanca());
+            if (banca.size() <= count) {
+                for (CartaEnJuego targetPokemon : banca) {
+                    targetPokemon.setHpActual(Math.max(0, targetPokemon.getHpActual() - amount));
+                    System.out.println("☄️ Daño automático a banca completa: " + targetPokemon.getCard().getNombre() + " recibe " + amount + " de daño.");
+                    partida.getTurnLogs().add("BENCH_DAMAGE:JUGADOR:" + targetPokemon.getCard().getId() + ":" + targetPokemon.getCard().getNombre().replace(':', '-') + ":" + amount);
+                }
+                return;
+            }
+
             com.pokemon.tcg.model.battle.PendingBattleAction action = new com.pokemon.tcg.model.battle.PendingBattleAction();
             action.setActor(partida.getJugadorUsername());
             action.setType("CHOOSE_OPPONENT_BENCH_TO_DAMAGE");
@@ -49,6 +59,7 @@ public class DamageOpponentBenchedCommand implements BattleCommand {
             action.setMinSelections(count);
             action.setMaxSelections(count);
             action.setAmount(amount);
+
             action.setOptions(defensor.getBanca().stream()
                     .map(carta -> {
                         String id = carta.getCard().getId();

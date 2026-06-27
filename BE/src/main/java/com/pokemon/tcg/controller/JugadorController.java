@@ -96,6 +96,7 @@ public class JugadorController {
                     if (card.getAtaques() != null) card.getAtaques().size();
                     if (card.getDebilidades() != null) card.getDebilidades().size();
                     if (card.getResistencias() != null) card.getResistencias().size();
+                    if (card.getHabilidades() != null) card.getHabilidades().size();
                 }
             }
             return ResponseEntity.ok(col);

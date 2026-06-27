@@ -177,26 +177,115 @@ class BattleAttackServiceTest {
         Partida partida = partidaBasica();
         CartaEnJuego b1 = new CartaEnJuego(card("b1-1", "Bulbasaur", "50"));
         CartaEnJuego b2 = new CartaEnJuego(card("b2-1", "Squirtle", "60"));
+        CartaEnJuego b3 = new CartaEnJuego(card("b3-1", "Froakie", "50"));
         partida.getBot().getBanca().add(b1);
         partida.getBot().getBanca().add(b2);
+        partida.getBot().getBanca().add(b3);
 
-        BattleCommand cmd = new DamageOpponentBenchedCommand(20, 2);
+        // count=1 con 3 en banca: debe crear PendingAction para que el jugador elija
+        BattleCommand cmd = new DamageOpponentBenchedCommand(20, 1);
         cmd.execute(partida, partida.getJugador(), partida.getBot());
 
-        // Para el jugador, se crea una acción pendiente
+        // Para el jugador (atacante != bot), se crea una acción pendiente
+        assertNotNull(partida.getPendingAction());
         assertEquals("CHOOSE_OPPONENT_BENCH_TO_DAMAGE", partida.getPendingAction().getType());
-        assertEquals(2, partida.getPendingAction().getMinSelections());
-        
-        // Ahora probamos el bot atacando al jugador
+        assertEquals(1, partida.getPendingAction().getMinSelections());
+
+        // Ahora probamos el bot atacando al jugador — el bot aplica daño directo aleatorio
         partida.setPendingAction(null);
         partida.getJugador().getBanca().add(b1);
         partida.getJugador().getBanca().add(b2);
-        
-        cmd.execute(partida, partida.getBot(), partida.getJugador());
-        
-        // El bot hace daño directamente a ambos porque count = 2
+
+        BattleCommand cmdBot = new DamageOpponentBenchedCommand(20, 2);
+        cmdBot.execute(partida, partida.getBot(), partida.getJugador());
+
+        // El bot hace daño directamente a ambos porque count=2 con banca.size()=2 (bot path)
         assertEquals(30, b1.getHpActual());
         assertEquals(40, b2.getHpActual());
+    }
+
+    @Test
+    void breakThroughDaniaAlUnicoPokemonDeBancaAntesDePromoverloPorKo() {
+        Partida partida = partidaBasica();
+        partida.transicionarA(new com.pokemon.tcg.model.battle.state.EstadoTurnoNormal());
+        partida.setJugadorUsername("ash");
+        partida.setBotUsername("misty");
+        partida.getJugador().getPremios().addAll(List.of(
+                card("jp1", "Premio 1", "0"),
+                card("jp2", "Premio 2", "0")
+        ));
+        partida.getBot().getPremios().addAll(List.of(
+                card("bp1", "Premio rival 1", "0"),
+                card("bp2", "Premio rival 2", "0")
+        ));
+
+        CartaEnJuego unicoSuplente = new CartaEnJuego(card("bench-1", "Squirtle", "60"));
+        partida.getBot().getBanca().add(unicoSuplente);
+        Ataque breakThrough = attack(
+                "Break Through",
+                60,
+                "This attack does 30 damage to 1 of your opponent's Benched Pokemon."
+        );
+
+        BattleKoService koService = new BattleKoService();
+        service.resolveAttack(
+                partida,
+                breakThrough,
+                partida.getJugador().getActivo(),
+                partida.getBot().getActivo(),
+                koService::resolverKO,
+                null
+        );
+
+        assertSame(unicoSuplente, partida.getBot().getActivo());
+        assertEquals(30, unicoSuplente.getHpActual());
+        assertTrue(partida.getBot().getBanca().isEmpty());
+        assertNull(partida.getPendingAction());
+        assertEquals(Partida.Fase.TURNO_NORMAL, partida.getFaseActual());
+    }
+
+    @Test
+    void breakThroughRevalidaOpcionesDespuesDePromoverPokemonPorKo() {
+        Partida partida = partidaBasica();
+        partida.transicionarA(new com.pokemon.tcg.model.battle.state.EstadoTurnoNormal());
+        partida.setJugadorUsername("ash");
+        partida.setBotUsername("misty");
+        partida.getJugador().getPremios().addAll(List.of(
+                card("jp1", "Premio 1", "0"),
+                card("jp2", "Premio 2", "0")
+        ));
+        partida.getBot().getPremios().addAll(List.of(
+                card("bp1", "Premio rival 1", "0"),
+                card("bp2", "Premio rival 2", "0")
+        ));
+
+        CartaEnJuego bancaDebil = new CartaEnJuego(card("bench-1", "Froakie", "40"));
+        CartaEnJuego bancaFuerte = new CartaEnJuego(card("bench-2", "Lapras", "100"));
+        partida.getBot().getBanca().add(bancaDebil);
+        partida.getBot().getBanca().add(bancaFuerte);
+        Ataque breakThrough = attack(
+                "Break Through",
+                60,
+                "This attack does 30 damage to 1 of your opponent's Benched Pokemon."
+        );
+
+        BattleKoService koService = new BattleKoService();
+        service.resolveAttack(
+                partida,
+                breakThrough,
+                partida.getJugador().getActivo(),
+                partida.getBot().getActivo(),
+                koService::resolverKO,
+                null
+        );
+
+        assertSame(bancaFuerte, partida.getBot().getActivo());
+        assertEquals(1, partida.getBot().getBanca().size());
+        assertNotNull(partida.getPendingAction());
+        assertEquals(1, partida.getPendingAction().getOptions().size());
+        assertEquals("bench-1", partida.getPendingAction().getOptions().get(0).getId());
+        assertEquals(1, partida.getPendingAction().getMinSelections());
+        assertEquals(1, partida.getPendingAction().getMaxSelections());
     }
 
     @Test

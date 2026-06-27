@@ -2065,7 +2065,13 @@ public class BattleEngineService {
         copy.reemplazarAtaques(source.getAtaques().stream().map(this::copiarAtaqueParaPartida).toList());
         copy.setDebilidades(source.getDebilidades().stream().map(this::copiarAtributoCarta).toList());
         copy.setResistencias(source.getResistencias().stream().map(this::copiarAtributoCarta).toList());
+        copy.setHabilidades(source.getHabilidades() == null ? new ArrayList<>() : source.getHabilidades().stream().map(this::copiarHabilidadParaPartida).collect(java.util.stream.Collectors.toList()));
         return copy;
+    }
+
+    private com.pokemon.tcg.model.Habilidad copiarHabilidadParaPartida(com.pokemon.tcg.model.Habilidad source) {
+        if (source == null) return null;
+        return new com.pokemon.tcg.model.Habilidad(source.getNombre(), source.getTexto(), source.getType());
     }
 
     private Ataque copiarAtaqueParaPartida(Ataque source) {
@@ -2128,6 +2134,7 @@ public class BattleEngineService {
             card.getDebilidades().size();
             card.getResistencias().size();
             card.getSubtypes().size();
+            if (card.getHabilidades() != null) card.getHabilidades().size();
         }
     }
 

@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Map;
 import java.text.Normalizer;
 
 @Service
@@ -179,25 +178,6 @@ public class MazoService {
         if (!tieneBasico) {
             throw new IllegalArgumentException("El mazo debe incluir al menos 1 Pokemon Basico.");
         }
-
-        // Validar límite de 4 copias para cartas no-energía-básica (incluye Energías Especiales)
-        Map<String, Long> conteo = cartas.stream()
-                .collect(java.util.stream.Collectors.groupingBy(Card::getId, java.util.stream.Collectors.counting()));
-        for (Map.Entry<String, Long> entry : conteo.entrySet()) {
-            // Buscar la carta para determinar si es energía básica
-            cartas.stream()
-                    .filter(c -> c.getId().equals(entry.getKey()))
-                    .findFirst()
-                    .ifPresent(card -> {
-                        boolean esEnergiaBasica = "energy".equals(normalizar(card.getSupertype()))
-                                && card.getSubtypes() != null
-                                && card.getSubtypes().stream().anyMatch(s -> "basic".equals(normalizar(s)));
-                        if (!esEnergiaBasica && entry.getValue() > 4) {
-                            throw new IllegalArgumentException(
-                                    "No podés incluir más de 4 copias de \"" + card.getNombre() + "\" en un mazo.");
-                        }
-                    });
-        }
     }
     private void eagerlyLoadMazo(Mazo mazo) {
         if (mazo != null && mazo.getCartas() != null) {
@@ -208,6 +188,7 @@ public class MazoService {
                 if (card.getAtaques() != null) card.getAtaques().size();
                 if (card.getDebilidades() != null) card.getDebilidades().size();
                 if (card.getResistencias() != null) card.getResistencias().size();
+                if (card.getHabilidades() != null) card.getHabilidades().size();
             }
         }
     }
