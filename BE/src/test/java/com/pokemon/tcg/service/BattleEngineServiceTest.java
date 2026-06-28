@@ -116,7 +116,8 @@ class BattleEngineServiceTest {
         service.partidasEnCurso.put(partida.getId(), partida);
         service.ejecutarTurnoBot(partida.getId());
 
-        assertEquals(Partida.Fase.TURNO_NORMAL, partida.getFaseActual());
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("BOT", partida.getGanador());
     }
 
     @Test

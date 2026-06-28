@@ -45,6 +45,12 @@ class BattleEngineServiceBotTurnTest {
     private Partida crearPartidaSPEnTurnoBot() {
         TableroJugador jugador = new TableroJugador();
         TableroJugador bot = new TableroJugador();
+        Card defaultCard = new Card();
+        defaultCard.setId("bot-card");
+        defaultCard.setNombre("Bot Dummy Card");
+        defaultCard.setSupertype("Pokemon");
+        bot.getMazo().add(defaultCard);
+        
         Partida partida = new Partida(jugador, bot);
         partida.setJugadorUsername("ash");
         partida.setTurnoActual(Partida.Turno.BOT);

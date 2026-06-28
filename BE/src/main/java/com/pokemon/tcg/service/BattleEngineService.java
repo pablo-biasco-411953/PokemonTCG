@@ -1105,12 +1105,12 @@ public class BattleEngineService {
             if (partida.getTurnoActual() == Partida.Turno.JUGADOR) {
                 partida.setTurnoActual(Partida.Turno.BOT);
                 partida.getBot().setTurnosJugados(partida.getBot().getTurnosJugados() + 1);
-                robarCarta(partida.getBot());
+                robarCartaInicioTurno(partida, partida.getBot());
                 agregarLog(partida, "TURN_STARTED", partida.getBotUsername());
             } else {
                 partida.setTurnoActual(Partida.Turno.JUGADOR);
                 partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
-                robarCarta(partida.getJugador());
+                robarCartaInicioTurno(partida, partida.getJugador());
                 agregarLog(partida, "TURN_STARTED", partida.getJugadorUsername());
             }
         }
@@ -1615,7 +1615,10 @@ public class BattleEngineService {
         if (partida == null) return;
 
         partida.getUltimasMonedasLanzadas().clear();
-        robarCarta(partida.getBot());
+        robarCartaInicioTurno(partida, partida.getBot());
+        if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
+            return;
+        }
         botAIService.ejecutarTurno(partida);
 
         if (partida.getFaseActual() == Partida.Fase.FIN_PARTIDA) {
@@ -1667,12 +1670,28 @@ public class BattleEngineService {
         partida.setNumeroTurno(partida.getNumeroTurno() + 1);
         partida.setTurnoActual(Partida.Turno.JUGADOR);
         partida.getJugador().setTurnosJugados(partida.getJugador().getTurnosJugados() + 1);
-        robarCarta(partida.getJugador());
+        robarCartaInicioTurno(partida, partida.getJugador());
         partida.getUltimasMonedasLanzadas().clear();
     }
     private void robarCarta(TableroJugador tablero) {
         if (!tablero.getMazo().isEmpty())
             tablero.getMano().add(tablero.getMazo().remove(0));
+    }
+    private void robarCartaInicioTurno(Partida partida, TableroJugador tablero) {
+        if (tablero.getMazo().isEmpty()) {
+            partida.transicionarA(new EstadoFinPartida());
+            String ganador;
+            if (tablero == partida.getJugador()) {
+                ganador = partida.getBotUsername() != null ? partida.getBotUsername() : "BOT";
+            } else {
+                ganador = partida.getJugadorUsername();
+            }
+            partida.setGanador(ganador);
+            partida.setRazonFinPartida("El rival se quedó sin cartas en su mazo al inicio de su turno.");
+            System.out.println("🏆 Fin de partida por Deck Out: " + ganador + " gana.");
+            return;
+        }
+        robarCarta(tablero);
     }
 
     private boolean puedeColocarBasicosExtra(TableroJugador tablero) {

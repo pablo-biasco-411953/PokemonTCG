@@ -118,6 +118,20 @@ class BattleEngineServicePasarTurnoTest {
     }
 
     @Test
+    void pasarTurno_multiPlayer_botMazoVacio_pierdePorDeckOut() {
+        Partida partida = crearPartidaMPEnTurnoJugador();
+        partida.getJugador().setActivo(new CartaEnJuego(cardBasico("p1", "Pikachu")));
+        // Bot deck is empty
+        service.partidasEnCurso.put(partida.getId(), partida);
+
+        service.pasarTurno(partida.getId(), "ash");
+
+        assertEquals(Partida.Fase.FIN_PARTIDA, partida.getFaseActual());
+        assertEquals("ash", partida.getGanador());
+        assertTrue(partida.getRazonFinPartida().contains("se quedó sin cartas en su mazo"));
+    }
+
+    @Test
     void pasarTurno_bancaLlena_sinActivo_lanzaExcepcion() {
         Partida partida = crearPartidaSPEnTurnoJugador();
         partida.getJugador().getBanca().add(new CartaEnJuego(cardBasico("b1", "Bulbasaur")));
