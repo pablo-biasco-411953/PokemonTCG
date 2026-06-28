@@ -1,8 +1,8 @@
 # Reporte de Cobertura de Código (JaCoCo) — Backend
 
-- **Fecha/Hora de Registro**: 2026-06-27 21:40 (Local)
-- **Origen**: Ejecución completa del suite de pruebas (921 tests ejecutados exitosamente, 0 errores).
-- **Estado de Cumplimiento General RNF-03**: ❌ *No Cumple* (79.63% vs >= 80% requerido).
+- **Fecha/Hora de Registro**: 2026-06-27 22:25 (Local)
+- **Origen**: Ejecución completa del suite de pruebas (1224 tests ejecutados exitosamente, 0 errores).
+- **Estado de Cumplimiento General RNF-03**: ✅ *Cumple* (86.07% vs >= 80% requerido).
 
 ---
 
@@ -10,11 +10,11 @@
 
 | Componente | Requisito RNF-03 | Estado Actual (JaCoCo) | Estado de Cumplimiento |
 | :--- | :---: | :---: | :---: |
-| **Total del Proyecto (Backend)** | **≥ 80.00%** | **79.63%** | ❌ *No Cumple* |
+| **Total del Proyecto (Backend)** | **≥ 80.00%** | **86.07%** | ✅ *Cumple* |
 
 > [!IMPORTANT]
-> El proyecto general se encuentra a un **0.37%** de alcanzar la cobertura mínima requerida del **80%**.
-> Con la incorporación de las pruebas adicionales para `BattleEngineService.resolverAccionPendiente`, la cobertura lógica global subió a **82.58%**.
+> El proyecto general supera holgadamente la cobertura mínima requerida del 80% (actualmente 86.07%).
+> Con la incorporación de las pruebas adicionales, la cobertura lógica global subió a **86.07%**.
 
 ---
 
@@ -23,7 +23,7 @@
 El pliego RNF-03 exige una **cobertura > 90%** en tres componentes críticos de la lógica de juego. Dado que dichos componentes fueron mapeados a nombres de clases distintos en la implementación real, a continuación se desglosa el estado actual para cada uno de estos roles:
 
 ### A. Cálculo de Daño (Equivalente a `DamageCalculator`)
-*   **`BattleAttackService`** (Orquestador principal de ataques): **87.46%** (530 / 606 instrucciones) ❌ *No Cumple* (Subió de 86.63%)
+*   **`BattleAttackService`** (Orquestador principal de ataques): **91.64%** (625 / 682 instrucciones) ✅ *Cumple*
 *   **`EnergyCostCalculator`** (Validación de costos de energía): **92.53%** (322 / 348 instrucciones) ✅ *Cumple*
 *   **Eslabones de Pre-Daño (Chain of Responsibility):**
     *   `EfectoMonedaFalla`: **100.00%** (44/44)  ✅ *Cumple*
@@ -44,7 +44,7 @@ El pliego RNF-03 exige una **cobertura > 90%** en tres componentes críticos de 
     *   *Nota: Todos los componentes de efectos de estado individuales alcanzan el **100%** de cobertura.*
 
 ### C. Validación de Reglas (Equivalente a `RuleValidator`)
-*   **`BattleEngineService`** (Validación principal de flujos de turnos): **66.80%** (4,877 / 7,301 instrucciones) ❌ *No Cumple*
+*   **`BattleEngineService`** (Validación principal de flujos de turnos): **73.42%** (5,425 / 7,389 instrucciones) ❌ *No Cumple* (Aumentó significativamente desde 66.80%)
 *   **Comandos de Acciones del Jugador (`puedeEjecutar()`):**
     *   `ComandoJugarPokemon`: **94.57%** (87/92) ✅ *Cumple*
     *   `ComandoEvolucionar`: **98.78%** (162/164) ✅ *Cumple*
