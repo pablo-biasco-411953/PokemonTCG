@@ -74,6 +74,11 @@ export class BattleBoardCardDetailPanelComponent {
       : null;
   }
 
+  getReglas(card: Card | BattleActionCard | null): string[] {
+    if (!card) return [];
+    return 'reglas' in card && Array.isArray(card.reglas) ? card.reglas : [];
+  }
+
   getAttachedEnergies(): Card[] {
     return this.hoveredInPlayCard?.energiasUnidas ?? [];
   }
