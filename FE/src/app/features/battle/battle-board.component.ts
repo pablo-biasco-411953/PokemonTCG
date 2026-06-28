@@ -3633,16 +3633,16 @@ export class BattleBoardComponent implements OnInit, OnDestroy {
 
     // NUEVOS ESTADOS JUGADOR
     if (!condViejoJugador.includes('Paralyzed') && condNuevoJugador.includes('Paralyzed')) {
-      this.mostrarNotificacion('¡Tu Pokémon fue paralizado!', 'error');
+      this.mostrarNotificacion('¡Tu Pokémon fue paralizado!', 'warning');
     }
     if (!condViejoJugador.includes('Asleep') && condNuevoJugador.includes('Asleep')) {
-      this.mostrarNotificacion('¡Tu Pokémon se quedó dormido!', 'error');
+      this.mostrarNotificacion('¡Tu Pokémon se quedó dormido!', 'warning');
     }
     if (!condViejoJugador.includes('Poisoned') && condNuevoJugador.includes('Poisoned')) {
-      this.mostrarNotificacion('¡Tu Pokémon fue envenenado!', 'error');
+      this.mostrarNotificacion('¡Tu Pokémon fue envenenado!', 'warning');
     }
     if (!condViejoJugador.includes('Confused') && condNuevoJugador.includes('Confused')) {
-      this.mostrarNotificacion('¡Tu Pokémon está confundido!', 'error');
+      this.mostrarNotificacion('¡Tu Pokémon está confundido!', 'warning');
     }
 
     const condViejoBot = estadoAnterior.bot?.activo?.condicionesEspeciales || [];
