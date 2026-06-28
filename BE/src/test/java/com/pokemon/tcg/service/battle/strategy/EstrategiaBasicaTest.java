@@ -386,5 +386,11 @@ class EstrategiaBasicaTest {
         
         Card basico = cardBasico("b1", "Charmander");
         assertTrue((Boolean) method.invoke(estrategia, basico));
+
+        Card trainer = new Card();
+        trainer.setId("t1");
+        trainer.setNombre("Great Ball");
+        trainer.setSupertype("Trainer");
+        assertFalse((Boolean) method.invoke(estrategia, trainer));
     }
 }

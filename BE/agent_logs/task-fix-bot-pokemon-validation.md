@@ -19,6 +19,7 @@ El usuario reportó dos errores en la partida:
 - **Modificado** `BE/src/main/java/com/pokemon/tcg/service/battle/strategy/EstrategiaBasica.java`: Comprobar supertype del Pokémon básico para el Bot.
 - **Modificado** `FE/src/app/features/battle/battle-board-card-detail-panel.component.html`: Renderizar reglas/descripciones de cartas Trainer.
 
-## Próximos pasos
-- Ejecutar tests de backend para comprobar que todo sigue funcionando correctamente.
-- Realizar git commit y push a upstream y origin.
+## Verificación
+- Se añadieron aserciones unitarias en `EstrategiaBasicaTest.java` para verificar que el Bot bloquea correctamente el juego de cartas Trainer.
+- Se ejecutó `mvn clean test` y los 1223 tests pasaron exitosamente.
+
